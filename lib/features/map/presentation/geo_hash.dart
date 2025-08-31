@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import '../../../shared/utility/distance.dart';
+
 class Geohash {
   static const _base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
   static const _bits = [16, 8, 4, 2, 1];
@@ -41,7 +43,7 @@ class Geohash {
   static double centerDistanceMeters(String a, String b) {
     final ca = _decodeCenter(a);
     final cb = _decodeCenter(b);
-    return _haversine(ca.$1, ca.$2, cb.$1, cb.$2);
+    return Distance.meters(ca.$1, ca.$2, cb.$1, cb.$2);
   }
 
   static (double, double) _decodeCenter(String hash) {
@@ -115,14 +117,5 @@ class Geohash {
     return nextBase + _base32[idx];
   }
 
-  static double _haversine(double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371000.0;
-    final dLat = (lat2 - lat1) * math.pi / 180.0;
-    final dLon = (lon2 - lon1) * math.pi / 180.0;
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1 * math.pi / 180.0) *
-            math.cos(lat2 * math.pi / 180.0) *
-            math.sin(dLon / 2) * math.sin(dLon / 2);
-    return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-  }
+
 }

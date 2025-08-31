@@ -1,0 +1,149 @@
+// lib/router.dart
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+// Auth/onboarding
+import 'package:nightowlcode/features/login/widgets/login_nightowl_screen.dart';
+import 'package:nightowlcode/features/login/widgets/login_or_create_account_screen.dart';
+import 'package:nightowlcode/features/signup/widgets/choose_favorite_venues_screen.dart';
+import 'package:nightowlcode/features/signup/widgets/first_create_nightowl_profile_screen.dart';
+
+// Tabs + shell
+import 'package:nightowlcode/features/main/presentation/main_shell.dart';
+import 'package:nightowlcode/features/explore/widgets/explore_screen.dart';
+import 'package:nightowlcode/features/map/widgets/map_screen.dart';
+import 'package:nightowlcode/features/profile/widgets/my_profile_screen.dart';
+import 'package:nightowlcode/features/calender/widgets/calender_screen.dart';
+
+// Standalone
+import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
+import 'package:nightowlcode/features/settings/widgets/settings_screen.dart';
+import 'package:nightowlcode/features/signup/widgets/fourth_create_nightowl_profile_screen.dart';
+import 'package:nightowlcode/features/signup/widgets/optional_details_screen.dart';
+import 'package:nightowlcode/features/signup/widgets/third_create_nightowl_profile_screen.dart';
+import 'package:nightowlcode/shared/constants/enums.dart';
+
+import '../features/main/presentation/main_screen_wrapper.dart';
+import '../features/signup/widgets/second_create_nightowl_profile_screen.dart';
+
+typedef ScreenBuilderWithKey = Widget Function(Key? key);
+final List<MainScreenName> kBranchOrder =
+List<MainScreenName>.unmodifiable(_rootBuilders.keys);
+
+// --- Tab root registry (single source of truth) ---
+final Map<MainScreenName, ScreenBuilderWithKey> _rootBuilders = {
+  MainScreenName.explore:  (key) => ExploreScreen(key: key),
+  MainScreenName.map:      (key) => MapScreen(key: key),
+  MainScreenName.profile:  (key) => MyProfileScreen(key: key),
+
+  // Placeholders to keep API stable
+  MainScreenName.calender: (key) => CalenderScreen(key: key),
+  MainScreenName.social:   (key) => const Center(child: Text('Social')),
+  MainScreenName.venues:   (key) => const Center(child: Text('Venues')),
+  MainScreenName.admin:    (key) => const Center(child: Text('Admin')),
+};
+
+Widget _buildRoot(MainScreenName s, Key key) {
+  final builder = _rootBuilders[s];
+  assert(builder != null, 'No builder registered for $s in _rootBuilders');
+
+  final content = builder!(key); // the screen itself
+  return MainScreenWrapper(screen: s, child: content);
+}
+
+// --- Router ---
+final GoRouter router = GoRouter(
+  // Start here (no invalid redirect needed)
+  initialLocation: '/login-or-create',
+  // ScreenName.explore.name,
+
+  routes: [
+    // Auth / onboarding
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: LoginScreen()),
+    ),
+    GoRoute(
+      path: '/login-or-create',
+      name: 'loginOrCreate',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: LoginOrCreateAccountScreen()),
+    ),
+    GoRoute(
+      path: '/first-create-nightowl-profile',
+      name: 'firstCreateNightowlProfile',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: FirstCreateNightowlProfileScreen()),
+    ),
+    GoRoute(
+      path: '/second-create-nightowl-profile',
+      name: 'secondCreateNightowlProfile',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: SecondCreateNightowlProfileScreen()),
+    ),
+    GoRoute(
+      path: '/third-create-nightowl-profile',
+      name: 'thirdCreateNightowlProfile',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: ThirdCreateNightowlProfileScreen()),
+    ),
+    GoRoute(
+      path: '/fourth-create-nightowl-profile',
+      name: 'fourthCreateNightowlProfile',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: FourthCreateNightowlProfileScreen()),
+    ),
+    GoRoute(
+      path: '/choose-favorite-venues',
+      name: 'chooseFavoriteVenues',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: ChooseFavoriteVenuesScreen()),
+    ),
+    // GoRoute(
+    //   path: '/optional-details',
+    //   name: 'optionalDetails',
+    //   pageBuilder: (context, state) =>
+    //   const NoTransitionPage(child: OptionalDetailsScreen()),
+    // ),
+
+    // Standalone
+    GoRoute(
+      path: '/settings',
+      name: 'settings',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: SettingsScreen()),
+    ),
+    GoRoute(
+      path: '/test',
+      name: 'test',
+      pageBuilder: (context, state) =>
+      const NoTransitionPage(child: VenuePopup(id: 'LOLBAR')),
+    ),
+
+    // Tab shell (IndexedStack keeps roots mounted)
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navShell) => MainShell(nav: navShell),
+      branches: [
+        for (final s in kBranchOrder) // <-- use canonical order here
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/${s.name}',
+                name: s.name,
+                pageBuilder: (context, state) =>
+                    NoTransitionPage(child: _buildRoot(s, PageStorageKey(s.name))),
+              ),
+            ],
+          ),
+      ],
+    ),
+  ],
+
+  errorPageBuilder: (context, state) => MaterialPage(
+    child: Scaffold(
+      body: Center(child: Text('Route error: ${state.error}')),
+    ),
+  ),
+);

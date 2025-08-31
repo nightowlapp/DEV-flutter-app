@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+
+    // Only allow WebP uploads anywhere in the bucket.
+    function isWebP() {
+      // Enforce both MIME and filename (case-insensitive)
+      return request.resource.contentType == "image/webp"
+        && request.resource.name.matches(".*\\.[Ww][Ee][Bb][Pp]$");
+    }
+
+    // Public assets (events/venues) – DEV-friendly
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if signedIn() && isWebP();
+    }
+
+    // User-owned (avatars, QR codes, etc.)
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if signedIn() && request.auth.uid == uid && isWebP();
+    }
+  }
+}

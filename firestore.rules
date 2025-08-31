@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+
+    // Require a server-set timestamp on writes.
+    // Firestore treats FieldValue.serverTimestamp() as request.time in rules,
+    // so this forces clients to use serverTimestamp() on every write.
+    function hasServerUpdatedAt() {
+      return request.resource.data.keys().hasAll(["updated_at"]) &&
+             request.resource.data.updated_at == request.time;
+    }
+
+    /* Users can read/write their own profile, but must include updated_at */
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid && hasServerUpdatedAt();
+      allow delete: if false;
+    }
+
+    /* Public browse for venues & events; writes locked for now */
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+
+      // RSVPs/attendees: user controls ONLY their own doc + updated_at required
+      match /attendees/{uid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn() && request.auth.uid == uid && hasServerUpdatedAt();
+        // Delete can't carry updated_at (no request.resource on delete), so allow without it:
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
+    }
+  }
+}
