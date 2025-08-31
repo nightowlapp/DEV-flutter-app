@@ -129,7 +129,7 @@ class PointRules {
       // > 10km → 0 by default (or penalty if beyond user max)
     ],
     this.hardCutBeyondMaxDistance = false, // ✅ outside maxDistance sinks below inside
-    this.beyondMaxDistancePenalty = -20,
+    this.beyondMaxDistancePenalty = -50,
 
     // Strict distance when certain party statuses (e.g. planning/recovering)
     this.strictDistanceStatuses = const { PartyStatusTypes.still_planning },
@@ -413,7 +413,7 @@ class VenueRanker {
   int _pointsForDistance(double meters, double? userMaxKm, {required bool strict}) {
     // Inside user max distance → award nearest matching band points
     // Beyond → penalty (or drop) so anything inside outranks anything outside.
-    final maxMeters = (userMaxKm != null && userMaxKm > 0) ? userMaxKm * 1000 : null;
+    final maxMeters = (userMaxKm != null && userMaxKm > 0) ? 50 : null;
 
     // Beyond max distance handling
     if (maxMeters != null && meters > maxMeters) {
