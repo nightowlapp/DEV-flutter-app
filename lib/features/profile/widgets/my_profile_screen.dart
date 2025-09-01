@@ -10,7 +10,6 @@ import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../../shared/reusable/users/party_status_indicator.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
-import '../../main/widgets/main_app_bar.dart';
 import 'achievements_section.dart';
 import 'level_indicator.dart';
 
@@ -26,7 +25,8 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(       backgroundColor: black,
+    return Scaffold(
+      backgroundColor: black,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(top: 6), // TOdo sort padding on all screens at some point

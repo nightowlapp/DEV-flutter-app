@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
+import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
@@ -18,9 +19,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,                    // defaults to NightOwl logo
     this.showBack = false,           // if true & canPop, shows back instead of logo
     this.onBack,
-    this.actions,                    // if provided, overrides default actions
+    this.actions,
+    this.action,
     this.logoImage,
-    this.showSettingsButton = false, // <-- add this for profile
     this.onTapSettings,              // optional handler; defaults to /settings
   });
 
@@ -38,13 +39,14 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
 
   // Actions
+  final Widget? action;
   final List<Widget>? actions; // full override if provided
 
   // Optional logo override
   final ImageProvider? logoImage;
 
   // Profile settings toggle
-  final bool showSettingsButton;
+  final bool showSettingsButton = MainScreenName.profile == true;
   final VoidCallback? onTapSettings;
 
   static const _kHeight = 44.0;
@@ -53,11 +55,12 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(_kHeight);
 
   void _defaultBack(BuildContext context) {
-    try {
-      context.pop();
-      return;
-    } catch (_) {}
-    Navigator.maybePop(context);
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      Navigator.of(context).maybePop();
+    }
   }
 
   @override
@@ -65,23 +68,31 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final canPop = Navigator.of(context).canPop();
 
     // Default leading: fixed-radius logo
-    final Widget defaultLeading = CircleAvatar(
-      radius: borderRadiusDefault,
-      backgroundImage: logoImage ?? const AssetImage('assets/nightowl/logo.png'),
-      backgroundColor: Colors.transparent,
+    final Widget defaultLeading = Builder(
+      builder: (ctx) => IconButton(
+        tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
+        padding: EdgeInsets.zero,
+        onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+        icon: CircleAvatar(
+          radius: borderRadiusDefault,
+          backgroundImage:
+          logoImage ?? const AssetImage('assets/nightowl/logo.png'),
+          backgroundColor: Colors.transparent,
+        ),
+      ),
     );
 
     final Widget? resolvedLeading = leading ??
         (showBack && canPop
             ? IconButton(
-          icon: const BackButtonIcon(),
+          icon: Icon(chevronLeftIcon),
           onPressed: onBack ?? () => _defaultBack(context),
         )
             : defaultLeading);
 
     // Build default trailing (settings? + end-drawer avatar)
-    List<Widget> defaultActions = [];
 
+    final List<Widget> defaultActions = [];
     if (showSettingsButton) {
       defaultActions.add(
         IconButton(
@@ -90,21 +101,20 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           tooltip: 'Settings',
         ),
       );
-      defaultActions.add(const SizedBox(width: 4));
     }
 
     defaultActions.addAll([
       Builder(
         builder: (ctx) => GestureDetector(
           onTap: () => Scaffold.maybeOf(ctx)?.openEndDrawer(),
-          child: const ProfilePictureAvatar()
+          child: const ProfilePictureAvatar(),
         ),
       ),
       const SizedBox(width: 8),
     ]);
 
-    final List<Widget>? resolvedActions = actions ?? defaultActions;
-
+    final List<Widget> resolvedActions =
+        actions ?? (action != null ? <Widget>[action!] : defaultActions);
     final Widget resolvedTitle = title ??
         Text(
           titleText ?? 'NightOwl',

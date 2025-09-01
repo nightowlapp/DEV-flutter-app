@@ -50,6 +50,7 @@ class Styles {
 
   static TextStyle get smallText => baseFont.copyWith(
     fontSize: 8,
+    color: white,
     // fontWeight: FontWeight.w600,
   );
 
@@ -74,6 +75,14 @@ class Styles {
     fontWeight: FontWeight.w600
   );
 
+  static TextStyle linkText(BuildContext context) => baseFont.copyWith(
+    color: owlOrange,
+    decoration: TextDecoration.underline,
+    decorationColor: blue,
+    decorationThickness: 1.6,
+    decorationStyle: TextDecorationStyle.wavy,
+    letterSpacing: 3.5
+  );
 
   static TextStyle get logoTextGradient => baseFont.copyWith(
       letterSpacing: -1.4,

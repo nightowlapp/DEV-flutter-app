@@ -28,6 +28,7 @@ final partyStatusIcon = Icons.my_location;
 
 // Utility
 final checkIcon = Icons.check;
+final checkCircleIcon = Icons.check_circle_outline;
 final tuneIcon = Icons.tune;
 final checkBoxCheckedIcon = Icons.check_box;
 final checkBoxUncheckedIcon = Icons.check_box_outline_blank;
@@ -35,6 +36,13 @@ final invisible = Icons.visibility_off;
 final visible = Icons.visibility;
 final mailIcon = Icons.mail_outline;
 final passwordIcon = Icons.lock_outline;
+final globeIcon =Icons.public;
+final qrCodeIcon = Icons.qr_code_2;
+final fullScreenIcon = Icons.fullscreen;
+final copyIcon = Icons.copy;
+final shieldIcon = Icons.shield_moon;
+final infoIcon = Icons.info_outline;
+
 
 final settingsIcon =Icons.settings;
 final errorIcon = Icons.error_outline;

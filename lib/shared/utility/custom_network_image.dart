@@ -25,6 +25,7 @@ class CustomNetworkImage extends StatelessWidget {
         this.httpHeaders,
         this.fallbackAsset = 'assets/nightowl/logo.png',
         this.fallbackSize = const Size(50, 50),
+        this.fallBackEnabled = true,
       });
 
   final String url;
@@ -44,6 +45,7 @@ class CustomNetworkImage extends StatelessWidget {
 
   /// Default fallback logo asset (make sure it’s in pubspec.yaml).
   final String fallbackAsset;
+  final bool fallBackEnabled;
 
   /// Size of the centered fallback logo.
   final Size fallbackSize;
@@ -53,13 +55,14 @@ class CustomNetworkImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget fallback() => _wrap(
+      fallBackEnabled ?
       Center(
         child: SizedBox(
           width:50,
           height: 50,
           child: Image.asset(fallbackAsset, fit: BoxFit.contain),
         ),
-      ),
+      ): const SizedBox.shrink(),
     );
 
     final u = url.trim();

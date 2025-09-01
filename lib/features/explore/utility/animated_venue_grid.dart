@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:animated_list_plus/animated_list_plus.dart';
 import 'package:animated_list_plus/transitions.dart';
 import 'package:flutter/material.dart';
+import 'package:nightowlcode/features/explore/widgets/venue_main_screen.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
+import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/features/explore/widgets/venue_card.dart';
@@ -202,6 +204,13 @@ class _AnimatedVenueCell extends StatelessWidget {
         venue: venue!,
         userLocation: userLoc,
         media: mediaById[venue!.id],
+        onTap: () {
+          context.pushVenue(
+            venue!,
+            media: mediaById[venue!.id],
+            userLoc: userLoc,
+          );
+        },
       ),
     );
   }

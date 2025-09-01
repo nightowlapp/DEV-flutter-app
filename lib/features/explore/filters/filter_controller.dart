@@ -1,16 +1,36 @@
-// lib/features/explore/filters/filter_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'advanced_search_filter.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+import '../presentation/ranked_venues_controller.dart'; // for userPrefsProvider
+
+/// Build defaults once from user prefs.
+/// - openNowOnly = true
+/// - maxDistanceKm = user's pref (if present)
+/// - types = all (empty set = no restriction)
+final _defaultFiltersProvider =
+Provider.autoDispose<AdvancedSearchFilter>((ref) {
+  final prefs = ref.watch(userPrefsProvider);
+  return AdvancedSearchFilter(
+    openNowOnly: true,
+    maxDistanceKm: prefs?.maxDistanceKm, // may be null if not loaded yet
+    minRating: null,
+    types: const {}, // empty == all
+  );
+});
 
 final filtersProvider =
 StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
-      (ref) => FilterController(),
+      (ref) {
+    final defaults = ref.watch(_defaultFiltersProvider);
+    return FilterController(defaults);
+  },
   name: 'filtersProvider',
 );
 
 class FilterController extends StateNotifier<AdvancedSearchFilter> {
-  FilterController() : super(AdvancedSearchFilter.empty);
+  FilterController(this._defaults) : super(_defaults);
+
+  AdvancedSearchFilter _defaults;
 
   void setOpenNow(bool v) => state = state.copyWith(openNowOnly: v);
 
@@ -26,13 +46,16 @@ class FilterController extends StateNotifier<AdvancedSearchFilter> {
 
   void toggleType(VenueType t) {
     final s = Set<VenueType>.from(state.types);
-    if (s.contains(t)) {
-      s.remove(t);
-    } else {
-      s.add(t);
-    }
+    s.contains(t) ? s.remove(t) : s.add(t);
     state = state.copyWith(types: s);
   }
 
-  void reset() => state = AdvancedSearchFilter.empty;
+  /// Reset back to the **current** defaults.
+  void reset() => state = _defaults;
+
+  /// If you want defaults to update when prefs arrive later,
+  /// expose this (optional):
+  void updateDefaults(AdvancedSearchFilter d) {
+    _defaults = d;
+  }
 }

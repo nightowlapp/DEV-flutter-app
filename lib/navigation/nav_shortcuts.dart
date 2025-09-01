@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nightowlcode/navigation/route_args.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+
+import '../data/services/media_existence.dart';
+import '../models/venues/venue.dart';
+import '../shared/utility/lat_lng.dart';
 
 /// Typed metadata for tab roots
 extension ScreenNameRouting on MainScreenName {
@@ -28,5 +33,16 @@ extension NavShortcuts on BuildContext {
   /// Replace current page with a non-tab page by its route *name*.
   void replaceNamedPage(String routeName, {Object? extra}) {
     GoRouter.of(this).replaceNamed(routeName, extra: extra);
+  }
+  Future<T?> pushVenue<T extends Object?>(
+      Venue v, {
+        VenueMediaHealth? media,
+        LatLng? userLoc,
+      }) {
+    return GoRouter.of(this).pushNamed<T>(
+      'venue',
+      pathParameters: {'id': v.id},
+      extra: VenueMainArgs(venue: v, media: media, userLoc: userLoc),
+    );
   }
 }

@@ -1,6 +1,7 @@
 // lib/router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nightowlcode/features/explore/widgets/venue_main_screen.dart';
 
 // Auth/onboarding
 import 'package:nightowlcode/features/login/widgets/login_nightowl_screen.dart';
@@ -21,6 +22,7 @@ import 'package:nightowlcode/features/settings/widgets/settings_screen.dart';
 import 'package:nightowlcode/features/signup/widgets/fourth_create_nightowl_profile_screen.dart';
 import 'package:nightowlcode/features/signup/widgets/optional_details_screen.dart';
 import 'package:nightowlcode/features/signup/widgets/third_create_nightowl_profile_screen.dart';
+import 'package:nightowlcode/navigation/route_args.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
 import '../features/main/presentation/main_screen_wrapper.dart';
@@ -110,17 +112,36 @@ final GoRouter router = GoRouter(
 
     // Standalone
     GoRoute(
+      path: '/venue/:id',
+      name: 'venue',
+      pageBuilder: (context, state) {
+        final args = state.extra as VenueMainArgs?;
+        if (args == null) {
+          return const NoTransitionPage(
+            child: Scaffold(body: Center(child: Text('Missing Venue args'))),
+          );
+        }
+        return NoTransitionPage(
+          child: VenueMainScreen(
+            venue: args.venue,
+            media: args.media,
+            userLoc: args.userLoc,
+          ),
+        );
+      },
+    ),
+    GoRoute(
       path: '/settings',
       name: 'settings',
       pageBuilder: (context, state) =>
       const NoTransitionPage(child: SettingsScreen()),
     ),
-    GoRoute(
-      path: '/test',
-      name: 'test',
-      pageBuilder: (context, state) =>
-      const NoTransitionPage(child: VenuePopup(id: 'LOLBAR')),
-    ),
+    // GoRoute(
+    //   path: '/test',
+    //   name: 'test',
+    //   pageBuilder: (context, state) =>
+    //   const NoTransitionPage(child: VenuePopup(id: 'LOLBAR')),
+    // ),
 
     // Tab shell (IndexedStack keeps roots mounted)
     StatefulShellRoute.indexedStack(

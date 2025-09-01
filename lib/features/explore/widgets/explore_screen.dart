@@ -5,7 +5,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 
-import '../filters/filters_sheet.dart';
+import '../filters/filters_popup.dart';
 import '../filters/visible_venues_provider.dart';
 import '../presentation/ranked_venues_controller.dart';
 import '../search/search_wiring.dart';
@@ -46,7 +46,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         child: Column(
           children: [
             VenueSearchBar(controller: _searchCtrl,
-          onTapTune: () => showFiltersSheet(context, ref)),
+                onTapTune: () => showFiltersPopup(context, ref)),
             const SizedBox(height: verticalSpacerSmall),
             Expanded(
               child: async.when(

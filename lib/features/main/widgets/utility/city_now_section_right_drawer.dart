@@ -16,7 +16,13 @@ class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: Text('Copenhagen Now', style: Styles.boldText)),
+      Stack(
+      children: [
+          Text('Copenhagen Now', style: Styles.boldText),
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Text("1002"),
+          ),],),
           const SizedBox(height: verticalSpacerSmall),
           const Expanded(child: _CityList()),
         ],

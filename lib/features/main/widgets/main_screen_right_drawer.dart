@@ -65,7 +65,6 @@ class MainScreenRightDrawer extends StatelessWidget {
                 children: [PartyStatusIndicator(),
                 ]),
 
-              const SizedBox(height: verticalSpacerSmall),
               const Divider(color: owlOrange),
               const SizedBox(height: verticalSpacerSmall),
 

@@ -160,17 +160,55 @@ class MapStyle {
   }
 
   /// Apply layer filters based on UI filter state (open/closed + types).
-  Future<void> applyFilters(MapboxMap map, {required bool showClosed, required Set<String> allowedTypes}) async {
+  // lib/features/map/presentation/map_style.dart
+  Future<void> applyFilters(
+      MapboxMap map, {
+        required bool showClosed,
+        required Set<String> allowedTypes,
+      }) async {
     final style = map.style;
-    final typeExpr = ['in', ['get','venueType'], ...allowedTypes];
-    final openPredicate = ['any', ['==',['get','isOpenNow'], true], ['==',['get','opensLaterToday'], true]];
+
+    // keep it clean & deterministic
+    final typesList = allowedTypes
+        .where((e) => e.isNotEmpty)
+        .toList()
+      ..sort();
+
+    // ✅ correct: `in` takes the value and ONE array (use ['literal', list])
+    final typeExpr = typesList.isEmpty
+        ? ['has', 'venueType']
+        : ['in', ['get', 'venueType'], ['literal', typesList]];
+
+    final openPredicate = [
+      'any',
+      ['==', ['get', 'isOpenNow'], true],
+      ['==', ['get', 'opensLaterToday'], true],
+    ];
+
     final combined = showClosed ? typeExpr : ['all', typeExpr, openPredicate];
 
-    // unclustered & labels
-    await style.setStyleLayerProperty(lyrUnclustered, 'filter', jsonEncode(['all', ['!', ['has','point_count']], combined]));
-    await style.setStyleLayerProperty(lyrLabels, 'filter', jsonEncode(['all', ['!', ['has','point_count']], combined]));
-    // VIP layers
-    await style.setStyleLayerProperty(lyrVip, 'filter', jsonEncode(combined));
-    await style.setStyleLayerProperty(lyrVipLabels, 'filter', jsonEncode(combined));
+    await Future.wait([
+      style.setStyleLayerProperty(
+        MapStyle.lyrUnclustered,
+        'filter',
+        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+      ),
+      style.setStyleLayerProperty(
+        MapStyle.lyrLabels,
+        'filter',
+        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+      ),
+      style.setStyleLayerProperty(
+        MapStyle.lyrVip,
+        'filter',
+        jsonEncode(combined),
+      ),
+      style.setStyleLayerProperty(
+        MapStyle.lyrVipLabels,
+        'filter',
+        jsonEncode(combined),
+      ),
+    ]);
   }
+
 }

@@ -18,12 +18,14 @@ class VenueCard extends StatelessWidget {
     this.userLocation,
     this.media,
     this.fallbackAsset = 'assets/nightowl/logo.png',
+    this.onTap,
   });
 
   final Venue venue;
   final LatLng? userLocation;
   final VenueMediaHealth? media;
   final String fallbackAsset;
+  final VoidCallback? onTap;
 
   TextStyle get _pillStyle =>
       Styles.smallText.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600);
@@ -62,11 +64,16 @@ class VenueCard extends StatelessWidget {
         ? ''
         : '🚶 ${Distance.formatWalkMinutes(meters)}';
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: grey, width: 0.7),
-        borderRadius: BorderRadius.circular(borderRadiusMedium),
-      ),
+    return Material(
+      borderRadius: BorderRadius.circular(borderRadiusMedium),
+        child: InkWell(
+            onTap: onTap, // ← NEW
+            borderRadius: BorderRadius.circular(borderRadiusMedium),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: grey, width: 0.7),
+                borderRadius: BorderRadius.circular(borderRadiusMedium),
+              ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -117,6 +124,6 @@ class VenueCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    )));
   }
 }
