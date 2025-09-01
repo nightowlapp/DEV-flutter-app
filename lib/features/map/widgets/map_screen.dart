@@ -6,11 +6,13 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import 'package:nightowlcode/data/providers.dart'; // allVenuesStreamProvider
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/shared/constants/enums.dart';
+import 'package:nightowlcode/shared/constants/enums.dart'; // <-- VenueType
+import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 
-import '../presentation/map_style.dart'; // MapStyle
+
+import '../presentation/map_style.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -23,17 +25,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _mapCreated = false;
   CameraOptions? _initialCamera;
 
-  // Riverpod subscription (listenManual since we subscribe outside build)
   ProviderSubscription<AsyncValue<List<Venue>>>? _venuesSub;
-
-  // Filters (per your earlier setup)
-  final bool _showClosed = true; // show everything initially
-  final Set<String> _allowedTypes = const {
-    'bar', 'club', 'pub', 'beer_bar', 'cocktail_bar', 'wine_bar',
-    'sports_bar', 'karaoke_bar', 'gay_bar'
-  };
-
   final MapStyle _style = MapStyle();
+
+  // ✅ Use enums here
+  final bool _showClosed = true;
+  final Set<VenueType> _allowedTypes = const {
+    VenueType.bar,
+    VenueType.club,
+    VenueType.pub,
+    VenueType.beer_bar,
+    VenueType.cocktail_bar,
+    VenueType.wine_bar,
+    VenueType.sports_bar,
+    VenueType.karaoke_bar,
+    VenueType.gay_bar,
+  };
 
   @override
   void initState() {
@@ -48,26 +55,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Future<void> _initLocation() async {
-    try {
-      // Replace with your real location service if available
-      const lat = 55.6761; // Copenhagen
-      const lng = 12.5683;
-      setState(() {
-        _initialCamera = CameraOptions(
-          center: Point(coordinates: Position(lng, lat)),
-          zoom: mapZoomDefault,
-          pitch: 0,
-          bearing: 0,
-        );
-      });
-    } catch (_) {
-      setState(() {
-        _initialCamera = CameraOptions(
-          center: Point(coordinates: Position(12.5683, 55.6761)),
-          zoom: 12.0,
-        );
-      });
-    }
+    // Replace with your location service
+    const lat = 55.6761; // Copenhagen
+    const lng = 12.5683;
+    setState(() {
+      _initialCamera = CameraOptions(
+        center: Point(coordinates: Position(lng, lat)),
+        zoom: mapZoomDefault,
+        pitch: 0,
+        bearing: 0,
+      );
+    });
   }
 
   Future<void> _onMapCreated(MapboxMap map) async {
@@ -87,37 +85,42 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     await _map!.attribution
         .updateSettings(AttributionSettings(clickable: false, iconColor: transparent.value));
 
-    // Ensure sources/layers and apply filters
+    // Ensure style and apply filters
     await _style.ensure(_map!);
-    await _style.applyFilters(_map!, showClosed: _showClosed, allowedTypes: _allowedTypes);
 
-    // Listen to ALL venues and push to Mapbox sources
+    // 👇 Convert enums → names only at the boundary to keep MapStyle generic
+    await _style.applyFilters(
+      _map!,
+      showClosed: _showClosed,
+      allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
+    );
+
+    // Stream all venues → GeoJSON → Mapbox
     _venuesSub = ref.listenManual<AsyncValue<List<Venue>>>(
       allVenuesStreamProvider,
           (prev, next) async {
         if (!mounted || _map == null || !next.hasValue) return;
+
         final venues = next.value!;
         final clusterable = <Map<String, dynamic>>[];
         final vip = <Map<String, dynamic>>[];
 
         for (final v in venues) {
-          if (_allowedTypes.isNotEmpty && !_allowedTypes.contains(v.type.name)) continue;
-
-          final props = <String, dynamic>{
-            'id': v.id,
-            'name': v.displayName.isNotEmpty ? v.displayName : v.name,
-            'rating': v.rating ?? 0.0,
-            'venueType': v.type.name,
-            'subscription': v.subscriptionType.name,
-            // keep pins green for now; wire real hours later
-            'isOpenNow': true,
-            'opensLaterToday': true,
-          };
+          // ✅ Compare enum-to-enum (type-safe)
+          if (_allowedTypes.isNotEmpty && !_allowedTypes.contains(v.type)) continue;
 
           final feat = {
             'type': 'Feature',
             'id': v.id,
-            'properties': props,
+            'properties': {
+              'id': v.id,
+              'name': v.displayName.isNotEmpty ? v.displayName : v.name,
+              'rating': v.rating ?? 0.0,
+              'venueType': v.type.name,              // <- Mapbox expects string
+              'subscription': v.subscriptionType.name,
+              'isOpenNow': true,
+              'opensLaterToday': true,
+            },
             'geometry': {
               'type': 'Point',
               'coordinates': [v.entry.lng, v.entry.lat],
@@ -131,11 +134,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           }
         }
 
-        final clusterableFc =
-        jsonEncode({'type': 'FeatureCollection', 'features': clusterable});
-        final vipFc = jsonEncode({'type': 'FeatureCollection', 'features': vip});
-
-        await _style.setVenueData(_map!, clusterableFc: clusterableFc, vipFc: vipFc);
+        await _style.setVenueData(
+          _map!,
+          clusterableFc: jsonEncode({'type': 'FeatureCollection', 'features': clusterable}),
+          vipFc: jsonEncode({'type': 'FeatureCollection', 'features': vip}),
+        );
       },
       fireImmediately: true,
     );
@@ -143,12 +146,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   void _centerOnUser() {
     if (_map == null) return;
-    const lat = 55.6761;
-    const lng = 12.5683;
+    //TODO Real user
+    const lat = 55.6761, lng = 12.5683;
     _map!.flyTo(
       CameraOptions(center: Point(coordinates: Position(lng, lat)), zoom: mapZoomDefault),
       MapAnimationOptions(duration: 800),
     );
+  }
+  void _openVenueList() {
+
   }
 
   @override
@@ -172,14 +178,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             right: 12,
             child: FloatingActionButton(
               heroTag: 'centerUser',
-              mini: true,
+              mini: true, // 24
               tooltip: 'Center on user',
               onPressed: _centerOnUser,
-              child: const Icon(Icons.my_location),
+              child:  Icon(locationIcon),
+            ),
+          ),Positioned(
+            bottom: 12,
+            right: 60,
+            child: FloatingActionButton(
+              heroTag: 'mapLegend',
+              mini: true,
+              tooltip: 'open map legend',
+              onPressed: _openVenueList,
+              child: Icon(chevronUpIcon),
             ),
           ),
         ],
       ),
     );
   }
+
 }

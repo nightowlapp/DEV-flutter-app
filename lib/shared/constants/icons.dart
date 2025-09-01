@@ -25,6 +25,7 @@ final IconData otherGenderIcon = Icons.transgender;
 
 // UI
 final partyStatusIcon = Icons.my_location;
+final locationIcon = Icons.my_location;
 
 // Utility
 final checkIcon = Icons.check;
@@ -63,8 +64,17 @@ final chevronRightIcon = CupertinoIcons.chevron_right;
 
 
 // Location
-final sae = Icons.wine_bar;
-final aw = Icons.local_bar;
+final wineBarIcon = Icons.wine_bar;
+final cocktailBarIcon = Icons.local_bar;
+final beerBarIcon = Icons.sports_bar;
+final karaokeBarIcon = Icons.mic_none;
+final sportsBarIcon = Icons.sports_soccer;
+final gayBarIcon = Icons.transgender;
+final pubIcon = Icons.local_drink;
+final unknowBarIcon = Icons.nightlife;
+final barIcon = Icons.table_bar;
+final clubIcon = Icons.flourescent;
+
 
 // const defaultLocationDot = FontAwesomeIcons.locationDot;
 // const defaultLocationDotLocked = FontAwesomeIcons.locationPinLock;
