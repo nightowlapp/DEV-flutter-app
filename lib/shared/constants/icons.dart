@@ -26,9 +26,20 @@ final IconData otherGenderIcon = Icons.transgender;
 // UI
 final partyStatusIcon = Icons.my_location;
 final locationIcon = Icons.my_location;
+
 final filledStarIcon = Icons.star;
 final halfFilledStarIcon = Icons.star_half;
 final emptyStarIcon = Icons.star_border;
+
+final locationPinIcon = Icons.location_pin;
+
+final euroIcon = Icons.euro;
+final freeIcon = Icons.money_off;
+
+final dressCodeIcon = FontAwesomeIcons.vest;
+
+const favoriteIcon = Icons.favorite;
+const emptyFavoriteIcon = Icons.favorite_border;
 
 // Utility
 final checkIcon = Icons.check;

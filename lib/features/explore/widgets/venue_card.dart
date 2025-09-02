@@ -54,15 +54,8 @@ class VenueCard extends StatelessWidget {
     final age = venue.defaultAgeRestriction;
     final isVerified = venue.isVerified;
 
-    // Safe distance calculation (never throws)
-    final double? meters = (userLocation == null)
-        ? null
-        : Distance.metersLatLng(userLocation!, venue.entry);
-
     // Show walk time or em-dash if unknown
-    final String walkText = (meters == null)
-        ? ''
-        : '🚶 ${Distance.formatWalkMinutes(meters)}';
+    final String walkText = Distance.walkText(userLocation,venue);
 
     return Material(
       borderRadius: BorderRadius.circular(borderRadiusMedium),

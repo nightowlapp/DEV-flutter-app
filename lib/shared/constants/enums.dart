@@ -55,6 +55,24 @@ enum VenueType { //database format
   // Thrown out: bar_club, bodega, live_music_bar, jazz_bar ,
 }
 
+extension VenueTypeIconX on VenueType {
+  IconData get icon {
+    switch (this) {
+      case VenueType.wine_bar:     return wineBarIcon;
+      case VenueType.cocktail_bar: return cocktailBarIcon;
+      case VenueType.beer_bar:     return beerBarIcon;
+      case VenueType.karaoke_bar:  return karaokeBarIcon;
+      case VenueType.sports_bar:   return sportsBarIcon; // per your mapping
+      case VenueType.gay_bar:      return gayBarIcon;
+      case VenueType.pub:          return pubIcon;
+      case VenueType.bar:          return barIcon;
+      case VenueType.club:         return clubIcon; // note: correct spelling
+      case VenueType.unknown:       return unknowBarIcon;
+      default:                     return unknowBarIcon;
+    }
+  }
+}
+
 enum DressCodeType { //database format
   none,                 // Come as you are
   casual,               // Tees/jeans OK

@@ -40,6 +40,7 @@ dependencies:
   shared_preferences: ^2.5.3
   dio: ^5.9.0
   freezed_annotation: ^3.1.0
+  intl: ^0.20.2
 
   # Firebase
   firebase_core: ^4.0.0
@@ -77,6 +78,7 @@ dependencies:
   hive: ^2.2.3
   cached_network_image: ^3.4.1
   animated_list_plus: ^0.5.2
+
 
   #  flutter_image_compress: ^2.4.0 # WebP images
 #syncfusion_flutter_sliders

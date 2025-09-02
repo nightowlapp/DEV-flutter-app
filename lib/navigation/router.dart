@@ -25,6 +25,7 @@ import 'package:nightowlcode/features/signup/widgets/third_create_nightowl_profi
 import 'package:nightowlcode/navigation/route_args.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
+import '../features/explore/widgets/more_info_screen.dart';
 import '../features/main/presentation/main_screen_wrapper.dart';
 import '../features/signup/widgets/second_create_nightowl_profile_screen.dart';
 
@@ -136,11 +137,25 @@ final GoRouter router = GoRouter(
       pageBuilder: (context, state) =>
       const NoTransitionPage(child: SettingsScreen()),
     ),
+    // in your router config
+    GoRoute(
+      path: '/more-info',
+      name: MoreInfoScreen.routeName,
+      builder: (context, state) {
+        final args = state.extra as VenueMoreInfoArgs;
+        return MoreInfoScreen(
+          venue: args.venue,
+          media: args.media,
+          userLoc: args.userLoc,
+        );
+      },
+    ),
+
     // GoRoute(
     //   path: '/test',
     //   name: 'test',
     //   pageBuilder: (context, state) =>
-    //   const NoTransitionPage(child: VenuePopup(id: 'LOLBAR')),
+    //   const NoTransitionPage(child: VenuePopup(id: 'Test')),
     // ),
 
     // Tab shell (IndexedStack keeps roots mounted)

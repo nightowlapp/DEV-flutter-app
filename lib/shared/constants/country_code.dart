@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum CountryCode { // 249 unique ISO 3166-1 alpha-2 country codes
   ad,  ae,  af,  ag,  ai,  al,  am,  ao,  aq,  ar,  as,  at,  au,  aw,  ax,  az,
   ba,  bb,  bd,  be,  bf,  bg,  bh,  bi,  bj,  bl,  bm,  bn,  bo,  bq,  br,  bs,  bt,  bv,  bw,  by,  bz,
@@ -25,3 +27,150 @@ enum CountryCode { // 249 unique ISO 3166-1 alpha-2 country codes
   ye,  yt,
   za,  zm,  zw
 }
+
+extension CountryCodeLabelX on CountryCode {
+  /// ISO 3166-1 alpha-2 → English short name (title-cased).
+  /// Falls back to the uppercased code if missing.
+  String get fullName {
+    final key = _alpha2;
+    return _countryNameByAlpha2[key] ?? key.toUpperCase();
+  }
+
+  /// 'ad', 'us', … (handles odd enum casing like dO/iN/iS by lowercasing)
+  String get _alpha2 {
+    // Prefer Dart's `name` (>=2.15); fallback for older SDKs.
+    final raw = (hasPropertyName(this) ? (this as dynamic).name as String : describeEnum(this));
+    return raw.toLowerCase();
+  }
+}
+
+// String -> CountryCode helpers
+extension CountryCodeStringX on String {
+  /// Try to parse this string ('us', 'GB', 'dO', etc.) to CountryCode.
+  CountryCode? toCountryCode() {
+    final k = trim().toLowerCase();
+    try {
+      return CountryCode.values.firstWhere(
+            (e) => describeEnum(e).toLowerCase() == k,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Full English country name; falls back to uppercased code.
+  String toCountryName() => toCountryCode()?.fullName ?? trim().toUpperCase();
+}
+
+/// Tiny helper for SDKs without `.name`
+bool hasPropertyName(Object e) {
+  try { (e as dynamic).name; return true; } catch (_) { return false; }
+}
+
+// ---- ISO 3166-1 alpha-2 → English short names ----
+const Map<String, String> _countryNameByAlpha2 = {
+  'ad':'Andorra','ae':'United Arab Emirates','af':'Afghanistan','ag':'Antigua and Barbuda','ai':'Anguilla',
+  'al':'Albania','am':'Armenia','ao':'Angola','aq':'Antarctica','ar':'Argentina','as':'American Samoa',
+  'at':'Austria','au':'Australia','aw':'Aruba','ax':'Åland Islands','az':'Azerbaijan','ba':'Bosnia and Herzegovina',
+  'bb':'Barbados','bd':'Bangladesh','be':'Belgium','bf':'Burkina Faso','bg':'Bulgaria','bh':'Bahrain',
+  'bi':'Burundi','bj':'Benin','bl':'Saint Barthélemy','bm':'Bermuda','bn':'Brunei Darussalam','bo':'Bolivia',
+  'bq':'Bonaire, Sint Eustatius and Saba','br':'Brazil','bs':'Bahamas','bt':'Bhutan','bv':'Bouvet Island',
+  'bw':'Botswana','by':'Belarus','bz':'Belize','ca':'Canada','cc':'Cocos (Keeling) Islands',
+  'cd':'Congo, Democratic Republic of the','cf':'Central African Republic','cg':'Congo','ch':'Switzerland',
+  'ci':'Côte d’Ivoire','ck':'Cook Islands','cl':'Chile','cm':'Cameroon','cn':'China','co':'Colombia',
+  'cr':'Costa Rica','cu':'Cuba','cv':'Cabo Verde','cw':'Curaçao','cx':'Christmas Island','cy':'Cyprus',
+  'cz':'Czechia','de':'Germany','dj':'Djibouti','dk':'Denmark','dm':'Dominica','do':'Dominican Republic',
+  'dz':'Algeria','ec':'Ecuador','ee':'Estonia','eg':'Egypt','eh':'Western Sahara','er':'Eritrea','es':'Spain',
+  'et':'Ethiopia','fi':'Finland','fj':'Fiji','fk':'Falkland Islands (Malvinas)','fm':'Micronesia',
+  'fo':'Faroe Islands','fr':'France','ga':'Gabon','gb':'United Kingdom','gd':'Grenada','ge':'Georgia',
+  'gf':'French Guiana','gg':'Guernsey','gh':'Ghana','gi':'Gibraltar','gl':'Greenland','gm':'Gambia',
+  'gn':'Guinea','gp':'Guadeloupe','gq':'Equatorial Guinea','gr':'Greece','gs':'South Georgia and the South Sandwich Islands',
+  'gt':'Guatemala','gu':'Guam','gw':'Guinea-Bissau','gy':'Guyana','hk':'Hong Kong','hm':'Heard Island and McDonald Islands',
+  'hn':'Honduras','hr':'Croatia','ht':'Haiti','hu':'Hungary','id':'Indonesia','ie':'Ireland','il':'Israel',
+  'im':'Isle of Man','in':'India','io':'British Indian Ocean Territory','iq':'Iraq',
+  'ir':'Iran (Islamic Republic of)','is':'Iceland','it':'Italy','je':'Jersey','jm':'Jamaica','jo':'Jordan','jp':'Japan',
+  'ke':'Kenya','kg':'Kyrgyzstan','kh':'Cambodia','ki':'Kiribati','km':'Comoros','kn':'Saint Kitts and Nevis',
+  'kp':'Korea (Democratic People’s Republic of)','kr':'Korea, Republic of','kw':'Kuwait','ky':'Cayman Islands',
+  'kz':'Kazakhstan','la':'Lao People’s Democratic Republic','lb':'Lebanon','lc':'Saint Lucia','li':'Liechtenstein',
+  'lk':'Sri Lanka','lr':'Liberia','ls':'Lesotho','lt':'Lithuania','lu':'Luxembourg','lv':'Latvia','ly':'Libya',
+  'ma':'Morocco','mc':'Monaco','md':'Moldova, Republic of','me':'Montenegro','mf':'Saint Martin (French part)',
+  'mg':'Madagascar','mh':'Marshall Islands','mk':'North Macedonia','ml':'Mali','mm':'Myanmar','mn':'Mongolia',
+  'mo':'Macao','mp':'Northern Mariana Islands','mq':'Martinique','mr':'Mauritania','ms':'Montserrat','mt':'Malta',
+  'mu':'Mauritius','mv':'Maldives','mw':'Malawi','mx':'Mexico','my':'Malaysia','mz':'Mozambique','na':'Namibia',
+  'nc':'New Caledonia','ne':'Niger','nf':'Norfolk Island','ng':'Nigeria','ni':'Nicaragua','nl':'Netherlands',
+  'no':'Norway','np':'Nepal','nr':'Nauru','nu':'Niue','nz':'New Zealand','om':'Oman','pa':'Panama','pe':'Peru',
+  'pf':'French Polynesia','pg':'Papua New Guinea','ph':'Philippines','pk':'Pakistan','pl':'Poland',
+  'pm':'Saint Pierre and Miquelon','pn':'Pitcairn','pr':'Puerto Rico','ps':'Palestine, State of','pt':'Portugal',
+  'pw':'Palau','py':'Paraguay','qa':'Qatar','re':'Réunion','ro':'Romania','rs':'Serbia','ru':'Russian Federation',
+  'rw':'Rwanda','sa':'Saudi Arabia','sb':'Solomon Islands','sc':'Seychelles','sd':'Sudan','se':'Sweden',
+  'sg':'Singapore','sh':'Saint Helena, Ascension and Tristan da Cunha','si':'Slovenia','sj':'Svalbard and Jan Mayen',
+  'sk':'Slovakia','sl':'Sierra Leone','sm':'San Marino','sn':'Senegal','so':'Somalia','sr':'Suriname',
+  'ss':'South Sudan','st':'Sao Tome and Principe','sv':'El Salvador','sx':'Sint Maarten (Dutch part)',
+  'sy':'Syrian Arab Republic','sz':'Eswatini','tc':'Turks and Caicos Islands','td':'Chad','tf':'French Southern Territories',
+  'tg':'Togo','th':'Thailand','tj':'Tajikistan','tk':'Tokelau','tl':'Timor-Leste','tm':'Turkmenistan',
+  'tn':'Tunisia','to':'Tonga','tr':'Türkiye','tt':'Trinidad and Tobago','tv':'Tuvalu','tw':'Taiwan',
+  'tz':'Tanzania, United Republic of','ua':'Ukraine','ug':'Uganda','um':'United States Minor Outlying Islands',
+  'us':'United States of America','uy':'Uruguay','uz':'Uzbekistan','va':'Holy See',
+  'vc':'Saint Vincent and the Grenadines','ve':'Venezuela','vg':'Virgin Islands (British)','vi':'Virgin Islands (U.S.)',
+  'vn':'Viet Nam','vu':'Vanuatu','wf':'Wallis and Futuna','ws':'Samoa','ye':'Yemen','yt':'Mayotte',
+  'za':'South Africa','zm':'Zambia','zw':'Zimbabwe',
+};
+
+const Set<String> _cetAliases = {
+  'CET', // already a CET label
+  'MET', // Middle European Time alias
+};
+
+extension TimeZoneIdToCET on String? {
+  /// If this IANA time zone is a Central European zone, returns "CET".
+  /// Otherwise returns the original (trimmed) string or empty when null/blank.
+  String toCETLabel() {
+    final s = this?.trim();
+    if (s == null || s.isEmpty) return '';
+    final id = s.replaceAll(' ', '_');
+    if (_cetIanaZones.contains(id) || _cetAliases.contains(id)) return 'CET';
+    return s; // not a CET zone → keep original
+  }
+}
+
+const Set<String> _cetIanaZones = {
+  // Core CET Europe zones
+  'Europe/Amsterdam',
+  'Europe/Andorra',
+  'Europe/Belgrade',
+  'Europe/Berlin',
+  'Europe/Bratislava',
+  'Europe/Brussels',
+  'Europe/Budapest',
+  'Europe/Copenhagen',
+  'Europe/Gibraltar',
+  'Europe/Ljubljana',
+  'Europe/Luxembourg',
+  'Europe/Madrid',
+  'Europe/Malta',
+  'Europe/Monaco',
+  'Europe/Oslo',
+  'Europe/Paris',
+  'Europe/Podgorica',
+  'Europe/Prague',
+  'Europe/Rome',
+  'Europe/San_Marino',
+  'Europe/Sarajevo',
+  'Europe/Skopje',
+  'Europe/Stockholm',
+  'Europe/Tirane',
+  'Europe/Vaduz',
+  'Europe/Vatican',
+  'Europe/Vienna',
+  'Europe/Warsaw',
+  'Europe/Zagreb',
+  'Europe/Zurich',
+
+  // CET-based aliases/odd ones
+  'Arctic/Longyearbyen',
+  'Poland',
+  'Europe/Busingen', // DE exclave, follows Zurich
+  'Africa/Ceuta',    // Spanish exclave (CET)
+  'Africa/Algiers',  // CET (no DST)
+  'Africa/Tunis',    // CET (no DST)
+};

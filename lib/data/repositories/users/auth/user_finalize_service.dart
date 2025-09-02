@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:nightowlcode/data/repositories/users/user_repository.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
-import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/features/signup/presentation/sign_up_draft.dart';
 
 class UserFinalizeService {

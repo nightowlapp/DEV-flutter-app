@@ -139,11 +139,12 @@ class SafetyModeToggle extends StatelessWidget {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Not',
+                          // text: 'Not',
                           style:
                           Styles.boldText.copyWith(color: red), // red
                         ),
-                        const TextSpan(text: ' sharing location'),
+                        // const TextSpan(text: ' sharing location'),
+                        const TextSpan(text: ''),
                       ],
                     ),
                     textAlign: TextAlign.left,
@@ -156,7 +157,7 @@ class SafetyModeToggle extends StatelessWidget {
                     key: const ValueKey('status_on'),
                     TextSpan(
                       children: [
-                        const TextSpan(text: 'Sharing live location\u200B to\u200A'),
+                        const TextSpan(text: 'Informing\u200B'),
                         TextSpan(
                           text: '$trustedContactsCount',
                           style: Styles.boldText.copyWith(
