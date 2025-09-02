@@ -163,4 +163,40 @@ extension ColorHex on Color {
     return '${leadingHashSign ? '#' : ''}${body.toUpperCase()}';
   }
 }
+extension HexToColor on String {
+  Color toColor({bool eightIsRgba = true}) {
+    var s = trim().toUpperCase();
+    s = s.replaceAll(RegExp(r'^#'), '');
+    if (s.startsWith('0X')) s = s.substring(2);
+
+    if (s.length == 6) {
+      // RRGGBB -> AARRGGBB (FF default alpha)
+      return Color(int.parse('FF$s', radix: 16));
+    } else if (s.length == 8) {
+      if (eightIsRgba) {
+        // RRGGBBAA -> AARRGGBB
+        final rgb = s.substring(0, 6);
+        final aa  = s.substring(6, 8);
+        return Color(int.parse('$aa$rgb', radix: 16));
+      } else {
+        // AARRGGBB
+        return Color(int.parse(s, radix: 16));
+      }
+    } else if (s.length == 3 || s.length == 4) {
+      // Short hex: RGB or RGBA
+      final r = s[0], g = s[1], b = s[2];
+      final a = (s.length == 4) ? s[3] : 'F';
+      final full = '${r * 2}${g * 2}${b * 2}${a * 2}'; // RRGGBBAA
+      return Color(int.parse('${full.substring(6, 8)}${full.substring(0, 6)}', radix: 16));
+    }
+    throw FormatException('Invalid hex color: $this');
+  }
+
+  /// Convenience: returns a Dart literal like "Color(0xFFE87701)".
+  String toColorConstLiteral({bool eightIsRgba = true}) {
+    final c = toColor(eightIsRgba: eightIsRgba);
+    final v = c.value.toRadixString(16).padLeft(8, '0').toUpperCase(); // AARRGGBB
+    return 'Color(0x$v)';
+  }
+}
 

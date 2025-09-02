@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import '../../shared/utility/json_utility.dart';
 import '/shared/utility/utility.dart'; // Utility
@@ -196,40 +197,7 @@ class OpeningHours {
     );
   }
 
-  bool isOpenAt(DateTime localNow) {
-    final minutes = _toMinutes(localNow.hour, localNow.minute);
-    final today = DateTime(localNow.year, localNow.month, localNow.day);
-
-    final exception = exceptions.firstWhere(
-          (e) => e.date == today,
-      orElse: () => ExceptionHours(date: DateTime(1970, 1, 1)),
-    );
-
-    final DaySchedule schedule = (exception.date == today)
-        ? DaySchedule(
-      isClosed: exception.isClosed,
-      openMinutes: exception.openMinutes,
-      closeMinutes: exception.closeMinutes,
-      ageRestriction: exception.ageRestriction,
-      dressCode: exception.dressCode,
-      entryPrice: exception.entryPrice,
-    )
-        : week[(localNow.weekday - 1) % 7];
-
-    if (schedule.isClosed) return false;
-
-    final open = schedule.openMinutes!;
-    final close = schedule.closeMinutes!;
-    if (open == close) return false; // Shouldn't happen due to assert
-
-    if (close > open) {
-      return minutes >= open && minutes < close;
-    } else {
-      // Overnight (e.g., 22:00–03:00)
-      return minutes >= open || minutes < close;
-    }
-  }
-
+  bool isOpenAt(DateTime localNow) => statusAt(localNow).phase == OpeningPhase.open;
   bool isOpenToday(DateTime localNow) {
     final today = DateTime(localNow.year, localNow.month, localNow.day);
     final exception = exceptions.firstWhere(
@@ -282,6 +250,208 @@ class OpeningHours {
         : week[(localNow.weekday - 1) % 7].entryPrice;
   }
 }
+
+// ===== Add below your OpeningHours class (same file) =====
+
+enum OpeningPhase {
+  open,             // currently open
+  opensLaterToday,  // closed now, opens later today
+  opensTomorrow,    // closed today, opens tomorrow
+  closedToday,      // closed and no info for tomorrow
+}
+
+@immutable
+class OpeningStatus {
+  final OpeningPhase phase;
+  final int? openMinutes;   // next opening minute-of-day (if applicable)
+  final int? closeMinutes;  // closing minute-of-day for current open window
+  final bool fromYesterday; // true if currently open due to yesterday's overnight span
+
+  const OpeningStatus({
+    required this.phase,
+    this.openMinutes,
+    this.closeMinutes,
+    this.fromYesterday = false,
+  });
+}
+
+extension OpeningStatusFormat on OpeningStatus {
+  String label() {
+    String fmt(int m) =>
+        '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+
+    switch (phase) {
+      case OpeningPhase.open:
+        return 'Open now · until ${fmt(closeMinutes!)}';
+      case OpeningPhase.opensLaterToday:
+        return 'Opens ${fmt(openMinutes!)}';
+      case OpeningPhase.opensTomorrow:
+        return 'Closed today · Opens ${fmt(openMinutes!)}';
+      case OpeningPhase.closedToday:
+        return 'Closed today';
+    }
+  }
+}
+
+extension OpeningHoursStatus on OpeningHours {
+  /// Structured status for UI. `localNow` must be venue local time.
+  OpeningStatus statusAt(DateTime localNow) {
+    final today = DateTime(localNow.year, localNow.month, localNow.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final tomorrow = today.add(const Duration(days: 1));
+    final nowM = _toMinutes(localNow.hour, localNow.minute);
+
+    DaySchedule? t = _scheduleForDate(today);
+    DaySchedule? y = _scheduleForDate(yesterday);
+    DaySchedule? tm = _scheduleForDate(tomorrow);
+
+    bool valid(DaySchedule? s) =>
+        s != null && !s.isClosed && s.openMinutes != null && s.closeMinutes != null;
+    bool overnight(DaySchedule s) => s.closeMinutes! <= s.openMinutes!;
+
+    // 1) Open now due to YESTERDAY'S overnight (e.g., 21:00–03:00 and it's 01:00 today)
+    if (valid(y) && overnight(y!)) {
+      if (nowM < y!.closeMinutes!) {
+        return OpeningStatus(
+          phase: OpeningPhase.open,
+          closeMinutes: y.closeMinutes,
+          fromYesterday: true,
+        );
+      }
+    }
+
+    // 2) TODAY's schedule
+    if (valid(t)) {
+      final open = t!.openMinutes!;
+      final close = t.closeMinutes!;
+      if (!overnight(t)) {
+        if (nowM >= open && nowM < close) {
+          return OpeningStatus(phase: OpeningPhase.open, closeMinutes: close);
+        }
+        if (nowM < open) {
+          return OpeningStatus(phase: OpeningPhase.opensLaterToday, openMinutes: open);
+        }
+        // closed for the rest of today
+        if (valid(tm)) {
+          return OpeningStatus(phase: OpeningPhase.opensTomorrow, openMinutes: tm!.openMinutes);
+        }
+        return const OpeningStatus(phase: OpeningPhase.closedToday);
+      } else {
+        // Overnight (e.g., 21:00–03:00)
+        if (nowM >= open) {
+          return OpeningStatus(phase: OpeningPhase.open, closeMinutes: close);
+        }
+        // later today (tonight)
+        return OpeningStatus(phase: OpeningPhase.opensLaterToday, openMinutes: open);
+      }
+    }
+
+    // 3) No valid schedule today
+    if (valid(tm)) {
+      return OpeningStatus(phase: OpeningPhase.opensTomorrow, openMinutes: tm!.openMinutes);
+    }
+    return const OpeningStatus(phase: OpeningPhase.closedToday);
+  }
+
+  // --- helper: same exception/weekly resolution, but date-safe ---
+  DaySchedule? _scheduleForDate(DateTime dateLocal) {
+    final d = DateTime(dateLocal.year, dateLocal.month, dateLocal.day);
+
+    ExceptionHours? exc;
+    for (final e in exceptions) {
+      final ed = DateTime(e.date.year, e.date.month, e.date.day);
+      if (ed.year == d.year && ed.month == d.month && ed.day == d.day) {
+        exc = e;
+        break;
+      }
+    }
+    if (exc != null) {
+      return DaySchedule(
+        isClosed: exc.isClosed,
+        openMinutes: exc.openMinutes,
+        closeMinutes: exc.closeMinutes,
+        ageRestriction: exc.ageRestriction,
+        dressCode: exc.dressCode,
+        entryPrice: exc.entryPrice,
+      );
+    }
+
+    // Monday=1 -> index 0
+    final idx = (d.weekday + 6) % 7;
+    if (week.isEmpty || idx >= week.length) return null;
+    return week[idx];
+  }
+}
+
+// Put this in the same file as your OpeningHours model (e.g., below the class)
+extension OpeningHoursSimpleFormat on OpeningHours {
+  /// Returns today's range as 24h parts + flags.
+  /// - open/close: "HH:mm"
+  /// - nextDay: true when close time is on the next day (overnight)
+  /// - isClosed: true when closed or missing times
+  ({String open, String close, bool nextDay, bool isClosed})
+  todayRangeParts24h({DateTime? localNow}) {
+    final now = (localNow ?? DateTime.now()).toLocal();
+    final d = DateTime(now.year, now.month, now.day);
+
+    // Find exception for today (date-only compare)
+    final exc = exceptions.firstWhere(
+          (e) => e.date.year == d.year && e.date.month == d.month && e.date.day == d.day,
+      orElse: () => ExceptionHours(date: DateTime(1970, 1, 1)),
+    );
+
+    final DaySchedule schedule = (exc.date.year == d.year &&
+        exc.date.month == d.month &&
+        exc.date.day == d.day)
+        ? DaySchedule(
+      isClosed: exc.isClosed,
+      openMinutes: exc.openMinutes,
+      closeMinutes: exc.closeMinutes,
+      ageRestriction: exc.ageRestriction,
+      dressCode: exc.dressCode,
+      entryPrice: exc.entryPrice,
+    )
+        : week[(d.weekday + 6) % 7]; // Mon=1 -> index 0
+
+    String fmt(int minutes) {
+      final h = (minutes ~/ 60) % 24;
+      final m = minutes % 60;
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+    }
+
+    if (schedule.isClosed ||
+        schedule.openMinutes == null ||
+        schedule.closeMinutes == null) {
+      return (open: '', close: '', nextDay: false, isClosed: true);
+    }
+
+    final openM = schedule.openMinutes!;
+    final closeM = schedule.closeMinutes!;
+    final nextDay = closeM <= openM; // overnight window
+
+    return (open: fmt(openM), close: fmt(closeM), nextDay: nextDay, isClosed: false);
+  }
+
+  /// Keeps your previous string API if you need it elsewhere.
+  String todayRangeLabel24h({DateTime? localNow}) {
+    final r = todayRangeParts24h(localNow: localNow);
+    if (r.isClosed) return 'Closed today';
+    return '${r.open} - ${r.close}';
+  }
+}
+
+// Optional convenience on Venue
+extension VenueOpeningRange on Venue {
+  ({String open, String close, bool nextDay, bool isClosed})
+  todayRangeParts24h({DateTime? venueLocalNow}) =>
+      openingHours.todayRangeParts24h(localNow: venueLocalNow);
+
+  String todayRangeLabel24h({DateTime? venueLocalNow}) =>
+      openingHours.todayRangeLabel24h(localNow: venueLocalNow);
+}
+
+
+
 
 // ---------- Venue (domain) ----------
 @immutable

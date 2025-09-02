@@ -1,18 +1,19 @@
 // lib/features/map/widgets/map_screen.dart
-import 'dart:convert';
 import 'package:flutter/material.dart' hide Viewport;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
-import 'package:nightowlcode/data/providers.dart'; // allVenuesStreamProvider
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/enums.dart'; // <-- VenueType
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 
-
+import '../../../data/services/location/location_controller.dart';
+import '../../../data/venue_providers.dart';
 import '../presentation/map_style.dart';
+import '../presentation/initial_camera_provider.dart';  // ← initialCameraProvider + fallbackCamera
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -20,12 +21,11 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen>
+    with AutomaticKeepAliveClientMixin {
   MapboxMap? _map;
   bool _mapCreated = false;
-  CameraOptions? _initialCamera;
 
-  ProviderSubscription<AsyncValue<List<Venue>>>? _venuesSub;
   final MapStyle _style = MapStyle();
 
   // ✅ Use enums here
@@ -42,31 +42,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     VenueType.gay_bar,
   };
 
-  @override
-  void initState() {
-    super.initState();
-    _initLocation();
-  }
+  // 🔄 simple UI loading flag while the map finishes initial setup
+  bool _loading = true;
 
   @override
-  void dispose() {
-    _venuesSub?.close();
-    super.dispose();
-  }
-
-  Future<void> _initLocation() async {
-    // Replace with your location service
-    const lat = 55.6761; // Copenhagen
-    const lng = 12.5683;
-    setState(() {
-      _initialCamera = CameraOptions(
-        center: Point(coordinates: Position(lng, lat)),
-        zoom: mapZoomDefault,
-        pitch: 0,
-        bearing: 0,
-      );
-    });
-  }
+  bool get wantKeepAlive => true; // keep the map instance alive across tab switches
 
   Future<void> _onMapCreated(MapboxMap map) async {
     if (_mapCreated) return;
@@ -81,9 +61,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         showAccuracyRing: true,
       ),
     );
-    await _map!.scaleBar.updateSettings(ScaleBarSettings(enabled: false, isMetricUnits: true));
-    await _map!.attribution
-        .updateSettings(AttributionSettings(clickable: false, iconColor: transparent.value));
+    await _map!.scaleBar.updateSettings(
+      ScaleBarSettings(enabled: false, isMetricUnits: true),
+    );
+    await _map!.attribution.updateSettings(
+      AttributionSettings(clickable: false, iconColor: transparent.value),
+    );
 
     // Ensure style and apply filters
     await _style.ensure(_map!);
@@ -95,73 +78,52 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
     );
 
-    // Stream all venues → GeoJSON → Mapbox
-    _venuesSub = ref.listenManual<AsyncValue<List<Venue>>>(
-      allVenuesStreamProvider,
-          (prev, next) async {
-        if (!mounted || _map == null || !next.hasValue) return;
-
-        final venues = next.value!;
-        final clusterable = <Map<String, dynamic>>[];
-        final vip = <Map<String, dynamic>>[];
-
-        for (final v in venues) {
-          // ✅ Compare enum-to-enum (type-safe)
-          if (_allowedTypes.isNotEmpty && !_allowedTypes.contains(v.type)) continue;
-
-          final feat = {
-            'type': 'Feature',
-            'id': v.id,
-            'properties': {
-              'id': v.id,
-              'name': v.displayName.isNotEmpty ? v.displayName : v.name,
-              'rating': v.rating ?? 0.0,
-              'venueType': v.type.name,              // <- Mapbox expects string
-              'subscription': v.subscriptionType.name,
-              'isOpenNow': true,
-              'opensLaterToday': true,
-            },
-            'geometry': {
-              'type': 'Point',
-              'coordinates': [v.entry.lng, v.entry.lat],
-            },
-          };
-
-          if (v.subscriptionType == SubscriptionTypesVenue.free) {
-            clusterable.add(feat);
-          } else {
-            vip.add(feat);
-          }
-        }
-
-        await _style.setVenueData(
-          _map!,
-          clusterableFc: jsonEncode({'type': 'FeatureCollection', 'features': clusterable}),
-          vipFc: jsonEncode({'type': 'FeatureCollection', 'features': vip}),
-        );
-      },
-      fireImmediately: true,
+    // Push whatever we already have (synchronously)
+    final fcNow = ref.read(venuesGeoJsonProvider);
+    await _style.setVenueData(
+      _map!,
+      clusterableFc: fcNow.clusterable,
+      vipFc: fcNow.vip,
     );
+
+    // ✅ initial map setup done → hide loader
+    if (mounted) setState(() => _loading = false);
   }
 
-  void _centerOnUser() {
-    if (_map == null) return;
-    //TODO Real user
-    const lat = 55.6761, lng = 12.5683;
-    _map!.flyTo(
-      CameraOptions(center: Point(coordinates: Position(lng, lat)), zoom: mapZoomDefault),
-      MapAnimationOptions(duration: 800),
-    );
-  }
-  void _openVenueList() {
-
+  Future<void> _centerOnUser() async {
+    final cam = await ref.read(initialCameraProvider.future);
+    _map?.flyTo(cam, MapAnimationOptions(duration: 800));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_initialCamera == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    super.build(context);
+
+    // 🔔 Riverpod listeners MUST be in build for ConsumerStatefulWidget.
+    // They will update the existing map instance as soon as providers change.
+    ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
+      if (_map == null) return;
+      await _style.setVenueData(
+        _map!,
+        clusterableFc: next.clusterable,
+        vipFc: next.vip,
+      );
+    });
+
+    ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
+      next.whenData((cam) {
+        if (_map != null) {
+          _map!.flyTo(cam, MapAnimationOptions(duration: 650));
+        }
+      });
+    });
+
+    // Show the map immediately with a fallback camera; no spinner.
+    final camAsync = ref.watch(initialCameraProvider);
+    final cam = camAsync.maybeWhen(
+      data: (c) => c,
+      orElse: () => fallbackCamera,
+    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -169,34 +131,113 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         children: [
           MapWidget(
             key: const ValueKey('mapWidget'),
-            styleUri: MapboxStyles.SATELLITE,
-            cameraOptions: _initialCamera!,
-            onMapCreated: _onMapCreated,
+            styleUri: MapboxStyles.DARK,
+            cameraOptions: cam,               // ← instant map with fallback camera
+            onMapCreated: _onMapCreated,      // ← hydrates style & pushes current GeoJSON
           ),
-          Positioned(
-            bottom: 12,
-            right: 12,
-            child: FloatingActionButton(
-              heroTag: 'centerUser',
-              mini: true, // 24
-              tooltip: 'Center on user',
-              onPressed: _centerOnUser,
-              child:  Icon(locationIcon),
+
+          // 🔳 simple overlay while the map initializes style/sources
+          if (_loading)
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black54,
+                child: Center(child: LoadingIndicator()),
+              ),
             ),
-          ),Positioned(
-            bottom: 12,
-            right: 60,
-            child: FloatingActionButton(
-              heroTag: 'mapLegend',
-              mini: true,
-              tooltip: 'open map legend',
-              onPressed: _openVenueList,
-              child: Icon(chevronUpIcon),
-            ),
-          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        mini: true, // 24
+        tooltip: 'Center on user',
+        onPressed: _centerOnUser,
+        child: Icon(locationIcon),
       ),
     );
   }
 
+  void openVenueList() {
+  }
+//   List<Widget> _openVenueList(BuildContext context, LatLng userLocation) {
+//     List<Venue> venues;
+//     return venues.map((v) {
+//       return ListTile(
+//         leading: Container(
+//           // width: kNormalSizeRadius * 2,
+//           // height: kNormalSizeRadius * 2,
+//           decoration: BoxDecoration(
+//             shape: BoxShape.circle,
+//             border: Border.all(
+//               color: v.isOpenNow(DateTime.now())
+//                   ? green
+//                   : red,
+//               width: 3.0,
+//             ),
+//           ),
+//           child: ClipOval(
+//             child: CachedNetworkImage(
+//               imageUrl: v.logoUrl,
+//               placeholder: (context, url) => const LoadingIndicator(),
+//               errorWidget: (context, url, error) => CachedNetworkImage(
+//                 imageUrl: v.typeOfClubImg,
+//                 placeholder: (context, url) =>
+//                 const LoadingIndicator(),
+//                 errorWidget: (context, url, error) => const Icon(Icons.error),
+//               ),
+//               fit: BoxFit.cover,
+//             ),
+//           ),
+//         ),
+//         title: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Expanded(
+//               child: Text(
+//                 ClubNameFormatter.formatClubName(v.name),
+//                 style: kTextStyleP1,
+//                 overflow: TextOverflow.ellipsis,
+//               ),
+//             ),
+//             Text(
+//               ClubAgeRestrictionFormatter
+//                   .displayClubAgeRestrictionFormattedOnlyAge(v),
+//               style: kTextStyleP2.copyWith(color: primaryColor),
+//             ),
+//             const SizedBox(width: kSmallPadding),
+//             Text(
+//               ClubDistanceCalculator.displayDistanceToClub(
+//                 club: v,
+//                 userLat: userLocation.latitude,
+//                 userLon: userLocation.longitude,
+//               ),
+//               style: kTextStyleP2.copyWith(color: primaryColor),
+//             ),
+//           ],
+//         ),
+//         subtitle: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Expanded(
+//               child: Text(
+//                 ClubNameFormatter.displayClubLocation(v),
+//                 style: kTextStyleP3.copyWith(color: primaryColor),
+//                 overflow: TextOverflow.ellipsis,
+//               ),
+//             ),
+//             Text(
+//               clubOpeningHoursFormatted,
+//               style: clubOpeningHoursFormatted.toLowerCase() ==
+//                   S.of(context).closed_today
+//                   ? kTextStyleP3.copyWith(color: redAccent)
+//                   : kTextStyleP3,
+//             ),
+//           ],
+//         ),
+//         onTap: () {
+//           Navigator.pop(context);
+//           ClubBottomSheet.showClubSheet(context: context, club: v);
+//         },
+//       );
+//     }).toList();
+//   }
+// }
 }

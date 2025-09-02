@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/providers.dart';
 
 import '../core/storage/app_storage.dart';
+import 'other_providers.dart';
 
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   final Widget child;

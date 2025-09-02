@@ -90,7 +90,7 @@ class FirestoreMapVenueRepository implements AbstractVenueRepository {
     return 4;
   }
 
-  double _haversine(double lat1, double lon1, double lat2, double lon2) {
+  double _haversine(double lat1, double lon1, double lat2, double lon2) { //TODO Remove. Already have.
     const R = 6371000.0;
     final dLat = (lat2 - lat1) * math.pi / 180.0;
     final dLon = (lon2 - lon1) * math.pi / 180.0;

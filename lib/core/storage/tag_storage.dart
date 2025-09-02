@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
-import '../../data/providers.dart';
+import '../../data/other_providers.dart';
 import '../../models/venues/tag.dart';
 
 final venueTagsProvider = FutureProvider.family<List<Tag>, List<String>>((ref, tagIds) async {

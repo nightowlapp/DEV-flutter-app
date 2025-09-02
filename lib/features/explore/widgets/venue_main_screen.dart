@@ -33,9 +33,10 @@ class VenueMainScreen extends StatelessWidget {
     final String walkText = (meters == null) ? '' : '🚶 ${Distance.formatWalkMinutes(meters)}';
 
     final logo = venueLogo(venue: venue,    );
-
+    // final primaryColor = venue.primaryColorHex!;
+    // titleColor: HexToColor(primaryColor),
     return Scaffold(
-      appBar: MainAppBar(titleText: _title, showBack: true, centerTitle: true, action: logo, backgroundColor: black,), //TODO looks cool with image at top but dificoult to see name and click back.
+      appBar: MainAppBar(titleText: _title,  showBack: true, centerTitle: true, action: logo, backgroundColor: black,), //TODO looks cool with image at top but dificoult to see name and click back.
       body: Stack(
         children: [
           // ---------- Main content (unchanged layout) ----------
@@ -60,7 +61,7 @@ class VenueMainScreen extends StatelessWidget {
 
 
           // ---------- Verified overlay (independent, never interferes) ----------
-          if (!venue.isVerified)
+          if (venue.isVerified)
             Positioned(
               right: 0,
               child: SafeArea(
@@ -100,7 +101,7 @@ class _VerifiedBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 0,), // tiny background
       decoration: BoxDecoration(
         color: black,
-        borderRadius: BorderRadius.circular(borderRadiusMedium),
+        borderRadius: BorderRadius.circular(borderRadiusDefault),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

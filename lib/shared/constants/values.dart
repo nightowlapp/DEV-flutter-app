@@ -1,7 +1,8 @@
 // BorderRadius
-const borderRadiusSmall = 5.0;
+const borderRadiusSmallest = 5.0;
+const borderRadiusSmall = 10.0;
 const borderRadiusMedium = 15.0;
-// const borderRadiusButton = 20.0;
+// const borderRadiusLarge = 20.0;
 const borderRadiusDefault = 25.0;
 
 // Spacer

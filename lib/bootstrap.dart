@@ -8,19 +8,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive/hive.dart';
 import 'package:nightowlcode/core/error_handler.dart';
 import 'package:nightowlcode/data/repositories/users/auth/auth_repository.dart';
 import 'package:nightowlcode/data/services/location/location_service.dart';
 import 'package:nightowlcode/night_owl_app.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_config.dart';
 import 'core/storage/app_storage.dart';
+import 'core/storage/venues_sso.dart';
 import 'data/app_lifecycle_observer.dart';
-import 'data/providers.dart';
+import 'data/other_providers.dart';
 import 'data/services/notifications/notification_service.dart';
 import 'firebase_options.dart';
 
@@ -28,10 +32,7 @@ Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Firestore.instance.enablePersistence();
-
-  // final dir = await getApplicationDocumentsDirectory();
-  // Hive.init(dir.path);
-  // Hive.registerAdapter(TagAdapter()); // Generate with build_runner
+  await initLocalStores();
 
   // FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
 
@@ -80,6 +81,12 @@ Future<void> _preBoot() async {
 
 }
 
+
+Future<void> initLocalStores() async {
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
+}
+
 void bootstrap(Widget Function() builder) {
   // Framework errors
 
@@ -96,9 +103,7 @@ void bootstrap(Widget Function() builder) {
         return true; // tell engine we handled it
       };
 
-      runApp(const MaterialApp(
-          home: LoadingScreen(),
-        ));
+
 
       await _preBoot();
       // authStateChanges() TODO to stay signed in when login!.
@@ -138,6 +143,8 @@ class _InitTasksState extends ConsumerState<InitTasks> {
   @override
   void initState() {
     super.initState();
+    // database sync
+    Future.microtask(() => ref.read(venuesSsoProvider.future));
     // fire-and-forget: initialize google_sign_in v7 with proper IDs
     Future.microtask(() async {
       try { await ref.read(authRepositoryProvider).prewarmGoogle(); } catch (_) {}
@@ -146,4 +153,25 @@ class _InitTasksState extends ConsumerState<InitTasks> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+class VenuesBoot extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final venues = ref.watch(venuesSsoProvider);
+    return venues.when(
+      data: (list) => Scaffold(
+        appBar: AppBar(title: const Text('Venues')),
+        body: ListView.builder(
+          itemCount: list.length,
+          itemBuilder: (_, i) => ListTile(
+            title: Text(list[i].displayName ?? list[i].name),
+            subtitle: Text(list[i].id),
+          ),
+        ),
+      ),
+      loading: () => const Scaffold(body: Center(child: LoadingScreen())),
+      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
+    );
+  }
 }

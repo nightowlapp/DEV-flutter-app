@@ -12,10 +12,17 @@ import 'package:nightowlcode/models/users/user.dart' as model;
 import 'package:nightowlcode/models/venues/venue.dart';
 
 import '../core/app_config.dart';
+import '../core/storage/venues_sso.dart';
+import '../features/explore/presentation/ranked_venues_controller.dart';
+import '../features/explore/search/search_controller.dart';
+import '../features/explore/search/search_filter.dart';
 import '../models/venues/tag.dart';
 import 'firestore_paths.dart';
 import 'repositories/storage_repository.dart';
 import 'repositories/venues/tag_repository.dart';
+
+//TODO Only keep "OTHER" providers in here.
+
 
 // --- Low-level singletons ---
 final firebaseAuthProvider = Provider<fb.FirebaseAuth>((ref) => fb.FirebaseAuth.instance);
@@ -87,3 +94,43 @@ final allVenuesStreamProvider = StreamProvider<List<Venue>>((ref) {
   );
   return col.snapshots().map((q) => q.docs.map((d) => d.data()).toList());
 }, name: 'allVenuesStreamProvider');
+
+final rankedVenuesProvider =
+StateNotifierProvider.autoDispose<RankedVenuesNotifier, AsyncValue<RankedVenuesState>>((ref) {
+  return RankedVenuesNotifier(ref);
+});
+
+/// Ready-to-use filtered list for the Explore screen:
+/// - watches rankedVenuesProvider (source of truth)
+/// - watches searchQueryProvider (user input)
+final exploreFilteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
+  final base = ref.watch(venuesListProvider);      // <-- from local SSO
+  final q = ref.watch(searchQueryProvider);
+  return filterVenues(base, q);
+});
+
+/// Single Source Of Truth for Venues:
+/// - Immediately serves locally cached venues (fast start)
+/// - On first-ever run (no cache): fetches all venues once and caches them
+/// - Then listens for Firestore changes and incrementally updates the cache
+/// - Exposes the up-to-date in-memory list at all times
+final venuesSsoProvider =
+AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
+
+final venuesListProvider = Provider<List<Venue>>((ref) {
+  final async = ref.watch(venuesSsoProvider);
+  return async.maybeWhen(data: (l) => l, orElse: () => const <Venue>[]);
+});
+
+
+// Grab a single venue by id (updates reactively when SSO changes)
+final venueByIdProvider = Provider.family<Venue?, String>((ref, id) {
+  final all = ref.watch(venuesListProvider);
+  try { return all.firstWhere((v) => v.id == id); } catch (_) { return null; }
+});
+
+
+final visibleVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
+  // Later you can intersect with viewport. For now: use filtered list.
+  return ref.watch(exploreFilteredVenuesProvider);
+});

@@ -5,7 +5,7 @@ import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 
 import '../../../core/platform_config.dart';
-import '../../../data/providers.dart';
+import '../../../data/other_providers.dart';
 import '../../../data/repositories/users/auth/auth_profile_mapper.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/icons.dart';

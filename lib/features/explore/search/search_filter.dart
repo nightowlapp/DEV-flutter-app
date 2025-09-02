@@ -33,12 +33,4 @@ String _normalize(String s) {
   return stripped;
 }
 
-/// Ready-to-use filtered list for the Explore screen:
-/// - watches rankedVenuesProvider (source of truth)
-/// - watches searchQueryProvider (user input)
-final exploreFilteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
-  final ranked = ref.watch(rankedVenuesProvider).asData?.value;
-  final q = ref.watch(searchQueryProvider);
-  final base = ranked?.venues ?? const <Venue>[];
-  return filterVenues(base, q);
-});
+

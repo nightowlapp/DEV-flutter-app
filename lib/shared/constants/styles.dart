@@ -88,11 +88,19 @@ class Styles {
       letterSpacing: -1.4,
       fontSize: 26,
       fontWeight: FontWeight.w200,
-      foreground: Paint()
-        ..shader = const LinearGradient(
-            colors: [white, owlOrange, white],
-        ).createShader(const Rect.fromLTWH(26, 50, 80, 33)),
+      // foreground: Paint()
+      //   ..shader = const LinearGradient(
+      //       colors: [white, owlOrange, white],
+      //   ).createShader(const Rect.fromLTWH(26, 50, 80, 33)),
+    // copyWith(
+    foreground: Paint() //TODO Cool font.
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = owlOrange,
+    // ),
   );
+
+
 
   static TextStyle get sloganTextGradient => baseFont.copyWith( //TODO
     fontSize: 20,

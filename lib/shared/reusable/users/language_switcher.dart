@@ -40,7 +40,7 @@ radius: iconSizeDefault,
         children: [
           ListTile(
             leading: ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadiusSmall),
+              borderRadius: BorderRadius.circular(borderRadiusSmallest),
               child: Image.asset(
                 'assets/flags/uk.png',
                 width: iconSizeMedium,
@@ -55,7 +55,7 @@ radius: iconSizeDefault,
           ),
           ListTile(
             leading: ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadiusSmall),
+              borderRadius: BorderRadius.circular(borderRadiusSmallest),
               child: Image.asset(
                 'assets/flags/dk.png',
                 width: iconSizeMedium,

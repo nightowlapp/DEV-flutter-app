@@ -26,6 +26,9 @@ final IconData otherGenderIcon = Icons.transgender;
 // UI
 final partyStatusIcon = Icons.my_location;
 final locationIcon = Icons.my_location;
+final filledStarIcon = Icons.star;
+final halfFilledStarIcon = Icons.star_half;
+final emptyStarIcon = Icons.star_border;
 
 // Utility
 final checkIcon = Icons.check;

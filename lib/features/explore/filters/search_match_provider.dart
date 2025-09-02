@@ -1,6 +1,7 @@
 // lib/features/explore/search/search_match_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
+import '../../../data/other_providers.dart';
 import '../presentation/ranked_venues_controller.dart';
 import '../search/search_controller.dart';
 import '../search/search_engine.dart';

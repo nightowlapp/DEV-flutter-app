@@ -8,6 +8,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/storage/storage_url.dart';
+
 class MediaExistenceResult {
   final bool exists;
   final String? downloadUrl;
@@ -101,12 +103,12 @@ class MediaExistence {
     _mem.remove(_cacheKeyOf(refOrUrl));
     await _flushPrefs();
   }
-
-  /// Single check; when [force] true, bypass cache and hit Storage.
   Future<MediaExistenceResult> check(String refOrUrl, {bool force = false}) async {
     await _loadPrefs();
-    final key = _cacheKeyOf(refOrUrl);
-    final cached = _mem[key];
+    final raw = refOrUrl.trim();
+    if (raw.isEmpty) return const MediaExistenceResult(exists: false);
+
+    final cached = _mem[raw];
     if (!force && cached != null) {
       final ttl = cached.exists ? _positiveTtl : _negativeTtl;
       if (_isFresh(cached, ttl)) {
@@ -114,30 +116,16 @@ class MediaExistence {
       }
     }
 
-    try {
-      final Reference ref = _looksLikeUrl(refOrUrl)
-          ? _storage.refFromURL(refOrUrl)
-          : _storage.ref(refOrUrl);
+    // Build a deterministic public URL (no network call).
+    final directUrl = StorageUrl.normalize(raw);
 
-      await ref.getMetadata(); // verifies existence
-      final url = await ref.getDownloadURL();
-
-      final entry = _CacheEntry(true, DateTime.now().millisecondsSinceEpoch, url);
-      _mem[key] = entry;
-      await _flushPrefs();
-      return MediaExistenceResult(exists: true, downloadUrl: url);
-    } on FirebaseException {
-      final entry = _CacheEntry(false, DateTime.now().millisecondsSinceEpoch, null);
-      _mem[key] = entry;
-      await _flushPrefs();
-      return const MediaExistenceResult(exists: false);
-    } catch (_) {
-      final entry = _CacheEntry(false, DateTime.now().millisecondsSinceEpoch, null);
-      _mem[key] = entry;
-      await _flushPrefs();
-      return const MediaExistenceResult(exists: false);
-    }
+    // Trust direct URLs to avoid startup stutter. Let the image widget handle 404s with fallback.
+    final entry = _CacheEntry(true, DateTime.now().millisecondsSinceEpoch, directUrl);
+    _mem[raw] = entry;
+    await _flushPrefs();
+    return MediaExistenceResult(exists: true, downloadUrl: directUrl);
   }
+  
 
   /// Batch with limited concurrency.
   Future<Map<String, MediaExistenceResult>> checkAll(

@@ -134,7 +134,7 @@ class PointRules {
     // Strict distance when certain party statuses (e.g. planning/recovering)
     this.strictDistanceStatuses = const { PartyStatusTypes.still_planning },
     this.strictDistanceMultiplier = 1.5,     // boost near bands
-    this.strictBeyondMaxDistancePenalty = -40, // punish far even harder
+    this.strictBeyondMaxDistancePenalty = VenueRanker._DROP, // punish far even harder
 
     // Open status
     this.openNowPoints = 10,

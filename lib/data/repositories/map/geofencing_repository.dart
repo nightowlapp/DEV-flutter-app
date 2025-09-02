@@ -13,7 +13,7 @@ class GeofencingRepository {
   }, SetOptions(merge: true));
 
   Future<void> setOutside(String? lastVenueId) => db.collection('presence').doc(userId).set({
-    'venueId': null,
+    'venueId': null, //TODO Make sure everything from database is snake_id
     'status': 'outside',
     'exitedAt': FieldValue.serverTimestamp(),
     'updatedAt': FieldValue.serverTimestamp(),

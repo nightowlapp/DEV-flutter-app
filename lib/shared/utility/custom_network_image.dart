@@ -3,12 +3,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../core/storage/storage_url.dart';
+
 /// Drop-in network image with built-in safety:
+/// - Accepts Firebase Storage *paths* (e.g. `venue_images/x/logo.webp`),
+///   `gs://…` URLs, or normal http(s) URLs
 /// - If URL is empty/invalid → shows fallback asset
 /// - While loading → shows fallback asset
 /// - On error → shows fallback asset
 /// - Optional clipping via borderRadius
-class CustomNetworkImage extends StatelessWidget {
+class CustomNetworkImage extends StatelessWidget { //TODO Store images as long as possible at some point. DOnt know default.
   const CustomNetworkImage(
       this.url, {
         super.key,
@@ -26,6 +30,7 @@ class CustomNetworkImage extends StatelessWidget {
         this.fallbackAsset = 'assets/nightowl/logo.png',
         this.fallbackSize = const Size(50, 50),
         this.fallBackEnabled = true,
+        this.normalizeStorage = true, // ← normalize Firebase Storage paths/gs://
       });
 
   final String url;
@@ -43,51 +48,52 @@ class CustomNetworkImage extends StatelessWidget {
   final String? cacheKey;
   final Map<String, String>? httpHeaders;
 
-  /// Default fallback logo asset (make sure it’s in pubspec.yaml).
   final String fallbackAsset;
   final bool fallBackEnabled;
-
-  /// Size of the centered fallback logo.
   final Size fallbackSize;
+
+  /// If true (default), `url` can be a Storage path or `gs://` and will be
+  /// converted to a direct https download URL.
+  final bool normalizeStorage;
 
   bool _isHttp(String s) => s.startsWith('http://') || s.startsWith('https://');
 
   @override
   Widget build(BuildContext context) {
     Widget fallback() => _wrap(
-      fallBackEnabled ?
-      Center(
+      fallBackEnabled
+          ? Center(
         child: SizedBox(
-          width:50,
-          height: 50,
+          width: fallbackSize.width,
+          height: fallbackSize.height,
           child: Image.asset(fallbackAsset, fit: BoxFit.contain),
         ),
-      ): const SizedBox.shrink(),
+      )
+          : const SizedBox.shrink(),
     );
 
-    final u = url.trim();
-    if (u.isEmpty || !_isHttp(u)) {
-      // Invalid URL → fallback
+    final raw = url.trim();
+    final resolved = normalizeStorage ? StorageUrl.normalize(raw) : raw;
+
+    if (resolved.isEmpty || !_isHttp(resolved)) {
       return fallback();
     }
 
     final img = CachedNetworkImage(
-      imageUrl: u,
+      imageUrl: resolved,
       width: width,
       height: height,
       fit: fit,
       alignment: alignment,
       memCacheWidth: memCacheWidth,
       httpHeaders: httpHeaders,
-      cacheKey: cacheKey ?? u,
+      cacheKey: cacheKey ?? resolved,
       fadeInDuration: fadeInDuration,
       fadeOutDuration: fadeOutDuration,
-      // Loading → fallback
       placeholder: (_, __) => fallback(),
-      // Error → fallback (and log in debug)
       errorWidget: (_, __, err) {
         assert(() {
-          if (kDebugMode) debugPrint('CustomNetworkImage error for $u -> $err');
+          if (kDebugMode) debugPrint('CustomNetworkImage error for $resolved -> $err');
           return true;
         }());
         return fallback();

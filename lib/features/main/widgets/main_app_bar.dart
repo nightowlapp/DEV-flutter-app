@@ -14,6 +14,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.titleText,
     this.title,
+    this.titleColor,
     this.centerTitle = true,
     this.backgroundColor,            // defaults to transparent
     this.leading,                    // defaults to NightOwl logo
@@ -28,6 +29,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   // Title (defaults to "NightOwl" with gradient style)
   final String? titleText;
   final Widget? title;
+  final Color? titleColor;
   final bool centerTitle;
 
   // Colors (defaults to transparent)
@@ -53,6 +55,15 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(_kHeight);
+
+  TextStyle get _resolvedTitleStyle {
+    // default = gradient
+    if (titleColor == null) return Styles.logoTextGradient;
+    // when a solid color is requested, remove the gradient foreground first
+    return Styles.logoTextGradient.copyWith( //TODO not working.
+      color: titleColor,
+    );
+  }
 
   void _defaultBack(BuildContext context) {
     final router = GoRouter.of(context);
@@ -120,7 +131,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           titleText ?? 'NightOwl',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Styles.logoTextGradient,
+          style: _resolvedTitleStyle,
         );
 
     return AppBar(

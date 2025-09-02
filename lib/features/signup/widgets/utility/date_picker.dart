@@ -20,7 +20,7 @@ class DatePicker extends StatefulWidget {
     this.backgroundColor = transparent,
     this.borderColor = white,
     this.borderWidth = 2.0,
-    this.borderRadius = borderRadiusSmall,
+    this.borderRadius = borderRadiusSmallest,
     this.textColor = white,
     this.hintColor = grey,
     this.tooYoungColor = red,

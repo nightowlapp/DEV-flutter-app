@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
-import 'package:nightowlcode/data/providers.dart'; // has authStateProvider & sharedPrefsFutureProvider
+import 'package:nightowlcode/data/other_providers.dart'; // has authStateProvider & sharedPrefsFutureProvider
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
