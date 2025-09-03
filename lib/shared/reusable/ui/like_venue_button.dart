@@ -22,8 +22,8 @@ class LikeVenueButton extends StatefulWidget {
     this.confirmText,
     this.undoText = 'No',
     this.removeText = 'Remove',
-    this.fullIcon = favoriteIcon,
-    this.emptyIcon = emptyFavoriteIcon,
+    this.fullIcon = heartIcon,
+    this.emptyIcon = emptyHeartIcon,
     this.fullColor = red,
     this.emptyColor = white,
   });
@@ -148,9 +148,8 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
                       doRemove = false;
                       Navigator.of(ctx).pop();
                     },
-                    textColor: green,
-                    borderColor: green,
-                    borderRadius: borderRadiusSmall,
+                    textColor: owlOrange,
+                    borderColor: owlOrange, //TODO green instead?
                   ),
                 ),
               ),

@@ -16,10 +16,21 @@ class LikeStore extends ChangeNotifier {
   bool _ready = false;
   bool _liked = false;
   Object? _lastError;
+  bool _disposed = false;
 
   bool get ready => _ready;
   bool get isLiked => _liked;
   Object? get lastError => _lastError;
+
+  void _safeNotify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   Future<void> init() async {
     if (_ready) return;
@@ -27,7 +38,7 @@ class LikeStore extends ChangeNotifier {
     if (uid == null) {
       _ready = true;
       _liked = false;
-      notifyListeners();
+      _safeNotify();
       return;
     }
     try {
@@ -37,7 +48,7 @@ class LikeStore extends ChangeNotifier {
       _lastError = e;
     } finally {
       _ready = true;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -51,7 +62,7 @@ class LikeStore extends ChangeNotifier {
 
     final next = !_liked;
     _liked = next;
-    notifyListeners();
+    _safeNotify();
 
     try {
       if (next) {
@@ -63,7 +74,7 @@ class LikeStore extends ChangeNotifier {
     } catch (e) {
       _liked = !next; // rollback
       _lastError = e;
-      notifyListeners();
+      _safeNotify();
       rethrow;
     }
   }

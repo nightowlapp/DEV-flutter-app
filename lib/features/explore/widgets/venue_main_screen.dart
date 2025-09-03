@@ -27,11 +27,11 @@ class VenueMainScreen extends StatelessWidget {
   final LatLng? userLoc;
 
   String get _title =>
-      venue.displayName.isNotEmpty ? venue.displayName : venue.name;
+  venue.displayName.isNotEmpty ? venue.displayName : venue.name;
 
   @override
   Widget build(BuildContext context) {
-    final logo = venueLogo(venue: venue);
+    final logo = venueLogo(venue: venue, showInitialFallback: false);
     //TODO below.
     final primaryColor = venue.primaryColorHex ?? owlOrange.toHex();
     final secondaryColor = venue.secondaryColorHex ?? owlOrange.toHex();

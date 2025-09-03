@@ -15,9 +15,10 @@ class DocumentPaths {
   static String venue(String id) => '$venues/$id';
   static String venueSub(String id, String sub) => '$venues/$id/$sub';
 
-  // Other
+  // Mix
   static const String favorites = 'favorites';
   static const String likes = 'likes';
+
 
 
 }

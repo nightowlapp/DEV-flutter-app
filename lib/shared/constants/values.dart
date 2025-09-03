@@ -23,6 +23,8 @@ const iconSizeDefault = 18.0;
 const iconSizeMedium = 24.0;
 const iconSizeLarge = 30.0;
 
+const logoIcon = 40.0;
+
 //Font
 const fontSizeSmallest = 8.0;
 const fontSizeSmaller = 10.0;

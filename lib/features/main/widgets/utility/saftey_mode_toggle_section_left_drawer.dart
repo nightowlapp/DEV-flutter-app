@@ -4,7 +4,6 @@ import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/shared/reusable/ui/information_popup.dart';
 
 import '../../../../shared/constants/icons.dart';
 

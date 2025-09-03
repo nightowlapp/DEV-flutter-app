@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 class PopupDialogDefault extends StatelessWidget {
   factory PopupDialogDefault({
@@ -25,7 +26,7 @@ class PopupDialogDefault extends StatelessWidget {
   }) {
     return PopupDialogDefault._internal(
       key: key,
-      title: title,
+      title: Utility.formatString(title),
       borderRadius: borderRadius,
       contentPadding: contentPadding,
       headerStyle: headerStyle ?? Styles.popupHeader,

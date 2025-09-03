@@ -33,7 +33,7 @@ class VenueCard extends StatelessWidget {
   Widget _pill(String text) => Container(
     padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
     decoration: BoxDecoration(
-      color: black,
+      color: text.isNotEmpty ?black:transparent,
       borderRadius: BorderRadius.circular(borderRadiusDefault),
     ),
     child: Text(text,

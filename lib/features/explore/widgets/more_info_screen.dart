@@ -14,8 +14,11 @@ import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
-import '../../../data/firestore_providers.dart';
+import '../../../data/likes_providers.dart';
+import '../../../data/providers/favorite_venues/favorite_limit_provider.dart';
+import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../shared/constants/icons.dart';
+import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/like_venue_button.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/reusable/ui/venue_logo.dart';
@@ -69,6 +72,7 @@ class MoreInfoScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
+    final favStore = ref.watch(favoriteStoreProvider(venue.id),  );
 
     final logo = venueLogo(venue: venue);
     final price = venue.effectiveEntryPrice(DateTime.now());
@@ -104,7 +108,7 @@ class MoreInfoScreen extends ConsumerWidget {
                     // Top row: icons + rating card
                     Row(
                       children: [
-                        const Icon(Icons.star, size: iconSizeLarge, color: white),
+                        FavoriteVenueButton(store: favStore, venue: venue),
                         const SizedBox(width: allSidePaddingDefault),
                         LikeVenueButton(store: likeStore, venue: venue,),
 

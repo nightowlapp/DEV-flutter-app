@@ -17,7 +17,9 @@ import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/custom_network_image.dart';
 import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 
-import '../../../data/firestore_providers.dart';
+import '../../../data/likes_providers.dart';
+import '../../../data/providers/favorite_venues/favorites_providers.dart';
+import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/like_venue_button.dart';
 import 'more_info_screen.dart';
 
@@ -58,6 +60,8 @@ class VenueScreenContent extends ConsumerWidget  {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
+    final favStore = ref.watch(favoriteStoreProvider(venue.id,));
+
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -70,7 +74,7 @@ class VenueScreenContent extends ConsumerWidget  {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // favoriteButton(),
-            Icon(Icons.star, size: iconSizeLarge,),
+            FavoriteVenueButton(store: favStore, venue: venue),
             SizedBox(width: allSidePaddingDefault,),
             LikeVenueButton(store: likeStore, venue: venue,),
 

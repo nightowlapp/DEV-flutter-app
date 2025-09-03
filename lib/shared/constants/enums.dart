@@ -109,7 +109,7 @@ enum UserRole{
 enum SubscriptionTypesUser {
   free,
   premium,
-  admin,
+  // admin,
 }
 
 enum FriendRequestStatus {

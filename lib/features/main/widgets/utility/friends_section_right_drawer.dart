@@ -16,6 +16,8 @@ class _FriendsSectionRightDrawerState extends State<FriendsSectionRightDrawer> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Stack(
+    // const logoSize = logoIcon; //TODO
+
           children: [
             Center(child: Text('Friends', style: Styles.boldText)),
             const Align(
