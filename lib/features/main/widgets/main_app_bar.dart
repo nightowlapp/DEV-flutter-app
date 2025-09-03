@@ -1,13 +1,18 @@
 // lib/shared/reusable/ui/owl_app_bar.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
+
+import '../../../data/other_providers.dart';
+import '../../../shared/reusable/ui/loading/error_screen.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MainAppBar({
@@ -114,15 +119,47 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
-    defaultActions.addAll([
-      Builder(
-        builder: (ctx) => GestureDetector(
-          onTap: () => Scaffold.maybeOf(ctx)?.openEndDrawer(),
-          child: const ProfilePictureAvatar(),
-        ),
-      ),
-      const SizedBox(width: 8),
-    ]);
+    defaultActions.add(
+      Consumer(builder: (context, ref, _) {
+        final userAsync = ref.watch(authUserProvider); // AsyncValue<model.User?>
+
+        return userAsync.when(
+          loading: () => const LoadingIndicator(),
+          error: (_, __) => const ErrorScreen(),
+          data: (user) {
+            final imageUrl   = user?.profilePictureUrl;
+            final cooldownKey = user == null ? 'avatar_anon' : 'avatar_${user.id}';
+
+            return Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () async {
+                  // your intended action first
+                  Scaffold.maybeOf(ctx)?.openEndDrawer();
+
+                  // then conditionally prompt to add an image (with cooldown)
+                  await ProfilePictureAvatar.promptAddIfNeeded(
+                    ctx,
+                    imageUrl: imageUrl,
+                    cooldown: const Duration(hours: 1),
+                    cooldownKey: cooldownKey,
+                    title: 'Add a profile picture',
+                    onAdd: () => context.pushNamed('editProfilePhoto'),
+                  );
+                },
+                child: ProfilePictureAvatar(
+                  imageUrl: imageUrl,      // <-- NOTE: profilePictureUrl
+                  onTap: () => Scaffold.maybeOf(ctx)?.openEndDrawer(),
+                  onAddImage: () => context.pushNamed('editProfilePhoto'),
+                  cooldownKey: cooldownKey,
+                ),
+              ),
+            );
+          },
+        );
+      }),
+    );
+
+
 
     final List<Widget> resolvedActions =
         actions ?? (action != null ? <Widget>[action!] : defaultActions);

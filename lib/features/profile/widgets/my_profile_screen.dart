@@ -36,10 +36,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
               Row(children: [ // TODO make "top_section_profile"
                   // Avatar
-                  ProfilePictureAvatar( //TODO
-                    imageUrl: 'assets/nightowl/test.png',
-                    size: PlatformConfig.width(context) * 0.25,
-                  ),
+                  ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25,),
                   const SizedBox(width: horizontalSpacerDefault,),
                   // Full name and username
                   Expanded(

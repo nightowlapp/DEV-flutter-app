@@ -46,11 +46,8 @@ class MainScreenRightDrawer extends StatelessWidget {
                   GestureDetector(
                     onTap: () => context.goScreen(MainScreenName.profile), // <— typed, DRY
                     child: ProfilePictureAvatar(
-                      imageUrl: 'assets/nightowl/test.png',
                       size: PlatformConfig.width(context) * 0.15,
                       borderWidth: 2,
-                      showStatus: true,
-                      statusColor: Colors.green,
                       tooltip: 'My Profile',
                       heroTag: 'profile-avatar',
                     ),

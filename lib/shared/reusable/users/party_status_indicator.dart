@@ -8,6 +8,7 @@ import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
+import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../constants/styles.dart'; // PartyStatusTypes
 import '../../party_status_store.dart';
 
@@ -54,6 +55,7 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator> {
 
         setState(() => _status = picked);
         await store.saveStatus(picked); // keep last selected for "whenever it is shown"
+        ref.invalidate(partyStatusColorProvider);
         HapticFeedback.mediumImpact(); //TODO Use a lot more many places.
 
       },

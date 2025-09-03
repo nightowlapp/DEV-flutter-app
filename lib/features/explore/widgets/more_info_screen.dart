@@ -74,7 +74,7 @@ class MoreInfoScreen extends ConsumerWidget {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
     final favStore = ref.watch(favoriteStoreProvider(venue.id),  );
 
-    final logo = venueLogo(venue: venue);
+    final logo = venueLogo(venue: venue, showInitialFallback: false);
     final price = venue.effectiveEntryPrice(DateTime.now());
     final bool hasPrice = (price ?? 0) > 0;
 

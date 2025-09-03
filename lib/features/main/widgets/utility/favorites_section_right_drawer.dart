@@ -117,7 +117,7 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                         shape: VenueLogoShape.circle,
                         tooltip: v.displayName.isNotEmpty ? v.displayName : v.name,
                         // onTap: () => ... navigate to venue details if you want
-                        //TODO keep. nav to map if current screen i map. Otherwise go to main venue profile.
+                        //TODO keep. nav to map if current screen is map. Otherwise go to main venue profile.
                         // fallback badge kicks in automatically when logo missing
                       ),
                     );
