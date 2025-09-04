@@ -3,6 +3,7 @@ class DocumentPaths {
   //Users
   static const users = 'users';
   static const String achievements = 'achievements';
+  static const String partyStatusDays = 'party_status_days';
 
   static String user(String id) => '$users/$id';
   static String userSub(String id, String sub) => '$users/$id/$sub';
@@ -18,6 +19,8 @@ class DocumentPaths {
   // Mix
   static const String favorites = 'favorites';
   static const String likes = 'likes';
+  static const String entries = 'entries';
+
 
 
 
@@ -29,8 +32,8 @@ class StoragePaths {
   static const nightOwlImages = 'nightowl_images';
 
   static String venueImage(String venueId, String fileName) =>
-      '$venueImages/$venueId/$fileName';
+  '$venueImages/$venueId/$fileName';
 
   static String userImage(String userId, String fileName) =>
-      '$userImages/$userId/$fileName';
+  '$userImages/$userId/$fileName';
 }

@@ -25,6 +25,7 @@ import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
 import 'data/app_lifecycle_observer.dart';
 import 'data/other_providers.dart';
+import 'data/providers/party_status/party_status_provider.dart';
 import 'data/services/notifications/notification_service.dart';
 import 'firebase_options.dart';
 
@@ -145,6 +146,9 @@ class _InitTasksState extends ConsumerState<InitTasks> {
     super.initState();
     // database sync
     Future.microtask(() => ref.read(venuesSsoProvider.future));
+    Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
+    Future.microtask(() {ref.read(partyStatusAutoResetProvider);}); // Resets partyStatus at 08:00 e/d
+
     // fire-and-forget: initialize google_sign_in v7 with proper IDs
     Future.microtask(() async {
       try { await ref.read(authRepositoryProvider).prewarmGoogle(); } catch (_) {}

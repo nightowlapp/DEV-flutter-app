@@ -1,16 +1,18 @@
+// lib/shared/reusable/users/party_status_indicator.dart
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/shared/constants/colors.dart';
+import 'package:geolocator/geolocator.dart';
+
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
+import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
 
 import '../../../data/providers/party_status/party_status_provider.dart';
-import '../../constants/styles.dart'; // PartyStatusTypes
-import '../../party_status_store.dart';
+import '../../constants/styles.dart';
 
 class PartyStatusIndicator extends ConsumerStatefulWidget {
   const PartyStatusIndicator({super.key});
@@ -19,155 +21,129 @@ class PartyStatusIndicator extends ConsumerStatefulWidget {
   ConsumerState<PartyStatusIndicator> createState() => _PartyStatusIndicatorState();
 }
 
-class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator> {
-  PartyStatusTypes _status = PartyStatusTypes.still_planning;
-  bool _loading = true;
+class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
+  with SingleTickerProviderStateMixin {
+  static const _cycleDuration = Duration(seconds: 12); // slow & subtle
+  static const double _minOpacity = 0.2;
+  static const double _maxOpacity = 0.8;
+
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    _controller = AnimationController(vsync: this, duration: _cycleDuration)..stop();
   }
 
-  Future<void> _bootstrap() async {
-    final store = ref.read(partyStatusStoreProvider);
-    final persisted = await store.loadStatus();
-    if (!mounted) return;
-    setState(() {
-      _status = persisted ?? _status;
-      _loading = false;
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // Interpolate smoothly through the provider-supplied palette.
+  Color _colorFromT(double t, List<Color> palette) {
+    if (palette.isEmpty) return Colors.grey;
+    final n = palette.length;
+    final seg = ((t % 1.0) * n).floor();
+    final a = palette[seg % n];
+    final b = palette[(seg + 1) % n];
+    final localT = ((t % 1.0) * n) - seg;
+    return Color.lerp(a, b, Curves.easeInOut.transform(localT)) ?? a;
   }
 
   @override
   Widget build(BuildContext context) {
-    final store = ref.watch(partyStatusStoreProvider);
+    final status = ref.watch(partyStatusStateProvider);          // chosen status (fast)
+    final baseColor = ref.watch(partyStatusColorProvider);       // color for chosen status
+    final needsAnswer = ref.watch(partyStatusNeedsAnswerProvider);
+    final palette = ref.watch(partyStatusPulsePaletteProvider);  // colors to pulse through
+
+
+    // Start/stop animation when "needsAnswer" changes.
+    ref.listen<bool>(partyStatusNeedsAnswerProvider, (prev, next) {
+        if (next) {
+          if (!_controller.isAnimating) _controller.repeat();
+        }
+        else {
+          if (_controller.isAnimating) _controller.stop();
+        }
+      }
+    );
+
+    // Ensure proper initial state on first build.
+    if (needsAnswer && !_controller.isAnimating) {
+      _controller.repeat();
+    }
+    else if (!needsAnswer && _controller.isAnimating) {
+      _controller.stop();
+    }
 
     return GestureDetector(
       onTap: () async {
         HapticFeedback.selectionClick();
-        final picked = await _showStatusDialog(context, initial: _status);
+        final picked = await _showStatusDialog(context, ref: ref, initial: status);
         if (picked == null) return;
 
-        // // Simulate a tiny DB write TODO DB
-        // await Future.delayed(const Duration(milliseconds: 250));
-        // if (!mounted) return;
+        // Snappy global update
+        ref.read(partyStatusStateProvider.notifier).state = picked;
 
-        setState(() => _status = picked);
-        await store.saveStatus(picked); // keep last selected for "whenever it is shown"
-        ref.invalidate(partyStatusColorProvider);
-        HapticFeedback.mediumImpact(); //TODO Use a lot more many places.
-
+        // Persist (local + cloud)
+        final pos = await Geolocator.getCurrentPosition().catchError((_) => null);
+        final store = ref.read(partyStatusStoreProvider);
+        await store.saveStatus(
+          picked,
+          change: PartyStatusChange.manual,
+          position: pos,
+        );
+        HapticFeedback.mediumImpact(); // TODO use more!
       },
       child: CircleAvatar(
-        backgroundColor: transparent, // Todo if not responed to day flash "normal color/null (orange)
-        radius: iconSizeDefault, // same size always
-        child: _loading
-            ? SizedBox(
-          width: iconSizeDefault,
-          height: iconSizeDefault,
-          child: CircularProgressIndicator(strokeWidth: 2, color: greyLighter),
-        )
-            : Icon(
-          partyStatusIcon ,
-          size: iconSizeMedium,
-          color: _statusColor(_status), // color reflects status
-        ),
+        backgroundColor: Colors.transparent,
+        radius: iconSizeDefault,
+        child: needsAnswer
+          ? AnimatedBuilder(
+            animation: _controller,
+            builder: (_, __) {
+              final s = math.sin(2 * math.pi * _controller.value); // -1..1
+              final opacity = _minOpacity + (_maxOpacity - _minOpacity) * ((s + 1) / 2); // 0.2..0.8
+              final col = _colorFromT(_controller.value, palette).withOpacity(opacity);
+              return Icon(partyStatusIcon, size: iconSizeMedium, color: col);
+            },
+          )
+          : Icon(partyStatusIcon, size: iconSizeMedium, color: baseColor),
       ),
     );
   }
 }
 
-/* ---------- Popup content (same shell as LanguageSwitcher) ---------- */
-
 Future<PartyStatusTypes?> _showStatusDialog(
-    BuildContext context, {
-      required PartyStatusTypes initial,
-    }) {
-  PartyStatusTypes selected = initial;
-
+  BuildContext context, {
+    required WidgetRef ref,
+    required PartyStatusTypes initial,
+  }) {
   return showDialog<PartyStatusTypes>(
     context: context,
     builder: (dialogCtx) => PopupDialogDefault(
       title: 'Select Status',
       children: [
         for (final it in PartyStatusTypes.values)
-          ListTile(
-            // highlight what is chosen right now
-            selected: it == initial,
-            selectedTileColor: _statusBg(it),
-            leading: _StatusIcon(
-              icon: _statusIcon(it),
-              color: _statusColor(it),
-            ),
-            title: Text(Utility.formatString(it.name), style: Styles.popupText,),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              selected = it;
-              Navigator.of(dialogCtx).pop<PartyStatusTypes>(it);
-            },
+          Builder(builder: (_) {
+              final color = ref.read(partyStatusColorForProvider(it));
+              final bg = color.withOpacity(0.14);
+              return ListTile(
+                selected: it == initial,
+                selectedTileColor: bg,
+                leading: Icon(partyStatusIcon, color: color, size: iconSizeDefault),
+                title: Text(Utility.formatString(it.name), style: Styles.popupText),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.of(dialogCtx).pop<PartyStatusTypes>(it);
+                },
+              );
+            }
           ),
       ],
     ),
   );
 }
-
-/* ---------- Small helpers ---------- */
-
-class _StatusIcon extends StatelessWidget {
-  const _StatusIcon({
-    required this.icon,
-    required this.color,
-  });
-
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: iconSizeDefault,
-      height: iconSizeDefault,
-      child: Icon(
-        icon,
-        color: color,
-        size: iconSizeDefault,
-      ),
-    );
-  }
-}
-
-IconData _statusIcon(PartyStatusTypes s) {
-  switch (s) {
-    // case PartyStatusTypes.out_tonight:
-    //   return myLocation;
-  // Icons.local_bar; // TODO Icons when going out?
-  //   case PartyStatusTypes.not_tonight:
-  //     return myLocation;
-  //   case PartyStatusTypes.still_planning:
-  //     return myLocation;
-    default:return partyStatusIcon;
-  }
-}
-
-Color _statusColor(PartyStatusTypes s) {
-  switch (s) {
-    case PartyStatusTypes.out_tonight:
-      return green;
-    case PartyStatusTypes.house_party:
-      return purple;
-    case PartyStatusTypes.pregame:
-      return yellow;
-    case PartyStatusTypes.recovering:
-      // return blue;
-    // case PartyStatusTypes.not_tonight:
-      return red;
-    case PartyStatusTypes.still_planning:
-      return greyLighter;
-    default:
-      return greyLighter;
-  }
-}
-
-// subtle background derived from the status color (keeps it DRY and scalable)
-Color _statusBg(PartyStatusTypes s) => _statusColor(s).withOpacity(0.14);

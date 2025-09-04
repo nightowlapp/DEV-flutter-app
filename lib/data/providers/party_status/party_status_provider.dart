@@ -1,27 +1,147 @@
-// lib/shared/reusable/users/party_status_providers.dart
+// lib/data/providers/party_status/party_status_provider.dart
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-
+import 'package:nightowlcode/shared/constants/colors.dart';
+import '../../../core/storage/app_storage.dart';
+import '../../other_providers.dart';
 import '../../../shared/party_status_store.dart';
+import '../../repositories/users/party_status_repository.dart';
 
-// Map PartyStatusTypes -> Color (same mapping you use in the indicator)
-Color statusToColor(PartyStatusTypes s) {
-  switch (s) {
-    case PartyStatusTypes.out_tonight: return green;
-    case PartyStatusTypes.house_party: return purple;
-    case PartyStatusTypes.pregame:     return yellow;
-    case PartyStatusTypes.recovering:  return red;
-    case PartyStatusTypes.still_planning:
-    default:                           return greyLighter;
+// DI (unchanged)
+final partyStatusRepositoryProvider = Provider<PartyStatusRepository>((ref) {
+    final db = ref.watch(firestoreProvider);
+    final auth = ref.watch(firebaseAuthProvider);
+    return PartyStatusRepository(db, auth);
   }
-}
+);
 
-/// Current party status (last saved), as a color.
-/// Recomputed when invalidated (e.g. after saveStatus).
-final partyStatusColorProvider = FutureProvider<Color>((ref) async {
-  final store = ref.watch(partyStatusStoreProvider);
-  final s = await store.loadStatus();
-  return statusToColor(s ?? PartyStatusTypes.still_planning);
-});
+final partyStatusStoreProvider = Provider<PartyStatusStore>((ref) {
+    final prefs = ref.watch(sharedPrefsProvider);
+    final local = SharedPrefsPartyStatusStore(prefs);
+    final repo = ref.watch(partyStatusRepositoryProvider);
+    return FirestorePartyStatusStore(repo, local);
+  }
+);
+
+// ➊ Current status in memory (source of truth for UI)
+final partyStatusStateProvider = StateProvider<PartyStatusTypes>(
+  (ref) => PartyStatusTypes.still_planning,
+);
+
+// // ➋ Color derived from the in-memory status (sync)
+final partyStatusColorForProvider = Provider.family<Color, PartyStatusTypes>((ref, s) {
+    switch (s) {
+      case PartyStatusTypes.out_tonight: return green;
+      case PartyStatusTypes.house_party: return purple;
+      case PartyStatusTypes.pregame:     return yellow;
+      case PartyStatusTypes.recovering:  return red;
+      case PartyStatusTypes.still_planning:
+      default:                           return greyLighter;
+    }
+  }
+);
+
+// ➌ One-time bootstrap to seed in-memory state from local store on app start
+final partyStatusBootstrapProvider = FutureProvider<void>((ref) async {
+    final store = ref.watch(partyStatusStoreProvider);
+    final saved = await store.loadStatus() ?? PartyStatusTypes.still_planning;
+    ref.read(partyStatusStateProvider.notifier).state = saved;
+  }
+);
+
+// lib/data/providers/party_status/party_status_provider.dart
+final partyStatusAutoResetProvider = Provider<void>((ref) {
+    Timer? t;
+
+    DateTime _next8am(DateTime now) {
+      final today8 = DateTime(now.year, now.month, now.day, 8);
+      return now.isBefore(today8) ? today8 : today8.add(const Duration(days: 1));
+    }
+
+    // Declare a function variable first so _fire() can use it
+    late void Function() schedule;
+
+    Future<void> _fire() async {
+      // 1) update in-memory immediately
+      ref.read(partyStatusStateProvider.notifier).state =
+      PartyStatusTypes.still_planning;
+
+      // 2) persist locally only (no cloud write)
+      final store = ref.read(partyStatusStoreProvider);
+      await store.saveStatus(
+        PartyStatusTypes.still_planning,
+        writeToCloud: false,
+      );
+
+      // 3) re-arm for the next day
+      schedule();
+    }
+
+    // Assign the function AFTER _fire is defined
+    schedule = () {
+      final now = DateTime.now();
+      final next = _next8am(now);
+      t?.cancel();
+      t = Timer(next.difference(now), _fire);
+    };
+
+    // First arm
+    schedule();
+
+    // Re-evaluate on app resume (DST/timezone/clock changes)
+    final listener = AppLifecycleListener(
+      onStateChange: (state) async {
+        if (state == AppLifecycleState.resumed) {
+          final store = ref.read(partyStatusStoreProvider);
+          final current =
+            await store.loadStatus() ?? PartyStatusTypes.still_planning;
+          ref.read(partyStatusStateProvider.notifier).state = current;
+          schedule(); // re-arm for new local 08:00 if needed
+        }
+      },
+    );
+
+    ref.onDispose(() {
+        t?.cancel();
+        listener.dispose();
+      }
+    );
+  }
+);
+
+final partyStatusNeedsAnswerProvider = Provider<bool>((ref) {
+    // Re-evaluate when the status changes anywhere in-app:
+    ref.watch(partyStatusStateProvider);
+
+    final prefs = ref.watch(sharedPrefsProvider);
+    final answeredDay = prefs.getString(kPartyStatusAnsweredDayKey);
+    final currentDay = partyStatusDayKey(DateTime.now());
+
+    // Not answered if answeredDay != today’s day-key
+    return answeredDay != currentDay;
+  }
+);
+
+final partyStatusColorProvider = Provider<Color>((ref) {
+    final s = ref.watch(partyStatusStateProvider);
+    return ref.watch(partyStatusColorForProvider(s));
+  }
+);
+
+// Palette to pulse through when the user hasn’t answered “today”.
+// (Interleave a neutral to make the pulse gentler.)
+final partyStatusPulsePaletteProvider = Provider<List<Color>>((ref) {
+    final c = (PartyStatusTypes s) => ref.read(partyStatusColorForProvider(s));
+    const neutral = greyLighter;
+    return <Color>[
+      c(PartyStatusTypes.out_tonight), neutral,
+      c(PartyStatusTypes.house_party), neutral,
+      c(PartyStatusTypes.pregame), neutral,
+    ];
+  }
+);
+

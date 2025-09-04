@@ -24,7 +24,7 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
 
     // Count label + colors like your old UI
     final currentCount = countAsync.maybeWhen(data: (c) => c, orElse: () => 0);
-    final currentText  = countAsync.maybeWhen(data: (c) => '$c', orElse: () => '—');
+    final currentText  = countAsync.maybeWhen(data: (c) => '$c', orElse: () => '');
     final limitText    = progress.unlimited ? '∞' : '${progress.limit}';
     final half         = progress.unlimited ? 0 : (progress.limit / 2).floor();
 

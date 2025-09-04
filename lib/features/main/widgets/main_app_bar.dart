@@ -12,7 +12,6 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
 import '../../../data/other_providers.dart';
-import '../../../shared/reusable/ui/loading/error_screen.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MainAppBar({
@@ -74,7 +73,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final router = GoRouter.of(context);
     if (router.canPop()) {
       router.pop();
-    } else {
+    }
+    else {
       Navigator.of(context).maybePop();
     }
   }
@@ -99,12 +99,12 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
 
     final Widget? resolvedLeading = leading ??
-        (showBack && canPop
-            ? IconButton(
+      (showBack && canPop
+        ? IconButton(
           icon: Icon(chevronLeftIcon),
           onPressed: onBack ?? () => _defaultBack(context),
         )
-            : defaultLeading);
+        : defaultLeading);
 
     // Build default trailing (settings? + end-drawer avatar)
 
@@ -120,56 +120,23 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
 
     defaultActions.add(
-      Consumer(builder: (context, ref, _) {
-        final userAsync = ref.watch(authUserProvider); // AsyncValue<model.User?>
-
-        return userAsync.when(
-          loading: () => const LoadingIndicator(),
-          error: (_, __) => const ErrorScreen(),
-          data: (user) {
-            final imageUrl   = user?.profilePictureUrl;
-            final cooldownKey = user == null ? 'avatar_anon' : 'avatar_${user.id}';
-
-            return Builder(
-              builder: (ctx) => GestureDetector(
-                onTap: () async {
-                  // your intended action first
-                  Scaffold.maybeOf(ctx)?.openEndDrawer();
-
-                  // then conditionally prompt to add an image (with cooldown)
-                  await ProfilePictureAvatar.promptAddIfNeeded(
-                    ctx,
-                    imageUrl: imageUrl,
-                    cooldown: const Duration(hours: 1),
-                    cooldownKey: cooldownKey,
-                    title: 'Add a profile picture',
-                    onAdd: () => context.pushNamed('editProfilePhoto'),
-                  );
-                },
-                child: ProfilePictureAvatar(
-                  imageUrl: imageUrl,      // <-- NOTE: profilePictureUrl
-                  onTap: () => Scaffold.maybeOf(ctx)?.openEndDrawer(),
-                  onAddImage: () => context.pushNamed('editProfilePhoto'),
-                  cooldownKey: cooldownKey,
-                ),
-              ),
-            );
-          },
-        );
-      }),
+      ProfilePictureAvatar(
+        size: 44,
+        onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
+        onAddImage: () => context.pushNamed('editProfilePhoto'),
+        disablePrompt: true,
+      )
     );
 
-
-
     final List<Widget> resolvedActions =
-        actions ?? (action != null ? <Widget>[action!] : defaultActions);
+      actions ?? (action != null ? <Widget>[action!] : defaultActions);
     final Widget resolvedTitle = title ??
-        Text(
-          titleText ?? 'NightOwl',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: _resolvedTitleStyle,
-        );
+      Text(
+        titleText ?? 'NightOwl',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: _resolvedTitleStyle,
+      );
 
     return AppBar(
       elevation: 0,

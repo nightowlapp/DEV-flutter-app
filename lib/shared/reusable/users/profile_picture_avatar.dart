@@ -1,6 +1,7 @@
 // lib/shared/reusable/ui/profile_picture_avatar.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nightowlcode/shared/constants/icons.dart';
@@ -12,15 +13,15 @@ import 'package:nightowlcode/shared/utility/custom_network_image.dart'; // ← y
 // Providers (SSOT): current user + status color
 import 'package:nightowlcode/data/other_providers.dart' show authUserProvider; // model.User?
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart'
-    show partyStatusColorProvider;
+  show partyStatusColorProvider;
 
-import '../ui/owl_snack.dart';
+import '../ui/popup_dialog_default.dart';
+
 
 /// A customizable circular profile picture with optional ring border and status dot.
 ///
 /// - Self-sufficient by default: reads current user (photo URL) and party status color via Riverpod.
 /// - Uses your CustomNetworkImage (supports http(s)/gs:///storage paths + cache).
-/// - If no image: shows a dismissible OwlSnack prompt (hour cooldown by default).
 /// - You can still pass overrides (imageUrl, onTap, etc.) when needed.
 class ProfilePictureAvatar extends StatelessWidget {
   const ProfilePictureAvatar({
@@ -44,13 +45,13 @@ class ProfilePictureAvatar extends StatelessWidget {
     this.promptCooldown = const Duration(hours: 1),
     this.forcePrompt = false,
     this.cooldownKey,
-    this.snackTitle = 'Add a profile picture',
-    this.snackMessage = 'Upload a profile picture to your profile.',
-    this.snackActionLabel = 'Choose',
+    this.popupTitle = 'Add your profile picture',
+    this.popupMessage = 'Upload a profile picture to your profile.',
 
     // Fallback rendering
     this.showOnlyInitials = false,
-    this.initials,               // optional explicit initials; if null we derive from user
+    this.initials,    // optional explicit initials; if null we derive from user
+    this.disablePrompt = false,
   });
 
   // ---- Inputs / overrides ---------------------------------------------------
@@ -72,39 +73,13 @@ class ProfilePictureAvatar extends StatelessWidget {
   final Duration promptCooldown;
   final bool forcePrompt;
   final String? cooldownKey;
-  final String snackTitle;
-  final String snackMessage;
-  final String snackActionLabel;
+  final String popupTitle;
+  final String popupMessage;
 
   // Fallback options
   final bool showOnlyInitials;
   final String? initials;
-
-  // --- static helper stays the same (reused) --------------------------------
-  static Future<void> promptAddIfNeeded(
-      BuildContext context, {
-        required String? imageUrl,
-        required Duration cooldown,
-        String? cooldownKey,
-        bool force = false,
-        required String title,
-        String? message,
-        String actionLabel = 'Upload',
-        VoidCallback? onAdd,
-      }) async {
-    final hasImage = _hasCandidateImage(imageUrl);
-    if (hasImage) return;
-    final ok = await _shouldPrompt(
-        cooldown: cooldown, cooldownKey: cooldownKey, force: force);
-    if (!ok) return;
-    OwlSnack.show(
-      context,
-      title: title,
-      message: (message ?? '').trim().isEmpty ? null : message,
-      actionLabel: onAdd != null ? actionLabel : null,
-      onAction: onAdd,
-    );
-  }
+  final bool disablePrompt;
 
   @override
   Widget build(BuildContext context) {
@@ -127,23 +102,20 @@ class ProfilePictureAvatar extends StatelessWidget {
 
         // Prefer explicit imageUrl override; otherwise use provider value
         final effectiveImageUrl = (imageUrl?.trim().isNotEmpty == true)
-            ? imageUrl
-            : userPhotoUrl;
+          ? imageUrl
+          : userPhotoUrl;
 
         // Default cooldown key is user-scoped
         final effectiveCooldownKey = cooldownKey ?? 'avatar_${userId ?? 'anon'}';
 
         // 2) Border color (auto from status unless override provided)
-        final autoColor = ref.watch(partyStatusColorProvider).maybeWhen(
-          data: (c) => c,
-          orElse: () => greyLighter,
-        );
+        final autoColor = ref.watch(partyStatusColorProvider);
         final effectiveBorderColor =
-        (borderColor == null)
+          (borderColor == null)
             ? autoColor
             : (borderColor ?? transparent);
         final hasBorder =
-            borderWidth > 0 && effectiveBorderColor != transparent;
+          borderWidth > 0 && effectiveBorderColor != transparent;
 
         // 3) Build the avatar core
         Widget avatar = _buildAvatar(
@@ -186,7 +158,7 @@ class ProfilePictureAvatar extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: effectiveBorderColor, width: borderWidth),
+                color: effectiveBorderColor, width: borderWidth),
             ),
             child: avatar,
           );
@@ -202,6 +174,7 @@ class ProfilePictureAvatar extends StatelessWidget {
     );
   }
 
+  // Replace your _handleTap with this:
   Future<void> _handleTap(
       BuildContext context, {
         required String? effectiveImageUrl,
@@ -210,75 +183,55 @@ class ProfilePictureAvatar extends StatelessWidget {
     // 1) Do the intended action first (open drawer, navigate, etc.)
     onTap?.call();
 
-    // 2) If there is no image: show snack (with cooldown), unless disabled.
-    if (!_hasCandidateImage(effectiveImageUrl)) {
-      final ok = await _shouldPrompt( // prompt every hour; can be forced
-        cooldown: promptCooldown,
-        cooldownKey: effectiveCooldownKey,
-        force: forcePrompt,
-      );
-      if (!ok) return;
+    // 2) Respect the "no prompt" switch
+    if (disablePrompt) return;
 
-      OwlSnack.show(
-        context,
-        title: snackTitle,
-        message: snackMessage,
-        actionLabel: onAddImage != null ? snackActionLabel : null,
-        onAction: onAddImage,
-        // dismissible by swipe; short default duration (customize if you want)
-        duration: const Duration(seconds: 5),
-      );
-    }
+    // 3) Only prompt when there's no image at all (http/gs/storage path or empty)
+    if (_hasCandidateImage(effectiveImageUrl)) return;
+
+    // 5) Show your popup
+    await _showAddImagePopup(
+      context,
+      title: popupTitle,
+      message: popupMessage,
+      onAction: onAddImage,
+    );
   }
 
-  static Future<bool> _shouldPrompt({
-    required Duration cooldown,
-    required String? cooldownKey,
-    required bool force,
-  }) async {
-    if (force) return true;
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'pp_prompt_ts_${cooldownKey ?? 'global'}';
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final last = prefs.getInt(key) ?? 0;
-    if (last != 0 && (now - last) < cooldown.inMilliseconds) return false;
-    await prefs.setInt(key, now); // record that we asked now
-    return true;
-    // Note: this treats “just showed” as “asked”. If user uploads → great.
-    // If user dismisses → we still respect cooldown (your requirement).
-  }
-
-  void _showAddImageSheet(BuildContext context) {
-    showModalBottomSheet<void>(
+// Add this helper in the same class (below _handleTap is fine)
+  static Future<void> _showAddImagePopup(
+      BuildContext context, {
+        required String title,
+        String? message,
+        VoidCallback? onAction,
+      }) {
+    return showDialog<void>(
       context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      barrierDismissible: true,
+      builder: (_) => PopupDialogDefault(
+        title: title,
+        children: [
+          if ((message ?? '').isNotEmpty)
+            Text(message!, style: Styles.popupText),
+          const SizedBox(height: 12),
+          Row(
             children: [
-              ListTile(
-                leading: const Icon(Icons.add_a_photo_outlined),
-                title: const Text('Add image'),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  onAddImage?.call();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.close),
-                title: const Text('Cancel'),
-                onTap: () => Navigator.of(ctx).pop(),
+              Expanded(
+                child: OwlButton(
+                  onPressed: () => Navigator.of(context).pop(), //TODO upload image.
+                  label: 'Upload',
+                ),
               ),
             ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
+
+// Keep this helper; it just checks "is a non-empty path/URL provided?"
+  static bool _hasCandidateImage(String? url) => (url ?? '').trim().isNotEmpty;
+
 
   /// Builds avatar with either:
   /// - explicit [imageProvider],
@@ -303,7 +256,8 @@ class ProfilePictureAvatar extends StatelessWidget {
           errorBuilder: (context, error, stack) => _placeholder(radius, context),
         ),
       );
-    } else if (_hasCandidateImage(effectiveImageUrl)) {
+    }
+    else if (_hasCandidateImage(effectiveImageUrl)) {
       // Use your CustomNetworkImage: accepts http(s)/gs:///paths and caches
       content = ClipOval(
         child: SizedBox(
@@ -317,7 +271,8 @@ class ProfilePictureAvatar extends StatelessWidget {
           ),
         ),
       );
-    } else {
+    }
+    else {
       // No image candidate → placeholder
       content = _placeholder(radius, context);
     }
@@ -327,9 +282,6 @@ class ProfilePictureAvatar extends StatelessWidget {
       child: content,
     );
   }
-
-  // Treat any non-empty path as a candidate (Storage paths won't be http(s) yet).
-  static bool _hasCandidateImage(String? url) => (url ?? '').trim().isNotEmpty;
 
   Widget _placeholder(double radius, BuildContext context) {
     if (!showOnlyInitials) {
@@ -342,8 +294,8 @@ class ProfilePictureAvatar extends StatelessWidget {
     // Initials (either explicit or derived from nothing = empty)
     final value = (initials ?? '').trim();
     final safe = value.isEmpty
-        ? ''
-        : value.split(RegExp(r'\s+')).take(2).map((w) => w[0]).join().toUpperCase();
+      ? ''
+      : value.split(RegExp(r'\s+')).take(2).map((w) => w[0]).join().toUpperCase();
 
     return Center(
       child: Text(

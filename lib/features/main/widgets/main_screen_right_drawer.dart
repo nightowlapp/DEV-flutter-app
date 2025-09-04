@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/features/main/widgets/utility/city_now_section_right_drawer.dart';
 import 'package:nightowlcode/features/main/widgets/utility/favorites_section_right_drawer.dart';
@@ -44,12 +45,10 @@ class MainScreenRightDrawer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   GestureDetector(
-                    onTap: () => context.goScreen(MainScreenName.profile), // <— typed, DRY
+                    // onTap: () => Navigator.of(context).pop(),
+                        // context.goScreen(MainScreenName.profile), // <— typed, DRY //TODO only if profile pic.
                     child: ProfilePictureAvatar(
                       size: PlatformConfig.width(context) * 0.15,
-                      borderWidth: 2,
-                      tooltip: 'My Profile',
-                      heroTag: 'profile-avatar',
                     ),
                   ),
                 ],
@@ -57,10 +56,10 @@ class MainScreenRightDrawer extends StatelessWidget {
 
               const SizedBox(height: verticalSpacerMedium),
 
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [PartyStatusIndicator(),
-                ]),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: PartyStatusIndicator(),
+              ),
 
               const Divider(color: owlOrange),
               const SizedBox(height: verticalSpacerSmall),

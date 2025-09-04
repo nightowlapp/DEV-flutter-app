@@ -49,9 +49,6 @@ class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {@override
               ProfilePictureAvatar( //TODO Friend
                 imageUrl: 'assets/nightowl/test.png',
                 size: PlatformConfig.width(context) * 0.15,
-                borderWidth: 2,
-                tooltip: 'My Profile',
-                heroTag: 'profile-avatar',
               ),
             ],
           ),
