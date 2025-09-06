@@ -7,6 +7,7 @@ import 'package:nightowlcode/features/explore/utility/venue_ranker.dart';
 import 'package:nightowlcode/features/explore/utility/venue_ranker_prefs.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
+import '../../../core/storage/app_storage.dart';
 import '../../../data/repositories/venues/venue_media_adapter.dart';
 import '../../../data/services/location/location_controller.dart';
 import '../../../data/services/media_existence.dart';
@@ -35,52 +36,49 @@ final _venueRankerProvider = Provider<VenueRanker>((ref) {
 });
 
 class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> {
-  RankedVenuesNotifier(this.ref) : super(const AsyncLoading()) {
+  RankedVenuesNotifier(this.ref)
+      : _svc = VenueMediaService(
+    MediaExistence(prefs: ref.read(sharedPrefsProvider)), // central prefs
+  ),
+        super(const AsyncLoading()) {
     _init();
   }
 
   final Ref ref;
+  final VenueMediaService _svc; // use this everywhere
+
   StreamSubscription<List<Venue>>? _venuesSub;
   StreamSubscription<MapEntry<String, VenueMediaHealth>>? _mediaSub;
   List<Venue> _venues = [];
   Map<String, VenueMediaHealth> _media = {};
   Map<String, String> _lastMediaKey = {};
   LatLng? _userLoc;
-  final _ranker = const VenueRanker();
-  final _svc = VenueMediaService(MediaExistence());
 
   void _init() {
-    // Listen to venues stream
     _venuesSub = ref.watch(allVenuesStreamProvider.stream).listen(
           (venues) {
-        print('Venues received: ${venues.length}');
         _venues = venues;
         _updateState();
         _probeMedia(venues);
       },
-      onError: (e, stack) {
-        print('Firestore venues error: $e\n$stack');
-        state = AsyncError(e, stack);
-      },
+      onError: (e, stack) => state = AsyncError(e, stack),
     );
 
-    // Listen to location changes
     ref.listen(currentLatLngProvider, (_, asyncLoc) {
       asyncLoc.when(
         data: (loc) {
-          if (_hasMoved(_userLoc, loc, minMeters: 25)) {
+          if (_hasMoved(_userLoc, loc, minMeters: 10)) {
             _userLoc = loc;
             _updateState();
           }
         },
-        error: (e, stack) => print('Location error: $e\n$stack'),
+        error: (e, s) {},
         loading: () {},
       );
     });
 
-    // Listen to ranker rules/prefs changes
     ref.listen(rankerRulesProvider, (_, __) => _updateState());
-    ref.listen(userPrefsProvider, (_, __) => _updateState());
+    ref.listen(userPrefsProvider,   (_, __) => _updateState());
   }
 
   void _updateState() {

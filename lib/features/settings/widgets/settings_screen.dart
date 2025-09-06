@@ -22,7 +22,7 @@ class SettingsScreen extends StatefulWidget {
 // // start immediately; don't block UI
 // unawaited(() async {
 // final url = await ref.read(storageRepositoryProvider)
-//     .uploadUserProfileImage(uid: uid, file: file);
+//     .uploadUserProfilePicture(uid: uid, file: file);
 // ref.read(signUpDraftProvider.notifier).setRemotePhoto(url);
 // }());
 //

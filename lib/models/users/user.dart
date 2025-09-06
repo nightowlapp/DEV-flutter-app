@@ -354,3 +354,7 @@ class User {
     return a == b;
   }
 }
+
+extension UserX on User {
+  bool get hasProfilePicture => (profilePictureUrl?.trim().isNotEmpty ?? false);
+}

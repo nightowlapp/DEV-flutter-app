@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nightowlcode/core/platform_config.dart';
+import 'package:nightowlcode/shared/constants/colors.dart';
 import '../../../../shared/constants/styles.dart';
 import '../../../../shared/constants/values.dart';
 
@@ -16,13 +18,17 @@ class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-      Stack(
-      children: [
-          Text('Copenhagen Now', style: Styles.boldText),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text("1002"),
-          ),],),
+          Stack(
+            children: [
+              SizedBox(width: PlatformConfig.width(context) * 0.25,
+                child: Text('Copenhagen Now', style: Styles.boldText),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text("91002", style: Styles.basicText.copyWith(color: owlOrange),),
+              )
+            ],
+          ),
           const SizedBox(height: verticalSpacerSmall),
           const Expanded(child: _CityList()),
         ],
@@ -46,7 +52,7 @@ class _CityListState extends State<_CityList> {
         const SliverToBoxAdapter(child: SizedBox(height: verticalSpacerSmall)),
         SliverList(
           delegate: SliverChildBuilderDelegate(
-                (context, i) {
+            (context, i) {
               if (i >= 39) return null;
               if (i.isOdd) return const SizedBox(height: verticalSpacerMedium);
               final itemIndex = i ~/ 2;

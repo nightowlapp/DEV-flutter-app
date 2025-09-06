@@ -4,8 +4,10 @@ import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_snack.dart';
 
 import '../../../../shared/constants/icons.dart';
+import '../../../../shared/reusable/ui/popup_dialog_default.dart';
 
 /// Refer-a-friend section for the LEFT drawer
 /// - Same header style (centered title + left icon)
@@ -61,7 +63,7 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
               // - uses (maxWidth - padding) so it never overflows horizontally
               // - leaves vertical space for buttons/text
               const double pad = allSidePaddingDefault * 2;
-              final double maxSide = (constraints.maxWidth - pad).clamp(80.0, 2048.0);
+              final double maxSide = (constraints.maxWidth - pad).clamp(80.0, 2048.0)/2;
 
               return Container(
                 padding: const EdgeInsets.all(allSidePaddingDefault),
@@ -122,12 +124,11 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
               label: 'Copy Link',
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _inviteLink));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Link copied'),
-                    backgroundColor: owlOrange.withOpacity(.9),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+                OwlSnack.show(
+                    context, title: 'Link Copied',
+                message: '$_inviteLink is copied to clipholder.',
+                variant: OwlSnackVariant.success,
+                  duration: const Duration(seconds: 5),
                 );
               },
             ),
@@ -139,6 +140,7 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
   void _showQrFullscreen(BuildContext context, String link) {
     // Move UP by 12% of screen height (negative dy = up)
     final double dy = -PlatformConfig.height(context) * 0.14;
+    // PopupDialogDefault(title: 'Scan to join NightOwl', children: [],); //TODO make popup in here:
 
     showDialog(
       context: context,
@@ -151,7 +153,7 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
             side: const BorderSide(color: grey, width: 0.7),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(allSidePaddingDefault*1.5),
+            padding: const EdgeInsets.all(allSidePaddingDefault * 1.5),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -167,7 +169,6 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
                   data: link,
                   size: PlatformConfig.width(context) * 0.85,
                 ),
-
 
                 SelectableText(
                   link,
@@ -231,7 +232,9 @@ class _SmallOutlinedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return SizedBox(
+      width: PlatformConfig.width(context)*0.35,
+        child: OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: white,
@@ -243,6 +246,6 @@ class _SmallOutlinedButton extends StatelessWidget {
       ),
       icon: Icon(icon, size: iconSizeDefault, color: owlOrange),
       label: Text(label),
-    );
+    ));
   }
 }

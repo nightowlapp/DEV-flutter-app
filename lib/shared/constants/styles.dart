@@ -80,7 +80,7 @@ class Styles {
     decoration: TextDecoration.underline,
     decorationColor: blue,
     decorationThickness: 1.6,
-    decorationStyle: TextDecorationStyle.wavy,
+    decorationStyle: TextDecorationStyle.dashed,
     letterSpacing: 3.5
   );
 

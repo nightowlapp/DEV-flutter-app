@@ -17,7 +17,6 @@ import '../../main/widgets/main_app_bar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenUIState();
 }
@@ -31,30 +30,26 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _mailPhoneInputController.dispose();
     _passwordInputController.dispose();
     super.dispose();
   }
 
+  // ✅ sync instance, async write
   Future<void> _saveStayLoggedIn() async {
-    final prefs = await ref.read(sharedPrefsFutureProvider.future);
+    final prefs = ref.read(sharedPrefsProvider);
     await prefs.setBool('stayLoggedIn', _stayLoggedIn);
   }
 
   void _recomputeCanContinue() {
     setState(() {
-        _canContinue = _mailPhoneInputController.text.isNotEmpty &&
-          _mailPhoneInputController.text.length > 3 &&
-          _passwordInputController.text.isNotEmpty &&
-          _passwordInputController.text.length > 5;
-      }
-    );
+      _canContinue =
+          _mailPhoneInputController.text.isNotEmpty &&
+              _mailPhoneInputController.text.length > 3 &&
+              _passwordInputController.text.isNotEmpty &&
+              _passwordInputController.text.length > 5;
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -67,21 +62,14 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
         _passwordInputController.text,
       );
       await _saveStayLoggedIn();
-      if (mounted) {
-        context.goScreen(MainScreenName.explore);
-      }
-    }
-    catch (e) {
+      if (mounted) context.goScreen(MainScreenName.explore);
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text('Login failed: $e'), behavior: SnackBarBehavior.floating),
         );
       }
-    }
-    finally {
+    } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }

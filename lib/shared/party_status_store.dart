@@ -1,13 +1,12 @@
-// lib/shared/party_status_store.dart
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:nightowlcode/shared/constants/enums.dart';
 import '../data/repositories/users/party_status_repository.dart';
 
-/// Public so other files can compute the same “day key”.
+/// Computes a day-key with an 08:00 boundary.
 String partyStatusDayKey(DateTime now) {
-  final d = now.subtract(const Duration(hours: 8)); // 08:00 boundary
+  final d = now.subtract(const Duration(hours: 8));
   return '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
@@ -47,14 +46,14 @@ class SharedPrefsPartyStatusStore implements PartyStatusStore {
     if (storedDay != currentDay) {
       await _prefs.setString(_kVal, PartyStatusTypes.still_planning.name);
       await _prefs.setString(_kDay, currentDay);
-      // NOTE: do NOT touch kPartyStatusAnsweredDayKey here.
+      // Do NOT touch kPartyStatusAnsweredDayKey here.
       return PartyStatusTypes.still_planning;
     }
 
     try {
       return PartyStatusTypes.values.firstWhere((e) => e.name == stored);
     } catch (_) {
-      return PartyStatusTypes.still_planning;
+
     }
   }
 
@@ -69,15 +68,14 @@ class SharedPrefsPartyStatusStore implements PartyStatusStore {
     await _prefs.setString(_kVal, value.name);
     await _prefs.setString(_kDay, currentDay);
 
-    // Mark “answered today” only when user picked something manually.
-    if (change == PartyStatusChange.manual || change == PartyStatusChange.values) { //Any change.
+    // Mark answered ONLY for manual (user-driven) changes.
+    if (change == PartyStatusChange.manual) {
       await _prefs.setString(kPartyStatusAnsweredDayKey, currentDay);
     }
   }
 }
 
-/* ---------- Firestore-backed (unchanged except calling recordStatus) ---------- */
-
+/* ---------- Firestore-backed ---------- */
 class FirestorePartyStatusStore implements PartyStatusStore {
   FirestorePartyStatusStore(this.repo, this.local);
   final PartyStatusRepository repo;
@@ -85,14 +83,22 @@ class FirestorePartyStatusStore implements PartyStatusStore {
 
   @override
   Future<PartyStatusTypes?> loadStatus() async {
-    final cached = await local.loadStatus();
-    try {
-      final cloud = await repo.loadCurrentStatus();
-      if (cloud != null) await local.saveStatus(cloud);
-      return cloud ?? cached;
-    } catch (_) {
-      return cached;
+    final now = DateTime.now();
+    final storedDay = local._prefs.getString(SharedPrefsPartyStatusStore._kDay);
+    final currentDay = partyStatusDayKey(now);
+    final needsReset = storedDay != null && storedDay != currentDay;
+
+    if (needsReset) {
+      await saveStatus(
+        PartyStatusTypes.still_planning,
+        change: PartyStatusChange.automatic,
+        writeToCloud: false,
+      );
+      return PartyStatusTypes.still_planning;
     }
+
+    final status = await local.loadStatus() ?? PartyStatusTypes.still_planning;
+    return status;
   }
 
   @override
@@ -104,9 +110,11 @@ class FirestorePartyStatusStore implements PartyStatusStore {
       }) async {
     await local.saveStatus(value, change: change);
     if (writeToCloud) {
-      // ignore: unawaited_futures
-      repo.recordStatus(
-        status: value, change: change, position: position, now: DateTime.now(),
+      await repo.recordStatus(
+        status: value,
+        change: change,
+        position: position,
+        now: DateTime.now(),
       );
     }
   }

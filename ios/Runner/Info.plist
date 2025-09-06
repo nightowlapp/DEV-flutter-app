@@ -56,6 +56,18 @@
     <array>
     <string>location</string>
     </array>
+    <!-- Required if the user picks from the photo library -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We use your photo library so you can choose a profile picture.</string>
+
+    <!-- Required only if you use the camera -->
+    <key>NSCameraUsageDescription</key>
+    <string>We use the camera so you can take a profile picture.</string>
+
+    <!-- Optional: only if you SAVE to the library (not needed for pick-only) -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>We save photos to your library at your request.</string>
+
 
 	</dict>
 </plist>

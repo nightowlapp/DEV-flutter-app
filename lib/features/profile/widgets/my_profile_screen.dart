@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/features/profile/presentation/change_profile_picture.dart';
 import 'package:nightowlcode/features/profile/widgets/timeline_section.dart';
 import 'package:nightowlcode/features/profile/widgets/visits_section.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
@@ -38,6 +39,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                   // Avatar
                   ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25,),
                   const SizedBox(width: horizontalSpacerDefault,),
+
                   // Full name and username
                   Expanded(
                     child: FittedBox( // TODO make "as big as possilbe" but auto scale if too big.

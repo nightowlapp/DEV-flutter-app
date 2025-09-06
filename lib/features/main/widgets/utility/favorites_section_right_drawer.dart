@@ -35,12 +35,12 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
     final Color limitColor = brand;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ---- Header: centered title + right aligned count ----
         Stack(
           children: [
-            Center(child: Text('Favorites', style: Styles.boldText.copyWith(fontSize: 15))),
+            Center(child: Text('Favorites', style: Styles.boldText)),
             Positioned(
               right: 0,
               child: RichText(
@@ -104,13 +104,13 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                   children: List.generate(slots, (i) {
                     if (i >= list.length) {
                       // Empty slot to keep a consistent “minSlots” width
-                      return const SizedBox(width: logoSize + itemPad, height: 50);
+                      return const SizedBox(width: itemPad, height: 50);
                     }
 
                     final v = list[i];
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: itemPad),
+                      padding: const EdgeInsets.symmetric(horizontal: itemPad/2),
                       child: venueLogo(
                         venue: v,
                         size: logoSize,

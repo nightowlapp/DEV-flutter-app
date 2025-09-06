@@ -5,6 +5,19 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <!-- Optional: only if you use the camera source -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Android 13+ (API 33+): if you ever access images directly via MediaStore.
+     image_picker usually doesn't need this for ACTION_GET_CONTENT,
+     but add it if you see permission errors on some OEMs. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Android 12 and below fallback (ignored on 33+).  -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
 <!--    Maybe use foreground? But not now.-->
 <!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
 <!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>-->

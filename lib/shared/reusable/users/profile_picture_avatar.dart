@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
@@ -12,9 +11,8 @@ import 'package:nightowlcode/shared/utility/custom_network_image.dart'; // ← y
 
 // Providers (SSOT): current user + status color
 import 'package:nightowlcode/data/other_providers.dart' show authUserProvider; // model.User?
-import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart'
-  show partyStatusColorProvider;
-
+import '../../../data/providers/party_status/party_status_provider.dart';
+import '../../../features/profile/presentation/change_profile_picture.dart';
 import '../ui/popup_dialog_default.dart';
 
 
@@ -176,10 +174,10 @@ class ProfilePictureAvatar extends StatelessWidget {
 
   // Replace your _handleTap with this:
   Future<void> _handleTap(
-      BuildContext context, {
-        required String? effectiveImageUrl,
-        required String effectiveCooldownKey,
-      }) async {
+    BuildContext context, {
+      required String? effectiveImageUrl,
+      required String effectiveCooldownKey,
+    }) async {
     // 1) Do the intended action first (open drawer, navigate, etc.)
     onTap?.call();
 
@@ -198,28 +196,44 @@ class ProfilePictureAvatar extends StatelessWidget {
     );
   }
 
-// Add this helper in the same class (below _handleTap is fine)
+  // Add this helper in the same class (below _handleTap is fine)
   static Future<void> _showAddImagePopup(
-      BuildContext context, {
-        required String title,
-        String? message,
-        VoidCallback? onAction,
-      }) {
+    BuildContext context, {
+      required String title,
+      String? message,
+      VoidCallback? onAction, // keep if you want, but we’ll call changeProfilePicture
+    }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (dialogCtx) => PopupDialogDefault(
         title: title,
         children: [
           if ((message ?? '').isNotEmpty)
-            Text(message!, style: Styles.popupText),
+          Text(message!, style: Styles.popupText),
           const SizedBox(height: 12),
+          // inside ProfilePictureAvatar._showAddImagePopup(...)
           Row(
             children: [
               Expanded(
-                child: OwlButton(
-                  onPressed: () => Navigator.of(context).pop(), //TODO upload image.
-                  label: 'Upload',
+                child: Builder( // ensure a context under the dialog
+                  builder: (dialogBtnCtx) {
+                    return Consumer(
+                      builder: (context, ref, _) {
+                        return OwlButton( // TODO Unesseary many places. Just go straight to upload.
+                          label: 'Upload',
+                          onPressed: () async {
+                            // stable container from the dialog context
+                            final container = ProviderScope.containerOf(dialogBtnCtx, listen: false);
+                            // close dialog first
+                            Navigator.of(dialogCtx, rootNavigator: true).pop();
+                            // run async work using the container (no disposed-ref issues)
+                            await changeProfilePictureWithContainer(context, container);
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -229,9 +243,8 @@ class ProfilePictureAvatar extends StatelessWidget {
     );
   }
 
-// Keep this helper; it just checks "is a non-empty path/URL provided?"
+  // Keep this helper; it just checks "is a non-empty path/URL provided?"
   static bool _hasCandidateImage(String? url) => (url ?? '').trim().isNotEmpty;
-
 
   /// Builds avatar with either:
   /// - explicit [imageProvider],

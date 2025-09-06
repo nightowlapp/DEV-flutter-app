@@ -60,6 +60,6 @@ final canContinueFirstStepProvider = Provider<bool>((ref) {
 /// Public provider
 final signUpDraftProvider =
 StateNotifierProvider<SignUpDraftNotifier, SignUpDraft>((ref) {
-  final prefs = ref.watch(sharedPrefsProvider);
+  final prefs = ref.watch(sharedPrefsProvider);        // central instance
   return SignUpDraftNotifier(prefs);
 });

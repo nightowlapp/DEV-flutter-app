@@ -79,7 +79,7 @@ class MapStyle {
       await style.addLayer(CircleLayer(id: lyrClusters, sourceId: srcVenuesClusterable));
       await style.setStyleLayerProperty(lyrClusters, 'filter', jsonEncode(['has', 'point_count']));
       await style.setStyleLayerProperty(lyrClusters, 'circle-color',
-        jsonEncode(['step', ['get', 'point_count'], darkOrange.toHex(), 25, lightOrange.toHex(), 100, owlOrange.toHex(), maxSizeCluster, promoFg.toHex()]));
+        jsonEncode(['step', ['get', 'point_count'], mapDarkOrange.toHex(), 25, mapLightOrange.toHex(), 100, owlOrange.toHex(), maxSizeCluster, promoFg.toHex()]));
       await style.setStyleLayerProperty(lyrClusters, 'circle-radius',
         jsonEncode(['step', ['get', 'point_count'], 20, 25, 25, 100, 30, maxSizeCluster, 40]));
       await style.setStyleLayerProperty(lyrClusters, 'circle-stroke-width', 0.0);
@@ -129,7 +129,7 @@ class MapStyle {
           ]));
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-size', 1.0);
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-halo-color',
-        jsonEncode(['case', ['==', ['get', 'isOpenNow'], true], mapOpenGreen.toHex(), mapClosedRed.toHex()]));
+        jsonEncode(['case', ['==', ['get', 'isOpenNow'], true], mapGreen.toHex(), mapRed.toHex()]));
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-halo-width', 2.0);
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-allow-overlap', true);
     }
@@ -184,7 +184,7 @@ class MapStyle {
           ]));
       await style.setStyleLayerProperty(lyrVip, 'icon-size', 1.5);
       await style.setStyleLayerProperty(lyrVip, 'icon-halo-color',
-        jsonEncode(['case', ['==', ['get', 'isOpenNow'], true], mapOpenGreen.toHex(), mapClosedRed.toHex()]));
+        jsonEncode(['case', ['==', ['get', 'isOpenNow'], true], mapGreen.toHex(), mapRed.toHex()]));
       await style.setStyleLayerProperty(lyrVip, 'icon-halo-width', 3.0);
       await style.setStyleLayerProperty(lyrVip, 'icon-allow-overlap', true);
     }
@@ -214,12 +214,14 @@ class MapStyle {
     // circle-opacity: 1.0 - Fully opaque.
     // circle-stroke-color: black - Black border.
     // circle-stroke-width: 1.5px.
+    // Color color =  ref.watch(partyStatusColorProvider);// TODO friend border right color.
+    const friendPartyStatusColor = green;
     if (!await style.styleLayerExists(lyrFriendDots)) {
       await style.addLayer(CircleLayer(id: lyrFriendDots, sourceId: srcFriends));
-      await style.setStyleLayerProperty(lyrFriendDots, 'circle-color', friendTeal.toHex());
+      await style.setStyleLayerProperty(lyrFriendDots, 'circle-color', friendColor.toHex());
       await style.setStyleLayerProperty(lyrFriendDots, 'circle-radius', 10.0);
       await style.setStyleLayerProperty(lyrFriendDots, 'circle-opacity', 1.0);
-      await style.setStyleLayerProperty(lyrFriendDots, 'circle-stroke-color', black.toHex());
+      await style.setStyleLayerProperty(lyrFriendDots, 'circle-stroke-color', friendPartyStatusColor.toHex());
       await style.setStyleLayerProperty(lyrFriendDots, 'circle-stroke-width', 1.5);
     }
 

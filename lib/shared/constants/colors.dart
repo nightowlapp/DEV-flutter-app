@@ -3,43 +3,45 @@ import 'package:flutter/material.dart';
 
 //Core
 const owlOrange = Color(0xFFE87701);
+const blue = Colors.blue;
+const adminColor = Colors.pinkAccent ?? Color(0xFF0137E8);
+
 const black = Colors.black;
 const white = Colors.white;
 const grey = Color.fromRGBO(66, 66, 66, 1);
 const transparent = Colors.transparent;
 
-const adminColor = Color(0xFF0137E8);
-
 // Status colors
 const green = Colors.green;
-const blue = Colors.blue;
 const purple = Colors.purple;
 const red = Colors.red; // accent? confuse wiht orange? TODO
 const yellow = Colors.yellow;
 const greyLighter = Colors.grey;
 
+// Map colors
+// const venueColor
+const friendColor = Colors.teal;
+
+const mapLightOrange = Color(0xFF78350F);
+const mapDarkOrange = Color(0xFF33130A);
+const mapGreen = Color(0xFF2ECC71);          // #2ECC71
+const mapRed = Color(0xFFE74C3C);          // #E74C3C
+
 const TEST = Colors.pink;
 
-// Map colors
-const lightOrange = Color(0xFF78350F);
-const darkOrange = Color(0xFF33130A);
+// const lighterBlack = Color.fromARGB(221, 184, 178, 178);
+// const owlOrange = Colors.deepOrangeAccent;
+// const owlPurple = Colors.deepPurple;
+// const owlOrangeDark = Color(0x0AE87701); // owlOrange.opacity(0.04)
+
+
+// Core semantics
 
 const mapGrey555 = Color(0xFF555555);            // #555555
 const onHoldBg = Color(0xFF2E1A09);
 const degradedBg = Color(0xFF3A1D0F);
-const mapOpenGreen = Color(0xFF2ECC71);          // #2ECC71
-const mapClosedRed = Color(0xFFE74C3C);          // #E74C3C
 const technoBg = Color(0xFF0F1029);
-const friendTeal = Colors.teal;                  // #009688
 
-// const lighterBlack = Color.fromARGB(221, 184, 178, 178);
-// const owlOrange = Colors.deepOrangeAccent;
-// const grey = Colors.blueGrey;
-// const owlPurple = Colors.deepPurple;
-const owlOrangeDark = Color(0x0AE87701); // owlOrange.opacity(0.04)
-
-
-// Core semantics
 const successBg = Color(0xFF064E3B);
 const successFg = Color(0xFF34D399);
 

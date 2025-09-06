@@ -1,4 +1,3 @@
-// lib/data/party_status/party_status_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:geolocator/geolocator.dart';
@@ -21,7 +20,7 @@ class PartyStatusRepository {
     return u.uid;
   }
 
-  /// Day id like "2025-09-03" in the user's *local* time.
+  /// Day id like "2025-09-03" in the user's *local* time (midnight boundary for DB grouping).
   String dayId(DateTime localNow) {
     final d = DateTime(localNow.year, localNow.month, localNow.day);
     return '${d.year.toString().padLeft(4, '0')}-'
@@ -74,30 +73,23 @@ class PartyStatusRepository {
       'updated_at': FieldValue.serverTimestamp(),
     });
 
-    // final dayDoc = _db.collection(DocumentPaths.users).doc(uid) //  latest TODO needed?
-    //     .collection(DocumentPaths.partyStatusDays).doc(day);
-    // batch.set(dayDoc, {
-    //   'latest': {
-    //     'party_status': status.name,
-    //     'change': change.name,
-    //     'created_at': FieldValue.serverTimestamp(),
-    //   }
-    // }, SetOptions(merge: true));
-
-
     await batch.commit();
   }
 
-  /// Read the mirrored latest status from user root.
-  Future<PartyStatusTypes?> loadCurrentStatus() async {
+  /// Read the mirrored latest status + timestamp from user root.
+  Future<CurrentPartyStatus> loadCurrent() async {
     final uid = _uid();
     final doc = await _db.collection(DocumentPaths.users).doc(uid).get();
     final raw = doc.data()?['current_party_status'] as String?;
-    if (raw == null || raw.isEmpty) return null;
-    return PartyStatusTypes.values.firstWhere(
+
+    final status = (raw == null || raw.isEmpty)
+        ? null
+        : PartyStatusTypes.values.firstWhere(
           (e) => e.name == raw,
       orElse: () => PartyStatusTypes.still_planning,
     );
+
+    return CurrentPartyStatus(status!);
   }
 
   /// Stream today’s history if you need it.

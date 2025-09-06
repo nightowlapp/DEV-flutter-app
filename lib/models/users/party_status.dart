@@ -1,4 +1,3 @@
-// lib/data/party_status/party_status_models.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -58,4 +57,10 @@ class PartyStatusEntry {
     if (p == null) return (null, null);
     return (GeoPoint(p.latitude, p.longitude), p.accuracy);
   }
+}
+
+@immutable
+class CurrentPartyStatus {
+  final PartyStatusTypes status;
+  const CurrentPartyStatus(this.status);
 }

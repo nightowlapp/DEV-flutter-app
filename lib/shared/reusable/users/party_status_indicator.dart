@@ -1,4 +1,3 @@
-// lib/shared/reusable/users/party_status_indicator.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,9 +9,9 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
-
 import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../constants/styles.dart';
+import '../../constants/colors.dart';
 
 class PartyStatusIndicator extends ConsumerStatefulWidget {
   const PartyStatusIndicator({super.key});
@@ -22,10 +21,10 @@ class PartyStatusIndicator extends ConsumerStatefulWidget {
 }
 
 class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
-  with SingleTickerProviderStateMixin {
-  static const _cycleDuration = Duration(seconds: 12); // slow & subtle
+    with SingleTickerProviderStateMixin {
+  static const _cycleDuration = Duration(seconds: 9);
   static const double _minOpacity = 0.2;
-  static const double _maxOpacity = 0.8;
+  static const double _maxOpacity = 1.0;
 
   late final AnimationController _controller;
 
@@ -41,9 +40,8 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
     super.dispose();
   }
 
-  // Interpolate smoothly through the provider-supplied palette.
   Color _colorFromT(double t, List<Color> palette) {
-    if (palette.isEmpty) return Colors.grey;
+    if (palette.isEmpty) return greyLighter;
     final n = palette.length;
     final seg = ((t % 1.0) * n).floor();
     final a = palette[seg % n];
@@ -54,74 +52,74 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final status = ref.watch(partyStatusStateProvider);          // chosen status (fast)
-    final baseColor = ref.watch(partyStatusColorProvider);       // color for chosen status
+    final status = ref.watch(partyStatusStateProvider);
+    final baseColor = ref.watch(partyStatusColorProvider);
     final needsAnswer = ref.watch(partyStatusNeedsAnswerProvider);
-    final palette = ref.watch(partyStatusPulsePaletteProvider);  // colors to pulse through
+    final palette = ref.watch(partyStatusPulsePaletteProvider);
 
-
-    // Start/stop animation when "needsAnswer" changes.
+    // Listen in build (compatible with your Riverpod version)
     ref.listen<bool>(partyStatusNeedsAnswerProvider, (prev, next) {
-        if (next) {
-          if (!_controller.isAnimating) _controller.repeat();
-        }
-        else {
-          if (_controller.isAnimating) _controller.stop();
-        }
+      if (!mounted) return;
+      if (next) {
+        if (!_controller.isAnimating) _controller.repeat();
+      } else {
+        if (_controller.isAnimating) _controller.stop();
       }
-    );
+    });
 
-    // Ensure proper initial state on first build.
     if (needsAnswer && !_controller.isAnimating) {
       _controller.repeat();
-    }
-    else if (!needsAnswer && _controller.isAnimating) {
+    } else if (!needsAnswer && _controller.isAnimating) {
       _controller.stop();
     }
 
     return GestureDetector(
       onTap: () async {
         HapticFeedback.selectionClick();
-        final picked = await _showStatusDialog(context, ref: ref, initial: status);
-        if (picked == null) return;
 
-        // Snappy global update
+        final picked = await _showStatusDialog(context, ref: ref, initial: status);
+        if (!mounted || picked == null) return;
+
         ref.read(partyStatusStateProvider.notifier).state = picked;
 
-        // Persist (local + cloud)
-        final pos = await Geolocator.getCurrentPosition().catchError((_) => null);
+        Position? pos;
+        try { pos = await Geolocator.getCurrentPosition(); } catch (_) { pos = null; }
+        if (!mounted) return;
+
         final store = ref.read(partyStatusStoreProvider);
         await store.saveStatus(
           picked,
           change: PartyStatusChange.manual,
           position: pos,
         );
-        HapticFeedback.mediumImpact(); // TODO use more!
+
+        if (!mounted) return;
+        HapticFeedback.mediumImpact();
       },
       child: CircleAvatar(
         backgroundColor: Colors.transparent,
         radius: iconSizeDefault,
         child: needsAnswer
-          ? AnimatedBuilder(
-            animation: _controller,
-            builder: (_, __) {
-              final s = math.sin(2 * math.pi * _controller.value); // -1..1
-              final opacity = _minOpacity + (_maxOpacity - _minOpacity) * ((s + 1) / 2); // 0.2..0.8
-              final col = _colorFromT(_controller.value, palette).withOpacity(opacity);
-              return Icon(partyStatusIcon, size: iconSizeMedium, color: col);
-            },
-          )
-          : Icon(partyStatusIcon, size: iconSizeMedium, color: baseColor),
+            ? AnimatedBuilder(
+          animation: _controller,
+          builder: (_, __) {
+            final s = math.sin(2 * math.pi * _controller.value);
+            final opacity = _minOpacity + (_maxOpacity - _minOpacity) * ((s + 1) / 2);
+            final col = _colorFromT(_controller.value, palette).withOpacity(opacity);
+            return Icon(partyStatusIcon, size: iconSizeMedium, color: col);
+          },
+        )
+            : Icon(partyStatusIcon, size: iconSizeMedium, color: baseColor),
       ),
     );
   }
 }
 
 Future<PartyStatusTypes?> _showStatusDialog(
-  BuildContext context, {
-    required WidgetRef ref,
-    required PartyStatusTypes initial,
-  }) {
+    BuildContext context, {
+      required WidgetRef ref,
+      required PartyStatusTypes initial,
+    }) {
   return showDialog<PartyStatusTypes>(
     context: context,
     builder: (dialogCtx) => PopupDialogDefault(
@@ -129,20 +127,19 @@ Future<PartyStatusTypes?> _showStatusDialog(
       children: [
         for (final it in PartyStatusTypes.values)
           Builder(builder: (_) {
-              final color = ref.read(partyStatusColorForProvider(it));
-              final bg = color.withOpacity(0.14);
-              return ListTile(
-                selected: it == initial,
-                selectedTileColor: bg,
-                leading: Icon(partyStatusIcon, color: color, size: iconSizeDefault),
-                title: Text(Utility.formatString(it.name), style: Styles.popupText),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.of(dialogCtx).pop<PartyStatusTypes>(it);
-                },
-              );
-            }
-          ),
+            final color = ref.read(partyStatusColorForProvider(it));
+            final bg = color.withOpacity(0.2);
+            return ListTile(
+              selected: it == initial,
+              selectedTileColor: bg,
+              leading: Icon(partyStatusIcon, color: color, size: iconSizeDefault),
+              title: Text(Utility.formatString(it.name), style: Styles.popupText),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.of(dialogCtx).pop<PartyStatusTypes>(it);
+              },
+            );
+          }),
       ],
     ),
   );

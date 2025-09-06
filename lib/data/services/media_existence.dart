@@ -35,26 +35,24 @@ class _CacheEntry {
 /// Positive TTL 24h; negative TTL 10m (tunable).
 class MediaExistence {
   MediaExistence({
+    required SharedPreferences prefs,
     FirebaseStorage? storage,
-    SharedPreferences? prefs,
     Duration? positiveTtl,
     Duration? negativeTtl,
     int? maxEntries,
-  })  : _storage = storage ?? FirebaseStorage.instance,
+  })  : _prefs = prefs,
+        _storage = storage ?? FirebaseStorage.instance,
         _positiveTtl = positiveTtl ?? const Duration(hours: 24),
         _negativeTtl = negativeTtl ?? const Duration(minutes: 10),
-        _maxEntries = maxEntries ?? 512 {
-    _prefsFuture = prefs != null
-        ? SynchronousFuture(prefs)
-        : SharedPreferences.getInstance();
-  }
+        _maxEntries = maxEntries ?? 512;
 
+
+  final SharedPreferences _prefs;
   final FirebaseStorage _storage;
   final Duration _positiveTtl;
   final Duration _negativeTtl;
   final int _maxEntries;
 
-  late final Future<SharedPreferences> _prefsFuture;
   final _mem = <String, _CacheEntry>{};
   bool _loaded = false;
   static const _prefsKey = 'media_existence_cache_v1';
@@ -62,8 +60,7 @@ class MediaExistence {
   Future<void> _loadPrefs() async {
     if (_loaded) return;
     _loaded = true;
-    final prefs = await _prefsFuture;
-    final raw = prefs.getString(_prefsKey);
+    final raw = _prefs.getString(_prefsKey);
     if (raw == null || raw.isEmpty) return;
     try {
       final Map<String, dynamic> m = json.decode(raw);
@@ -75,7 +72,6 @@ class MediaExistence {
   }
 
   Future<void> _flushPrefs() async {
-    final prefs = await _prefsFuture;
     if (_mem.length > _maxEntries) {
       final now = DateTime.now().millisecondsSinceEpoch;
       final sorted = _mem.entries.sortedBy<num>((e) => (now - e.value.tsMillis));
@@ -85,7 +81,7 @@ class MediaExistence {
       }
     }
     final map = _mem.map((k, v) => MapEntry(k, v.toJson()));
-    await prefs.setString(_prefsKey, json.encode(map));
+    await _prefs.setString(_prefsKey, json.encode(map));
   }
 
   bool _looksLikeUrl(String s) =>
@@ -125,7 +121,7 @@ class MediaExistence {
     await _flushPrefs();
     return MediaExistenceResult(exists: true, downloadUrl: directUrl);
   }
-  
+
 
   /// Batch with limited concurrency.
   Future<Map<String, MediaExistenceResult>> checkAll(

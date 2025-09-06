@@ -40,7 +40,6 @@ Future<void> _preBoot() async {
   // ref.read(locationServiceProvider.notifier).initialize(context);
   TzUtils.ensureInitialized();
 
-  const InitTasks(child: NightOwlApp(),);
 
   // Fetch/sort already in init to figure out friends, venues and so on? todo
 
@@ -104,20 +103,19 @@ void bootstrap(Widget Function() builder) {
         return true; // tell engine we handled it
       };
 
-
-
       await _preBoot();
       // authStateChanges() TODO to stay signed in when login!.
 
       final prefs = await SharedPreferences.getInstance();
-      //TODO? Above
-
       runApp(ProviderScope(
           // child: AppLifecycleObserver(
-              overrides: [
-            sharedPrefsProvider.overrideWithValue(prefs),
-          ], child: builder()));
-    // );
+          overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
+        child: InitTasks(              // <-- MOUNT the initializer
+          child: builder(),
+        ),
+      )
+      );
+      // );
     }, (error, stack) {
       handleError(error, stack);
     }
@@ -146,13 +144,10 @@ class _InitTasksState extends ConsumerState<InitTasks> {
     super.initState();
     // database sync
     Future.microtask(() => ref.read(venuesSsoProvider.future));
-    Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
-    Future.microtask(() {ref.read(partyStatusAutoResetProvider);}); // Resets partyStatus at 08:00 e/d
 
-    // fire-and-forget: initialize google_sign_in v7 with proper IDs
-    Future.microtask(() async {
-      try { await ref.read(authRepositoryProvider).prewarmGoogle(); } catch (_) {}
-    });
+    Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
+    Future.microtask(() => ref.read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d
+
   }
 
   @override

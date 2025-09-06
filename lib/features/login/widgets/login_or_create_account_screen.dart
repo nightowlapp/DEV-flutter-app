@@ -11,31 +11,24 @@ import 'package:nightowlcode/shared/reusable/users/language_switcher.dart';
 
 import '../../../core/storage/app_storage.dart';
 import '../../main/widgets/main_app_bar.dart';
-
 enum StartDecision { loading, showLogin, goExplore }
 
-/// Reads SharedPreferences once and exposes the stayLoggedIn flag.
-final stayLoggedInProvider = FutureProvider<bool>((ref) async {
-  final prefs = await ref.watch(sharedPrefsFutureProvider.future);
-  return
-    // prefs.getBool('stayLoggedIn') ?? true;
-    true; // TODO TESTING.
+// ✅ sync prefs read
+final stayLoggedInProvider = Provider<bool>((ref) {
+  final prefs = ref.watch(sharedPrefsProvider);
+  return prefs.getBool('stayLoggedIn') ?? true;
 });
 
-/// Combines auth + stayLoggedIn to decide what to render.
+// ✅ combine auth (async) + stayLoggedIn (sync)
 final startDecisionProvider = Provider<StartDecision>((ref) {
-  final auth = ref.watch(authStateProvider);           // AsyncValue<User?>
-  final stay = ref.watch(stayLoggedInProvider);        // AsyncValue<bool>
+  final auth = ref.watch(authStateProvider); // AsyncValue<User?>
+  final stay = ref.watch(stayLoggedInProvider); // bool
 
-  if (auth.isLoading || stay.isLoading) return StartDecision.loading;
-
-  // If anything errors out, degrade gracefully to login screen (no flash).
-  if (auth.hasError || stay.hasError) return StartDecision.showLogin;
+  if (auth.isLoading) return StartDecision.loading;
+  if (auth.hasError)  return StartDecision.showLogin;
 
   final user = auth.value;
-  final s = stay.value ?? true;
-
-  if (user != null && s) return StartDecision.goExplore;
+  if (user != null && stay) return StartDecision.goExplore;
   return StartDecision.showLogin;
 });
 
@@ -44,7 +37,6 @@ class LoginOrCreateAccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Side-effect: navigate once the decision flips to goExplore.
     ref.listen<StartDecision>(startDecisionProvider, (prev, next) {
       if (next == StartDecision.goExplore) {
         context.goScreen(MainScreenName.explore);
@@ -53,12 +45,9 @@ class LoginOrCreateAccountScreen extends ConsumerWidget {
 
     final decision = ref.watch(startDecisionProvider);
 
-    // While deciding OR right before navigating, show loading (no login flash).
     if (decision == StartDecision.loading || decision == StartDecision.goExplore) {
       return const _LoadingScaffold();
     }
-
-    // Decided to show login/signup.
     return const _LoginBody();
   }
 }

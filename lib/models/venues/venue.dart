@@ -7,6 +7,11 @@ import '../../shared/utility/json_utility.dart';
 import '/shared/utility/utility.dart'; // Utility
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
+// TODO companyNumber as field (CVR)
+//TODO PDF barcard.
+//TODO default offer.
+
+
 // ---------- Enum (de)serializers ----------
 VenueType venueTypeFromString(String s) => VenueType.values.firstWhere(
       (e) => describeEnum(e).toLowerCase() == (s.trim().toLowerCase()),
@@ -53,6 +58,7 @@ class DaySchedule {
     this.openMinutes,
     this.closeMinutes,
     this.ageRestriction,
+    //TODO offer each day
     this.dressCode,
     this.entryPrice,
   }) : assert(isClosed || (openMinutes != null && closeMinutes != null && openMinutes != closeMinutes),

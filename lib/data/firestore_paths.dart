@@ -28,7 +28,11 @@ class DocumentPaths {
 
 class StoragePaths {
   static const venueImages = 'venue_images';
+
   static const userImages = 'user_images';
+  static const profilePicture = 'profile_picture';
+
+
   static const nightOwlImages = 'nightowl_images';
 
   static String venueImage(String venueId, String fileName) =>

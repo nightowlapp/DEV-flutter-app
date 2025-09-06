@@ -57,7 +57,6 @@ class RatingCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 6),
 
             // stars + small rating count (bottom-right)
             Expanded(

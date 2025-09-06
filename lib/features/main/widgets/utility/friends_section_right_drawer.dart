@@ -26,7 +26,9 @@ class _FriendsSectionRightDrawerState extends State<FriendsSectionRightDrawer> {
             ),
           ],
         ),
+
         const SizedBox(height: verticalSpacerSmall),
+
         SizedBox(
           height: 50,
           child: ListView.separated(

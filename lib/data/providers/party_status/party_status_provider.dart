@@ -1,4 +1,3 @@
-// lib/data/providers/party_status/party_status_provider.dart
 import 'dart:async';
 import 'dart:ui';
 
@@ -32,7 +31,7 @@ final partyStatusStateProvider = StateProvider<PartyStatusTypes>(
   (ref) => PartyStatusTypes.still_planning,
 );
 
-// // ➋ Color derived from the in-memory status (sync)
+// ➋ Color derived from the in-memory status (sync)
 final partyStatusColorForProvider = Provider.family<Color, PartyStatusTypes>((ref, s) {
     switch (s) {
       case PartyStatusTypes.out_tonight: return green;
@@ -48,18 +47,24 @@ final partyStatusColorForProvider = Provider.family<Color, PartyStatusTypes>((re
 // ➌ One-time bootstrap to seed in-memory state from local store on app start
 final partyStatusBootstrapProvider = FutureProvider<void>((ref) async {
     final store = ref.watch(partyStatusStoreProvider);
-    final saved = await store.loadStatus() ?? PartyStatusTypes.still_planning;
-    ref.read(partyStatusStateProvider.notifier).state = saved;
+    final saved = await store.loadStatus();
+    ref.read(partyStatusStateProvider.notifier).state = saved!;
   }
 );
 
-// lib/data/providers/party_status/party_status_provider.dart
 final partyStatusAutoResetProvider = Provider<void>((ref) {
     Timer? t;
 
     DateTime _next8am(DateTime now) {
       final today8 = DateTime(now.year, now.month, now.day, 8);
       return now.isBefore(today8) ? today8 : today8.add(const Duration(days: 1));
+    }
+
+    DateTime _previous8am(DateTime now) {
+      final today8 = DateTime(now.year, now.month, now.day, 8);
+      return (now.isAfter(today8) || now.isAtSameMomentAs(today8))
+        ? today8
+        : today8.subtract(const Duration(days: 1));
     }
 
     // Declare a function variable first so _fire() can use it
@@ -70,10 +75,11 @@ final partyStatusAutoResetProvider = Provider<void>((ref) {
       ref.read(partyStatusStateProvider.notifier).state =
       PartyStatusTypes.still_planning;
 
-      // 2) persist locally only (no cloud write)
+      // 2) persist locally + cloud with automatic change
       final store = ref.read(partyStatusStoreProvider);
       await store.saveStatus(
         PartyStatusTypes.still_planning,
+        change: PartyStatusChange.automatic,
         writeToCloud: false,
       );
 
@@ -136,12 +142,11 @@ final partyStatusColorProvider = Provider<Color>((ref) {
 // (Interleave a neutral to make the pulse gentler.)
 final partyStatusPulsePaletteProvider = Provider<List<Color>>((ref) {
     final c = (PartyStatusTypes s) => ref.read(partyStatusColorForProvider(s));
-    const neutral = greyLighter;
     return <Color>[
-      c(PartyStatusTypes.out_tonight), neutral,
-      c(PartyStatusTypes.house_party), neutral,
-      c(PartyStatusTypes.pregame), neutral,
+      c(PartyStatusTypes.out_tonight),
+      c(PartyStatusTypes.house_party),
+      c(PartyStatusTypes.pregame),
+      c(PartyStatusTypes.still_planning),
     ];
   }
 );
-

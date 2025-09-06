@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/features/main/widgets/utility/city_now_section_right_drawer.dart';
@@ -9,9 +10,11 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/users/language_switcher.dart';
 
+import '../../../data/providers/users/profile_picture_provider.dart';
 import '../../../shared/constants/enums.dart';
 import '../../../shared/reusable/users/party_status_indicator.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
+import '../../profile/presentation/change_profile_picture.dart';
 
 
 class MainScreenRightDrawer extends StatelessWidget {
@@ -41,16 +44,34 @@ class MainScreenRightDrawer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ---------- TOP ----------
+              // Drawer snippet
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  GestureDetector(
-                    // onTap: () => Navigator.of(context).pop(),
-                        // context.goScreen(MainScreenName.profile), // <— typed, DRY //TODO only if profile pic.
-                    child: ProfilePictureAvatar(
-                      size: PlatformConfig.width(context) * 0.15,
-                    ),
-                  ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final hasPic = ref.watch(hasCurrentUserProfilePictureProvider);
+
+                      return ProfilePictureAvatar(
+                        size: PlatformConfig.width(context) * 0.15,
+
+                        // Let the avatar show its prompt only when there is NO picture:
+                        // (disablePrompt == true => no prompt)
+                        disablePrompt: hasPic, // hasPic -> no prompt; !hasPic -> prompt
+
+                        // Only handle the "hasPic" case here; for !hasPic the avatar will prompt.
+                        onTap: () async {
+                          // close drawer first, then act
+                          Scaffold.maybeOf(context)?.closeEndDrawer();
+
+                          if (hasPic) {
+                            context.goScreen(MainScreenName.profile);
+                          }
+                          // else do nothing here: avatar's _handleTap will open the upload popup
+                        },
+                      );
+                    },
+                  )
                 ],
               ),
 

@@ -8,6 +8,7 @@ import 'package:nightowlcode/data/repositories/users/auth/user_finalize_service.
 import 'package:nightowlcode/data/repositories/users/user_repository.dart';
 import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 import 'package:nightowlcode/data/repositories/venues/venue_repository.dart';
+import 'package:nightowlcode/data/services/users/profile_picture_service.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
 import 'package:nightowlcode/models/venues/venue.dart';
 
@@ -37,6 +38,12 @@ final authStateProvider = StreamProvider<fb.User?>(
 final userRepositoryProvider = Provider<UserRepository>(
       (ref) => UserRepository(ref.watch(firestoreProvider)),
 );
+
+
+final profilePictureServiceProvider = Provider<ProfilePictureService>((ref) {
+  return ProfilePictureService(ref.read(firebaseStorageProvider));
+});
+
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final cfg = AppConfig.current;
