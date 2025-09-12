@@ -201,7 +201,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
       ),
     );
   }
-u
+
   void _openStats() {
   }
 }
