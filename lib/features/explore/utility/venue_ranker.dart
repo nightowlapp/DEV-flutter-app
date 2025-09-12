@@ -36,6 +36,9 @@ class ScoreResult {
 
 // ========== TUNABLE RULES (all knobs in one place) ===========================
 class PointRules {
+
+  // final bool testing true; // TODO if here show the amount of points for transparency
+
   // --------- Global behavior ---------
   /// If true: venues that are NOT open now are pushed to the bottom (huge penalty).
   final bool showOnlyOpenNow;
@@ -47,6 +50,8 @@ class PointRules {
   // --------- Rating ---------
   /// e.g. 4.6★ -> round(4.6 * 2) = 9 points
   final int ratingPerStar;
+
+  // final SubscriptionTypesVenue subscriptionTypesVenue; // TODO Very important.
 
   /// Extra points based on rating volume (kept for flexibility)
   final List<Threshold> ratingCountTiers;
@@ -109,6 +114,8 @@ class PointRules {
     this.showOnlyOpenNow = true, // ✅ default: show open now
     this.preferPreferredTypesFirst = true,
     this.nonPreferredTypePenalty = -10000,
+
+    // if (this.subscriptionTypesVenue = SubscriptionTypesVenue.free),
 
     // Rating
     this.ratingPerStar = 2,

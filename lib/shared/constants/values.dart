@@ -13,6 +13,7 @@ const verticalSpacerMedium = 16.0;
 const verticalSpacerVeryBig = 32.0;
 
 const horizontalSpacerSmall = 4.0;
+const horizontalSpacerMedium = 8.0;
 const horizontalSpacerDefault = 12.0;
 const horizontalSpacerLarge = 16.0;
 
@@ -22,6 +23,7 @@ const iconSizeSmall = 15.0;
 const iconSizeDefault = 18.0;
 const iconSizeMedium = 24.0;
 const iconSizeLarge = 30.0;
+const iconSizeHuge = 50.0;
 
 const logoIcon = 40.0;
 

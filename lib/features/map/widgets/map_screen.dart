@@ -56,7 +56,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await _map!.location.updateSettings(
       LocationComponentSettings(
         enabled: true,
-        accuracyRingColor: owlOrange.value,
+        accuracyRingColor: blue.value,
         accuracyRingBorderColor: white.value,
         showAccuracyRing: true,
       ),
@@ -150,7 +150,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         mini: true, // 24
         tooltip: 'Center on user',
         onPressed: _centerOnUser,
-        child: Icon(locationIcon),
+        child: Icon(locationIcon,),
       ),
     );
   }

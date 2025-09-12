@@ -30,20 +30,7 @@ class MainBottomNavigationBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(s.icon, color: s == MainScreenName.admin ? adminColor : null),
             label: s.label,
-          )
-          // for (final s in tabs)
-          //   BottomNavigationBarItem(
-          //     icon: s == ScreenName.profile
-          //         ? const CircleAvatar(
-          //       radius: 12,
-          //       backgroundImage: AssetImage('assets/nightowl/test.png'),
-          //     )
-          //         : Icon(
-          //       s.icon,
-          //       color: s == ScreenName.admin ? adminColor : null,
-          //     ),
-          //     label: s.label,
-          //   ),
+          ),
       ],
       onTap: onTap,
     );

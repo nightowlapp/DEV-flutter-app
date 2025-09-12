@@ -66,12 +66,12 @@ class TimelineSection extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Text(leftCaption!, style: Styles.basicTextHeader),
+                child: Text(leftCaption!, style: Styles.basicText),
               ),
             ),
           Align(
             alignment: Alignment.center,
-            child: Text(title, style: Styles.basicTextHeader, textAlign: TextAlign.center),
+            child: Text(title, style: Styles.basicText, textAlign: TextAlign.center),
           ),
           if (rightCaption != null)
             Align(
@@ -83,7 +83,7 @@ class TimelineSection extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: onRightTap,
-                child: Text(rightCaption!, style: Styles.basicTextHeader),
+                child: Text(rightCaption!, style: Styles.basicText),
               ),
             ),
         ],

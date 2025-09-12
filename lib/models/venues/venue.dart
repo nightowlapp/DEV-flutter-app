@@ -113,7 +113,7 @@ class DaySchedule {
 // ---------- ExceptionHours (domain uses DateTime only) ----------
 
 @immutable
-class ExceptionHours {
+class ExceptionHours { // Used for special events?
   final DateTime date; // Y/M/D only
   final bool isClosed;
   final int? openMinutes;
@@ -232,6 +232,7 @@ class OpeningHours {
     return (exception.date == today)
         ? exception.ageRestriction
         : week[(localNow.weekday - 1) % 7].ageRestriction;
+    //TODO error in logic? Return defaultAge if no age.
   }
 
   DressCodeType? activeDressCode(DateTime localNow) {
@@ -480,7 +481,9 @@ class Venue {
   // ---------- Media ----------
   final String? logoUrl;
   final String? coverImageUrl;
+  // final String? barCard; // PDF? Image?
   final List<String> moodImageUrls;
+  // final String? defaultOfferUrl; // PDF? Image?
 
   // ---------- Identity & Description ----------
   final String description;

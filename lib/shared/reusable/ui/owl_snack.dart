@@ -4,6 +4,7 @@ import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 enum OwlSnackVariant { info, success, warning, error, neutral }
 
@@ -15,7 +16,7 @@ class OwlSnack {
         required String title,
         String? message,
         OwlSnackVariant variant = OwlSnackVariant.neutral,
-
+        SnackBarBehavior = SnackBarBehavior.floating,
         // Visuals
         Widget? icon,                          // override default logo
         bool showIcon = true,                  // hide/show icon
@@ -59,7 +60,7 @@ class OwlSnack {
             children: [
               Expanded(
                 child: Text(
-                  title,
+                  Utility.formatString(title),
                   style: Styles.popupHeader.copyWith(color: fg),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -107,7 +108,7 @@ class OwlSnack {
     );
 
     final snack = SnackBar(
-      behavior: SnackBarBehavior.floating,
+      behavior: SnackBarBehavior,
       duration: duration,
       margin: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: padding ?? const EdgeInsets.fromLTRB(16, 14, 16, 14),

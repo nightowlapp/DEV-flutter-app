@@ -2,7 +2,11 @@
 import 'package:flutter/material.dart';
 
 //Core
-const owlOrange = Color(0xFFE87701);
+// const owlOrange = Color(0xFFE87701);
+// const owlOrange = Colors.purple;
+// const owlOrange = Colors.purpleAccent;
+// const owlOrange = Colors.deepPurple;
+const owlOrange = Colors.deepPurpleAccent;
 const blue = Colors.blue;
 const adminColor = Colors.pinkAccent ?? Color(0xFF0137E8);
 
@@ -29,7 +33,7 @@ const mapRed = Color(0xFFE74C3C);          // #E74C3C
 
 const TEST = Colors.pink;
 
-// const lighterBlack = Color.fromARGB(221, 184, 178, 178);
+const lighterBlack = Color.fromARGB(221, 184, 178, 178);
 // const owlOrange = Colors.deepOrangeAccent;
 // const owlPurple = Colors.deepPurple;
 // const owlOrangeDark = Color(0x0AE87701); // owlOrange.opacity(0.04)

@@ -4,9 +4,12 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 enum MainScreenName {
   explore(showNav: true),
   map(showNav: true),
+
   calender(showNav: false),
-  social(showNav: false),
+
+  social(showNav: true),
   profile(showNav: true),
+
   venues(showNav: true),
   admin(showNav: true);
 

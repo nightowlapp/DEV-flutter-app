@@ -28,6 +28,7 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 import '../features/explore/widgets/more_info_screen.dart';
 import '../features/main/presentation/main_screen_wrapper.dart';
 import '../features/signup/widgets/second_create_nightowl_profile_screen.dart';
+import '../features/social/widgets/social_screen.dart';
 
 typedef ScreenBuilderWithKey = Widget Function(Key? key);
 final List<MainScreenName> kBranchOrder =
@@ -37,11 +38,11 @@ List<MainScreenName>.unmodifiable(_rootBuilders.keys);
 final Map<MainScreenName, ScreenBuilderWithKey> _rootBuilders = {
   MainScreenName.explore:  (key) => ExploreScreen(key: key),
   MainScreenName.map:      (key) => MapScreen(key: key),
+  MainScreenName.calender: (key) => CalenderScreen(key: key),
+  MainScreenName.social:   (key) => SocialScreen(key: key),
   MainScreenName.profile:  (key) => MyProfileScreen(key: key),
 
   // Placeholders to keep API stable
-  MainScreenName.calender: (key) => CalenderScreen(key: key),
-  MainScreenName.social:   (key) => const Center(child: Text('Social')),
   MainScreenName.venues:   (key) => const Center(child: Text('Venues')),
   MainScreenName.admin:    (key) => const Center(child: Text('Admin')),
 };
@@ -133,7 +134,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/settings',
-      name: 'settings',
+      name: SettingsScreen.routeName,
       pageBuilder: (context, state) =>
       const NoTransitionPage(child: SettingsScreen()),
     ),

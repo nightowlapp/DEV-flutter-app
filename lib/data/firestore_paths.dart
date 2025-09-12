@@ -22,22 +22,22 @@ class DocumentPaths {
   static const String entries = 'entries';
 
 
-
-
 }
 
 class StoragePaths {
   static const venueImages = 'venue_images';
+  static const venueCover = 'cover'; // .webp
+  static const venueLogo = 'logo'; // .webp
+
+  static String venueImage(String venueId, String fileName) =>
+      '$venueImages/$venueId/$fileName';
 
   static const userImages = 'user_images';
   static const profilePicture = 'profile_picture';
 
+  static String userImage(String userId, String fileName) =>
+      '$userImages/$userId/$fileName';
 
   static const nightOwlImages = 'nightowl_images';
 
-  static String venueImage(String venueId, String fileName) =>
-  '$venueImages/$venueId/$fileName';
-
-  static String userImage(String userId, String fileName) =>
-  '$userImages/$userId/$fileName';
 }

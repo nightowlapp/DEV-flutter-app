@@ -92,12 +92,10 @@ class Styles {
       //   ..shader = const LinearGradient(
       //       colors: [white, owlOrange, white],
       //   ).createShader(const Rect.fromLTWH(26, 50, 80, 33)),
-    // copyWith(
     foreground: Paint() //TODO Cool font.
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..color = owlOrange,
-    // ),
   );
 
 
@@ -290,11 +288,77 @@ white          ],
       ],
     );
   }
+
+
+
+
+/// test1 — left-to-right warm hint like the sample (subtle orange leading edge)
+static TextStyle get test1 => baseFont.copyWith(
+  fontSize: fontSizeLarge,
+  foreground: Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [owlOrange, white, white],
+      stops: [0.0, 0.45, 1.0],
+    ).createShader(const Rect.fromLTWH(0, 0, 240, 48)),
+);
+
+/// test2 — stronger orange → gold → white sweep (slightly more saturated)
+static TextStyle get test2 => baseFont.copyWith(
+  fontSize: fontSizeLarge,
+
+  letterSpacing: 0.8,
+  foreground: Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [owlOrange, owlGold, white],
+      stops: [0.0, 0.35, 1.0],
+    ).createShader(const Rect.fromLTWH(0, 0, 240, 48)),
+);
+
+/// test3 — top-to-bottom soft warmth at the baseline (gives a gilded lower edge)
+static TextStyle get test3 => baseFont.copyWith(
+  fontSize: fontSizeLarge,
+  foreground: Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [white, white, owlAmber],
+      stops: [0.0, 0.65, 1.0],
+    ).createShader(const Rect.fromLTWH(0, 0, 220, 56)),
+);
+
+/// test4 — center highlight (white → gold → white) for a glossy mid-band
+static TextStyle get test4 => baseFont.copyWith(
+  fontSize: fontSizeLarge,
+  foreground: Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [white, owlGold, white],
+      stops: [0.15, 0.5, 0.85],
+    ).createShader(const Rect.fromLTWH(0, 0, 260, 52)),
+);
+
+/// test5 — gentle amber kiss near the “Owl” end (bias warmth to the right)
+static TextStyle get test5 => baseFont.copyWith(
+  fontSize: fontSizeLarge,
+  letterSpacing: 0.7,
+  foreground: Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [white, white, owlAmber],
+      stops: [0.0, 0.7, 1.0],
+    ).createShader(const Rect.fromLTWH(0, 0, 260, 50)),
+);
+
+
+
+  static const Color owlAmber  = Color(0xFFF2B36D);
+  static const Color owlGold   = Color(0xFFFFD186);
+
+
 }
-
-
-
-
-
-
-

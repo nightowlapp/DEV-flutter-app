@@ -112,13 +112,13 @@ class User {
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  String get displayName {
+  String get displayFullName {
     final parts = <String>[
       if ((firstName ?? '').trim().isNotEmpty) firstName!.trim(),
       if ((middleName ?? '').trim().isNotEmpty) middleName!.trim(),
       if ((lastName ?? '').trim().isNotEmpty) lastName!.trim(),
     ];
-    return parts.isEmpty ? userName : parts.join(' ');
+    return parts.isEmpty ? '' : parts.join(' ');
   }
 
   int get age {

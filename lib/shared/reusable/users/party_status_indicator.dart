@@ -22,7 +22,7 @@ class PartyStatusIndicator extends ConsumerStatefulWidget {
 
 class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
     with SingleTickerProviderStateMixin {
-  static const _cycleDuration = Duration(seconds: 9);
+  static const _cycleDuration = Duration(seconds: 5);
   static const double _minOpacity = 0.2;
   static const double _maxOpacity = 1.0;
 
@@ -95,6 +95,7 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
 
         if (!mounted) return;
         HapticFeedback.mediumImpact();
+        if (needsAnswer) ref.invalidate(partyStatusNeedsAnswerProvider); // Recompute to disable animation TODO Works with if?
       },
       child: CircleAvatar(
         backgroundColor: Colors.transparent,

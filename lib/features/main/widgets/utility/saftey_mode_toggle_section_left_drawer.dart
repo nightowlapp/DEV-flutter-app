@@ -115,7 +115,7 @@ class SafetyModeToggle extends StatelessWidget {
         ),
 
         const SizedBox(height: verticalSpacerSmall),
-
+        // SwitchListTile(value: null,, onChanged: (bool value) {  },), //TODO this instead?
         Row(
           children: [
             Expanded(

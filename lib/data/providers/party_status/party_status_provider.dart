@@ -60,12 +60,6 @@ final partyStatusAutoResetProvider = Provider<void>((ref) {
       return now.isBefore(today8) ? today8 : today8.add(const Duration(days: 1));
     }
 
-    DateTime _previous8am(DateTime now) {
-      final today8 = DateTime(now.year, now.month, now.day, 8);
-      return (now.isAfter(today8) || now.isAtSameMomentAs(today8))
-        ? today8
-        : today8.subtract(const Duration(days: 1));
-    }
 
     // Declare a function variable first so _fire() can use it
     late void Function() schedule;
@@ -127,10 +121,21 @@ final partyStatusNeedsAnswerProvider = Provider<bool>((ref) {
     final answeredDay = prefs.getString(kPartyStatusAnsweredDayKey);
     final currentDay = partyStatusDayKey(DateTime.now());
 
-    // Not answered if answeredDay != today’s day-key
+    //TODO.
+    // final answeredDay = ref.watch(partyStatusAnsweredDayProvider);
+    // final currentDay = partyStatusDayKey(DateTime.now());
+    // return answeredDay != currentDay;
+
+
+  // Not answered if answeredDay != today’s day-key
     return answeredDay != currentDay;
   }
 );
+
+final partyStatusAnsweredDayProvider = StateProvider<String?>((ref) {
+  final prefs = ref.watch(sharedPrefsProvider);
+  return prefs.getString(kPartyStatusAnsweredDayKey);
+});
 
 final partyStatusColorProvider = Provider<Color>((ref) {
     final s = ref.watch(partyStatusStateProvider);

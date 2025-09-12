@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:nightowlcode/core/platform_config.dart';
 import '../../../../shared/constants/styles.dart';
 import '../../../../shared/constants/values.dart';
 
-class AchievementsSection extends StatefulWidget {
-  const AchievementsSection({super.key});
+class AchievementsSection extends StatelessWidget {
+  const AchievementsSection({
+    super.key,
+    required this.achieved,
+    required this.total,
+  });
 
-  @override
-  State<AchievementsSection> createState() => _AchievementsSectionState();
-}
+  final int achieved;
+  final int total;
 
-class _AchievementsSectionState extends State<AchievementsSection> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -17,25 +20,26 @@ class _AchievementsSectionState extends State<AchievementsSection> {
       children: [
         Stack(
           children: [
-            Center(child: Text('My Achievements', style: Styles.basicTextHeader)),
+            Center(child: Text('My Achievements', style: Styles.basicText)),
             Align(
               alignment: Alignment.centerRight,
-              child: Text("See All",style: Styles.basicTextHeader),
+              child: Text('See All', style: Styles.basicText),
             ),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("37/136",style: Styles.basicTextHeader),
+              child: Text('$achieved/$total', style: Styles.basicText),
             ),
           ],
         ),
         const SizedBox(height: verticalSpacerSmall),
         SizedBox(
-          height: 50,
+          height: PlatformConfig.height(context) * 0.2,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: 8,
-            separatorBuilder: (_, __) => const SizedBox.shrink(),
-            itemBuilder: (_, i) => const CircleAvatar(radius: iconSizeLarge),
+            separatorBuilder: (_, __) =>
+                SizedBox(width: PlatformConfig.width(context) * 0.02),
+            itemBuilder: (_, i) => const CircleAvatar(radius: iconSizeHuge),
           ),
         ),
       ],

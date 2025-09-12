@@ -53,18 +53,18 @@ radius: iconSizeDefault,
               Navigator.pop(context);
             },
           ),
-          ListTile(
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadiusSmallest),
-              child: Image.asset(
-                'assets/flags/dk.png',
-                width: iconSizeMedium,
-                height: iconSizeMedium,
-                fit: BoxFit.cover,
-              ),
-            ),
-            title: Text('Coming (postponed)', style: Styles.greyedOutPopupText),
-          ),
+          // ListTile(
+          //   leading: ClipRRect(
+          //     borderRadius: BorderRadius.circular(borderRadiusSmallest),
+          //     child: Image.asset(
+          //       'assets/flags/dk.png',
+          //       width: iconSizeMedium,
+          //       height: iconSizeMedium,
+          //       fit: BoxFit.cover,
+          //     ),
+          //   ),
+          //   title: Text('Coming (postponed)', style: Styles.greyedOutPopupText),
+          // ),
           // ListTile(
           //   leading: ClipRRect(
           //     borderRadius: BorderRadius.circular(borderRadiusSmall),

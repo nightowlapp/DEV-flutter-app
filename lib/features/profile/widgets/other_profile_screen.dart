@@ -50,6 +50,9 @@ class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {@override
                 imageUrl: 'assets/nightowl/test.png',
                 size: PlatformConfig.width(context) * 0.15,
               ),
+
+            //TODO Show users favorite venues. Achievements. Level. Fælles venner. Amount of friends. Messages.
+
             ],
           ),
         ),

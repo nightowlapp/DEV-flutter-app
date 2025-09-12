@@ -71,19 +71,19 @@ dependencies:
 
   geolocator: ^14.0.2
   mapbox_maps_flutter: ^2.10.0
-  path_provider: ^2.1.5
   timezone: ^0.10.1
-  package_info_plus: ^8.3.1
 
+  package_info_plus: ^8.3.1
+  path_provider: ^2.1.5
   hive: ^2.2.3
+
   cached_network_image: ^3.4.1
   image_picker: ^1.2.0
-  image: ^4.5.4
+  flutter_image_compress: ^2.4.0 # WebP images
+
   animated_list_plus: ^0.5.2
 
 
-
-  #  flutter_image_compress: ^2.4.0 # WebP images
 #syncfusion_flutter_sliders
 #  path: ^1.9.1
 #  crypto: ^3.0.6
@@ -99,6 +99,11 @@ dependencies:
 #  Local database for storing venues. Not needed now.
 #  isar: ^3.1.0+1
 #  isar_flutter_libs: ^3.1.0+1
+
+
+
+#  image: ^4.5.4
+
 
 dev_dependencies:
   flutter_test:

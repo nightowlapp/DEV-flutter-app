@@ -105,7 +105,7 @@ class _MainShellState extends State<MainShell> {
     final currentVisibleIndex = tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
 
     return MainScaffold(
-      appBar: MainAppBar(),
+      appBar: MainAppBar( screen: activeGlobal,      ),
       body: SafeArea(child: widget.nav),
       bottomNavigationBar: MainBottomNavigationBar(
         tabs: tabs,

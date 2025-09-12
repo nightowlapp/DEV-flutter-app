@@ -1,9 +1,9 @@
-// lib/core/storage/profile_image_service.dart
 import 'dart:typed_data';
-import 'dart:ui' as ui
-    show Image, ImageByteFormat, Codec, FrameInfo, instantiateImageCodec;
+import 'dart:ui' as ui show Image, ImageByteFormat, Codec, FrameInfo, instantiateImageCodec;
+
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image/image.dart' as img;
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../../firestore_paths.dart';
 import '../media_existence.dart';
@@ -32,6 +32,8 @@ class ProfilePictureService {
   final FirebaseStorage _storage;
   final MediaExistence? _media;
 
+  /// Always uploads WebP to:
+  ///   user_images/<uid>/profile_picture.webp
   Future<ProfilePictureUploadResult> uploadProfileWebp({
     required String uid,
     required Uint8List original,
@@ -39,10 +41,10 @@ class ProfilePictureService {
     int webpQuality = 80,
     bool archivePrevious = true,
   }) async {
-    final canonicalPath = StoragePaths.userImage(uid, '${StoragePaths.profilePicture}.webp');
+    final canonicalPath =
+    StoragePaths.userImage(uid, '${StoragePaths.profilePicture}.webp');
     final canonicalRef = _storage.ref().child(canonicalPath);
 
-    // Archive existing (best-effort)
     if (archivePrevious) {
       await _archiveIfExists(
         rootRef: _storage.ref(),
@@ -51,14 +53,12 @@ class ProfilePictureService {
       );
     }
 
-    // Transcode -> WebP
     final tr = await _transcodeToWebp(
       original,
       maxDim: maxDim,
-        quality: webpQuality
+      quality: webpQuality,
     );
 
-    // Upload
     await canonicalRef.putData(
       tr.bytes,
       SettableMetadata(
@@ -67,12 +67,10 @@ class ProfilePictureService {
       ),
     );
 
-    // Versioned URL
     final baseUrl = await canonicalRef.getDownloadURL();
     final v = DateTime.now().millisecondsSinceEpoch;
     final versioned = baseUrl.contains('?') ? '$baseUrl&v=$v' : '$baseUrl?v=$v';
 
-    // Invalidate local existence cache if wired in
     try {
       await _media?.invalidate(canonicalPath);
       await _media?.invalidate(baseUrl);
@@ -130,54 +128,43 @@ extension _Transcode on ProfilePictureService {
         required int maxDim,
         required int quality,
       }) async {
-    img.Image? decoded = img.decodeImage(original);
+    // Decode only to get original dimensions
+    final origUi = await _decodeUiImage(original);
+    final ow = origUi.width, oh = origUi.height;
 
-    // Fallback: decode via dart:ui for formats the `image` package can't parse.
-    if (decoded == null) {
-      try {
-        final uiImage = await _decodeUiImage(original);
-        final bd = await uiImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-        if (bd != null) {
-          decoded = img.Image.fromBytes(
-            width: uiImage.width,
-            height: uiImage.height,
-            bytes: bd.buffer,          // ByteBuffer ✔ (not Uint8List)
-            rowStride: uiImage.width * 4,
-            numChannels: 4,
-            order: img.ChannelOrder.rgba,
-            format: img.Format.uint8,
-          );
-        }
-      } catch (_) {}
+    int? targetW, targetH;
+    final longest = ow >= oh ? ow : oh;
+    if (longest > maxDim) {
+      final scale = maxDim / longest;
+      targetW = (ow * scale).round();
+      targetH = (oh * scale).round();
     }
 
-    if (decoded == null) {
-      throw Exception('Unsupported or corrupt image. Please choose a different file.');
-    }
+    try {
+      // Use flutter_image_compress to produce WebP
+      final out = await FlutterImageCompress.compressWithList(
+        original,
+        format: CompressFormat.webp,
+        quality: quality.clamp(0, 100),
+        minWidth: targetW!,
+        minHeight: targetH!,
+        keepExif: false,
+      );
 
-    // Resize to cap longest side
-    final w = decoded.width, h = decoded.height;
-    final scale = (w >= h) ? (maxDim / w) : (maxDim / h);
-    final processed = (scale < 1.0)
-        ? img.copyResize(
-      decoded,
-      width: (w * scale).round(),
-      height: (h * scale).round(),
-      interpolation: img.Interpolation.average,
-    )
-        : decoded;
+      if (out.isEmpty) {
+        throw UnsupportedError('WebP encoding returned empty data.');
+      }
 
-    // ✅ Correct order for image ^4.5.4:
-    // encodeNamedImage(String name, Image image, {quality, ...})
-    final encoded = img.encodeNamedImage('${StoragePaths.profilePicture}.webp', processed,);
-    if (encoded == null) {
+      final uiAfter = await _decodeUiImage(Uint8List.fromList(out));
+      return _TranscodeResult(Uint8List.fromList(out), uiAfter.width, uiAfter.height);
+    } on MissingPluginException {
+      // Plugin not registered on this build
       throw UnsupportedError(
-        'WebP encoding not available in the linked `image` package. '
-            'Ensure you are on image ^4.5.4+.',
+        'WebP encoder is not available on this build '
+            '(flutter_image_compress not registered). '
+            'Perform a full rebuild and ensure platform support.',
       );
     }
-
-    return _TranscodeResult(Uint8List.fromList(encoded), processed.width, processed.height);
   }
 
   Future<ui.Image> _decodeUiImage(Uint8List bytes) async {

@@ -127,6 +127,7 @@ class OwlButton extends StatelessWidget {
     this.icon,
     this.iconSize = iconSizeDefault,
     this.iconPadding = const EdgeInsets.only(left: horizontalSpacerDefault),
+    this.textStyle,
   });
 
   final String label;
@@ -143,6 +144,7 @@ class OwlButton extends StatelessWidget {
   final IconData? icon;
   final double iconSize;
   final EdgeInsets iconPadding;
+  final TextStyle? textStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -171,11 +173,11 @@ class OwlButton extends StatelessWidget {
           SizedBox(
             width: iconArea,
             child: icon == null
-                ? const SizedBox.shrink()
-                : Padding(
-              padding: iconPadding,
-              child: Icon(icon, size: iconSize, color: fg),
-            ),
+              ? const SizedBox.shrink()
+              : Padding(
+                padding: iconPadding,
+                child: Icon(icon, size: iconSize, color: fg),
+              ),
           ),
           // centered text (no Expanded)
           Padding(
@@ -185,12 +187,13 @@ class OwlButton extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: fg,
-                fontWeight: FontWeight.w600,
-                fontSize: fontSizeMedium,
-                letterSpacing: 0,
-              ),
+              style: textStyle ??
+                TextStyle(
+                  color: fg,
+                  fontWeight: FontWeight.w600,
+                  fontSize: fontSizeMedium,
+                  letterSpacing: 0,
+                ),
             ),
           ),
           // right spacer same as left to keep text visually centered

@@ -5,8 +5,11 @@ import 'package:nightowlcode/features/profile/widgets/timeline_section.dart';
 import 'package:nightowlcode/features/profile/widgets/visits_section.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
+import 'package:nightowlcode/shared/utility/level_logic.dart';
 
 import '../../../core/platform_config.dart';
+import '../../../data/other_providers.dart';
+import '../../../models/users/user.dart';
 import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../../shared/reusable/users/party_status_indicator.dart';
@@ -21,74 +24,119 @@ class MyProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
-  final List<String> _favoriteVenueImages =
-    List.generate(12, (_) => 'assets/nightowl/test.png'); // demo data
 
   @override
   Widget build(BuildContext context) {
+    final User? u = ref.watch(authUserProvider).valueOrNull;
+
+    final totalXp = u!.xp.toDouble();
+    final p = LevelLogic.progress(totalXp);
+
+    final xpThisLevel = LevelLogic.calculateThisLevelTotalXp(
+      currentXp: totalXp, currentLevel: p.level,
+    );
+    final currentXp = LevelLogic.calculateUserXpThisLevel(
+      currentXp: totalXp, currentLevel: p.level,
+    );
+
     return Scaffold(
       backgroundColor: black,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(top: 6), // TOdo sort padding on all screens at some point
+          padding: const EdgeInsets.only(top: 6, left: 12, right: 12), // TOdo sort padding on all screens at some point
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
               Row(children: [ // TODO make "top_section_profile"
-                  // Avatar
-                  ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25,),
-                  const SizedBox(width: horizontalSpacerDefault,),
+                  SizedBox(
+                    height: PlatformConfig.height(context) * 0.12,
 
-                  // Full name and username
-                  Expanded(
-                    child: FittedBox( // TODO make "as big as possilbe" but auto scale if too big.
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Poul Magne Skov', style: Styles.fullNameDisplay),   // larger base
-                          const SizedBox(height: verticalSpacerVerySmall),
-                          Text('Magnompower', style: Styles.usernameDisplay),       // smaller base
-                        ],
-                      ),
-                    ),
+                    child: Row(children: [
+                        // Avatar
+                        ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25,),
+                        const SizedBox(width: horizontalSpacerMedium,),
+
+                        // Full name and username
+                        Column(
+                          children: [FittedBox( // TODO make "as big as possilbe" but auto scale if too big.
+                              fit: BoxFit.fitWidth,
+                              alignment: Alignment.centerLeft,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(u!.displayFullName, style: Styles.fullNameDisplay),   // larger base
+                                  const SizedBox(height: verticalSpacerVerySmall),
+                                  Text(u.userName, style: Styles.usernameDisplay),       // smaller base
+                                ],
+                              ),
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
                   ),
-                  Spacer(),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    // mainAxisSize: MainAxisSize.max,
-                    children: [
-                      OwlButton(label: 'My stats', onPressed: () {}
-                      ),
-                      const SizedBox(height: 15,), // Make smarter! Doenst fit TODO Not now.
-                      const PartyStatusIndicator(),
-                    ],)
 
-                ]),
+                  const Spacer(),
 
-              SizedBox(height: verticalSpacerDefault,),
+                  //Right side
+                  SizedBox(             
+                    height: PlatformConfig.height(context) * 0.12,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      // mainAxisSize: MainAxisSize.max,
+                      children: [
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+
+                        SizedBox(height: PlatformConfig.height(context) * 0.03,
+                          width: PlatformConfig.width(context) * 0.25,
+                          child: 1>2 ?
+                          OwlButton( // TODO when somethin to put here.
+                            label: 'My Stats',
+                            onPressed: _openStats,
+                            fullWidth: false,
+                            textColor: owlOrange,
+                            borderColor: transparent,
+                            backgroundColor: black,
+                            textStyle: Styles.basicText,
+                          )
+                          : SizedBox.shrink()
+                        ),
+
+                        SizedBox(height: PlatformConfig.height(context) * 0.02),
+
+                        SizedBox(height: PlatformConfig.height(context) * 0.03,
+                          width: PlatformConfig.width(context) * 0.25,
+                          child: const PartyStatusIndicator(),),
+
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+                      ],
+                    )
+                  )
+                ]
+              ),
+
+              const SizedBox(height: verticalSpacerDefault,),
 
               Column(children: [
                   Column(children: [
-                      // Text("Level 7"),
-                      // SizedBox(height: verticalSpacerSmall),
-
                       LevelIndicator(
-                        levelLabel: 'Level 7',
-                        current: 76,
+                        levelLabel: u.level.toInt() == 1337 ? 'Level 1337' : 'Level ${p.level.toInt()}', // 1337
+                        current: u.level.toInt() == 1337 ? 69 : currentXp.toInt(), // 69
+                        total: u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(), // 420
                         height: PlatformConfig.height(context) * 0.05,
-                        gradient: LinearGradient(colors: [
+                        gradient: const LinearGradient(colors: [
                             owlOrange,
-                            // Color(0xFFFFD54F),
-                            owlOrange]), //TODO inplicit colors
-                        trackColor: Color(0xFF1E1E1E), total: 100,
+                            purple,
+                            owlOrange,
+                            purple
+                          ]), //TODO inplicit colors
+                        trackColor: grey,
                       ),]),
 
                   const SizedBox(height: verticalSpacerDefault),
 
-                  AchievementsSection(),
+                  const AchievementsSection(achieved: 37, total: 113),
 
                   const SizedBox(height: verticalSpacerDefault),
 
@@ -136,7 +184,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
                   const SizedBox(height: verticalSpacerDefault),
 
-                  VisitsSection()
+                  // VisitsSection()
 
                 ]),
               // SizedBox(height: 60,),
@@ -152,5 +200,8 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
         ),
       ),
     );
+  }
+u
+  void _openStats() {
   }
 }

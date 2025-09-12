@@ -24,6 +24,8 @@ class MainScreenWrapper extends StatelessWidget {
     switch (screen) {
       case MainScreenName.explore:
       case MainScreenName.map:
+      case MainScreenName.social:
+      case MainScreenName.calender:
         // TODO Other needed for location?
         return true;
       default:

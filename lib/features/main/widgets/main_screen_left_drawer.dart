@@ -74,6 +74,7 @@ class MainScreenLeftDrawer extends StatelessWidget {
               const Divider(color: owlOrange),
               const SizedBox(height: verticalSpacerSmall),
 
+
               const SafetyModeToggle(
               //TODO brain storm hvad dette gør. Sender notifikation til venner? Forøger deres icon på map? Beder personen tjekke ind hvert 15/30 sekund - ellers slår den alarm? Ringe til Politiet?
               //TODO Mpåske skifter hele layoutet til Ring til politi - alt er lukket ned udover "livsvigtige funktioner"?

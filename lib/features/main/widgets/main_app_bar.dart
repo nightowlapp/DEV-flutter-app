@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nightowlcode/features/settings/widgets/settings_screen.dart';
+import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
@@ -28,7 +30,10 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.action,
     this.logoImage,
     this.onTapSettings,              // optional handler; defaults to /settings
+    this.screen,
   });
+
+  final MainScreenName? screen;
 
   // Title (defaults to "NightOwl" with gradient style)
   final String? titleText;
@@ -52,7 +57,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final ImageProvider? logoImage;
 
   // Profile settings toggle
-  final bool showSettingsButton = MainScreenName.profile == true;
   final VoidCallback? onTapSettings;
 
   static const _kHeight = 44.0;
@@ -83,6 +87,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final canPop = Navigator.of(context).canPop();
 
+    final bool showSettingsButton = screen == MainScreenName.profile;
+
     // Default leading: fixed-radius logo
     final Widget defaultLeading = Builder(
       builder: (ctx) => IconButton(
@@ -112,21 +118,19 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (showSettingsButton) {
       defaultActions.add(
         IconButton(
-          icon: const Icon(CupertinoIcons.settings),
-          onPressed: onTapSettings ?? () => context.push('/settings'),
-          tooltip: 'Settings',
+          icon: Icon(settingsIcon),
+          onPressed: () => context.pushNamedPage(SettingsScreen.routeName,),
         ),
       );
     }
-
-    defaultActions.add(
-      ProfilePictureAvatar(
-        size: 44,
-        onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
-        onAddImage: () => context.pushNamed('editProfilePhoto'),
-        disablePrompt: true,
-      )
-    );
+    else {
+      defaultActions.add(
+        ProfilePictureAvatar(
+          onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
+          disablePrompt: true,
+        )
+      );
+    }
 
     final List<Widget> resolvedActions =
       actions ?? (action != null ? <Widget>[action!] : defaultActions);

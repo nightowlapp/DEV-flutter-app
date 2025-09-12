@@ -119,7 +119,7 @@ class MoreInfoScreen extends ConsumerWidget {
                     SizedBox(height: PlatformConfig.height(context) * 0.05,),
 
                     OpeningInfoHeaderBar(openingHours: venue.openingHours,
-                      defaultAgeRestriction: venue.defaultAgeRestriction,),
+                      defaultAgeRestriction: venue.defaultAgeRestriction, initiallyExpanded: true),
 
                     SizedBox(height: PlatformConfig.height(context) * 0.05,),
                     Row(
