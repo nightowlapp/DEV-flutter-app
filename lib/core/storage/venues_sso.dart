@@ -96,43 +96,39 @@ dynamic _jsonSafe(dynamic v) {
 }
 
 // ---------- Providers ----------
-
-final venuesLocalStoreProvider = FutureProvider<VenuesLocalStore>((ref) async {
-  return VenuesLocalStore.open();
-});
-
-
+final venuesSsoProvider = AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 class VenuesSso extends AsyncNotifier<List<Venue>> {
   StreamSubscription<QuerySnapshot<Venue>>? _sub;
-  KeepAliveLink? _keepAlive;
 
   @override
   Future<List<Venue>> build() async {
-    _keepAlive ??= ref.keepAlive();
-    final store = await ref.watch(venuesLocalStoreProvider.future);
-    final db = ref.watch(firestoreProvider);
+    final store = await VenuesLocalStore.open();
+    final db = ref.read(firestoreProvider);
 
-    // 1) Seed from local cache for instant UI
+    // 1) serve local immediately
     final local = await store.getAll();
     state = AsyncData(local);
 
-    // 2) If cache empty: fetch ALL once and cache
+    // 2) if local empty, do a one-shot full fetch (server) and cache
     if (await store.isEmpty) {
-      final all = await _fetchAllOnce(db);
-      await store.upsertMany(all);
-      await store.setLastSync(DateTime.now());
-      state = AsyncData(all);
+      final full = await _fetchAllOnce(db);
+      await store.upsertMany(full);
+      // checkpoint = max(updated_at) from full (or now if none)
+      final maxTs = _maxUpdatedAt(full) ?? DateTime.now();
+      await store.setLastSync(maxTs);
+      state = AsyncData(full);
     }
 
-    // 3) Start live incremental sync
-    await _startLiveSync(db, store);
+    // 3) attach live delta stream (quiet background)
+    await _startDeltaStream(db, store);
 
     ref.onDispose(() async {
       await _sub?.cancel();
+      _sub = null;
     });
 
-    return state.value ?? <Venue>[];
+    return state.value ?? const <Venue>[];
   }
 
   Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
@@ -141,79 +137,80 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       toFirestore: (v, _) => VenueFirestore.toMap(v),
     );
 
-    final snap = await col.get(const GetOptions(source: Source.server));
+    // Order by updated_at ensures consistent paging if you ever add limits.
+    final snap = await col.orderBy('updated_at', descending: false)
+        .get(const GetOptions(source: Source.server));
     return snap.docs.map((d) => d.data()).toList(growable: false);
   }
 
-  Future<void> _startLiveSync(
-      FirebaseFirestore db, VenuesLocalStore store) async {
+  Future<void> _startDeltaStream(FirebaseFirestore db, VenuesLocalStore store) async {
     final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
     );
 
-    // Prefer delta updates if backend has an `updatedAt` field (Timestamp)
-    Stream<QuerySnapshot<Venue>> stream;
     final lastSync = await store.getLastSync();
-
-    try {
-      if (lastSync != null) {
-        stream = col
-            .where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync))
-            .snapshots();
-      } else {
-        // Fallback: full snapshot (first emission will contain all docs)
-        stream = col.snapshots();
-      }
-    } catch (_) {
-      // If the field doesn't exist, fall back to full snapshots
-      stream = col.snapshots();
+    // Firestore requires orderBy on the inequality field.
+    Query<Venue> q = col.orderBy('updated_at', descending: false);
+    if (lastSync != null) {
+      q = q.where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync));
     }
 
-    // Cancel previous (hot reload safety)
+    // cancel any previous sub (hot reload safety)
     await _sub?.cancel();
-    _sub = stream.listen((qs) async {
-      // If we subscribed to full snapshots, use docChanges to apply only diffs
-      final current = Map<String, Venue>.fromEntries(
-        (state.value ?? <Venue>[]).map((v) => MapEntry(v.id, v)),
-      );
 
-      if (qs.docChanges.isEmpty && lastSync == null) {
-        // Defensive: if provider used full snapshot and no docChanges exposed,
-        // rebuild from docs list.
-        final all = qs.docs.map((d) => d.data()).toList(growable: false);
-        await store.upsertMany(all);
-        state = AsyncData(all);
-        await store.setLastSync(DateTime.now());
-        return;
-      }
+    _sub = q.snapshots().listen((qs) async {
+      // Maintain a mutable map for minimal re-builds
+      final current = <String, Venue>{
+        for (final v in (state.value ?? const <Venue>[])) v.id: v,
+      };
 
-      // Apply changes
-      for (final c in qs.docChanges) {
-        switch (c.type) {
+      // Track max updated_at we actually processed
+      DateTime? maxServerUpdatedAt;
+
+      for (final change in qs.docChanges) {
+        switch (change.type) {
           case DocumentChangeType.added:
           case DocumentChangeType.modified:
-            final v = c.doc.data();
+            final v = change.doc.data();
             if (v != null) {
-              await store.upsert(v);
               current[v.id] = v;
+              await store.upsert(v);
+              final u = v.updatedAt;
+              if (u != null && (maxServerUpdatedAt == null || u.isAfter(maxServerUpdatedAt!))) {
+                maxServerUpdatedAt = u;
+              }
             }
             break;
           case DocumentChangeType.removed:
-            final id = c.doc.id;
-            await store.remove(id);
-            current.remove(id);
+          // NOTE: removed is only emitted for full-collection listeners.
+          // If you truly delete docs, prefer "soft delete" (see below).
             break;
         }
       }
 
-      // Publish new list
-      final list = current.values.toList(growable: false);
-      state = AsyncData(list);
+      // Publish new list only if there were changes
+      final nextList = current.values.toList(growable: false);
+      state = AsyncData(nextList);
 
-      // Move the checkpoint
-      await store.setLastSync(DateTime.now());
+      // Advance checkpoint ONLY to the max server updated_at seen
+      if (maxServerUpdatedAt != null) {
+        await store.setLastSync(maxServerUpdatedAt!);
+      }
+    }, onError: (e, st) {
+      // keep UI usable with cached data; optionally log
+      // debugPrint('venues delta stream error: $e');
     });
   }
 
+  DateTime? _maxUpdatedAt(Iterable<Venue> venues) {
+    DateTime? m;
+    for (final v in venues) {
+      final u = v.updatedAt;
+      if (u == null) continue;
+      if (m == null || u.isAfter(m)) m = u;
+    }
+    return m;
+  }
 }
+

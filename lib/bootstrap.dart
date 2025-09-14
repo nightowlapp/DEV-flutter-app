@@ -24,7 +24,7 @@ import 'core/app_config.dart';
 import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
 import 'data/app_lifecycle_observer.dart';
-import 'data/other_providers.dart';
+import 'data/other_providers.dart' hide venuesSsoProvider;
 import 'data/providers/party_status/party_status_provider.dart';
 import 'data/services/notifications/notification_service.dart';
 import 'firebase_options.dart';
@@ -143,7 +143,7 @@ class _InitTasksState extends ConsumerState<InitTasks> {
   void initState() {
     super.initState();
     // database sync
-    Future.microtask(() => ref.read(venuesSsoProvider.future));
+    Future.microtask(() => ref.read(venuesSsoProvider));
 
     Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
     Future.microtask(() => ref.read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d

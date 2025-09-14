@@ -7,11 +7,6 @@ import '../../shared/utility/json_utility.dart';
 import '/shared/utility/utility.dart'; // Utility
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
-// TODO companyNumber as field (CVR)
-//TODO PDF barcard.
-//TODO default offer.
-
-
 // ---------- Enum (de)serializers ----------
 VenueType venueTypeFromString(String s) => VenueType.values.firstWhere(
       (e) => describeEnum(e).toLowerCase() == (s.trim().toLowerCase()),
@@ -20,25 +15,38 @@ VenueType venueTypeFromString(String s) => VenueType.values.firstWhere(
 
 String venueTypeToString(VenueType t) => describeEnum(t);
 
-DressCodeType dressCodeTypeFromString(String s) => DressCodeType.values.firstWhere(
-      (e) => describeEnum(e).toLowerCase() == (s.trim().toLowerCase()),
-  orElse: () => DressCodeType.none,
-);
+DressCodeType dressCodeTypeFromString(String s) =>
+    DressCodeType.values.firstWhere(
+          (e) => describeEnum(e).toLowerCase() == (s.trim().toLowerCase()),
+      orElse: () => DressCodeType.none,
+    );
 
 String dressCodeTypeToString(DressCodeType t) => describeEnum(t);
-
 
 SubscriptionTypesVenue subscriptionTypeFromString(String? s) {
   final v = (s ?? '').trim().toLowerCase();
   return SubscriptionTypesVenue.values.firstWhere(
-        (e) => describeEnum(e) == v,
+        (e) => describeEnum(e).toLowerCase() == v,
     orElse: () => SubscriptionTypesVenue.free,
   );
 }
 
 String subscriptionTypeToString(SubscriptionTypesVenue t) => describeEnum(t);
-String? colorToHex(Color? color) => color == null ? null : '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
-Color? colorFromHex(String? hex) => hex == null ? null : Color(int.parse(hex.substring(1), radix: 16) + 0xFF000000);
+
+String? colorToHex(Color? color) =>
+    color == null ? null : '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+
+Color? colorFromHex(String? hex) {
+  // Robustly handle #RRGGBB and #AARRGGBB (returns null for invalid)
+  if (hex == null) return null;
+  final h = hex.replaceAll('#', '');
+  if (h.length == 6) {
+    return Color(int.parse('FF$h', radix: 16));
+  } else if (h.length == 8) {
+    return Color(int.parse(h, radix: 16));
+  }
+  return null;
+}
 
 // ---------- Minutes helper ----------
 int _toMinutes(int hour, int minute) => (hour * 60) + minute;
@@ -52,17 +60,20 @@ class DaySchedule {
   final int? ageRestriction;
   final DressCodeType? dressCode;
   final double? entryPrice;
+  final String? offerImageUrl;
 
   const DaySchedule({
     this.isClosed = true,
     this.openMinutes,
     this.closeMinutes,
     this.ageRestriction,
-    //TODO offer each day
     this.dressCode,
     this.entryPrice,
-  }) : assert(isClosed || (openMinutes != null && closeMinutes != null && openMinutes != closeMinutes),
-  'Non-closed days must have valid open/close minutes');
+    this.offerImageUrl,
+  }) : assert(
+  isClosed || (openMinutes != null && closeMinutes != null && openMinutes != closeMinutes),
+  'Non-closed days must have valid open/close minutes',
+  );
 
   Map<String, dynamic> toJson() => {
     'is_closed': isClosed,
@@ -71,6 +82,7 @@ class DaySchedule {
     if (ageRestriction != null) 'age_restriction': ageRestriction,
     if (dressCode != null) 'dress_code': dressCodeTypeToString(dressCode!),
     if (entryPrice != null) 'entry_price': entryPrice,
+    if (offerImageUrl != null) 'offer_image_url': offerImageUrl,
   };
 
   factory DaySchedule.fromJson(Map<String, dynamic>? json) {
@@ -85,6 +97,7 @@ class DaySchedule {
       ageRestriction: JsonUtility.asNum<int>(json['age_restriction'], (n) => n.toInt()),
       dressCode: dressCodeTypeFromString(json['dress_code'] as String? ?? ''),
       entryPrice: JsonUtility.asNum<double>(json['entry_price'], (n) => n.toDouble()),
+      offerImageUrl: JsonUtility.nullIfEmpty(json['offer_image_url'] as String?),
     );
   }
 
@@ -95,9 +108,11 @@ class DaySchedule {
     int? ageRestriction,
     DressCodeType? dressCode,
     double? entryPrice,
+    String? offerImageUrl,
     bool clearAgeRestriction = false,
     bool clearDressCode = false,
     bool clearEntryPrice = false,
+    bool clearOfferImage = false,
   }) {
     return DaySchedule(
       isClosed: isClosed ?? this.isClosed,
@@ -106,6 +121,7 @@ class DaySchedule {
       ageRestriction: clearAgeRestriction ? null : (ageRestriction ?? this.ageRestriction),
       dressCode: clearDressCode ? null : (dressCode ?? this.dressCode),
       entryPrice: clearEntryPrice ? null : (entryPrice ?? this.entryPrice),
+      offerImageUrl: clearOfferImage ? null : (offerImageUrl ?? this.offerImageUrl),
     );
   }
 }
@@ -113,7 +129,8 @@ class DaySchedule {
 // ---------- ExceptionHours (domain uses DateTime only) ----------
 
 @immutable
-class ExceptionHours { // Used for special events?
+class ExceptionHours {
+  // Used for special events?
   final DateTime date; // Y/M/D only
   final bool isClosed;
   final int? openMinutes;
@@ -130,8 +147,10 @@ class ExceptionHours { // Used for special events?
     this.ageRestriction,
     this.dressCode,
     this.entryPrice,
-  }) : assert(isClosed || (openMinutes != null && closeMinutes != null && openMinutes != closeMinutes),
-  'Non-closed exception days must have valid open/close minutes');
+  }) : assert(
+  isClosed || (openMinutes != null && closeMinutes != null && openMinutes != closeMinutes),
+  'Non-closed exception days must have valid open/close minutes',
+  );
 
   Map<String, dynamic> toJson() => {
     'date': DateTime(date.year, date.month, date.day).toIso8601String(),
@@ -174,8 +193,7 @@ class OpeningHours {
 
   Map<String, dynamic> toJson() => {
     'week': week.map((d) => d.toJson()).toList(),
-    if (exceptions.isNotEmpty)
-      'exceptions': exceptions.map((e) => e.toJson()).toList(),
+    if (exceptions.isNotEmpty) 'exceptions': exceptions.map((e) => e.toJson()).toList(),
   };
 
   factory OpeningHours.fromJson(Map<String, dynamic>? json) {
@@ -195,8 +213,7 @@ class OpeningHours {
           : const DaySchedule(openMinutes: null, closeMinutes: null),
     );
     final exceptionsJson =
-        (json['exceptions'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ??
-            const [];
+        (json['exceptions'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? const [];
     return OpeningHours(
       week: week,
       exceptions: exceptionsJson.map(ExceptionHours.fromJson).toList(),
@@ -204,6 +221,7 @@ class OpeningHours {
   }
 
   bool isOpenAt(DateTime localNow) => statusAt(localNow).phase == OpeningPhase.open;
+
   bool isOpenToday(DateTime localNow) {
     final today = DateTime(localNow.year, localNow.month, localNow.day);
     final exception = exceptions.firstWhere(
@@ -232,7 +250,6 @@ class OpeningHours {
     return (exception.date == today)
         ? exception.ageRestriction
         : week[(localNow.weekday - 1) % 7].ageRestriction;
-    //TODO error in logic? Return defaultAge if no age.
   }
 
   DressCodeType? activeDressCode(DateTime localNow) {
@@ -241,9 +258,7 @@ class OpeningHours {
           (e) => e.date == today,
       orElse: () => ExceptionHours(date: DateTime(1970, 1, 1)),
     );
-    return (exception.date == today)
-        ? exception.dressCode
-        : week[(localNow.weekday - 1) % 7].dressCode;
+    return (exception.date == today) ? exception.dressCode : week[(localNow.weekday - 1) % 7].dressCode;
   }
 
   double? activeEntryPrice(DateTime localNow) {
@@ -252,26 +267,24 @@ class OpeningHours {
           (e) => e.date == today,
       orElse: () => ExceptionHours(date: DateTime(1970, 1, 1)),
     );
-    return (exception.date == today)
-        ? exception.entryPrice
-        : week[(localNow.weekday - 1) % 7].entryPrice;
+    return (exception.date == today) ? exception.entryPrice : week[(localNow.weekday - 1) % 7].entryPrice;
   }
 }
 
 // ===== Add below your OpeningHours class (same file) =====
 
 enum OpeningPhase {
-  open,             // currently open
-  opensLaterToday,  // closed now, opens later today
-  opensTomorrow,    // closed today, opens tomorrow
-  closedToday,      // closed and no info for tomorrow
+  open, // currently open
+  opensLaterToday, // closed now, opens later today
+  opensTomorrow, // closed today, opens tomorrow
+  closedToday, // closed and no info for tomorrow
 }
 
 @immutable
 class OpeningStatus {
   final OpeningPhase phase;
-  final int? openMinutes;   // next opening minute-of-day (if applicable)
-  final int? closeMinutes;  // closing minute-of-day for current open window
+  final int? openMinutes; // next opening minute-of-day (if applicable)
+  final int? closeMinutes; // closing minute-of-day for current open window
   final bool fromYesterday; // true if currently open due to yesterday's overnight span
 
   const OpeningStatus({
@@ -284,8 +297,7 @@ class OpeningStatus {
 
 extension OpeningStatusFormat on OpeningStatus {
   String label() {
-    String fmt(int m) =>
-        '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+    String fmt(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
 
     switch (phase) {
       case OpeningPhase.open:
@@ -312,13 +324,12 @@ extension OpeningHoursStatus on OpeningHours {
     DaySchedule? y = _scheduleForDate(yesterday);
     DaySchedule? tm = _scheduleForDate(tomorrow);
 
-    bool valid(DaySchedule? s) =>
-        s != null && !s.isClosed && s.openMinutes != null && s.closeMinutes != null;
+    bool valid(DaySchedule? s) => s != null && !s.isClosed && s.openMinutes != null && s.closeMinutes != null;
     bool overnight(DaySchedule s) => s.closeMinutes! <= s.openMinutes!;
 
     // 1) Open now due to YESTERDAY'S overnight (e.g., 21:00–03:00 and it's 01:00 today)
     if (valid(y) && overnight(y!)) {
-      if (nowM < y!.closeMinutes!) {
+      if (nowM < y.closeMinutes!) {
         return OpeningStatus(
           phase: OpeningPhase.open,
           closeMinutes: y.closeMinutes,
@@ -396,8 +407,7 @@ extension OpeningHoursSimpleFormat on OpeningHours {
   /// - open/close: "HH:mm"
   /// - nextDay: true when close time is on the next day (overnight)
   /// - isClosed: true when closed or missing times
-  ({String open, String close, bool nextDay, bool isClosed})
-  todayRangeParts24h({DateTime? localNow}) {
+  ({String open, String close, bool nextDay, bool isClosed}) todayRangeParts24h({DateTime? localNow}) {
     final now = (localNow ?? DateTime.now()).toLocal();
     final d = DateTime(now.year, now.month, now.day);
 
@@ -407,9 +417,7 @@ extension OpeningHoursSimpleFormat on OpeningHours {
       orElse: () => ExceptionHours(date: DateTime(1970, 1, 1)),
     );
 
-    final DaySchedule schedule = (exc.date.year == d.year &&
-        exc.date.month == d.month &&
-        exc.date.day == d.day)
+    final DaySchedule schedule = (exc.date.year == d.year && exc.date.month == d.month && exc.date.day == d.day)
         ? DaySchedule(
       isClosed: exc.isClosed,
       openMinutes: exc.openMinutes,
@@ -426,9 +434,7 @@ extension OpeningHoursSimpleFormat on OpeningHours {
       return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
     }
 
-    if (schedule.isClosed ||
-        schedule.openMinutes == null ||
-        schedule.closeMinutes == null) {
+    if (schedule.isClosed || schedule.openMinutes == null || schedule.closeMinutes == null) {
       return (open: '', close: '', nextDay: false, isClosed: true);
     }
 
@@ -449,16 +455,12 @@ extension OpeningHoursSimpleFormat on OpeningHours {
 
 // Optional convenience on Venue
 extension VenueOpeningRange on Venue {
-  ({String open, String close, bool nextDay, bool isClosed})
-  todayRangeParts24h({DateTime? venueLocalNow}) =>
+  ({String open, String close, bool nextDay, bool isClosed}) todayRangeParts24h({DateTime? venueLocalNow}) =>
       openingHours.todayRangeParts24h(localNow: venueLocalNow);
 
   String todayRangeLabel24h({DateTime? venueLocalNow}) =>
       openingHours.todayRangeLabel24h(localNow: venueLocalNow);
 }
-
-
-
 
 // ---------- Venue (domain) ----------
 @immutable
@@ -466,6 +468,7 @@ class Venue {
   final String id; // REQUIRED
 
   // Basics
+  final String? companyNumber;
   final String name; // REQUIRED
   final String displayName; // REQUIRED
   final VenueType type; // REQUIRED
@@ -479,11 +482,12 @@ class Venue {
   final DateTime? updatedAt;
 
   // ---------- Media ----------
-  final String? logoUrl;
-  final String? coverImageUrl;
-  // final String? barCard; // PDF? Image?
-  final List<String> moodImageUrls;
-  // final String? defaultOfferUrl; // PDF? Image?
+  final String? logoUrl; // venue_images/id/logo.webp
+  final String? coverImageUrl; // venue_images/id/cover.webp
+  final String? barCard; // venue_images/id/bar_card.pdf
+  final List<String> moodImageUrls; // venue_images/id/mood_images/   // Folder with many images
+  final String? defaultOfferUrl; // // venue_images/id/default_offer.webp
+  final String? dailyOfferUrls; // // venue_images/id/daily_offers/   // Folder with max 1 image for each day
 
   // ---------- Identity & Description ----------
   final String description;
@@ -518,8 +522,9 @@ class Venue {
   final String? email;
   final String? phone;
 
-   Venue({
+  Venue({
     required this.id,
+    this.companyNumber,
     required this.name,
     required this.displayName,
     required this.type,
@@ -544,7 +549,10 @@ class Venue {
     this.logoUrl,
     this.rating,
     this.coverImageUrl,
+    this.barCard,
     this.moodImageUrls = const [],
+    this.defaultOfferUrl,
+    this.dailyOfferUrls,
     this.timeZoneId,
     this.createdAt,
     this.updatedAt,
@@ -566,13 +574,11 @@ class Venue {
     int _readInt(dynamic v, {int defaultValue = 0}) =>
         JsonUtility.asNum<int>(v, (n) => n.toInt()) ?? defaultValue;
 
-    double? _readOptDouble(dynamic v) =>
-        JsonUtility.asNum<double>(v, (n) => n.toDouble());
+    double? _readOptDouble(dynamic v) => JsonUtility.asNum<double>(v, (n) => n.toDouble());
 
     final nameRaw = _readString(json['name']);
     final displayNameOrFormattedName =
-        JsonUtility.nullIfEmpty(json['display_name'] as String?) ??
-            Utility.formatString(nameRaw);
+        JsonUtility.nullIfEmpty(json['display_name'] as String?) ?? Utility.formatString(nameRaw);
 
     final entryMap = (json['entry'] as Map).cast<String, dynamic>();
     final entry = LatLng.fromJson(entryMap);
@@ -589,6 +595,7 @@ class Venue {
 
     return Venue(
       id: id,
+      companyNumber: _readString(json['company_number']),
       name: nameRaw,
       displayName: displayNameOrFormattedName,
       logoUrl: _readOptString(json['logo_url']),
@@ -607,22 +614,21 @@ class Venue {
       ),
       entry: entry,
       geohash: _readString(json['geohash']),
-      defaultAgeRestriction:
-      _readInt(json['default_age_restriction'], defaultValue: 18),
+      defaultAgeRestriction: _readInt(json['default_age_restriction'], defaultValue: 18),
       capacity: _readInt(json['capacity'], defaultValue: 100),
       coverImageUrl: _readOptString(json['cover_image_url']),
+      barCard: _readOptString(json['bar_card_url']),
       moodImageUrls: JsonUtility.listStrings(json['mood_image_urls']),
+      defaultOfferUrl: _readOptString(json['default_offer_url']),
+      dailyOfferUrls: _readOptString(json['daily_offer_urls']),
       timeZoneId: _readOptString(json['time_zone_id']),
       createdAt: _readDate(json['created_at']),
       updatedAt: _readDate(json['updated_at']),
-      defaultEntryPrice: JsonUtility.asNum<double>(
-          json['default_entry_price'], (n) => n.toDouble()) ??
-          0.0,
+      defaultEntryPrice: JsonUtility.asNum<double>(json['default_entry_price'], (n) => n.toDouble()) ?? 0.0,
       links: JsonUtility.mapStringString(json['links']),
       email: _readOptString(json['email']),
       phone: _readOptString(json['phone']),
-      subscriptionType:
-      subscriptionTypeFromString(_readOptString(json['subscription_type'])),
+      subscriptionType: subscriptionTypeFromString(_readOptString(json['subscription_type'])),
       isVerified: json['is_verified'] as bool? ?? false,
       primaryColorHex: _readOptString(json['primary_color_hex']),
       secondaryColorHex: _readOptString(json['secondary_color_hex']),
@@ -635,6 +641,7 @@ class Venue {
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{
       // basics
+      'company_number': companyNumber,
       'name': name,
       'display_name': displayName,
       'logo_url': logoUrl,
@@ -659,7 +666,10 @@ class Venue {
 
       // media
       'cover_image_url': coverImageUrl,
+      'bar_card_url': barCard,
       'mood_image_urls': moodImageUrls,
+      'default_offer_url': defaultOfferUrl,
+      'daily_offer_urls': dailyOfferUrls,
 
       // auditing (domain JSON uses ISO8601 strings)
       'created_at': createdAt?.toIso8601String(),
@@ -696,6 +706,7 @@ class Venue {
 
   Venue copyWith({
     String? id,
+    String? companyNumber,
     String? name,
     String? displayName,
     String? logoUrl,
@@ -713,7 +724,10 @@ class Venue {
     int? favoriteCount,
     int? visitCount,
     String? coverImageUrl,
+    String? barCard,
     List<String>? moodImageUrls,
+    String? defaultOfferUrl,
+    String? dailyOfferUrls,
     OpeningHours? openingHours,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -733,6 +747,7 @@ class Venue {
   }) {
     return Venue(
       id: id ?? this.id,
+      companyNumber: companyNumber ?? this.companyNumber,
       name: name ?? this.name,
       displayName: displayName ?? this.displayName,
       logoUrl: logoUrl ?? this.logoUrl,
@@ -750,7 +765,10 @@ class Venue {
       favoriteCount: favoriteCount ?? this.favoriteCount,
       visitCount: visitCount ?? this.visitCount,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      barCard: barCard ?? this.barCard,
       moodImageUrls: moodImageUrls ?? this.moodImageUrls,
+      defaultOfferUrl: defaultOfferUrl ?? this.defaultOfferUrl,
+      dailyOfferUrls: dailyOfferUrls ?? this.dailyOfferUrls,
       openingHours: openingHours ?? this.openingHours,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -759,8 +777,7 @@ class Venue {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       subscriptionType: subscriptionType ?? this.subscriptionType,
-      defaultAgeRestriction:
-      defaultAgeRestriction ?? this.defaultAgeRestriction,
+      defaultAgeRestriction: defaultAgeRestriction ?? this.defaultAgeRestriction,
       capacity: capacity ?? this.capacity,
       isVerified: isVerified ?? this.isVerified,
       primaryColorHex: primaryColorHex ?? this.primaryColorHex,

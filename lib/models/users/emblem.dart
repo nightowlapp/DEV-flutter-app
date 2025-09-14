@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
-class UserAchievement { // TOdo look throrught and decide definitively.
+class Emblem { // TOdo look throrught and decide definitively.
   final String id;
   final String name;
   final String emoji;           // or icon in the future
@@ -11,7 +11,7 @@ class UserAchievement { // TOdo look throrught and decide definitively.
   final int points;
   final String reward;
 
-  UserAchievement({
+  Emblem({
     required this.id,
     required this.name,
     required this.emoji,
@@ -47,7 +47,7 @@ class UserAchievement { // TOdo look throrught and decide definitively.
     'reward': reward,
   }..removeWhere((_, v) => v == null);
 
-  factory UserAchievement.fromJson(Map<String, dynamic> json) => UserAchievement(
+  factory Emblem.fromJson(Map<String, dynamic> json) => Emblem(
     id: (json['id'] as String),
     name: (json['name'] as String).trim(),
     emoji: (json['emoji'] as String).trim(),
@@ -58,7 +58,7 @@ class UserAchievement { // TOdo look throrught and decide definitively.
     reward: (json['reward'] as String).trim(),
   );
 
-  UserAchievement copyWith({
+  Emblem copyWith({
     String? id,
     String? name,
     String? emoji,
@@ -68,7 +68,7 @@ class UserAchievement { // TOdo look throrught and decide definitively.
     int? points,
     String? reward,
   }) =>
-      UserAchievement(
+      Emblem(
         id: id ?? this.id,
         name: name ?? this.name,
         emoji: emoji ?? this.emoji,
@@ -82,7 +82,7 @@ class UserAchievement { // TOdo look throrught and decide definitively.
   @override
   bool operator ==(Object o) =>
       identical(this, o) ||
-          (o is UserAchievement &&
+          (o is Emblem &&
               o.id == id &&
               o.name == name &&
               o.emoji == emoji &&

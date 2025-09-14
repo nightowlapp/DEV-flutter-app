@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marquee/marquee.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/data/services/like_store.dart';
 import 'package:nightowlcode/features/explore/utility/cover_image.dart';
@@ -21,6 +22,7 @@ import '../../../data/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/like_venue_button.dart';
+import '../utility/venue_tags_grid.dart';
 import 'more_info_screen.dart';
 
 class VenueScreenContent extends ConsumerWidget  {
@@ -90,7 +92,13 @@ class VenueScreenContent extends ConsumerWidget  {
           ],
         ),
         SizedBox(height: PlatformConfig.height(context) * 0.1,),
-        _tagsGrid(venue, context),
+
+        VenueTagsGrid(
+          tagIds: venue.tagids, // your existing List<String> of tag doc IDs (slugs)
+          viewportWidth: PlatformConfig.width(context),
+          viewportHeight: PlatformConfig.height(context),
+        ),
+
         SizedBox(height: PlatformConfig.height(context) * 0.1,),
 
 
@@ -191,7 +199,7 @@ class VenueScreenContent extends ConsumerWidget  {
     const chipHeight = 28.0;         // per-row item height
 
     return SizedBox(
-      height: PlatformConfig.height(context) * 0.1,
+      height: PlatformConfig.height(context) * 0.2,
       child: Container(
         decoration: BoxDecoration(
           color: black,
@@ -234,17 +242,17 @@ class VenueScreenContent extends ConsumerWidget  {
           BoxShadow(color: c.withOpacity(0.20), blurRadius: 2, spreadRadius: 0.5),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Row(
         children: [
           // left icon badge
           Container(
-            width: 20,
-            height: 20,
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
               color: c.withOpacity(0.10),
               borderRadius: BorderRadius.circular(borderRadiusSmallest),
-              border: Border.all(color: c, width: 1),
+              border: Border.all(color: c, width: 0.7),
             ),
             alignment: Alignment.center,
             // child: Icon(_iconForTag(tag), size: 14, color: white),
@@ -252,10 +260,10 @@ class VenueScreenContent extends ConsumerWidget  {
           const SizedBox(width: 5),
           // label
           Expanded(
-            child: Text(
-              tag,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Marquee( //TODO only spin of too long. Slow spin and chill
+              text: tag,
+              // maxLines: 1,
+              // overflow: TextOverflow.ellipsis,
               style: Styles.boldText.copyWith(fontSize: 11),
             ),
           ),

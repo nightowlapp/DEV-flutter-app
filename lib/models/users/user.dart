@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart'
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/models/users/phone_number.dart';
 
+import 'emblem.dart';
+
 T _enumFromString<T extends Enum>(String? s, List<T> values, T fallback) {
   final v = (s ?? '').trim().toLowerCase();
   for (final e in values) {
@@ -55,10 +57,10 @@ class User {
   final String? appVersion;
   final bool isVerified;
 
-  // TODO achievementCount to quickly display amount of achievemnts.
   final int level;
   final double xp;
   final PartyStatusTypes currentPartyStatus;
+  // final Set<Emblem> earnedEmblems; //TODO maybe just int?
 
   final Set<VenueType> preferredVenueTypes;
   final double maxDistanceKm;

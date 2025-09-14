@@ -2,7 +2,7 @@
 class DocumentPaths {
   //Users
   static const users = 'users';
-  static const String achievements = 'achievements';
+  static const String emblems = 'emblems';
   static const String partyStatusDays = 'party_status_days';
 
   static String user(String id) => '$users/$id';
@@ -25,18 +25,20 @@ class DocumentPaths {
 }
 
 class StoragePaths {
+  // Users
+  static const userImages = 'user_images';
+  static const profilePicture = 'profile_picture';
+
+  static String userImage(String userId, String fileName) =>
+  '$userImages/$userId/$fileName';
+
+  // Venues
   static const venueImages = 'venue_images';
   static const venueCover = 'cover'; // .webp
   static const venueLogo = 'logo'; // .webp
 
   static String venueImage(String venueId, String fileName) =>
-      '$venueImages/$venueId/$fileName';
-
-  static const userImages = 'user_images';
-  static const profilePicture = 'profile_picture';
-
-  static String userImage(String userId, String fileName) =>
-      '$userImages/$userId/$fileName';
+  '$venueImages/$venueId/$fileName';
 
   static const nightOwlImages = 'nightowl_images';
 

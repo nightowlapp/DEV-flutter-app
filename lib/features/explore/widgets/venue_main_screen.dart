@@ -42,14 +42,15 @@ class VenueMainScreen extends StatelessWidget {
     return Scaffold(
       appBar: MainAppBar(
         titleText: _title,
+        // verifiedVenue:  true,
         showBack: true,
         centerTitle: true,
         action: logo,
         backgroundColor: black,),
       //TODO looks cool with image at top but dificoult to see name and click back.
       body: CornerBadgeOverlay(
-        show: venue.isVerified,
-        badge: VerifiedBadge(),
+        show: !venue.isVerified,
+        badge: VerifiedBadge(), // TODO move to app bar
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: sidePaddingDefault),
           child: VenueScreenContent(

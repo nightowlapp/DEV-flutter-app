@@ -4,6 +4,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../shared/constants/enums.dart';
 import 'other_providers.dart';
@@ -21,12 +22,12 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
       'id': v.id,
       'properties': {
         'id': v.id,
-        'name': v.displayName.isNotEmpty ? v.displayName : v.name,
-        'rating': v.rating ?? 0.0,
+        'name': v.displayName.isNotEmpty ? v.displayName : Utility.formatString(v.name),
+        'rating': v.rating ?? 3.4,
         'venueType': v.type.name,
         'subscription': v.subscriptionType.name,
-        'isOpenNow': true,
-        'opensLaterToday': true,
+        'isOpenNow': v.isOpenNow(DateTime.now()),
+        'opensLaterToday': v.isOpenToday(DateTime.now()),
       },
       'geometry': {
         'type': 'Point',

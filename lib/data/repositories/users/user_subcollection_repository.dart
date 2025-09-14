@@ -2,7 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nightowlcode/models/users/favorite_venue.dart';
 import 'package:nightowlcode/models/users/liked_venue.dart';
-import 'package:nightowlcode/models/users/user_achievement.dart';
+import '../../../models/users/emblem.dart';
 import '../../firestore_paths.dart';
 
 class UserSocialRepository {
@@ -64,28 +64,28 @@ class UserSocialRepository {
   Future<bool> isLiked(String uid, String venueId) async =>
       (await _likesCol(uid).doc(venueId).get()).exists;
 
-  // -------- Achievements --------
-  CollectionReference<UserAchievement> _achievementsCol(String uid) =>
+  // -------- Emblems --------
+  CollectionReference<Emblem> _emblemsCol(String uid) =>
       _db
-          .collection(DocumentPaths.userSub(uid, DocumentPaths.achievements))
-          .withConverter<UserAchievement>(
-        fromFirestore: (snap, _) => UserAchievement.fromJson({
+          .collection(DocumentPaths.userSub(uid, DocumentPaths.emblems))
+          .withConverter<Emblem>(
+        fromFirestore: (snap, _) => Emblem.fromJson({
           'id': snap.id, // inject id from doc id
           ...?snap.data(),
         }),
         toFirestore: (a, _) => a.toJson()..remove('id'),
       );
 
-  Future<void> upsertAchievement(String uid, UserAchievement a) async {
-    final ref = _achievementsCol(uid).doc(a.id);
+  Future<void> upsertEmblem(String uid, Emblem a) async {
+    final ref = _emblemsCol(uid).doc(a.id);
     await ref.set(a, SetOptions(merge: true));
   }
 
-  Future<void> deleteAchievement(String uid, String achievementId) =>
-      _achievementsCol(uid).doc(achievementId).delete();
+  Future<void> deleteEmblem(String uid, String emblemId) =>
+      _emblemsCol(uid).doc(emblemId).delete();
 
-  Stream<List<UserAchievement>> watchAchievements(String uid) =>
-      _achievementsCol(uid)
+  Stream<List<Emblem>> watchEmblem(String uid) =>
+      _emblemsCol(uid)
           .orderBy('unlocked_at', descending: true)
           .snapshots()
           .map((q) => q.docs.map((d) => d.data()).toList());

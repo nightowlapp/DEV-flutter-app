@@ -54,7 +54,7 @@ void main() {
       expect(user.birthDate, draft.birthdate);
       expect(user.gender, draft.gender);
 
-      // Assert defaults (favorites/liked/achievements as subcollections: not in main doc)
+      // Assert defaults (favorites/liked/Emblems as subcollections: not in main doc)
       expect(user.isVerified, false);
       expect(user.level, 0);
       expect(user.xp, 0.0);
@@ -81,8 +81,8 @@ void main() {
       expect(favorites.docs, isEmpty);
       final liked = await mockFirestore.collection('users/mockUid/liked').get();
       expect(liked.docs, isEmpty);
-      final achievements = await mockFirestore.collection('users/mockUid/achievements').get();
-      expect(achievements.docs, isEmpty);
+      final Emblems = await mockFirestore.collection('users/mockUid/emblems').get();
+      expect(Emblems.docs, isEmpty);
     });
   });
 

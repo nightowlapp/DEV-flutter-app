@@ -130,3 +130,4 @@ enum PartyStatusTypes{ out_tonight,house_party, pregame,recovering, still_planni
 
 enum PartyStatusChange{automatic, manual}
 
+

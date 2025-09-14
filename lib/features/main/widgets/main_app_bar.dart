@@ -14,6 +14,7 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
 import '../../../data/other_providers.dart';
+import '../../../shared/reusable/ui/verified_badge.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MainAppBar({
@@ -31,6 +32,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.logoImage,
     this.onTapSettings,              // optional handler; defaults to /settings
     this.screen,
+    this.verifiedVenue = false,
   });
 
   final MainScreenName? screen;
@@ -40,6 +42,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? title;
   final Color? titleColor;
   final bool centerTitle;
+  final bool verifiedVenue;
 
   // Colors (defaults to transparent)
   final Color? backgroundColor;
@@ -115,6 +118,10 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     // Build default trailing (settings? + end-drawer avatar)
 
     final List<Widget> defaultActions = [];
+    if(verifiedVenue){
+      defaultActions.add(const VerifiedBadge());
+    }
+
     if (showSettingsButton) {
       defaultActions.add(
         IconButton(

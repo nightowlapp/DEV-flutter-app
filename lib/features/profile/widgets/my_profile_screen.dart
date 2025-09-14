@@ -14,7 +14,7 @@ import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../../shared/reusable/users/party_status_indicator.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
-import 'achievements_section.dart';
+import 'emblems_section.dart';
 import 'level_indicator.dart';
 
 class MyProfileScreen extends ConsumerStatefulWidget {
@@ -136,7 +136,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
                   const SizedBox(height: verticalSpacerDefault),
 
-                  const AchievementsSection(achieved: 37, total: 113),
+                  const EmblemsSection(achieved: 37, total: 113),
 
                   const SizedBox(height: verticalSpacerDefault),
 

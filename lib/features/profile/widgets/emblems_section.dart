@@ -3,8 +3,8 @@ import 'package:nightowlcode/core/platform_config.dart';
 import '../../../../shared/constants/styles.dart';
 import '../../../../shared/constants/values.dart';
 
-class AchievementsSection extends StatelessWidget {
-  const AchievementsSection({
+class EmblemsSection extends StatelessWidget {
+  const EmblemsSection({
     super.key,
     required this.achieved,
     required this.total,
@@ -20,7 +20,7 @@ class AchievementsSection extends StatelessWidget {
       children: [
         Stack(
           children: [
-            Center(child: Text('My Achievements', style: Styles.basicText)),
+            Center(child: Text('My Emblems', style: Styles.basicText)),
             Align(
               alignment: Alignment.centerRight,
               child: Text('See All', style: Styles.basicText),
