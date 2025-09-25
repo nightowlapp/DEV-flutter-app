@@ -10,10 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:nightowlcode/core/error_handler.dart';
-import 'package:nightowlcode/data/repositories/users/auth/auth_repository.dart';
-import 'package:nightowlcode/data/services/location/location_service.dart';
-import 'package:nightowlcode/night_owl_app.dart';
-import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
@@ -23,11 +19,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/app_config.dart';
 import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
-import 'data/app_lifecycle_observer.dart';
-import 'data/other_providers.dart' hide venuesSsoProvider;
 import 'data/providers/party_status/party_status_provider.dart';
-import 'data/services/notifications/notification_service.dart';
-import 'firebase_options.dart';
+import 'dev_firebase_options.dart';
 
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,7 +136,7 @@ class _InitTasksState extends ConsumerState<InitTasks> {
   void initState() {
     super.initState();
     // database sync
-    Future.microtask(() => ref.read(venuesSsoProvider));
+    Future.microtask(() => ref.read(venuesSsoProvider.future));
 
     Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
     Future.microtask(() => ref.read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d

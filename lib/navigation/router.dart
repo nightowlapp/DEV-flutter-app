@@ -24,7 +24,9 @@ import 'package:nightowlcode/features/signup/widgets/optional_details_screen.dar
 import 'package:nightowlcode/features/signup/widgets/third_create_nightowl_profile_screen.dart';
 import 'package:nightowlcode/navigation/route_args.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
+import '../features/explore/utility/bar_card_screen.dart';
 import '../features/explore/widgets/more_info_screen.dart';
 import '../features/main/presentation/main_screen_wrapper.dart';
 import '../features/signup/widgets/second_create_nightowl_profile_screen.dart';
@@ -120,7 +122,7 @@ final GoRouter router = GoRouter(
         final args = state.extra as VenueMainArgs?;
         if (args == null) {
           return const NoTransitionPage(
-            child: Scaffold(body: Center(child: Text('Missing Venue args'))),
+            child: Scaffold(body: Center(child: Text('Missing Venue'))),
           );
         }
         return NoTransitionPage(
@@ -137,6 +139,7 @@ final GoRouter router = GoRouter(
       name: SettingsScreen.routeName,
       pageBuilder: (context, state) =>
       const NoTransitionPage(child: SettingsScreen()),
+      // const NoTransitionPage(child: LoadingScreen()),
     ),
     // in your router config
     GoRoute(
@@ -149,6 +152,19 @@ final GoRouter router = GoRouter(
           media: args.media,
           userLoc: args.userLoc,
         );
+      },
+    ),
+    GoRoute(
+      path: '/bar-card',
+      name: BarCardScreen.routeName, // 'barCard'
+      pageBuilder: (context, state) {
+        final args = state.extra as BarCardArgs?;
+        if (args == null) {
+          return const NoTransitionPage(
+            child: Scaffold(body: Center(child: Text('Missing BarCardArgs'))),
+          );
+        }
+        return NoTransitionPage(child: BarCardScreen(args: args));
       },
     ),
 

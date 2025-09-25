@@ -45,6 +45,7 @@ const cameraIcon = Icons.photo_camera_outlined;
 const photoLibraryIcon = Icons.photo_library_outlined;
 
 // Utility
+final burgerMenu = Icons.menu_outlined;
 final checkIcon = Icons.check;
 final checkCircleIcon = Icons.check_circle_outline;
 final tuneIcon = Icons.tune;

@@ -86,7 +86,7 @@ class _FiltersCard extends ConsumerWidget {
                   Switch.adaptive(
                     value: filters.openNowOnly,
                     onChanged: ctrl.setOpenNow,
-                    activeColor: owlOrange,
+                    activeColor: owlPurple,
                     trackOutlineColor:
                     WidgetStatePropertyAll(grey.withOpacity(.5)),
                     inactiveThumbColor: grey,
@@ -131,10 +131,10 @@ class _FiltersCard extends ConsumerWidget {
                             // Immediate saving on change -> provider already updates
                             SliderTheme(
                               data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: owlOrange,
+                                activeTrackColor: owlPurple,
                                 inactiveTrackColor: grey.withOpacity(.3),
-                                thumbColor: owlOrange,
-                                overlayColor: owlOrange.withOpacity(.15),
+                                thumbColor: owlPurple,
+                                overlayColor: owlPurple.withOpacity(.15),
                               ),
                               child: Slider(
                                 min: 0,
@@ -170,9 +170,9 @@ class _FiltersCard extends ConsumerWidget {
                                 child: SliderTheme(
                                   data: SliderTheme.of(context).copyWith(
                                     activeTrackColor: grey.withOpacity(.35),
-                                    inactiveTrackColor: owlOrange,
-                                    thumbColor: owlOrange,
-                                    overlayColor: owlOrange.withOpacity(.15),
+                                    inactiveTrackColor: owlPurple,
+                                    thumbColor: owlPurple,
+                                    overlayColor: owlPurple.withOpacity(.15),
                                   ),
                                   child: Slider(
                                     min: 0,
@@ -222,11 +222,11 @@ class _FiltersCard extends ConsumerWidget {
                                   }
                                 }
                               },
-                              selectedColor: owlOrange,
+                              selectedColor: owlPurple,
                               backgroundColor: grey,
                               side: BorderSide(
                                 color: filters.types.isEmpty
-                                    ? owlOrange
+                                    ? owlPurple
                                     : grey,
                                 width: 0.7,
                               ),
@@ -246,10 +246,10 @@ class _FiltersCard extends ConsumerWidget {
                                 ),
                                 selected: sel,
                                 onSelected: (_) => ctrl.toggleType(t),
-                                selectedColor: owlOrange,
+                                selectedColor: owlPurple,
                                 backgroundColor: grey.withOpacity(.25),
                                 side: BorderSide(
-                                    color: sel ? owlOrange : grey,
+                                    color: sel ? owlPurple : grey,
                                     width: 0.7),
                                 materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,

@@ -98,12 +98,16 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
         padding: EdgeInsets.zero,
         onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
-        icon: CircleAvatar(
-          radius: borderRadiusDefault,
-          backgroundImage:
-          logoImage ?? const AssetImage('assets/nightowl/logo.png'),
-          backgroundColor: Colors.transparent,
-        ),
+        icon: logoImage != null
+          ? CircleAvatar(
+            radius: borderRadiusDefault,
+            backgroundImage:
+            logoImage,
+            backgroundColor: Colors.transparent,
+          )
+          :
+          Icon(burgerMenu),
+
       ),
     );
 
@@ -118,7 +122,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     // Build default trailing (settings? + end-drawer avatar)
 
     final List<Widget> defaultActions = [];
-    if(verifiedVenue){
+    if (verifiedVenue) {
       defaultActions.add(const VerifiedBadge());
     }
 
@@ -134,7 +138,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       defaultActions.add(
         ProfilePictureAvatar(
           onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
-          disablePrompt: true,
         )
       );
     }

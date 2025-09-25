@@ -7,7 +7,7 @@ class LoadingScreen extends StatelessWidget {
   const LoadingScreen({
     super.key,
     this.imagePath = 'assets/nightowl/logo.png',
-    this.borderColor = owlOrange,
+    this.borderColor = owlPurple,
     this.borderWidth = 1.5,
     this.backgroundColor = black,
     this.imageSize = 120,
@@ -53,7 +53,8 @@ class LoadingScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Claim the night',
-              style: Styles.sloganTextGradient,
+              style: Styles.gradientLogo,
+              // Styles.logoCrazy('Claim the night'),
               textAlign: TextAlign.center,
             )
           ],

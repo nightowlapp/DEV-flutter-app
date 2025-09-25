@@ -74,7 +74,7 @@ class VenueTagsGrid extends ConsumerWidget {
 }
 
 Widget _tagChip(Tag tag, width, height) {
-  final color = owlOrange;
+  final color = owlPurple;
 
   final emoji = tag.emoji.isNotEmpty ? tag.emoji : '';
   final label = tag.name.isNotEmpty ? tag.name : '';

@@ -25,15 +25,15 @@ class FavoriteVenueButton extends ConsumerStatefulWidget {
     this.addTitle,
     this.addText,
     this.addDenyText = 'No',
-    this.addConfirmText = 'Allow',
+    this.addConfirmText = 'Yes',
     this.confirmOnRemove = true,
     this.removeTitle,
     this.removeText,
     this.undoText = 'No',
-    this.confirmRemoveText = 'Remove',
+    this.confirmRemoveText = 'Yes',
     this.fullIcon = filledStarIcon,
     this.emptyIcon = emptyStarIcon,
-    this.fullColor = owlOrange,
+    this.fullColor = owlPurple,
     this.emptyColor = white,
   });
 
@@ -172,7 +172,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   child: OwlButton(
                     label: widget.addConfirmText,
                     onPressed: () { doAdd = true; Navigator.of(ctx).pop(); },
-                    textColor: owlOrange, borderColor: owlOrange,
+                    textColor: owlPurple, borderColor: owlPurple,
                   ),
                 ),
               ),
@@ -209,7 +209,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   child: OwlButton(
                     label: widget.undoText,
                     onPressed: () { doRemove = false; Navigator.of(ctx).pop(); },
-                    textColor: owlOrange, borderColor: owlOrange, borderRadius: borderRadiusSmall,
+                    textColor: owlPurple, borderColor: owlPurple, borderRadius: borderRadiusSmall,
                   ),
                 ),
               ),
@@ -253,7 +253,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
             child: OwlButton(
               label: 'Upgrade To Premium',
               onPressed: () => Navigator.of(ctx).pop(),//TODO
-              textColor: owlOrange, borderColor: owlOrange, borderRadius: borderRadiusSmall,
+              textColor: owlPurple, borderColor: owlPurple, borderRadius: borderRadiusSmall,
             ),
           ),
 

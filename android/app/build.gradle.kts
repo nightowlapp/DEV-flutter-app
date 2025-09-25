@@ -32,11 +32,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // Use forward slashes on Windows with Kotlin DSL, or escape backslashes
+            storeFile = file("C:/Users/Magno/Desktop/NightOwl/env/release-key.jks")
+            storePassword = "nightowlprod"
+            keyAlias = "release_key"          // <-- must match the alias you created
+            keyPassword = "nightowlprod"
+        }
+    }
+
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("debug") {
+            // default debug signing is fine
+        }
+        getByName("release") {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

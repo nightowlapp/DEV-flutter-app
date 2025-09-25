@@ -2,18 +2,20 @@
 import 'package:flutter/material.dart' hide Viewport;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
 
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/shared/constants/enums.dart'; // <-- VenueType
+import 'package:nightowlcode/shared/constants/enums.dart'; // VenueType
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 
+import '../../../data/other_providers.dart';
 import '../../../data/services/location/location_controller.dart';
-import '../../../data/venue_providers.dart';
+import '../../../data/providers/venues/venue_providers.dart'; // <-- assumes allVenuesStreamProvider & venuesGeoJsonProvider live here
 import '../presentation/map_style.dart';
-import '../presentation/initial_camera_provider.dart';  // ← initialCameraProvider + fallbackCamera
+import '../presentation/initial_camera_provider.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -25,10 +27,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
     with AutomaticKeepAliveClientMixin {
   MapboxMap? _map;
   bool _mapCreated = false;
+  bool _loading = true;
 
   final MapStyle _style = MapStyle();
 
-  // ✅ Use enums here
+  // Keep a lightweight cache of venues to resolve taps -> Venue
+  final Map<String, Venue> _venuesById = {};
+
+  // Filters you already had
   final bool _showClosed = true;
   final Set<VenueType> _allowedTypes = const {
     VenueType.bar,
@@ -42,11 +48,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     VenueType.gay_bar,
   };
 
-  // 🔄 simple UI loading flag while the map finishes initial setup
-  bool _loading = true;
-
   @override
-  bool get wantKeepAlive => true; // keep the map instance alive across tab switches
+  bool get wantKeepAlive => true;
 
   Future<void> _onMapCreated(MapboxMap map) async {
     if (_mapCreated) return;
@@ -70,8 +73,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // Ensure style and apply filters
     await _style.ensure(_map!);
-
-    // 👇 Convert enums → names only at the boundary to keep MapStyle generic
     await _style.applyFilters(
       _map!,
       showClosed: _showClosed,
@@ -86,21 +87,71 @@ class _MapScreenState extends ConsumerState<MapScreen>
       vipFc: fcNow.vip,
     );
 
-    // ✅ initial map setup done → hide loader
     if (mounted) setState(() => _loading = false);
+  }
+
+  // Open your bottom sheet
+  void _openVenueById(String id) {
+    final v = _venuesById[id];
+    if (v == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (_) => VenuePopup(
+        venue: v,
+        onClose: () => Navigator.of(context).pop(),
+        onOpenDetails: () {
+          // TODO: navigate to full venue page if needed
+        },
+      ),
+    );
+  }
+
+  // Minimal tap handler using queryRenderedFeatures
+  Future<void> _onMapTap(MapContentGestureContext ctx) async {
+    if (_map == null) return;
+
+    final geometry =
+    RenderedQueryGeometry.fromScreenCoordinate(ctx.touchPosition);
+
+    final results = await _map!.queryRenderedFeatures(
+      geometry,
+      RenderedQueryOptions(
+        // Only ask our two venue symbol layers (no clusters)
+        layerIds: [MapStyle.lyrVip, MapStyle.lyrUnclustered],
+      ),
+    );
+
+    for (final r in results) {
+      if (r == null) continue;
+
+      // Map<String?, Object?> structure
+      final featMap = r.queriedFeature.feature;
+      final props =
+      (featMap['properties'] as Map?)?.cast<String, Object?>();
+      final rawId =
+      (props != null && props['id'] != null) ? props['id'] : featMap['id'];
+      final id = rawId?.toString();
+
+      if (id != null) {
+        _openVenueById(id);
+        return;
+      }
+    }
+    // Tap didn’t hit our layers -> do nothing
   }
 
   Future<void> _centerOnUser() async {
     final cam = await ref.read(initialCameraProvider.future);
-    _map?.flyTo(cam, MapAnimationOptions(duration: 800));
+    _map?.flyTo(cam,  MapAnimationOptions(duration: 800));
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    // 🔔 Riverpod listeners MUST be in build for ConsumerStatefulWidget.
-    // They will update the existing map instance as soon as providers change.
+    // Keep the map sources in sync
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
       if (_map == null) return;
       await _style.setVenueData(
@@ -110,15 +161,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     });
 
+    // Keep a local id->Venue cache for quick popup lookup
+    ref.listen<AsyncValue<List<Venue>>>(allVenuesStreamProvider,
+            (prev, next) {
+          next.whenData((list) {
+            for (final v in list) {
+              _venuesById[v.id] = v;
+            }
+          });
+        });
+
+    // Center animation updates
     ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
       next.whenData((cam) {
-        if (_map != null) {
-          _map!.flyTo(cam, MapAnimationOptions(duration: 650));
-        }
+        _map?.flyTo(cam, MapAnimationOptions(duration: 650));
       });
     });
 
-    // Show the map immediately with a fallback camera; no spinner.
+    // Show map immediately with fallback camera
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(
       data: (c) => c,
@@ -132,11 +192,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
           MapWidget(
             key: const ValueKey('mapWidget'),
             styleUri: MapboxStyles.DARK,
-            cameraOptions: cam,               // ← instant map with fallback camera
-            onMapCreated: _onMapCreated,      // ← hydrates style & pushes current GeoJSON
+            cameraOptions: cam,
+            onMapCreated: _onMapCreated,
+            onTapListener: _onMapTap, // ⬅️ minimal addition
           ),
-
-          // 🔳 simple overlay while the map initializes style/sources
           if (_loading)
             const Positioned.fill(
               child: ColoredBox(
@@ -147,97 +206,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        mini: true, // 24
+        mini: true,
         tooltip: 'Center on user',
         onPressed: _centerOnUser,
-        child: Icon(locationIcon,),
+        child: Icon(locationIcon),
       ),
     );
   }
-
-  void openVenueList() {
-  }
-//   List<Widget> _openVenueList(BuildContext context, LatLng userLocation) {
-//     List<Venue> venues;
-//     return venues.map((v) {
-//       return ListTile(
-//         leading: Container(
-//           // width: kNormalSizeRadius * 2,
-//           // height: kNormalSizeRadius * 2,
-//           decoration: BoxDecoration(
-//             shape: BoxShape.circle,
-//             border: Border.all(
-//               color: v.isOpenNow(DateTime.now())
-//                   ? green
-//                   : red,
-//               width: 3.0,
-//             ),
-//           ),
-//           child: ClipOval(
-//             child: CachedNetworkImage(
-//               imageUrl: v.logoUrl,
-//               placeholder: (context, url) => const LoadingIndicator(),
-//               errorWidget: (context, url, error) => CachedNetworkImage(
-//                 imageUrl: v.typeOfClubImg,
-//                 placeholder: (context, url) =>
-//                 const LoadingIndicator(),
-//                 errorWidget: (context, url, error) => const Icon(Icons.error),
-//               ),
-//               fit: BoxFit.cover,
-//             ),
-//           ),
-//         ),
-//         title: Row(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           children: [
-//             Expanded(
-//               child: Text(
-//                 ClubNameFormatter.formatClubName(v.name),
-//                 style: kTextStyleP1,
-//                 overflow: TextOverflow.ellipsis,
-//               ),
-//             ),
-//             Text(
-//               ClubAgeRestrictionFormatter
-//                   .displayClubAgeRestrictionFormattedOnlyAge(v),
-//               style: kTextStyleP2.copyWith(color: primaryColor),
-//             ),
-//             const SizedBox(width: kSmallPadding),
-//             Text(
-//               ClubDistanceCalculator.displayDistanceToClub(
-//                 club: v,
-//                 userLat: userLocation.latitude,
-//                 userLon: userLocation.longitude,
-//               ),
-//               style: kTextStyleP2.copyWith(color: primaryColor),
-//             ),
-//           ],
-//         ),
-//         subtitle: Row(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           children: [
-//             Expanded(
-//               child: Text(
-//                 ClubNameFormatter.displayClubLocation(v),
-//                 style: kTextStyleP3.copyWith(color: primaryColor),
-//                 overflow: TextOverflow.ellipsis,
-//               ),
-//             ),
-//             Text(
-//               clubOpeningHoursFormatted,
-//               style: clubOpeningHoursFormatted.toLowerCase() ==
-//                   S.of(context).closed_today
-//                   ? kTextStyleP3.copyWith(color: redAccent)
-//                   : kTextStyleP3,
-//             ),
-//           ],
-//         ),
-//         onTap: () {
-//           Navigator.pop(context);
-//           ClubBottomSheet.showClubSheet(context: context, club: v);
-//         },
-//       );
-//     }).toList();
-//   }
-// }
 }

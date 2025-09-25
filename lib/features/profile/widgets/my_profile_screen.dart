@@ -54,7 +54,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
                     child: Row(children: [
                         // Avatar
-                        ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25,),
+                        ProfilePictureAvatar(size: PlatformConfig.width(context) * 0.25, disablePrompt: false,),
                         const SizedBox(width: horizontalSpacerMedium,),
 
                         // Full name and username
@@ -95,7 +95,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                             label: 'My Stats',
                             onPressed: _openStats,
                             fullWidth: false,
-                            textColor: owlOrange,
+                            textColor: owlPurple,
                             borderColor: transparent,
                             backgroundColor: black,
                             textStyle: Styles.basicText,
@@ -126,9 +126,9 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                         total: u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(), // 420
                         height: PlatformConfig.height(context) * 0.05,
                         gradient: const LinearGradient(colors: [
-                            owlOrange,
+                            owlPurple,
                             purple,
-                            owlOrange,
+                            owlPurple,
                             purple
                           ]), //TODO inplicit colors
                         trackColor: grey,

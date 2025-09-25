@@ -168,8 +168,6 @@ final exploreFilteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
 /// - On first-ever run (no cache): fetches all venues once and caches them
 /// - Then listens for Firestore changes and incrementally updates the cache
 /// - Exposes the up-to-date in-memory list at all times
-final venuesSsoProvider =
-AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 final venuesListProvider = Provider<List<Venue>>((ref) {
   final async = ref.watch(venuesSsoProvider);

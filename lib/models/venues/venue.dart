@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
@@ -53,10 +54,11 @@ int _toMinutes(int hour, int minute) => (hour * 60) + minute;
 
 // ---------- DaySchedule ----------
 @immutable
+// ---------- DaySchedule ----------
 class DaySchedule {
   final bool isClosed;
-  final int? openMinutes; // null when isClosed; otherwise 0..1439
-  final int? closeMinutes; // null when isClosed; otherwise 0..1439
+  final int? openMinutes;   // 0..1439
+  final int? closeMinutes;  // 0..1439
   final int? ageRestriction;
   final DressCodeType? dressCode;
   final double? entryPrice;
@@ -85,15 +87,36 @@ class DaySchedule {
     if (offerImageUrl != null) 'offer_image_url': offerImageUrl,
   };
 
+  // ✅ Defensive parsing: if invalid, treat as closed
   factory DaySchedule.fromJson(Map<String, dynamic>? json) {
-    if (json == null) {
-      return const DaySchedule();
+    if (json == null) return const DaySchedule();
+
+    bool isClosed = (json['is_closed'] as bool?) ?? true;
+
+    int? _asInt(dynamic v) {
+      if (v == null) return null;
+      final n = (v is num) ? v.toInt() : int.tryParse(v.toString());
+      if (n == null) return null;
+      // clamp to 0..1439
+      if (n < 0) return 0;
+      if (n > 1439) return 1439;
+      return n;
     }
-    final isClosed = json['is_closed'] as bool? ?? true;
+
+    int? open = isClosed ? null : _asInt(json['open']);
+    int? close = isClosed ? null : _asInt(json['close']);
+
+    // If non-closed but invalid times → coerce to closed
+    if (!isClosed && (open == null || close == null || open == close)) {
+      isClosed = true;
+      open = null;
+      close = null;
+    }
+
     return DaySchedule(
       isClosed: isClosed,
-      openMinutes: isClosed ? null : JsonUtility.asNum<int>(json['open'], (n) => n.toInt()),
-      closeMinutes: isClosed ? null : JsonUtility.asNum<int>(json['close'], (n) => n.toInt()),
+      openMinutes: open,
+      closeMinutes: close,
       ageRestriction: JsonUtility.asNum<int>(json['age_restriction'], (n) => n.toInt()),
       dressCode: dressCodeTypeFromString(json['dress_code'] as String? ?? ''),
       entryPrice: JsonUtility.asNum<double>(json['entry_price'], (n) => n.toDouble()),
@@ -114,10 +137,11 @@ class DaySchedule {
     bool clearEntryPrice = false,
     bool clearOfferImage = false,
   }) {
+    final nextClosed = isClosed ?? this.isClosed;
     return DaySchedule(
-      isClosed: isClosed ?? this.isClosed,
-      openMinutes: isClosed == true ? null : (openMinutes ?? this.openMinutes),
-      closeMinutes: isClosed == true ? null : (closeMinutes ?? this.closeMinutes),
+      isClosed: nextClosed,
+      openMinutes: nextClosed ? null : (openMinutes ?? this.openMinutes),
+      closeMinutes: nextClosed ? null : (closeMinutes ?? this.closeMinutes),
       ageRestriction: clearAgeRestriction ? null : (ageRestriction ?? this.ageRestriction),
       dressCode: clearDressCode ? null : (dressCode ?? this.dressCode),
       entryPrice: clearEntryPrice ? null : (entryPrice ?? this.entryPrice),
@@ -130,7 +154,6 @@ class DaySchedule {
 
 @immutable
 class ExceptionHours {
-  // Used for special events?
   final DateTime date; // Y/M/D only
   final bool isClosed;
   final int? openMinutes;
@@ -162,16 +185,37 @@ class ExceptionHours {
     if (entryPrice != null) 'entry_price': entryPrice,
   };
 
+  // ✅ Defensive parsing like DaySchedule
   factory ExceptionHours.fromJson(Map<String, dynamic> json) {
     final raw = json['date'];
-    final parsed = raw is String ? DateTime.parse(raw) : DateTime.now();
-    final onlyDate = DateTime(parsed.year, parsed.month, parsed.day);
-    final isClosed = json['is_closed'] as bool? ?? true;
+    final parsed = raw is String ? DateTime.tryParse(raw) ?? DateTime.now() : DateTime.now();
+    final d = DateTime(parsed.year, parsed.month, parsed.day);
+
+    bool isClosed = (json['is_closed'] as bool?) ?? true;
+
+    int? _asInt(dynamic v) {
+      if (v == null) return null;
+      final n = (v is num) ? v.toInt() : int.tryParse(v.toString());
+      if (n == null) return null;
+      if (n < 0) return 0;
+      if (n > 1439) return 1439;
+      return n;
+    }
+
+    int? open = isClosed ? null : _asInt(json['open']);
+    int? close = isClosed ? null : _asInt(json['close']);
+
+    if (!isClosed && (open == null || close == null || open == close)) {
+      isClosed = true;
+      open = null;
+      close = null;
+    }
+
     return ExceptionHours(
-      date: onlyDate,
+      date: d,
       isClosed: isClosed,
-      openMinutes: isClosed ? null : JsonUtility.asNum<int>(json['open'], (n) => n.toInt()),
-      closeMinutes: isClosed ? null : JsonUtility.asNum<int>(json['close'], (n) => n.toInt()),
+      openMinutes: open,
+      closeMinutes: close,
       ageRestriction: JsonUtility.asNum<int>(json['age_restriction'], (n) => n.toInt()),
       dressCode: dressCodeTypeFromString(json['dress_code'] as String? ?? ''),
       entryPrice: JsonUtility.asNum<double>(json['entry_price'], (n) => n.toDouble()),
@@ -672,8 +716,8 @@ class Venue {
       'daily_offer_urls': dailyOfferUrls,
 
       // auditing (domain JSON uses ISO8601 strings)
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      if (createdAt != null) 'created_at': createdAt!.toUtc().toIso8601String(),
+      if (updatedAt != null) 'updated_at': updatedAt!.toUtc().toIso8601String(),
 
       'default_entry_price': defaultEntryPrice,
 

@@ -52,7 +52,7 @@ class SafetyModeToggle extends StatelessWidget {
               GestureDetector(child: 
                 Icon(
                   infoIcon,
-                  color: owlOrange,
+                  color: owlPurple,
                   size: iconSizeDefault,
                 ),
               // onTap: InformationPopup(title: '', children: [],),

@@ -106,7 +106,7 @@ class _MainShellState extends State<MainShell> {
 
     return MainScaffold(
       appBar: MainAppBar( screen: activeGlobal,      ),
-      body: SafeArea(child: widget.nav),
+      body: widget.nav,
       bottomNavigationBar: MainBottomNavigationBar(
         tabs: tabs,
         currentIndex: currentVisibleIndex,

@@ -34,9 +34,9 @@ final partyStatusStateProvider = StateProvider<PartyStatusTypes>(
 // ➋ Color derived from the in-memory status (sync)
 final partyStatusColorForProvider = Provider.family<Color, PartyStatusTypes>((ref, s) {
     switch (s) {
-      case PartyStatusTypes.out_tonight: return green;
-      case PartyStatusTypes.house_party: return purple;
-      case PartyStatusTypes.pregame:     return yellow;
+      case PartyStatusTypes.out_tonight: return purple;
+      case PartyStatusTypes.house_party: return blue;
+      case PartyStatusTypes.pregame:     return orange;
       case PartyStatusTypes.recovering:  return red;
       case PartyStatusTypes.still_planning:
       default:                           return greyLighter;

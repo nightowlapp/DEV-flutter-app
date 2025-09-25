@@ -83,6 +83,9 @@ dependencies:
   flutter_image_compress: ^2.4.0 # WebP images
 
   animated_list_plus: ^0.5.2
+  pdfx: ^2.9.2
+  flutter_cache_manager: ^3.4.1
+  share_plus: ^12.0.0
 
 
 #syncfusion_flutter_sliders
@@ -162,7 +165,7 @@ flutter:
     - assets/
     - assets/flags/
     - assets/nightowl/
-    - assets/icons/
+    - assets/nightowl/cities/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

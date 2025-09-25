@@ -101,7 +101,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                     controller: _mailPhoneInputController,
                     hint: 'Email',
                     leadingIcon: mailIcon,
-                    cursorColor: owlOrange,
+                    cursorColor: owlPurple,
                     onChanged: (_) => _recomputeCanContinue(),
                     validator: (v) =>
                     (v == null || v.isEmpty) ? 'Email is required' : null,
@@ -112,7 +112,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                     hint: 'Password',
                     leadingIcon: passwordIcon,
                     obscureText: true,
-                    cursorColor: owlOrange,
+                    cursorColor: owlPurple,
                     onChanged: (_) => _recomputeCanContinue(),
                     validator: (v) =>
                     (v == null || v.isEmpty) ? 'Password is required' : null,
@@ -133,7 +133,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                                 _stayLoggedIn
                                   ? checkBoxCheckedIcon
                                   : checkBoxUncheckedIcon,
-                                color: owlOrange,
+                                color: owlPurple,
                               ),
                               const SizedBox(width: horizontalSpacerSmall),
                               Text(
@@ -149,7 +149,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                   SizedBox(height: verticalSpacerVeryBig),
                   OwlButton(
                     label: _isLoading ? 'Logging in...' : 'Login',
-                    backgroundColor: _canContinue && !_isLoading ? owlOrange : grey,
+                    backgroundColor: _canContinue && !_isLoading ? owlPurple : grey,
                     textColor: _canContinue && !_isLoading ? white : grey,
                     onPressed: _canContinue && !_isLoading ? _handleLogin : null,
                   ),

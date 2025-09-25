@@ -25,7 +25,7 @@ class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text("91002", style: Styles.basicText.copyWith(color: owlOrange),),
+                child: Text("91002", style: Styles.basicText.copyWith(color: owlPurple),),
               )
             ],
           ),

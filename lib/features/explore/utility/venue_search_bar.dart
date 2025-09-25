@@ -63,7 +63,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
           hintStyle: Styles.greyedOutPopupText,
           isDense: true,
           filled: true,
-          fillColor: owlOrange.withOpacity(0.03),
+          fillColor: owlPurple.withOpacity(0.03),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadiusDefault),
             borderSide: const BorderSide(color: grey, width: 0.7),
@@ -132,7 +132,7 @@ class _CountText extends StatelessWidget {
     final plural = (label.trim() == 'matches' || label.contains('matches'))
         ? (count == 1 ? ' match' : ' matches')
         : label;
-    final numColor = (count == 0) ? red : owlOrange;
+    final numColor = (count == 0) ? red : owlPurple;
     return Semantics(
       label: count == null ? semanticsLabelWhenUnknown : '$count$plural',
       child: Text.rich(

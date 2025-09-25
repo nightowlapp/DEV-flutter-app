@@ -150,7 +150,7 @@ class _FourthCreateNightowlProfileScreenState
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             OwlButton(
               label: _busy ? 'Saving…' : 'Create Profile',
-              backgroundColor: _canContinue ? owlOrange : grey,
+              backgroundColor: _canContinue ? owlPurple : grey,
               textColor: _canContinue ? white : grey,
               onPressed: _canContinue ? _createProfile : null,
             ),

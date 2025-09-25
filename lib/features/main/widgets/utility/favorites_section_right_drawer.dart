@@ -28,7 +28,7 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
     final limitText    = progress.unlimited ? '∞' : '${progress.limit}';
     final half         = progress.unlimited ? 0 : (progress.limit / 2).floor();
 
-    final Color brand = owlOrange; // your primary “accent”
+    final Color brand = owlPurple; // your primary “accent”
     final Color currentColor = progress.unlimited
         ? brand
         : (currentCount <= half ? red : brand);

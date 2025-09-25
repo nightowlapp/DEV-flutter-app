@@ -74,7 +74,7 @@ class OwlSnack {
           ),
 
           if (showDivider)
-            const Divider(color: owlOrange),
+            const Divider(color: owlPurple),
 
 // SizedBox(height: PlatformConfig.height(context)*0.005,),
 

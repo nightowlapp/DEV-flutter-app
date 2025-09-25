@@ -1,36 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
+import 'package:nightowlcode/features/main/widgets/utility/redeem_referral_sheet.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/owl_snack.dart';
+import 'package:share_plus/share_plus.dart';
 
-import '../../../../shared/constants/icons.dart';
-import '../../../../shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/constants/icons.dart';
 
-/// Refer-a-friend section for the LEFT drawer
-/// - Same header style (centered title + left icon)
-/// - Shows a QR (easy in-person sharing) and a copyable link (easy remote sharing)
+import '../../../../data/repositories/users/referral_repository.dart';
+
+// ---------- Connected wrapper: fetches inviteCode & inviteLink ----------
+class ReferAFriendLeftDrawerConnected extends ConsumerWidget {
+  const ReferAFriendLeftDrawerConnected({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final codeAsync = ref.watch(inviteCodeProvider);
+    final linkAsync = ref.watch(inviteLinkProvider);
+
+    return codeAsync.when(
+      data: (code) {
+        final link = linkAsync.maybeWhen(data: (l) => l, orElse: () => '');
+        return ReferAFriendLeftDrawer(inviteCode: code, inviteLink: link);
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Referral unavailable: $e')),
+    );
+  }
+}
+
+/// Refer-a-friend section for the LEFT drawer.
 class ReferAFriendLeftDrawer extends StatelessWidget {
   const ReferAFriendLeftDrawer({
     super.key,
     required this.inviteCode,
-    this.baseInviteUrl = 'https://owlnight.com/invite',
-    this.qrSize = 0, //dynamic size that is as big as possible but fits.
+    required this.inviteLink,
   });
 
   final String inviteCode;
-  final String baseInviteUrl;
-  final double qrSize;
-
-  String get _inviteLink {
-    // simplest and human-friendly: https://owlnight.com/invite/ABC123
-    final cleanBase = baseInviteUrl.endsWith('/')
-      ? baseInviteUrl.substring(0, baseInviteUrl.length - 1)
-      : baseInviteUrl;
-    return '$cleanBase/$inviteCode';
-  }
+  final String inviteLink;
 
   @override
   Widget build(BuildContext context) {
@@ -42,28 +54,22 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
         Stack(
           children: [
             Center(child: Text('Refer a Friend', style: Styles.boldText)),
-            Align(
+             Align(
               alignment: Alignment.centerLeft,
-              child: Icon(qrCodeIcon, color: owlOrange, size: iconSizeDefault),
+              child: Icon(qrCodeIcon, color: owlPurple),
             ),
           ],
         ),
-
         const SizedBox(height: verticalSpacerSmall),
 
-        // ---------- QR CODE (no extra packages: use a QR web service image) ---------- //TODO QR flutter.
-        // For production, consider qr_flutter for offline generation.
-
-        // QR: dynamically sized to the max possible that still fits
+        // ---------- QR ----------
         ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadiusDefault),
+          borderRadius: radius,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // We’re inside the drawer’s content width. Make a square QR that:
-              // - uses (maxWidth - padding) so it never overflows horizontally
-              // - leaves vertical space for buttons/text
-              const double pad = allSidePaddingDefault * 2;
-              final double maxSide = (constraints.maxWidth - pad).clamp(80.0, 2048.0)/2;
+              const pad = allSidePaddingDefault * 2;
+              final double maxSide = (constraints.maxWidth - pad)
+                  .clamp(80.0, 2048.0) / 2;
 
               return Container(
                 padding: const EdgeInsets.all(allSidePaddingDefault),
@@ -71,22 +77,23 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
                   color: black,
                   borderRadius: BorderRadius.circular(borderRadiusDefault),
                 ),
-                child: Center(child:
-                  GestureDetector(
+                child: Center(
+                  child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => _showQrFullscreen(context, _inviteLink),
+                    onTap: () => _showQrFullscreen(context, inviteLink),
                     child: Tooltip(
                       message: 'Tap to show full-screen QR',
                       child: SizedBox.square(
                         dimension: maxSide,
                         child: _QrFromNetwork(
-                          data: _inviteLink,
+                          data: inviteLink,
                           size: maxSide,
                         ),
                       ),
                     ),
                   ),
-                ),);
+                ),
+              );
             },
           ),
         ),
@@ -96,52 +103,56 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
         // ---------- ACTIONS ----------
         Wrap(
           alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _SmallOutlinedButton(
               icon: fullScreenIcon,
               label: 'Show QR',
-              onPressed: () => _showQrFullscreen(context, _inviteLink),
+              onPressed: () => _showQrFullscreen(context, inviteLink),
             ),
-
             _SmallOutlinedButton(
-              icon: Icons.send,
-              label: 'Send link',
-              onPressed: () {
-                //TODO messenger, messages, SOME
-                // Clipboard.setData(ClipboardData(text: inviteCode));
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //   SnackBar(
-                //     content: const Text('Code copied'),
-                //     backgroundColor: owlOrange.withOpacity(.9),
-                //     behavior: SnackBarBehavior.floating,
-                //   ),
-                // );
-              },
+              icon: Icons.ios_share,
+              label: 'Share link',
+              onPressed: () => Share.share(inviteLink, subject: 'Join me on NightOwl'),
             ),
-
             _SmallOutlinedButton(
               icon: copyIcon,
-              label: 'Copy Link',
+              label: 'Copy link',
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: _inviteLink));
+                Clipboard.setData(ClipboardData(text: inviteLink));
                 OwlSnack.show(
-                    context, title: 'Link Copied',
-                message: '$_inviteLink is copied to clipholder.',
-                variant: OwlSnackVariant.success,
-                  duration: const Duration(seconds: 5),
+                  context,
+                  title: 'Link Copied',
+                  message: '$inviteLink copied to clipboard.',
+                  variant: OwlSnackVariant.success,
+                  duration: const Duration(seconds: 4),
                 );
               },
             ),
+            _SmallOutlinedButton(
+              icon: Icons.key,
+              label: 'Redeem code',
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                backgroundColor: black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(borderRadiusDefault),
+                ),
+                builder: (_) => const RedeemReferralSheet(),
+              ),
+            ),
           ],
         ),
+
+        const SizedBox(height: verticalSpacerSmall),
+        Center(child: Text('Your code: $inviteCode', style: Styles.basicTextHeader)),
       ],
     );
   }
-  void _showQrFullscreen(BuildContext context, String link) {
-    // Move UP by 12% of screen height (negative dy = up)
-    final double dy = -PlatformConfig.height(context) * 0.14;
-    // PopupDialogDefault(title: 'Scan to join NightOwl', children: [],); //TODO make popup in here:
 
+  void _showQrFullscreen(BuildContext context, String link) {
+    final double dy = -PlatformConfig.height(context) * 0.14;
     showDialog(
       context: context,
       builder: (_) => Transform.translate(
@@ -157,19 +168,20 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Scan to join NightOwl', style: Styles.basicTextHeader.copyWith(fontSize: fontSizeMediumPlus)),
+                Text('Scan to join NightOwl',
+                    style: Styles.basicTextHeader.copyWith(fontSize: 18)),
                 const SizedBox(height: verticalSpacerSmall),
-                Divider(color: grey,),
+                const Divider(color: grey),
                 const SizedBox(height: verticalSpacerSmall),
                 SelectableText(
                   'Earn experience by referring your friends!',
                   style: Styles.basicTextHeader,
                   textAlign: TextAlign.center,
-                ), _QrFromNetwork(
+                ),
+                _QrFromNetwork(
                   data: link,
                   size: PlatformConfig.width(context) * 0.85,
                 ),
-
                 SelectableText(
                   link,
                   style: Styles.boldText,
@@ -182,22 +194,18 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
       ),
     );
   }
-
 }
 
-/// Minimal QR without packages via a public QR image API.
-/// Replace with `qr_flutter` (QrImageView) for offline/branding needs.
 class _QrFromNetwork extends StatelessWidget {
   const _QrFromNetwork({required this.data, required this.size});
-
   final String data;
   final double size;
 
   @override
   Widget build(BuildContext context) {
     final encoded = Uri.encodeComponent(data);
-    // Using goqr.me (api.qrserver.com). You can switch to any QR service or self-host.
-    final url = 'https://api.qrserver.com/v1/create-qr-code/?size=${size.toInt()}x${size.toInt()}&data=$encoded';
+    final url =
+        'https://api.qrserver.com/v1/create-qr-code/?size=${size.toInt()}x${size.toInt()}&data=$encoded';
 
     return Image.network(
       url,
@@ -210,10 +218,7 @@ class _QrFromNetwork extends StatelessWidget {
         height: size,
         color: Colors.black,
         alignment: Alignment.center,
-        child: const Text(
-          'QR unavailable',
-          style: TextStyle(color: white),
-        ),
+        child: const Text('QR unavailable', style: TextStyle(color: white)),
       ),
     );
   }
@@ -233,19 +238,19 @@ class _SmallOutlinedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: PlatformConfig.width(context)*0.35,
-        child: OutlinedButton.icon(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: white,
-        // side: BorderSide(color: grey, width: 0.7), //TODO actually nice glow without
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
+      width: PlatformConfig.width(context) * 0.35,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+          textStyle: Styles.boldText.copyWith(fontSize: fontSizeSmall),
         ),
-        textStyle: Styles.boldText.copyWith(fontSize: fontSizeSmall),
+        icon: Icon(icon, color: owlPurple),
+        label: Text(label),
       ),
-      icon: Icon(icon, size: iconSizeDefault, color: owlOrange),
-      label: Text(label),
-    ));
+    );
   }
 }

@@ -34,7 +34,7 @@ class ProgressBar extends StatelessWidget {
               height: 5, // Adjust thickness if needed
               decoration: BoxDecoration(
                 color: isCompleted
-                    ? owlOrange // Completed
+                    ? owlPurple // Completed
                     : isActive
                     ? greyLighter // Active
                     : grey, // Inactive

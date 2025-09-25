@@ -33,8 +33,8 @@ class VenueMainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final logo = venueLogo(venue: venue, showInitialFallback: false);
     //TODO below.
-    final primaryColor = venue.primaryColorHex ?? owlOrange.toHex();
-    final secondaryColor = venue.secondaryColorHex ?? owlOrange.toHex();
+    final primaryColor = venue.primaryColorHex ?? owlPurple.toHex();
+    final secondaryColor = venue.secondaryColorHex ?? owlPurple.toHex();
     final venueFont = venue.fontFamily ?? Styles.baseFont;
 
     // titleColor: HexToColor(primaryColor),
@@ -48,10 +48,7 @@ class VenueMainScreen extends StatelessWidget {
         action: logo,
         backgroundColor: black,),
       //TODO looks cool with image at top but dificoult to see name and click back.
-      body: CornerBadgeOverlay(
-        show: !venue.isVerified,
-        badge: VerifiedBadge(), // TODO move to app bar
-        child: Padding(
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: sidePaddingDefault),
           child: VenueScreenContent(
             venue: venue,
@@ -59,7 +56,6 @@ class VenueMainScreen extends StatelessWidget {
             userLoc: userLoc,
           ),
         ),
-      ),
     );
   }
 }

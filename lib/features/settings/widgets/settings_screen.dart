@@ -124,7 +124,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       : '${_two(_birthday!.day)}-${_two(_birthday!.month)}-${_birthday!.year}';
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar( // TODO Main APp bar
         backgroundColor: black,
         title: const Text('Settings'),
         centerTitle: true,
@@ -334,9 +334,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _kv('roles', setS(u?.roles)),
         _kv('subscriptionType', enumS(u?.subscriptionType)),
         _kv('platformType', enumS(u?.platformType)),
-        _kv('currentPartyStatus', enumS(u?.currentPartyStatus)),
-        _kv('createdAt', dateS(u?.createdAt)),
-        _kv('updatedAt', dateS(u?.updatedAt)),
       ]);
 
     // Firebase user (extra diagnostics)
@@ -492,7 +489,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: owlOrange,
+              primary: owlPurple,
               surface: black,
               onSurface: white,
             ),
@@ -538,7 +535,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListTile(
       leading: Icon(icon, color: white),
       title: Text(label, style: Styles.basicText),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: owlOrange) : const SizedBox.shrink(),
+      trailing: isSelected ? const Icon(Icons.check_circle, color: owlPurple) : const SizedBox.shrink(),
       onTap: () => Navigator.pop(ctx, value),
     );
   }

@@ -24,7 +24,7 @@ class DatePicker extends StatefulWidget {
     this.textColor = white,
     this.hintColor = grey,
     this.tooYoungColor = red,
-    this.legalAgeColor = owlOrange,
+    this.legalAgeColor = owlPurple,
     this.fontSize = 14.0,
     this.contentPadding =
     const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),

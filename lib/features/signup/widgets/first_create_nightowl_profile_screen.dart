@@ -108,7 +108,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                 children: [
                   GestureDetector(
                     onTap: () => ref.read(signUpDraftProvider.notifier).setAcceptedTos(!draft.acceptedTos),
-                    child: Icon(draft.acceptedTos ? checkBoxCheckedIcon : checkBoxUncheckedIcon, color: owlOrange),
+                    child: Icon(draft.acceptedTos ? checkBoxCheckedIcon : checkBoxUncheckedIcon, color: owlPurple),
                   ),
                   const SizedBox(width: horizontalSpacerSmall),
                   Row(
@@ -121,7 +121,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                           'Terms of Service',
                           style: Styles.boldText.copyWith(
                             fontSize: fontSizeMedium,
-                            color: owlOrange,
+                            color: owlPurple,
                             decoration: TextDecoration.underline,
                           ),
                         ),
@@ -135,7 +135,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             OwlButton(
               label: 'Continue',
-              backgroundColor: canContinue ? owlOrange : grey,
+              backgroundColor: canContinue ? owlPurple : grey,
               textColor: canContinue ? white : grey,
               onPressed: canContinue
                   ? () => context.pushNamedPage('secondCreateNightowlProfile')

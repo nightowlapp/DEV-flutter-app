@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
-import '../shared/constants/enums.dart';
-import 'other_providers.dart';
+import '../../../shared/constants/enums.dart';
+import '../../other_providers.dart';
 
 typedef VenuesFc = ({String clusterable, String vip});
 

@@ -67,7 +67,7 @@ class _ThirdCreateNightowlProfileScreenState
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             OwlButton(
               label: 'Continue',
-              backgroundColor: canContinue ? owlOrange : grey,
+              backgroundColor: canContinue ? owlPurple : grey,
               textColor: canContinue ? white : grey,
               onPressed: canContinue
                   ? () => context.pushNamedPage('fourthCreateNightowlProfile')

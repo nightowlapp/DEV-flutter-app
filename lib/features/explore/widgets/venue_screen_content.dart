@@ -4,6 +4,7 @@ import 'package:marquee/marquee.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/data/services/like_store.dart';
 import 'package:nightowlcode/features/explore/utility/cover_image.dart';
+import 'package:nightowlcode/features/explore/utility/offer_today_section.dart';
 import 'package:nightowlcode/features/explore/utility/rating_card.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
@@ -20,8 +21,12 @@ import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 
 import '../../../data/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
+import '../../../data/providers/venues/venue_media_providers.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
-import '../../../shared/reusable/ui/like_venue_button.dart';
+import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
+import '../../../shared/reusable/ui/verified_badge.dart';
+import '../utility/bar_card_screen.dart';
+import '../utility/mood_images_section.dart';
 import '../utility/venue_tags_grid.dart';
 import 'more_info_screen.dart';
 
@@ -63,80 +68,218 @@ class VenueScreenContent extends ConsumerWidget  {
   Widget build(BuildContext context, WidgetRef ref) {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
     final favStore = ref.watch(favoriteStoreProvider(venue.id,));
+    final async = ref.watch(venueMediaBundleProvider(venue.id));
+    // final hasOffer =  async.maybeWhen(
+    //     data: (b)
+    //     ,
+    //     orElse: () => const SizedBox.shrink());
 
+    final int visits = venue.visitCount;
+    final int? cap = venue.capacity;
+
+    final bool showStats =
+      visits > 10 || (cap != null && cap > 0 && (visits / cap) >= 0.20);
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        CoverImage.fromMedia(media: media, height: PlatformConfig.height(context) * 0.2,),
-        SizedBox(height: PlatformConfig.height(context) * 0.02,),
+        // ----- FIXED HEADER -----
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: PlatformConfig.height(context) * 0.01),
+              CoverImage.fromMedia(
+                media: media,
+                city: venue.city, // <- this wires the city.png fallback
+                height: PlatformConfig.height(context) * 0.2,
+              ),
+              SizedBox(height: PlatformConfig.height(context) * 0.01),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // favoriteButton(),
-            FavoriteVenueButton(store: favStore, venue: venue),
-            SizedBox(width: allSidePaddingDefault,),
-            LikeVenueButton(store: likeStore, venue: venue,),
+                  FavoriteVenueButton(store: favStore, venue: venue),
+                  const SizedBox(width: allSidePaddingDefault),
+                  LikeVenueButton(store: likeStore, venue: venue),
+                  const SizedBox(width: allSidePaddingDefault),
+                  if(venue.isVerified) const VerifiedBadge(),
+                  const Spacer(),
 
-            Spacer(),
+                  Column(
+                    children: [
+                      _displayOpeningHours(venue),
+                      const SizedBox(height: allSidePaddingDefault),
+                      RatingCard(venue: venue),
+                    ]
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
 
-            Column(
+        // ---------- SCROLLABLE AREA (starts at Mood Images) ----------
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: allSidePaddingDefault),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Mood images (horizontal strip)
+                SizedBox(height: PlatformConfig.height(context) * 0.05),
 
-                _displayOpeningHours(venue),
-                const SizedBox(height: allSidePaddingDefault,),
-                RatingCard(venue: venue),
-              ])
-          ],
+                MoodImagesSection(venueId: venue.id),
+
+                SizedBox(height: PlatformConfig.height(context) * 0.05),
+
+                // Tags (your existing grid is fixed-height, safe inside scroll view)
+                VenueTagsGrid(
+                  tagIds: venue.tagids,
+                  viewportWidth: PlatformConfig.width(context),
+                  viewportHeight: PlatformConfig.height(context),
+                ),
+
+                SizedBox(height: PlatformConfig.height(context) * 0.05),
+
+                // Bottom actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                      height: PlatformConfig.height(context) * 0.04,
+                      width: PlatformConfig.width(context) * 0.35,
+                      child: OwlButton(
+                        borderRadius: borderRadiusSmall,
+                        label: 'More Info',
+                        onPressed: () => context.pushNamedPage(
+                          MoreInfoScreen.routeName,
+                          extra: VenueMoreInfoArgs(
+                            venue: venue,
+                            media: media,
+                            userLoc: userLoc,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (venue.isVerified)
+                    SizedBox(
+                      height: PlatformConfig.height(context) * 0.04,
+                      width: PlatformConfig.width(context) * 0.35,
+                      child: OwlButton(
+                        borderRadius: borderRadiusSmall,
+                        label: 'Bar Card',
+                        onPressed: () => context.pushNamedPage(
+                          BarCardScreen.routeName,
+                          extra: BarCardArgs(venueId: venue.id),
+                        ),
+
+                      ),
+                    ),
+                  ]
+                ),
+
+                if(showStats) // TODO
+                Column(
+                  children: [
+
+                    SizedBox(height: PlatformConfig.height(context) * 0.05),
+                    const Divider(color: white,),
+                    SizedBox(height: PlatformConfig.height(context) * 0.05),
+
+                  ],
+                ),
+
+                if(showStats)
+                Column(
+                  children: [
+                    //TODO Current visits here IF more than 30% at least 30 people unless capacity is less than 50.
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(
+                            height: PlatformConfig.height(context) * 0.04,
+                            width: PlatformConfig.width(context) * 0.35,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: black,
+                              border: Border.all(color: white),
+                              borderRadius: BorderRadius.circular(borderRadiusSmall),
+                            ),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: venue.visitCount.toString(),
+                                    style: Styles.basicTextHeader.copyWith(color: owlPurple)
+                                  ),
+                                  TextSpan(
+                                    text: " Right now",
+                                    style: Styles.basicText
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          Container(
+                            height: PlatformConfig.height(context) * 0.04,
+                            width: PlatformConfig.width(context) * 0.35,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: black,
+                              border: Border.all(color: white),
+                              borderRadius: BorderRadius.circular(borderRadiusSmall),
+                            ),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text:
+                                    "${((venue.visitCount / venue.capacity) * 100).round()}",
+                                    style: Styles.basicTextHeader.copyWith(color: owlPurple)
+                                  ),
+                                  const TextSpan(
+                                    text: "% ",
+                                    style: TextStyle(
+                                      color: white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: "Filled",
+                                    style: Styles.basicText
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]
+                ),
+
+                if(async.hasValue)
+                Column(
+                  children: [
+                    SizedBox(height: PlatformConfig.height(context) * 0.05),
+
+                    OfferTodaySection(venueId: venue.id),
+
+                    SizedBox(height: PlatformConfig.height(context) * 0.05),
+                  ],
+                )
+
+              ],
+            ),
+          ),
         ),
-        SizedBox(height: PlatformConfig.height(context) * 0.1,),
-
-        VenueTagsGrid(
-          tagIds: venue.tagids, // your existing List<String> of tag doc IDs (slugs)
-          viewportWidth: PlatformConfig.width(context),
-          viewportHeight: PlatformConfig.height(context),
-        ),
-
-        SizedBox(height: PlatformConfig.height(context) * 0.1,),
-
-
-        // TODO Mood images here:
-        Row(
-          children: [
-
-          ],
-        ),
-
-        //TODO Current visits here IF more than 30% at least 30 people unless capacity is less than 50.
-
-        Row(
-          children: [
-
-          ],
-        ),
-
-
-
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            Container(
-              height: PlatformConfig.height(context) * 0.04, width: PlatformConfig.width(context) * 0.35,
-              child: OwlButton(borderRadius: borderRadiusSmall, label: 'More Info',
-                onPressed: () => context.pushNamedPage(MoreInfoScreen.routeName, extra: VenueMoreInfoArgs(
-                    venue: venue,
-                    media: media,
-                    userLoc: userLoc,
-                  ),))),
-            if(venue.isVerified)
-            Container(
-              height: PlatformConfig.height(context) * 0.04, width: PlatformConfig.width(context) * 0.35,
-              child: OwlButton(borderRadius: borderRadiusSmall, label: 'Bar Card', onPressed: () => context.pushNamedPage('barCard'))),
-          ],),
-        SizedBox(height: PlatformConfig.height(context) * 0.1,),
-
-
-
       ],
     );
   }
@@ -160,8 +303,8 @@ class VenueScreenContent extends ConsumerWidget  {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             // constraints: const BoxConstraints(minWidth: 100),
-            child: r.isClosed
-              ? Text('Closed today', style: baseStyle)
+            child: !r.isClosed // TODO error in logic. showing today if still open from yesterday.
+              ? Text('Closed today', style: baseStyle.copyWith(color: red))
               : RichText(
                 text: TextSpan(
                   style: baseStyle,
@@ -181,95 +324,7 @@ class VenueScreenContent extends ConsumerWidget  {
               ),
           ),
         ),
-      ));
-  }
-
-  Widget _tagsGrid(Venue v, BuildContext context) {
-    final sorted = List.of(v.tagids)..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    if (sorted.isEmpty) return const SizedBox.shrink();
-
-    // layout constants (3 rows, horizontal scroll, fixed height)
-    const rows = 2;
-    const vPad = 8.0;                // equal top/bottom padding
-    const hPad = 8.0;
-    final tagWidth = PlatformConfig.width(context) * 0.35;
-    const mainAxisSpacing = 10.0;    // horizontal spacing between items
-    const crossAxisSpacing = 5.0;    // vertical spacing between rows
-    const childAspectRatio = 5.0;    // width / height (wide pill)
-    const chipHeight = 28.0;         // per-row item height
-
-    return SizedBox(
-      height: PlatformConfig.height(context) * 0.2,
-      child: Container(
-        decoration: BoxDecoration(
-          color: black,
-          border: Border.all(color: white, width: 1.5),
-          borderRadius: BorderRadius.circular(borderRadiusSmall),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: vPad, horizontal: hPad),
-        child: GridView.builder(
-          scrollDirection: Axis.horizontal, // ← sideways
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: sorted.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: rows,                 // rows when scrolling horizontally
-            crossAxisSpacing: crossAxisSpacing,   // vertical gap between rows
-            mainAxisSpacing: mainAxisSpacing,     // horizontal gap
-            childAspectRatio: childAspectRatio,   // width / height
-            mainAxisExtent: tagWidth,
-          ),
-          itemBuilder: (context, index) {
-            final tag = sorted[index];
-            return SizedBox(
-              height: chipHeight,                 // lock row height
-              child: _neonTagChip(tag, owlOrange),
-            );
-          },
-        ),
-      ),
+      )
     );
   }
-
-  Widget _neonTagChip(String tag, Color c) {
-    return Container(
-      decoration: BoxDecoration(
-        color: black,
-        borderRadius: BorderRadius.circular(borderRadiusSmallest),
-        border: Border.all(color: c, width: 1),
-        boxShadow: [
-          BoxShadow(color: c.withOpacity(0.45), blurRadius: 10, spreadRadius: 1),
-          BoxShadow(color: c.withOpacity(0.20), blurRadius: 2, spreadRadius: 0.5),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Row(
-        children: [
-          // left icon badge
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: c.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(borderRadiusSmallest),
-              border: Border.all(color: c, width: 0.7),
-            ),
-            alignment: Alignment.center,
-            // child: Icon(_iconForTag(tag), size: 14, color: white),
-          ),
-          const SizedBox(width: 5),
-          // label
-          Expanded(
-            child: Marquee( //TODO only spin of too long. Slow spin and chill
-              text: tag,
-              // maxLines: 1,
-              // overflow: TextOverflow.ellipsis,
-              style: Styles.boldText.copyWith(fontSize: 11),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
 }

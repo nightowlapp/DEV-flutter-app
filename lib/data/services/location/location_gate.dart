@@ -81,7 +81,7 @@ class _LocationGateState extends ConsumerState<LocationGate> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: owlOrange.withOpacity(0.15),
+          backgroundColor: owlPurple.withOpacity(0.15),
           foregroundColor: white,
           side: const BorderSide(color: grey, width: 0.7),
           shape: RoundedRectangleBorder(

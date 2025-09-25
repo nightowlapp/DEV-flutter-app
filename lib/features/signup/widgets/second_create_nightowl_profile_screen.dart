@@ -142,13 +142,13 @@ class _SecondCreateNightowlProfileScreenState
                 ? OwlButton(
               icon: googleIcon,
               label: _busy ? 'Signing in...' : 'Continue with Google',
-              backgroundColor: owlOrange,
+              backgroundColor: owlPurple,
               onPressed: _busy ? null : _doGoogle,
             )
                 : OwlButton(
               icon: appleIcon,
               label: _busy ? 'Signing in...' : 'Continue with Apple',
-              backgroundColor: owlOrange,
+              backgroundColor: owlPurple,
               onPressed: _busy ? null : _doApple,
             ),
             SizedBox(height: PlatformConfig.height(context) * 0.01),
@@ -162,7 +162,7 @@ class _SecondCreateNightowlProfileScreenState
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             OwlButton(
               label: 'Continue',
-              backgroundColor: canTap ? owlOrange : grey,
+              backgroundColor: canTap ? owlPurple : grey,
               textColor: canTap ? white : grey,
               onPressed: canTap ? _continueWithEmail : null,
             ),

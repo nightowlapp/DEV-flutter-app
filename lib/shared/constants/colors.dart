@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 // const owlOrange = Colors.purple;
 // const owlOrange = Colors.purpleAccent;
 // const owlOrange = Colors.deepPurple;
-const owlOrange = Colors.deepPurpleAccent;
-const blue = Colors.blue;
+const owlPurple = Colors.deepPurpleAccent;
+const deepPurpleAccent = Color.fromRGBO(124, 77, 255, 1.0);
+// const owlOrange = Color.fromRGBO(110, 28, 198, 1.0);
 const adminColor = Colors.pinkAccent ?? Color(0xFF0137E8);
 
 const black = Colors.black;
@@ -15,11 +16,19 @@ const white = Colors.white;
 const grey = Color.fromRGBO(66, 66, 66, 1);
 const transparent = Colors.transparent;
 
+const owlGreenBlue        = Color.fromRGBO(0, 191, 165, 1.0);  // #00BFA5  (teal-ish, balanced)
+const owlGreenBlueGreener = Color.fromRGBO(26, 188, 156, 1.0); // #1ABC9C  (leans green)
+const owlGreenBlueBluer   = Color.fromRGBO(38, 198, 218, 1.0); // #26C6DA  (leans blue)
+
 // Status colors
 const green = Colors.green;
+const blue = Colors.blue;
+// const yellow = Colors.yellow;
+const orange = Colors.orange;
 const purple = Colors.purple;
+const purpleAccent = Colors.purpleAccent;
+const deepPurple = Colors.deepPurple;
 const red = Colors.red; // accent? confuse wiht orange? TODO
-const yellow = Colors.yellow;
 const greyLighter = Colors.grey;
 
 // Map colors

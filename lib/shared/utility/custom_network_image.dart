@@ -6,13 +6,12 @@ import 'package:flutter/widgets.dart';
 import '../../core/storage/storage_url.dart';
 
 /// Drop-in network image with built-in safety:
-/// - Accepts Firebase Storage *paths* (e.g. `venue_images/x/logo.webp`),
-///   `gs://…` URLs, or normal http(s) URLs
-/// - If URL is empty/invalid → shows fallback asset
-/// - While loading → shows fallback asset
-/// - On error → shows fallback asset
+/// - Accepts Firebase Storage paths, gs://, or http(s) URLs
+/// - Empty/invalid → fallback asset (FULL-BLEED)
+/// - Loading → fallback asset (FULL-BLEED)
+/// - Error → fallback asset (FULL-BLEED)
 /// - Optional clipping via borderRadius
-class CustomNetworkImage extends StatelessWidget { //TODO Store images as long as possible at some point. DOnt know default.
+class CustomNetworkImage extends StatelessWidget {
   const CustomNetworkImage(
       this.url, {
         super.key,
@@ -28,9 +27,8 @@ class CustomNetworkImage extends StatelessWidget { //TODO Store images as long a
         this.cacheKey,
         this.httpHeaders,
         this.fallbackAsset = 'assets/nightowl/logo.png',
-        this.fallbackSize = const Size(50, 50),
         this.fallBackEnabled = true,
-        this.normalizeStorage = true, // ← normalize Firebase Storage paths/gs://
+        this.normalizeStorage = true,
       });
 
   final String url;
@@ -50,7 +48,6 @@ class CustomNetworkImage extends StatelessWidget { //TODO Store images as long a
 
   final String fallbackAsset;
   final bool fallBackEnabled;
-  final Size fallbackSize;
 
   /// If true (default), `url` can be a Storage path or `gs://` and will be
   /// converted to a direct https download URL.
@@ -60,14 +57,14 @@ class CustomNetworkImage extends StatelessWidget { //TODO Store images as long a
 
   @override
   Widget build(BuildContext context) {
-    Widget fallback() => _wrap(
+    Widget fullBleedFallback() => _wrap(
       fallBackEnabled
-          ? Center(
-        child: SizedBox(
-          width: fallbackSize.width,
-          height: fallbackSize.height,
-          child: Image.asset(fallbackAsset, fit: BoxFit.contain),
-        ),
+          ? Image.asset(
+        fallbackAsset,
+        width: width,
+        height: height,
+        fit: fit,               // <-- FULL BLEED
+        alignment: alignment,
       )
           : const SizedBox.shrink(),
     );
@@ -76,7 +73,7 @@ class CustomNetworkImage extends StatelessWidget { //TODO Store images as long a
     final resolved = normalizeStorage ? StorageUrl.normalize(raw) : raw;
 
     if (resolved.isEmpty || !_isHttp(resolved)) {
-      return fallback();
+      return fullBleedFallback();
     }
 
     final img = CachedNetworkImage(
@@ -90,13 +87,13 @@ class CustomNetworkImage extends StatelessWidget { //TODO Store images as long a
       cacheKey: cacheKey ?? resolved,
       fadeInDuration: fadeInDuration,
       fadeOutDuration: fadeOutDuration,
-      placeholder: (_, __) => fallback(),
+      placeholder: (_, __) => fullBleedFallback(),
       errorWidget: (_, __, err) {
         assert(() {
           if (kDebugMode) debugPrint('CustomNetworkImage error for $resolved -> $err');
           return true;
         }());
-        return fallback();
+        return fullBleedFallback();
       },
     );
 

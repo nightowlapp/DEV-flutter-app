@@ -104,7 +104,7 @@ class MapRepository{
     final fiveMinAgo = DateTime.now().millisecondsSinceEpoch - 5 * 60 * 1000;
     _friendsSub = _fs
         .collection('friends_locations')
-        .where('updatedAt', isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
+        .where('updated_at', isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
         .snapshots()
         .listen((snap) {
       bool changed = false;

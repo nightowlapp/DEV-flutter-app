@@ -25,7 +25,7 @@ class MainScreenRightDrawer extends StatelessWidget {
     final width = PlatformConfig.width(context) * 0.5;
 
     return Drawer(
-      surfaceTintColor: owlOrange.withOpacity(0.01),
+      surfaceTintColor: owlPurple.withOpacity(0.01),
       shadowColor: grey,
       backgroundColor: black,
       width: width,
@@ -82,19 +82,19 @@ class MainScreenRightDrawer extends StatelessWidget {
                 child: PartyStatusIndicator(),
               ),
 
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
               const FavoritesSectionRightDrawer(),
 
               const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
               const FriendsSectionRightDrawer(),
 
               const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
               const CityNowSectionRightDrawer(),

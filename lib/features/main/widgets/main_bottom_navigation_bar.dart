@@ -20,8 +20,8 @@ class MainBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoTabBar(
       backgroundColor: black,
-      border: const Border(top: BorderSide(color: owlOrange, width: 0.04)),
-      activeColor: owlOrange,
+      border: const Border(top: BorderSide(color: owlPurple, width: 0.04)),
+      activeColor: owlPurple,
       inactiveColor: white,
       iconSize: iconSizeDefault,
       currentIndex: currentIndex,

@@ -105,7 +105,7 @@ Future<ImageSource?> _chooseSource(BuildContext context) {
             leading: const Icon(
               cameraIcon,
               size: iconSizeDefault,
-              color: owlOrange,
+              color: owlPurple,
             ),
             title: Text('Take photo', style: Styles.basicText),
             onTap: () => Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
@@ -114,7 +114,7 @@ Future<ImageSource?> _chooseSource(BuildContext context) {
             leading: const Icon(
               photoLibraryIcon,
               size: iconSizeDefault,
-              color: owlOrange,
+              color: owlPurple,
             ),
             title: Text('Choose from gallery', style: Styles.basicText),
             onTap: () => Navigator.of(ctx, rootNavigator: true).pop(ImageSource.gallery),

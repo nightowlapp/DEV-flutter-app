@@ -8,7 +8,7 @@ class AppTheme {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: black,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: owlOrange,
+      seedColor: owlPurple,
       brightness: Brightness.dark,
     ),
     useMaterial3: true,

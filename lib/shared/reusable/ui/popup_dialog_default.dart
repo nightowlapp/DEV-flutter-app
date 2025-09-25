@@ -34,7 +34,7 @@ class PopupDialogDefault extends StatelessWidget {
       backgroundColor: backgroundColor ?? black,
       icon: icon ?? Image.asset('assets/nightowl/logo.png', width: 22, height: 22),
       showDivider: showDivider,
-      divider: divider ?? const Divider(thickness: 0.3, color: owlOrange),
+      divider: divider ?? const Divider(thickness: 0.3, color: owlPurple),
       border: border ?? Border.all(color: grey, width: 0.7),
 
       // pass-through

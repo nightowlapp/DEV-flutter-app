@@ -19,10 +19,10 @@ class SimpleTextField extends StatefulWidget {
     this.leadingIcon,
     this.trailingIcon,
     this.backgroundColor = transparent,
-    this.textColor = owlOrange,
+    this.textColor = owlPurple,
     this.hintColor = greyLighter,
     this.borderColor =white,
-    this.focusedBorderColor = owlOrange,
+    this.focusedBorderColor = owlPurple,
     this.cursorColor = white,
     this.borderRadius = borderRadiusMedium,
     this.borderWidth = 1.5,
@@ -69,11 +69,11 @@ class _SimpleTextFieldState extends State<SimpleTextField> {
   Widget build(BuildContext context) {
     // sensible defaults for dark UI
     final Color bg = widget.backgroundColor ?? transparent;
-    final Color fg = widget.textColor ?? owlOrange;
+    final Color fg = widget.textColor ?? owlPurple;
     final Color hc = widget.hintColor ?? grey;
     final Color bc = widget.borderColor ?? white;
-    final Color fbc = widget.focusedBorderColor ?? owlOrange;
-    final Color cc = widget.cursorColor ?? owlOrange;
+    final Color fbc = widget.focusedBorderColor ?? owlPurple;
+    final Color cc = widget.cursorColor ?? owlPurple;
 
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(widget.borderRadius),

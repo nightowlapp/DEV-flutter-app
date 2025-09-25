@@ -76,7 +76,7 @@ class Styles {
   );
 
   static TextStyle linkText(BuildContext context) => baseFont.copyWith(
-    color: owlOrange,
+    color: owlPurple,
     decoration: TextDecoration.underline,
     decorationColor: blue,
     decorationThickness: 1.6,
@@ -95,7 +95,7 @@ class Styles {
     foreground: Paint() //TODO Cool font.
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = owlOrange,
+      ..color = owlPurple,
   );
 
 
@@ -106,12 +106,12 @@ class Styles {
     fontWeight: FontWeight.w600,
     foreground: Paint()
       ..shader = const LinearGradient(
-      colors: [owlOrange, white,white],
+      colors: [owlPurple, white,white],
     ).createShader(const Rect.fromLTWH(26, 50, 80, 33)),
   );
 
   static Widget nameOrange() { final baseStyle = baseFont.copyWith(fontSize: 30, letterSpacing: -2.6, fontWeight: FontWeight.w200);
-    return RichText(text: TextSpan(style: baseStyle, children: const[TextSpan(text: 'N', style: TextStyle(color: owlOrange, fontWeight: FontWeight.w500)), TextSpan(text: 'ight'), TextSpan(text: 'O', style: TextStyle(color: owlOrange, fontWeight: FontWeight.w500)), TextSpan(text: 'w', style: TextStyle(color: owlOrange, fontWeight: FontWeight.w500)), TextSpan(text: 'l')]));
+    return RichText(text: TextSpan(style: baseStyle, children: const[TextSpan(text: 'N', style: TextStyle(color: owlPurple, fontWeight: FontWeight.w500)), TextSpan(text: 'ight'), TextSpan(text: 'O', style: TextStyle(color: owlPurple, fontWeight: FontWeight.w500)), TextSpan(text: 'w', style: TextStyle(color: owlPurple, fontWeight: FontWeight.w500)), TextSpan(text: 'l')]));
   }
 
 
@@ -119,21 +119,21 @@ class Styles {
     fontSize: 33.0,
     fontWeight: FontWeight.w800,
     shadows: [
-      Shadow(offset: Offset(-1, -1), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(1, -1), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(-1, 1), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(2, 2), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(0, -3), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(0, 3), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(-3, 0), blurRadius: 0, color: owlOrange),
-      Shadow(offset: Offset(3, 0), blurRadius: 0, color: owlOrange),
+      Shadow(offset: Offset(-1, -1), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(1, -1), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(-1, 1), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(2, 2), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(0, -3), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(0, 3), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(-3, 0), blurRadius: 0, color: owlPurple),
+      Shadow(offset: Offset(3, 0), blurRadius: 0, color: owlPurple),
     ],
   );
 
   static TextStyle get popShadowLogo => const TextStyle(
     fontSize: 33.0,
     fontWeight: FontWeight.w800,
-    color: owlOrange,
+    color: owlPurple,
     shadows: [
       Shadow(
         offset: Offset(2, 2),
@@ -158,7 +158,7 @@ class Styles {
     fontWeight: FontWeight.w800,
     foreground: Paint()
       ..shader = const LinearGradient(
-        colors: [black, owlOrange],
+        colors: [black, owlPurple],
       ).createShader(const Rect.fromLTWH(0, 0, 300, 200)),
   );
 
@@ -193,10 +193,10 @@ class Styles {
       text: TextSpan(
         style: baseStyle,
         children: [
-          TextSpan(text: 'N', style: highlightStyle(owlOrange)),
+          TextSpan(text: 'N', style: highlightStyle(owlPurple)),
           const TextSpan(text: 'ight'),
-          TextSpan(text: 'O', style: highlightStyle(owlOrange)),
-          TextSpan(text: 'w', style: highlightStyle(owlOrange)),
+          TextSpan(text: 'O', style: highlightStyle(owlPurple)),
+          TextSpan(text: 'w', style: highlightStyle(owlPurple)),
           const TextSpan(text: 'l')
         ]
       )
@@ -213,10 +213,10 @@ class Styles {
         style: baseStyle,
         children: const[
           TextSpan(text: 'N', style: TextStyle(fontWeight: FontWeight.w500)),
-          TextSpan(text: 'ight', style: TextStyle(color: owlOrange)),
+          TextSpan(text: 'ight', style: TextStyle(color: owlPurple)),
           TextSpan(text: 'O', style: TextStyle(fontWeight: FontWeight.w500)),
           TextSpan(text: 'w', style: TextStyle(fontWeight: FontWeight.w500)),
-          TextSpan(text: 'l', style: TextStyle(color: owlOrange))
+          TextSpan(text: 'l', style: TextStyle(color: owlPurple))
         ]
       )
     );
@@ -240,7 +240,7 @@ class Styles {
       height: 1,
       shadows: [
         Shadow( // soft outer glow for POP
-          color: owlOrange.withOpacity(0.70),
+          color: owlPurple.withOpacity(0.70),
           offset: const Offset(0, 0),
           blurRadius: 6,
         ),
@@ -258,10 +258,10 @@ class Styles {
           colors: <Color>[
             white,
             white,
-            owlOrange,         // brand orange
-            owlOrange,         // brand orange
+            owlPurple,         // brand orange
+            owlPurple,         // brand orange
             white,
-            owlOrange,
+            owlPurple,
 white          ],
         ).createShader(Rect.fromLTWH(0, 0, fontSize * 10, fontSize * 2)), // wide gradient span
     );
@@ -299,7 +299,7 @@ static TextStyle get test1 => baseFont.copyWith(
     ..shader = const LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
-      colors: [owlOrange, white, white],
+      colors: [owlPurple, white, white],
       stops: [0.0, 0.45, 1.0],
     ).createShader(const Rect.fromLTWH(0, 0, 240, 48)),
 );
@@ -313,7 +313,7 @@ static TextStyle get test2 => baseFont.copyWith(
     ..shader = const LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
-      colors: [owlOrange, owlGold, white],
+      colors: [owlPurple, owlGold, white],
       stops: [0.0, 0.35, 1.0],
     ).createShader(const Rect.fromLTWH(0, 0, 240, 48)),
 );

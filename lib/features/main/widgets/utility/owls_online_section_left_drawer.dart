@@ -30,7 +30,7 @@ class OwlsOnlineSectionLeftDrawer extends StatelessWidget {
             Center(child: Text('Owls Online', style: Styles.boldText)),
             Align(
               alignment: Alignment.centerLeft,
-              child: Icon(globeIcon, color: owlOrange, size: iconSizeDefault),
+              child: Icon(globeIcon, color: owlPurple, size: iconSizeDefault),
             ),
           ],
         ),
@@ -41,7 +41,7 @@ class OwlsOnlineSectionLeftDrawer extends StatelessWidget {
         _AnimatedLinearBar(
           value: ratio,
           background: grey.withOpacity(.35),
-          foreground: owlOrange,
+          foreground: owlPurple,
           radius: BorderRadius.circular(999),
         ),
 

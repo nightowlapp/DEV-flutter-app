@@ -19,7 +19,7 @@ import '../../../data/providers/favorite_venues/favorite_limit_provider.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../shared/constants/icons.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
-import '../../../shared/reusable/ui/like_venue_button.dart';
+import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
@@ -57,15 +57,11 @@ class MoreInfoScreen extends ConsumerWidget {
 
   // Header (cover) ------------------------------------------------------------
   Widget _header(BuildContext context) {
-    final h = PlatformConfig.height(context) * 0.25; // a bit taller feels nicer
+    final h = PlatformConfig.height(context) * 0.2; // a bit taller feels nicer
     return CoverImage.fromMedia(
       media: media,
+      city: venue.city, // <- this wires the city.png fallback
       height: h,
-      // overlayGradient: const LinearGradient(
-      //   begin: Alignment.topCenter,
-      //   end: Alignment.bottomCenter,
-      //   colors: [Colors.transparent, Colors.black54],
-      // ),
     );
   }
 
@@ -89,10 +85,7 @@ class MoreInfoScreen extends ConsumerWidget {
       ),
 
       // Use slivers to avoid internal SliverPadding/layout issues
-      body: CornerBadgeOverlay(
-        show: venue.isVerified,            // NOTE: show only when verified
-        badge: const VerifiedBadge(),
-        child: CustomScrollView(
+      body: CustomScrollView(
 
           slivers: [
             // Cover image
@@ -101,16 +94,20 @@ class MoreInfoScreen extends ConsumerWidget {
             // Page content
             SliverPadding(
 
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate.fixed([
 
                     // Top row: icons + rating card
                     Row(
                       children: [
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+
                         FavoriteVenueButton(store: favStore, venue: venue),
                         const SizedBox(width: allSidePaddingDefault),
                         LikeVenueButton(store: likeStore, venue: venue,),
+                        const SizedBox(width: allSidePaddingDefault),
+                        if(venue.isVerified) const VerifiedBadge(),
 
                         const Spacer(),
                         RatingCard(venue: venue), // will be replaced below
@@ -286,7 +283,6 @@ class MoreInfoScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

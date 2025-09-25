@@ -6,17 +6,17 @@ class GeofencingRepository {
   final String userId;
 
   Future<void> setInside(String venueId) => db.collection('presence').doc(userId).set({
-    'venueId': venueId,
+    'venue_id': venueId,
     'status': 'inside',
-    'enteredAt': FieldValue.serverTimestamp(),
-    'updatedAt': FieldValue.serverTimestamp(),
+    'entered_at': FieldValue.serverTimestamp(),
+    'updated_at': FieldValue.serverTimestamp(),
   }, SetOptions(merge: true));
 
   Future<void> setOutside(String? lastVenueId) => db.collection('presence').doc(userId).set({
-    'venueId': null, //TODO Make sure everything from database is snake_id
+    'venue_id': null, //TODO Make sure everything from database is snake_id
     'status': 'outside',
-    'exitedAt': FieldValue.serverTimestamp(),
-    'updatedAt': FieldValue.serverTimestamp(),
+    'exited_at': FieldValue.serverTimestamp(),
+    'updated_at': FieldValue.serverTimestamp(),
     if (lastVenueId != null) 'lastVenueId': lastVenueId,
   }, SetOptions(merge: true));
 
@@ -41,19 +41,19 @@ class GeofencingRepository {
       final dayKey = DateTime.now().toUtc().toIso8601String().substring(0, 10).replaceAll('-', '');
       final sessionRef = sessionsCol.doc(); // or deterministic id
       tx.set(sessionRef, {
-        'venueId': venueId,
-        'enteredAt': FieldValue.serverTimestamp(),
-        'exitedAt': null,
+        'venue_id': venueId,
+        'entered_at': FieldValue.serverTimestamp(),
+        'exited_at': null,
         'dayKey': dayKey,
         'source': 'geofence',
       });
 
       // update presence
       tx.set(presenceRef, {
-        'currentVenueId': venueId,
-        'sessionId': sessionRef.id,
+        'current_venue_id': venueId,
+        'session_id': sessionRef.id,
         'status': 'inside',
-        'updatedAt': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });
   }
@@ -64,21 +64,21 @@ class GeofencingRepository {
 
     return db.runTransaction((tx) async {
       final p = await tx.get(presenceRef);
-      final sessionId = p.data()?['sessionId'] as String?;
+      final sessionId = p.data()?['session_id'] as String?;
       if (sessionId != null) {
-        tx.update(sessionsCol.doc(sessionId), {'exitedAt': FieldValue.serverTimestamp()});
+        tx.update(sessionsCol.doc(sessionId), {'exited_at': FieldValue.serverTimestamp()});
       } else {
         // fallback: close the last open session if any
-        final open = await sessionsCol.where('exitedAt', isNull: true).limit(1).get();
+        final open = await sessionsCol.where('exited_at', isNull: true).limit(1).get();
         if (open.docs.isNotEmpty) {
-          tx.update(open.docs.first.reference, {'exitedAt': FieldValue.serverTimestamp()});
+          tx.update(open.docs.first.reference, {'exited_at': FieldValue.serverTimestamp()});
         }
       }
       tx.set(presenceRef, {
-        'currentVenueId': null,
-        'sessionId': null,
+        'current_venue_id': null,
+        'session_id': null,
         'status': 'outside',
-        'updatedAt': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });
   }

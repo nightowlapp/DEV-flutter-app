@@ -17,7 +17,7 @@ class MainScreenLeftDrawer extends StatelessWidget {
     final width = PlatformConfig.width(context) * 0.5;
 
     return Drawer(
-      surfaceTintColor: owlOrange.withOpacity(0.01),
+      surfaceTintColor: owlPurple.withOpacity(0.01),
       shadowColor: grey,
       backgroundColor: black,
       width: width,
@@ -58,20 +58,20 @@ class MainScreenLeftDrawer extends StatelessWidget {
                     Text('Owlnight.com', style: Styles.linkText(context))
                   ),],
               ),
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
               const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,),
 
               const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
               // const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,), //TODO Owls nearby?
-              const ReferAFriendLeftDrawer(inviteCode: 'aszxe213',), //TODO functionallity
+              const ReferAFriendLeftDrawer(inviteCode: 'aszxe213', inviteLink: '',), //TODO functionallity
 
               const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlOrange),
+              const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
 

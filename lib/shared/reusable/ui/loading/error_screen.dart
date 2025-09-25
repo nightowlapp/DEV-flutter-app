@@ -7,7 +7,7 @@ class ErrorScreen extends StatelessWidget {
   const ErrorScreen({
     super.key,
     this.imagePath = 'assets/nightowl/logo.png',
-    this.borderColor = owlOrange,
+    this.borderColor = owlPurple,
     this.borderWidth = 1.5,
     this.backgroundColor = black,
     this.imageSize = 120,

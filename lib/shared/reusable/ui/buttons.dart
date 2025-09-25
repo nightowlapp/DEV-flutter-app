@@ -149,7 +149,7 @@ class OwlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color bg = backgroundColor ?? transparent;
-    final Color fg = textColor ?? (bg == transparent ? owlOrange : white);
+    final Color fg = textColor ?? (bg == transparent ? owlPurple : white);
     final Color sideColor = borderColor ?? white;
 
     final double iconArea = icon == null ? 0 : (iconSize + iconPadding.horizontal);
@@ -163,7 +163,7 @@ class OwlButton extends StatelessWidget {
         padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          side: BorderSide(color: sideColor, width: sideColor == transparent ? 0 : 2),
+          side: BorderSide(color: sideColor, width: sideColor == transparent ? 0 : 1),
         ),
       ),
       child: Row(

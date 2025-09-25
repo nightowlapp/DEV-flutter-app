@@ -59,7 +59,7 @@ class GenderSelector extends StatefulWidget {
     this.gap = 10.0,
     this.boxSize = iconSizeMedium*1.5,
     // Box look (delegated to OwlButton for bg/border)
-    this.activeBgColor = owlOrange,
+    this.activeBgColor = owlPurple,
     this.inactiveBgColor = transparent,
     this.activeBorderColor = white,
     this.inactiveBorderColor = white,

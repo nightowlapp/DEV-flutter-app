@@ -70,7 +70,7 @@ class _LoadingScaffold extends StatelessWidget {
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
               const SizedBox(height: 24),
-              const CircularProgressIndicator(color: owlOrange),
+              const CircularProgressIndicator(color: owlPurple),
             ],
           ),
         ),
@@ -93,14 +93,14 @@ class _LoginBody extends StatelessWidget {
             Column(
               children: [
                 SizedBox(
-                  height: PlatformConfig.height(context) * 0.5,
+                  height: PlatformConfig.height(context) * 0.35,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
                           'assets/nightowl/logo.png',
-                          height: PlatformConfig.height(context) * 0.30,
+                          height: PlatformConfig.height(context) * 0.3,
                           errorBuilder: (context, _, __) => const SizedBox.shrink(),
                         ),
                         Styles.logoCrazy('Claim the Night'),
@@ -117,7 +117,7 @@ class _LoginBody extends StatelessWidget {
                     children: [
                       OwlButton(
                         label: "Create Account",
-                        backgroundColor: owlOrange,
+                        backgroundColor: owlPurple,
                         onPressed: () => context.pushNamedPage('firstCreateNightowlProfile'),
                       ),
                       SizedBox(height: PlatformConfig.height(context) * 0.01),
@@ -125,7 +125,7 @@ class _LoginBody extends StatelessWidget {
                       SizedBox(height: PlatformConfig.height(context) * 0.01),
                       OwlButton(
                         label: "Login",
-                        textColor: owlOrange,
+                        textColor: owlPurple,
                         onPressed: () => context.pushNamedPage('login'),
                       ),
                     ],

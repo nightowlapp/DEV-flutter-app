@@ -29,7 +29,7 @@ class ProfilePictureAvatar extends StatelessWidget {
     this.semanticLabel,
     this.showOnlyInitials = false,
     this.initials,
-    this.disablePrompt = false,
+    this.disablePrompt = true,
   });
 
   // ---- Inputs / overrides ---------------------------------------------------

@@ -18,7 +18,7 @@ class VenueAvatar<T> extends StatelessWidget {
     this.minSlots = 0,
     this.radius = 20,
     this.spacing = 6,
-    this.borderWidth = 2,
+    this.borderWidth = 1,
     this.placeholderWidthFactor = 1.1,
     this.backgroundColor,
     this.circular = true,
