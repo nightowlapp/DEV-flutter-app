@@ -12,44 +12,49 @@ import '../../other_providers.dart';
 
 /// Map<String, Venue> built from the SSO list (reactive to SSO changes).
 final venuesByIdMapProvider = Provider.autoDispose<Map<String, Venue>>((ref) {
-  final list = ref.watch(venuesListProvider);
-  return { for (final v in list) v.id : v };
-});
+    final list = ref.watch(venuesListProvider);
+    return { for (final v in list) v.id : v };
+  }
+);
 
-typedef VenuesFc = ({String clusterable, String vip});
+typedef VenuesFc =  ({String clusterable, String vip});
 
 final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
-  final venues = ref.watch(venuesListProvider);
-  final clusterable = <Map<String, dynamic>>[];
-  final vip = <Map<String, dynamic>>[];
+    final venues = ref.watch(venuesListProvider);
+    final clusterable = <Map<String, dynamic>>[];
+    final vip = <Map<String, dynamic>>[];
 
-  for (final v in venues) {
-    final feat = {
-      'type': 'Feature',
-      'id': v.id,
-      'properties': {
+    for (final v in venues) {
+      final feat = {
+        'type': 'Feature',
         'id': v.id,
-        'name': v.displayName.isNotEmpty ? v.displayName : Utility.formatString(v.name),
-        'rating': v.rating ?? 3.4,
-        'venueType': v.type.name,
-        'subscription': v.subscriptionType.name,
-        'isOpenNow': v.isOpenNow(DateTime.now()),
-        'opensLaterToday': v.isOpenToday(DateTime.now()),
-      },
-      'geometry': {
-        'type': 'Point',
-        'coordinates': [v.entry.lng, v.entry.lat],
-      },
-    };
-    if (v.subscriptionType == SubscriptionTypesVenue.free) {
-      clusterable.add(feat);
-    } else {
-      vip.add(feat);
+        'properties': {
+          'id': v.id,
+          'name': v.displayName.isNotEmpty ? v.displayName : Utility.formatString(v.name),
+          'rating': v.rating ?? 3.4,
+          'venueType': v.type.name,
+          'isVerified': v.isVerified,
+          'logo_image_id': 'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}',
+          'subscription': v.subscriptionType.name,
+          'isOpenNow': v.isOpenNow(DateTime.now()),
+          'opensLaterToday': v.isOpenToday(DateTime.now()),
+        },
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [v.entry.lng, v.entry.lat],
+        },
+      };
+      if (v.subscriptionType == SubscriptionTypesVenue.free) {
+        clusterable.add(feat);
+      }
+      else {
+        vip.add(feat);
+      }
     }
-  }
 
-  return (
-  clusterable: jsonEncode({'type': 'FeatureCollection', 'features': clusterable}),
-  vip:         jsonEncode({'type': 'FeatureCollection', 'features': vip}),
-  );
-});
+    return (
+    clusterable: jsonEncode({'type': 'FeatureCollection', 'features': clusterable}),
+    vip: jsonEncode({'type': 'FeatureCollection', 'features': vip}),
+    );
+  }
+);

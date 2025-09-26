@@ -172,7 +172,7 @@ class VenueScreenContent extends ConsumerWidget  {
                         label: 'Bar Card',
                         onPressed: () => context.pushNamedPage(
                           BarCardScreen.routeName,
-                          extra: BarCardArgs(venueId: venue.id),
+                          extra: BarCardArgs(venueId: venue.id, venueName: venue.displayName),
                         ),
 
                       ),

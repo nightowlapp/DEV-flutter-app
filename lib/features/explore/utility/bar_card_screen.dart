@@ -15,7 +15,11 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 
 class BarCardArgs {
   final String venueId;
-  const BarCardArgs({required this.venueId});
+  final String venueName;
+  const BarCardArgs({
+    required this.venueId,
+    required this.venueName,
+  });
 }
 
 class BarCardScreen extends ConsumerWidget {
@@ -28,14 +32,14 @@ class BarCardScreen extends ConsumerWidget {
     final async = ref.watch(venueMediaBundleProvider(args.venueId));
 
     return Scaffold(
-      appBar: const MainAppBar(showBack: true, titleText: 'Bar Card', actions: []),
+      appBar: MainAppBar(showBack: true, titleText: "${args.venueName}'s Bar Card", actions: const []),
       body: async.when(
         loading: () => const Center(child: LoadingIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.white))),
+        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: white))),
         data: (bundle) {
           final raw = bundle.barCardPdfUrl;
           if (raw == null || raw.isEmpty) {
-            return const Center(child: Text('No bar card available', style: TextStyle(color: Colors.white70)));
+            return const Center(child: Text('No bar card available', style: TextStyle(color: red)));
           }
           final url = StorageUrl.normalize(raw);
 
@@ -46,7 +50,7 @@ class BarCardScreen extends ConsumerWidget {
                 return const Center(child: LoadingScreen());
               }
               if (snap.hasError || !snap.hasData) {
-                return const Center(child: Text('Failed to load PDF', style: TextStyle(color: Colors.white70)));
+                return const Center(child: Text('Failed to load PDF', style: TextStyle(color: red)));
               }
 
               try {
@@ -76,7 +80,7 @@ class _PdfErrorFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('Couldn’t open PDF\n$message', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+        Text('Couldn’t open PDF\n$message', textAlign: TextAlign.center, style: const TextStyle(color: red)),
         const SizedBox(height: 12),
         TextButton(
           onPressed: () {

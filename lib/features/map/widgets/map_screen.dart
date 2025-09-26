@@ -10,11 +10,13 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
-import 'package:nightowlcode/shared/utility/lat_lng.dart' as owllat;
+import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
+import '../../../core/storage/storage_url.dart';
 import '../../../data/other_providers.dart';
 import '../../../data/services/location/location_controller.dart';
 import '../../../data/providers/venues/venue_providers.dart';
+import '../presentation/map_logo_registry.dart';
 import '../presentation/map_style.dart';
 import '../presentation/initial_camera_provider.dart';
 
@@ -25,13 +27,16 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-    with AutomaticKeepAliveClientMixin {
+  with AutomaticKeepAliveClientMixin {
   MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
+  bool _styleReady = false;
 
   final MapStyle _style = MapStyle();
   final Map<String, Venue> _venuesById = {};
+  String _logoImageIdFor(Venue v) =>
+  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   final bool _showClosed = true;
   final Set<VenueType> _allowedTypes = const {
@@ -71,7 +76,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   // fly helper (your custom LatLng -> Mapbox CameraOptions)
-  Future<void> _navigateTo(owllat.LatLng location, {double zoom = 16}) async {
+  Future<void> _navigateTo(LatLng location, {double zoom = 16}) async {
     if (_map == null) return;
     final cam = CameraOptions(
       center: Point(coordinates: Position(location.lng, location.lat)),
@@ -79,7 +84,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       pitch: 0,
       bearing: 0,
     );
-    _map!.flyTo(cam,  MapAnimationOptions(duration: 800));
+    _map!.flyTo(cam, MapAnimationOptions(duration: 800));
   }
 
   void _openVenueById(String id) {
@@ -101,13 +106,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // include BOTH bg circle layers and the symbol layers to catch all taps
   // _onMapTap: use a small ScreenBox and include cluster layers.
-// include BOTH bg circle layers and the symbol layers to catch all taps
+  // include BOTH bg circle layers and the symbol layers to catch all taps
   Future<void> _onMapTap(MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
 
     Map<String, dynamic>? asMap(Object? o) =>
-        (o is Map) ? o.cast<String, dynamic>() : null;
+    (o is Map) ? o.cast<String, dynamic>() : null;
     List<dynamic>? asList(Object? o) => (o is List) ? o : null;
 
     // 32×32 px hit box around the finger
@@ -184,34 +189,50 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _centerOnUser() async {
     final cam = await ref.read(initialCameraProvider.future);
-    _map?.flyTo(cam,  MapAnimationOptions(duration: 1200));
+    _map?.flyTo(cam, MapAnimationOptions(duration: 1200));
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    // keep sources in sync
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
-      if (_map == null) return;
-      await _style.setVenueData(
-        _map!,
-        clusterableFc: next.clusterable,
-        vipFc: next.vip,
-      );
-    });
+        final map = _map;
+        if (map == null || !_styleReady) return;
+
+        await _style.setVenueData(
+          map,
+          clusterableFc: next.clusterable,
+          vipFc: next.vip,
+        );
+
+        // Build the set of logo IDs we need (use the exact string used by icon-image)
+        final venues = ref.read(venuesListProvider);
+        final idToPath2 = <String, String>{};
+        for (final v in venues) {
+          if (v.isVerified) {
+            final id = _logoImageIdFor(v);
+            // Prefer your canonical path; ignore arbitrary external URLs here
+            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
+          }
+        }
+        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
+      }
+    );
 
     // 🔄 Use the SSO-backed map for popups (no direct Firestore stream)
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-      _venuesById
+        _venuesById
         ..clear()
         ..addAll(next);
-    });
+      }
+    );
 
     // center animation updates
     ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
-      next.whenData((cam) => _map?.flyTo(cam,  MapAnimationOptions(duration: 650)));
-    });
+        next.whenData((cam) => _map?.flyTo(cam, MapAnimationOptions(duration: 650)));
+      }
+    );
 
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
@@ -229,12 +250,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
             onTapListener: _onMapTap,
           ),
           if (_loading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black54,
-                child: Center(child: LoadingIndicator()),
-              ),
+          const Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black54,
+              child: Center(child: LoadingIndicator()),
             ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -246,22 +267,32 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  bool _styleReady = false;
-
   Future<void> _onStyleLoaded(StyleLoadedEventData _) async {
-    if (_map == null) return;
-    if (_styleReady) return;        // ⬅ prevent duplicate runs
+    final map = _map;
+    if (map == null || _styleReady) return;
     _styleReady = true;
 
-    await _style.ensure(_map!);
+    MapLogoRegistry.instance.clear();
+
+    await _style.ensure(map);
     await _style.applyFilters(
-      _map!,
+      map,
       showClosed: _showClosed,
       allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
     );
 
     final fcNow = ref.read(venuesGeoJsonProvider);
-    await _style.setVenueData(_map!, clusterableFc: fcNow.clusterable, vipFc: fcNow.vip);
+    await _style.setVenueData(map, clusterableFc: fcNow.clusterable, vipFc: fcNow.vip);
+
+    // First-time sync right after style is ready
+    final venues = ref.read(venuesListProvider);
+    final idToPath = <String, String>{};
+    for (final v in venues) {
+      if (!v.isVerified) continue;
+      final id = _logoImageIdFor(v);
+      idToPath[id] = 'venue_images/${v.id}/logo.webp';
+    }
+    await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath);
 
     if (mounted) setState(() => _loading = false);
   }

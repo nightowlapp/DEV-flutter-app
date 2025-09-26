@@ -144,7 +144,7 @@ class MapStyle {
         jsonEncode([
           'case',
           ['==', ['get', 'isVerified'], true],
-          ['get', 'logo_url'],
+          ['get', 'logo_image_id'],
           [
             'case',
             ['==', ['get', 'venueType'], 'wine_bar'],
@@ -236,7 +236,7 @@ class MapStyle {
         jsonEncode([
           'case',
           ['==', ['get', 'isVerified'], true],
-          ['get', 'logo_url'],
+          ['get', 'logo_image_id'],
           [
             'case',
             ['==', ['get', 'venueType'], 'wine_bar'],
@@ -363,6 +363,8 @@ class MapStyle {
       await style.setStyleSourceProperty(srcVenuesVip, 'data', vipFc);
     }
   }
+
+
 
   Future<void> setFriendsData(MapboxMap map, String fc) async {
     if (await map.style.styleSourceExists(srcFriends)) {
