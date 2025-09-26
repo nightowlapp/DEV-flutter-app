@@ -5,15 +5,16 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
 
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/shared/constants/enums.dart'; // VenueType
+import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
+import 'package:nightowlcode/shared/utility/lat_lng.dart' as owllat;
 
 import '../../../data/other_providers.dart';
 import '../../../data/services/location/location_controller.dart';
-import '../../../data/providers/venues/venue_providers.dart'; // <-- assumes allVenuesStreamProvider & venuesGeoJsonProvider live here
+import '../../../data/providers/venues/venue_providers.dart';
 import '../presentation/map_style.dart';
 import '../presentation/initial_camera_provider.dart';
 
@@ -30,11 +31,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _loading = true;
 
   final MapStyle _style = MapStyle();
-
-  // Keep a lightweight cache of venues to resolve taps -> Venue
   final Map<String, Venue> _venuesById = {};
 
-  // Filters you already had
   final bool _showClosed = true;
   final Set<VenueType> _allowedTypes = const {
     VenueType.bar,
@@ -70,30 +68,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await _map!.attribution.updateSettings(
       AttributionSettings(clickable: false, iconColor: transparent.value),
     );
-
-    // Ensure style and apply filters
-    await _style.ensure(_map!);
-    await _style.applyFilters(
-      _map!,
-      showClosed: _showClosed,
-      allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
-    );
-
-    // Push whatever we already have (synchronously)
-    final fcNow = ref.read(venuesGeoJsonProvider);
-    await _style.setVenueData(
-      _map!,
-      clusterableFc: fcNow.clusterable,
-      vipFc: fcNow.vip,
-    );
-
-    if (mounted) setState(() => _loading = false);
   }
 
-  // Open your bottom sheet
+  // fly helper (your custom LatLng -> Mapbox CameraOptions)
+  Future<void> _navigateTo(owllat.LatLng location, {double zoom = 16}) async {
+    if (_map == null) return;
+    final cam = CameraOptions(
+      center: Point(coordinates: Position(location.lng, location.lat)),
+      zoom: zoom,
+      pitch: 0,
+      bearing: 0,
+    );
+    _map!.flyTo(cam,  MapAnimationOptions(duration: 800));
+  }
+
   void _openVenueById(String id) {
     final v = _venuesById[id];
     if (v == null) return;
+    // fly then open sheet
+    _navigateTo(v.entry);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -101,57 +94,104 @@ class _MapScreenState extends ConsumerState<MapScreen>
       builder: (_) => VenuePopup(
         venue: v,
         onClose: () => Navigator.of(context).pop(),
-        onOpenDetails: () {
-          // TODO: navigate to full venue page if needed
-        },
+        onOpenDetails: () {},
       ),
     );
   }
 
-  // Minimal tap handler using queryRenderedFeatures
+  // include BOTH bg circle layers and the symbol layers to catch all taps
+  // _onMapTap: use a small ScreenBox and include cluster layers.
+// include BOTH bg circle layers and the symbol layers to catch all taps
   Future<void> _onMapTap(MapContentGestureContext ctx) async {
-    if (_map == null) return;
+    final map = _map;
+    if (map == null) return;
 
-    final geometry =
-    RenderedQueryGeometry.fromScreenCoordinate(ctx.touchPosition);
+    Map<String, dynamic>? asMap(Object? o) =>
+        (o is Map) ? o.cast<String, dynamic>() : null;
+    List<dynamic>? asList(Object? o) => (o is List) ? o : null;
 
-    final results = await _map!.queryRenderedFeatures(
-      geometry,
-      RenderedQueryOptions(
-        // Only ask our two venue symbol layers (no clusters)
-        layerIds: [MapStyle.lyrVip, MapStyle.lyrUnclustered],
+    // 32×32 px hit box around the finger
+    final p = ctx.touchPosition;
+    const half = 16.0;
+    final geometry = RenderedQueryGeometry.fromScreenBox(
+      ScreenBox(
+        min: ScreenCoordinate(x: p.x - half, y: p.y - half),
+        max: ScreenCoordinate(x: p.x + half, y: p.y + half),
       ),
     );
 
-    for (final r in results) {
+    // Pull an id out of queried features
+    String? _firstId(List<QueriedRenderedFeature?> items) {
+      for (final r in items) {
+        if (r == null) continue;
+        final feat = r.queriedFeature.feature as Map?;
+        final props = asMap(feat?['properties']);
+        final rawId = props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+        if (rawId != null) return rawId.toString();
+      }
+      return null;
+    }
+
+    // 1) Symbols (on top)
+    final List<QueriedRenderedFeature?> sym = await map.queryRenderedFeatures(
+      geometry,
+      RenderedQueryOptions(layerIds: [MapStyle.lyrVip, MapStyle.lyrUnclustered]),
+    );
+    final symId = _firstId(sym);
+    if (symId != null) {
+      _openVenueById(symId);
+      return;
+    }
+
+    // 2) Background circles
+    final List<QueriedRenderedFeature?> dots = await map.queryRenderedFeatures(
+      geometry,
+      RenderedQueryOptions(layerIds: [MapStyle.lyrVipBg, MapStyle.lyrUnclusteredBg]),
+    );
+    final dotId = _firstId(dots);
+    if (dotId != null) {
+      _openVenueById(dotId);
+      return;
+    }
+
+    // 3) Clusters -> zoom toward the cluster center
+    final List<QueriedRenderedFeature?> cl = await map.queryRenderedFeatures(
+      geometry,
+      RenderedQueryOptions(layerIds: [MapStyle.lyrClusters]),
+    );
+    for (final r in cl) {
       if (r == null) continue;
-
-      // Map<String?, Object?> structure
-      final featMap = r.queriedFeature.feature;
-      final props =
-      (featMap['properties'] as Map?)?.cast<String, Object?>();
-      final rawId =
-      (props != null && props['id'] != null) ? props['id'] : featMap['id'];
-      final id = rawId?.toString();
-
-      if (id != null) {
-        _openVenueById(id);
+      final feat = r.queriedFeature.feature as Map?;
+      final props = asMap(feat?['properties']);
+      if (props?['point_count'] != null) {
+        final coords = asList(asMap(feat?['geometry'])?['coordinates']);
+        if (coords != null && coords.length >= 2) {
+          final lon = (coords[0] as num).toDouble();
+          final lat = (coords[1] as num).toDouble();
+          final cs = await map.getCameraState();
+          map.easeTo(
+            CameraOptions(
+              center: Point(coordinates: Position(lon, lat)),
+              zoom: (cs.zoom + 1.6).clamp(3.0, 20.0),
+            ),
+            MapAnimationOptions(duration: 500),
+          );
+        }
         return;
       }
     }
-    // Tap didn’t hit our layers -> do nothing
   }
 
   Future<void> _centerOnUser() async {
     final cam = await ref.read(initialCameraProvider.future);
-    _map?.flyTo(cam,  MapAnimationOptions(duration: 800));
+    _map?.flyTo(cam,  MapAnimationOptions(duration: 1200));
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    // Keep the map sources in sync
+    // keep sources in sync
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
       if (_map == null) return;
       await _style.setVenueData(
@@ -161,29 +201,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     });
 
-    // Keep a local id->Venue cache for quick popup lookup
-    ref.listen<AsyncValue<List<Venue>>>(allVenuesStreamProvider,
-            (prev, next) {
-          next.whenData((list) {
-            for (final v in list) {
-              _venuesById[v.id] = v;
-            }
-          });
-        });
-
-    // Center animation updates
-    ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
-      next.whenData((cam) {
-        _map?.flyTo(cam, MapAnimationOptions(duration: 650));
-      });
+    // 🔄 Use the SSO-backed map for popups (no direct Firestore stream)
+    ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
+      _venuesById
+        ..clear()
+        ..addAll(next);
     });
 
-    // Show map immediately with fallback camera
+    // center animation updates
+    ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
+      next.whenData((cam) => _map?.flyTo(cam,  MapAnimationOptions(duration: 650)));
+    });
+
     final camAsync = ref.watch(initialCameraProvider);
-    final cam = camAsync.maybeWhen(
-      data: (c) => c,
-      orElse: () => fallbackCamera,
-    );
+    final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -191,10 +222,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
         children: [
           MapWidget(
             key: const ValueKey('mapWidget'),
-            styleUri: MapboxStyles.DARK,
+            styleUri: "mapbox://styles/night-owl/cmfzfrida004u01s5co906aj5",
             cameraOptions: cam,
             onMapCreated: _onMapCreated,
-            onTapListener: _onMapTap, // ⬅️ minimal addition
+            onStyleLoadedListener: _onStyleLoaded,
+            onTapListener: _onMapTap,
           ),
           if (_loading)
             const Positioned.fill(
@@ -213,4 +245,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ),
     );
   }
+
+  bool _styleReady = false;
+
+  Future<void> _onStyleLoaded(StyleLoadedEventData _) async {
+    if (_map == null) return;
+    if (_styleReady) return;        // ⬅ prevent duplicate runs
+    _styleReady = true;
+
+    await _style.ensure(_map!);
+    await _style.applyFilters(
+      _map!,
+      showClosed: _showClosed,
+      allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
+    );
+
+    final fcNow = ref.read(venuesGeoJsonProvider);
+    await _style.setVenueData(_map!, clusterableFc: fcNow.clusterable, vipFc: fcNow.vip);
+
+    if (mounted) setState(() => _loading = false);
+  }
+
 }

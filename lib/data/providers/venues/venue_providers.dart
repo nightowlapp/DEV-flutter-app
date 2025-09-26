@@ -6,8 +6,15 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
+import '../../../models/venues/venue.dart';
 import '../../../shared/constants/enums.dart';
 import '../../other_providers.dart';
+
+/// Map<String, Venue> built from the SSO list (reactive to SSO changes).
+final venuesByIdMapProvider = Provider.autoDispose<Map<String, Venue>>((ref) {
+  final list = ref.watch(venuesListProvider);
+  return { for (final v in list) v.id : v };
+});
 
 typedef VenuesFc = ({String clusterable, String vip});
 

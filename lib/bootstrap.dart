@@ -20,7 +20,7 @@ import 'core/app_config.dart';
 import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
 import 'data/providers/party_status/party_status_provider.dart';
-import 'dev_firebase_options.dart';
+import 'firebase_options.dart';
 
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();

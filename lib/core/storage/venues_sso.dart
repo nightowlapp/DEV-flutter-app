@@ -42,7 +42,6 @@ class VenuesLocalStore {
   }
 
   Future<void> upsert(Venue v) async {
-    // FIX: persist the app JSON schema (symmetrical with Venue.fromJson)
     final cacheMap = <String, dynamic>{...v.toJson(), 'id': v.id};
     final safe = _jsonSafe(cacheMap) as Map<String, dynamic>;
     await _box.put(v.id, jsonEncode(safe));
@@ -57,6 +56,7 @@ class VenuesLocalStore {
     }
     await _box.putAll(entries);
   }
+
   Future<void> remove(String id) async {
     await _box.delete(id);
   }
@@ -84,10 +84,6 @@ class VenuesLocalStore {
   }
 }
 
-
-
-
-
 dynamic _jsonSafe(dynamic v) {
   if (v == null) return null;
   if (v is GeoPoint) return {'lat': v.latitude, 'lng': v.longitude};
@@ -109,11 +105,11 @@ final venuesLocalStoreProvider = FutureProvider<VenuesLocalStore>((ref) async {
   return VenuesLocalStore.open();
 });
 
-final venuesSsoProvider =
-AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
+final venuesSsoProvider = AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 class VenuesSso extends AsyncNotifier<List<Venue>> {
-  StreamSubscription<QuerySnapshot<Venue>>? _sub;
+  StreamSubscription<QuerySnapshot<Venue>>? _subDelta;    // add/modify
+  StreamSubscription<QuerySnapshot<Venue>>? _subRemovals; // delete-only
   KeepAliveLink? _keepAlive;
 
   @override
@@ -126,7 +122,7 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     final local = await store.getAll();
     state = AsyncData(local);
 
-    // 2) If empty -> fetch all once and cache
+    // 2) First run → full bootstrap from server and cache
     if (await store.isEmpty) {
       final all = await _fetchAllOnce(db);
       await store.upsertMany(all);
@@ -134,11 +130,12 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       state = AsyncData(all);
     }
 
-    // 3) Start live incremental sync
+    // 3) Start live sync (delta + removals)
     await _startLiveSync(db, store);
 
     ref.onDispose(() async {
-      await _sub?.cancel();
+      await _subDelta?.cancel();
+      await _subRemovals?.cancel();
       _keepAlive?.close();
     });
 
@@ -150,16 +147,11 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
     );
-
-    // Always hit server for the bootstrap
     final snap = await col.get(const GetOptions(source: Source.server));
     return snap.docs.map((d) => d.data()).toList(growable: false);
   }
 
-  Future<void> _startLiveSync(
-      FirebaseFirestore db,
-      VenuesLocalStore store,
-      ) async {
+  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
     final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
@@ -167,106 +159,90 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
 
     final lastSync = await store.getLastSync();
 
-    // Prefer delta updates by updated_at if available; fall back to full stream
-    Query<Venue> baseQuery = col;
-    Stream<QuerySnapshot<Venue>> stream;
+    // --- DELTA stream: only added/modified since lastSync -------------------
+    Stream<QuerySnapshot<Venue>> deltaStream;
+    Query<Venue> deltaQ = col;
     try {
       if (lastSync != null) {
-        // Using isGreaterThan keeps the first emission small.
-        baseQuery = baseQuery.where(
-          'updated_at',
-          isGreaterThan: Timestamp.fromDate(lastSync),
-        );
+        deltaQ = deltaQ.where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync));
       }
-      stream = baseQuery.snapshots();
+      deltaStream = deltaQ.snapshots();
     } catch (_) {
-      // If the field or index doesn't exist, fall back to full snapshots
-      stream = col.snapshots();
+      deltaStream = col.snapshots();
     }
 
-    await _sub?.cancel();
-    _sub = stream.listen(
-          (qs) async {
-        final current = Map<String, Venue>.fromEntries(
-          (state.value ?? const <Venue>[])
-              .map((v) => MapEntry(v.id, v)),
-        );
+    await _subDelta?.cancel();
+    _subDelta = deltaStream.listen((qs) async {
+      final current = Map<String, Venue>.fromEntries(
+        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+      );
 
-        DateTime? maxSeenUpdatedAt;
+      DateTime? maxSeenUpdatedAt;
 
-        // If docChanges is empty (can happen in some edge cases),
-        // rebuild from docs snapshot.
-        if (qs.docChanges.isEmpty && lastSync == null) {
-          final all = qs.docs.map((d) => d.data()).toList(growable: false);
-          await store.upsertMany(all);
-          state = AsyncData(all);
-          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-          return;
-        }
+      // If docChanges is empty (some edge cases), rebuild from docs snapshot
+      if (qs.docChanges.isEmpty && lastSync == null) {
+        final all = qs.docs.map((d) => d.data()).toList(growable: false);
+        await store.upsertMany(all);
+        state = AsyncData(all);
+        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+        return;
+      }
 
-        for (final change in qs.docChanges) {
-          switch (change.type) {
-            case DocumentChangeType.added:
-            case DocumentChangeType.modified:
-              final v = change.doc.data();
-              if (v != null) {
-                await store.upsert(v);
-                current[v.id] = v;
-                maxSeenUpdatedAt = _maxDate(
-                  maxSeenUpdatedAt,
-                  _extractUpdatedAt(v),
-                );
-              }
-              break;
-            case DocumentChangeType.removed:
-              final id = change.doc.id;
-              await store.remove(id);
-              current.remove(id);
-              break;
+      for (final change in qs.docChanges) {
+        if (change.type == DocumentChangeType.added || change.type == DocumentChangeType.modified) {
+          final v = change.doc.data();
+          if (v != null) {
+            await store.upsert(v);
+            current[v.id] = v;
+            maxSeenUpdatedAt = _maxDate(maxSeenUpdatedAt, _extractUpdatedAt(v));
           }
         }
+        // DO NOT process removals here; deletions are handled by the second stream.
+      }
 
-        // Publish new list to the UI
-        final list = current.values.toList(growable: false);
-        state = AsyncData(list);
+      final list = current.values.toList(growable: false);
+      state = AsyncData(list);
 
-        // Advance checkpoint using the newest updated_at we actually saw,
-        // otherwise use "now" as a conservative fallback.
-        await store.setLastSync(
-          maxSeenUpdatedAt ?? DateTime.now(),
-        );
-      },
-      onError: (e, st) async {
-        // Optional: backoff + full refresh
-        state = AsyncError(e, st);
-        try {
-          final all = await _fetchAllOnce(db);
-          await store.upsertMany(all);
-          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-          state = AsyncData(all);
-        } catch (_) {
-          // keep error state; next tick might recover
+      // Advance checkpoint using the newest updated_at we actually saw,
+      // or use "now" conservatively.
+      await store.setLastSync(maxSeenUpdatedAt ?? DateTime.now());
+    }, onError: (e, st) async {
+      state = AsyncError(e, st);
+      try {
+        final all = await _fetchAllOnce(db);
+        await store.upsertMany(all);
+        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+        state = AsyncData(all);
+      } catch (_) {}
+    }, cancelOnError: false);
+
+    // --- REMOVALS stream: full collection, but only react to removed --------
+    await _subRemovals?.cancel();
+    _subRemovals = col.snapshots().listen((qs) async {
+      if (qs.docChanges.isEmpty) return;
+
+      var changed = false;
+      final current = Map<String, Venue>.fromEntries(
+        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+      );
+
+      for (final change in qs.docChanges) {
+        if (change.type == DocumentChangeType.removed) {
+          final id = change.doc.id;
+          await store.remove(id);
+          if (current.remove(id) != null) changed = true;
         }
-      },
-      cancelOnError: false,
-    );
-  }
+      }
 
-  /// Manual full refresh (e.g. pull-to-refresh)
-  Future<void> forceFullResync() async {
-    final db = ref.read(firestoreProvider);
-    final store = await ref.read(venuesLocalStoreProvider.future);
-    final all = await _fetchAllOnce(db);
-    await store.upsertMany(all);
-    await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-    state = AsyncData(all);
+      if (changed) {
+        state = AsyncData(current.values.toList(growable: false));
+      }
+    });
   }
 
   // ---------- helpers ----------
 
   DateTime? _extractUpdatedAt(Venue v) {
-    // Try to read whatever the model/converter exposes.
-    // (We go through the converter map to be resilient to types.)
     final map = VenueFirestore.toMap(v);
     final raw = map['updated_at'];
     if (raw == null) return null;
@@ -289,5 +265,15 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     if (a == null) return b;
     if (b == null) return a;
     return a.isAfter(b) ? a : b;
+  }
+
+  /// Manual full refresh (e.g. pull-to-refresh)
+  Future<void> forceFullResync() async {
+    final db = ref.read(firestoreProvider);
+    final store = await ref.read(venuesLocalStoreProvider.future);
+    final all = await _fetchAllOnce(db);
+    await store.upsertMany(all);
+    await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+    state = AsyncData(all);
   }
 }

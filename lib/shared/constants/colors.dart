@@ -22,6 +22,7 @@ const owlGreenBlueBluer   = Color.fromRGBO(38, 198, 218, 1.0); // #26C6DA  (lean
 
 // Status colors
 const green = Colors.green;
+const lightGreen = Colors.lightGreenAccent;
 const blue = Colors.blue;
 // const yellow = Colors.yellow;
 const orange = Colors.orange;

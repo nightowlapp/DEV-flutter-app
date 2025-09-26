@@ -1,4 +1,4 @@
-// lib/features/map/widgets/venue_sticky_sheet.dart
+// lib/features/map/widgets/venue_popup.dart
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
@@ -18,21 +18,16 @@ class VenuePopup extends StatelessWidget {
   final VoidCallback? onOpenDetails;
 
   ImageProvider<Object>? _imageOf(Venue v) {
-    // Try logo first, else a type placeholder. Null falls back to errorChild.
+    // If verified -> show logo
     final url = (v.logoUrl ?? '').trim();
-    if (url.isNotEmpty) return NetworkImage(url);
-    // final typeImg = (v.typeOfClubImg ?? '').trim(); // if you have this
-    // if (typeImg.isNotEmpty) return NetworkImage(typeImg);
+    if (v.isVerified && url.isNotEmpty) return NetworkImage(url);
+    // else no image (we’ll just show the purple background with an error icon hidden under Clip)
     return null;
   }
 
-  Color? _statusBorder(Venue v) {
-    try {
-      final open = v.isOpenNow(DateTime.now());
-      return open ? green : red;
-    } catch (_) {
-      return null;
-    }
+  Color _statusBorder(Venue v) {
+    final open = v.isOpenNow(DateTime.now());
+    return open ? green : red;
   }
 
   @override
@@ -54,29 +49,24 @@ class VenuePopup extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Grab handle
                 Container(
-                  width: 32,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  width: 32, height: 4, margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                 ),
                 Row(
                   children: [
-                    // Avatar
+                    // Avatar: if verified -> logo; else purple background circle
                     VenueAvatar<Venue>(
                       items: [venue],
                       imageOf: _imageOf,
-                      // borderColorOf: _statusBorder,
+                      borderColorOf: _statusBorder,     // green/red status ring
                       radius: 22,
                       borderWidth: 2,
+                      backgroundColor: venue.isVerified ? null : owlPurple, // purple only when NOT verified
                       emptyText: '',
+                      errorChild: const SizedBox.shrink(), // hide broken icon if no image
                     ),
                     const SizedBox(width: 12),
-                    // Title + meta
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,12 +81,29 @@ class VenuePopup extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
+                              if (typeLabel.isNotEmpty) const SizedBox(width: 0),
                               if (typeLabel.isNotEmpty)
-                                _Chip(typeLabel),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.white24),
+                                  ),
+                                  child: Text(typeLabel, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                ),
                               const SizedBox(width: 8),
-                              _Star(rating),
+                              const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                              Text(rating, style: const TextStyle(color: Colors.white70)),
                               const SizedBox(width: 8),
-                              _OpenDot(isOpen: _statusBorder(venue) == green),
+                              Row(
+                                children: [
+                                  Icon(Icons.circle, size: 8, color: _statusBorder(venue) == green ? Colors.greenAccent : Colors.redAccent),
+                                  const SizedBox(width: 4),
+                                  Text(_statusBorder(venue) == green ? 'Open' : 'Closed',
+                                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                ],
+                              ),
                             ],
                           ),
                         ],
@@ -110,7 +117,6 @@ class VenuePopup extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                // Actions
                 Row(
                   children: [
                     Expanded(
@@ -128,7 +134,7 @@ class VenuePopup extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: onOpenDetails, // or navigate / go
+                        onPressed: onOpenDetails,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.black,
@@ -145,52 +151,6 @@ class VenuePopup extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-    );
-  }
-}
-
-class _Star extends StatelessWidget {
-  const _Star(this.rating);
-  final String rating;
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
-        Text(rating, style: const TextStyle(color: Colors.white70)),
-      ],
-    );
-  }
-}
-
-class _OpenDot extends StatelessWidget {
-  const _OpenDot({required this.isOpen});
-  final bool isOpen;
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.circle, size: 8, color: isOpen ? Colors.greenAccent : Colors.redAccent),
-        const SizedBox(width: 4),
-        Text(isOpen ? 'Open' : 'Closed', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-      ],
     );
   }
 }

@@ -632,10 +632,22 @@ class Venue {
         .map(LatLng.fromJson)
         .toList();
 
+// drop-in replacement
     DateTime? _readDate(dynamic v) {
-      final s = v as String?;
-      return s == null ? null : DateTime.parse(s);
+      if (v == null) return null;
+      if (v is DateTime) return v;
+      if (v is Timestamp) return v.toDate();
+      if (v is int) {
+        // assume milliseconds since epoch
+        return DateTime.fromMillisecondsSinceEpoch(v, isUtc: false);
+      }
+      if (v is String) {
+        // ISO-8601 "2025-09-24T23:20:37.236Z" etc.
+        return DateTime.tryParse(v);
+      }
+      return null;
     }
+
 
     return Venue(
       id: id,

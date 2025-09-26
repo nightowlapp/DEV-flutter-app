@@ -26,8 +26,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      wireSearchController(ref, _searchCtrl); // ← hook search logic
-    });
+        wireSearchController(ref, _searchCtrl); // ← hook search logic
+      }
+    );
   }
 
   @override
@@ -42,7 +43,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final asyncSso = ref.watch(venuesSsoProvider);
     // Your computed lists still come via providers that read the SSO list.
     final visible = ref.watch(visibleVenuesProvider);
-    final ranked   = ref.watch(rankedVenuesProvider);
+    final ranked = ref.watch(rankedVenuesProvider);
     final Map<String, VenueMediaHealth> mediaById = ranked.maybeWhen(
       data: (s) => s.media,
       orElse: () => const <String, VenueMediaHealth>{},
@@ -53,38 +54,36 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            VenueSearchBar(
-              controller: _searchCtrl,
-              onTapTune: () => showFiltersPopup(context, ref),
-            ),
-            const SizedBox(height: verticalSpacerSmall),
-            Expanded(
-              child: asyncSso.when(
-                loading: () => const LoadingIndicator(),
-                error: (e, _) => Center(
-                  child: Text('Error: $e', style: const TextStyle(color: red)),
-                ),
-                data: (_) {
-                  if (visible.isEmpty) {
-                    return const Center(
-                      child: Text('No venues found', style: TextStyle(color: red)),
-                    );
-                  }
-                  return AnimatedVenuesGrid(
-                    venues: visible,
-                    mediaById: mediaById,
-                    userLoc: userLoc,
-                    // If your grid needs media/userLoc, keep your existing providers for those,
-                    // or create dedicated providers. For now omit or pass null/empty if optional.
-                  );
-                },
+      body: Column(
+        children: [
+          VenueSearchBar(
+            controller: _searchCtrl,
+            onTapTune: () => showFiltersPopup(context, ref),
+          ),
+          const SizedBox(height: verticalSpacerSmall),
+          Expanded(
+            child: asyncSso.when(
+              loading: () => const LoadingIndicator(),
+              error: (e, _) => Center(
+                child: Text('Error: $e', style: const TextStyle(color: red)),
               ),
+              data: (_) {
+                if (visible.isEmpty) {
+                  return const Center(
+                    child: Text('No venues found', style: TextStyle(color: red)),
+                  );
+                }
+                return AnimatedVenuesGrid(
+                  venues: visible,
+                  mediaById: mediaById,
+                  userLoc: userLoc,
+                  // If your grid needs media/userLoc, keep your existing providers for those,
+                  // or create dedicated providers. For now omit or pass null/empty if optional.
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
