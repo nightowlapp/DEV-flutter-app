@@ -7,9 +7,10 @@ import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
+import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 
 import '../../../core/platform_config.dart';
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../data/providers/favorite_venues/favorite_venues_provider.dart';
 import '../../../models/venues/venue.dart';
@@ -383,7 +384,7 @@ class _VenueItem extends StatelessWidget {
               border:
               isSelected ? Border.all(color: owlPurple, width: 3) : null,
             ),
-            child: _VenueAvatar(venue: venue),
+            child: VenueLogo(venue: venue, showTypeIfNoLogo: true), //TODO check if work.
           ),
         ],
       ),
@@ -395,65 +396,5 @@ class _VenueItem extends StatelessWidget {
         ? venue.displayName!
         : venue.name;
     return name.trim();
-  }
-}
-
-/// Safe avatar that doesn’t assume a specific image field exists.
-/// - If your Venue has a `logoUrl` or `imageUrl`, add it below.
-/// - Otherwise shows the first letter.
-class _VenueAvatar extends StatelessWidget {
-  const _VenueAvatar({required this.venue});
-  final Venue venue;
-
-  @override
-  Widget build(BuildContext context) {
-    // <---- If you have a field for image, wire it here:
-    final String? imageUrl = _tryImageUrl(venue);
-
-    if (imageUrl == null || imageUrl.isEmpty) {
-      final letter = (venue.displayName?.isNotEmpty ?? false)
-          ? venue.displayName!.characters.first.toUpperCase()
-          : venue.name.characters.first.toUpperCase();
-      return CircleAvatar(
-        backgroundColor: const Color(0xFF222222),
-        child: Text(letter, style: const TextStyle(color: Colors.white)),
-      );
-    }
-
-    return ClipOval(
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          color: const Color(0xFF222222),
-          alignment: Alignment.center,
-          child: const Icon(Icons.local_bar, color: Colors.white70),
-        ),
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Container(
-            color: const Color(0xFF1A1A1A),
-            alignment: Alignment.center,
-            child: const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // Centralize the image field here to stay SOC/DRY.
-  String? _tryImageUrl(Venue v) {
-    // Adjust these according to your Venue model.
-    // ignore: dead_code
-    if (false) return null;
-    // Example guesses; comment/uncomment if they exist on your model:
-    // return v.logoUrl;
-    // return v.imageUrl;
-    // return v.photos.isNotEmpty ? v.photos.first : null;
-    return null;
   }
 }

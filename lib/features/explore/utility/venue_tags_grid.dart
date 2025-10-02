@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../data/services/tags/tag_helpers.dart';
 import '../../../models/venues/tag.dart';
 

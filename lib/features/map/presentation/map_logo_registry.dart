@@ -44,7 +44,7 @@ class MapLogoRegistry {
         _loaded.add(id);
       } catch (_) {
         try {
-          await style.removeStyleImage(id);
+          // await style.removeStyleImage(id);
           await style.addStyleImage(
             id, 1.0, mbx, false,
             const <ImageStretches?>[], const <ImageStretches?>[], null,

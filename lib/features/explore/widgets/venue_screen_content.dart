@@ -19,7 +19,7 @@ import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/custom_network_image.dart';
 import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 
-import '../../../data/likes_providers.dart';
+import '../../../data/providers/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../data/providers/venues/venue_media_providers.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';

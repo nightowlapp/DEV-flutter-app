@@ -1,5 +1,5 @@
 // lib/features/map/widgets/map_screen.dart
-import 'package:flutter/material.dart' hide Viewport;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
@@ -13,9 +13,13 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
 import '../../../core/storage/storage_url.dart';
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
+import '../../../data/providers/map_nav_providers.dart';
+import '../../../data/providers/users/friends_locations_provider.dart';
 import '../../../data/services/location/location_controller.dart';
 import '../../../data/providers/venues/venue_providers.dart';
+import '../../../models/users/live_location.dart';
+import '../presentation/friends_fc.dart';
 import '../presentation/map_logo_registry.dart';
 import '../presentation/map_style.dart';
 import '../presentation/initial_camera_provider.dart';
@@ -27,16 +31,21 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-  with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin {
   MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
   bool _styleReady = false;
+  int _lastNavId = 0;
+
+  /// If a nav command comes before map/style is ready, we queue it here.
+  MapNavCommand? _pendingNav;
 
   final MapStyle _style = MapStyle();
   final Map<String, Venue> _venuesById = {};
+
   String _logoImageIdFor(Venue v) =>
-  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
+      'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   final bool _showClosed = true;
   final Set<VenueType> _allowedTypes = const {
@@ -68,7 +77,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ),
     );
     await _map!.scaleBar.updateSettings(
-      ScaleBarSettings(enabled: false, isMetricUnits: true),
+       ScaleBarSettings(enabled: false, isMetricUnits: true),
     );
     await _map!.attribution.updateSettings(
       AttributionSettings(clickable: false, iconColor: transparent.value),
@@ -77,42 +86,54 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // fly helper (your custom LatLng -> Mapbox CameraOptions)
   Future<void> _navigateTo(LatLng location, {double zoom = 16}) async {
-    if (_map == null) return;
+    final map = _map;
+    if (map == null) return;
     final cam = CameraOptions(
       center: Point(coordinates: Position(location.lng, location.lat)),
       zoom: zoom,
       pitch: 0,
       bearing: 0,
     );
-    _map!.flyTo(cam, MapAnimationOptions(duration: 800));
+    map.easeTo(cam,  MapAnimationOptions(duration: 500));
   }
 
-  void _openVenueById(String id) {
+  /// Show popup without moving the camera (used after we already eased)
+  Future<void> _showVenuePopupById(String id) async {
     final v = _venuesById[id];
-    if (v == null) return;
-    // fly then open sheet
-    _navigateTo(v.entry);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
+    if (v == null || !mounted) return;
+
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    await showModalBottomSheet(
+      context: rootContext,
+      useRootNavigator: true,
+      backgroundColor: black,
       isScrollControlled: false,
       builder: (_) => VenuePopup(
         venue: v,
-        onClose: () => Navigator.of(context).pop(),
+        onClose: () => Navigator.of(rootContext, rootNavigator: true).pop(),
         onOpenDetails: () {},
       ),
     );
   }
+  /// Keep existing tap behavior: move + open
+  void _openVenueById(String id) async {
+    final v = _venuesById[id];
+    if (v == null) return;
+    _navigateTo(v.entry);
+    // tiny delay so the sheet doesn’t compete with the ease animation
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    await _showVenuePopupById(id);
+  }
 
   // include BOTH bg circle layers and the symbol layers to catch all taps
   // _onMapTap: use a small ScreenBox and include cluster layers.
-  // include BOTH bg circle layers and the symbol layers to catch all taps
   Future<void> _onMapTap(MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
 
     Map<String, dynamic>? asMap(Object? o) =>
-    (o is Map) ? o.cast<String, dynamic>() : null;
+        (o is Map) ? o.cast<String, dynamic>() : null;
     List<dynamic>? asList(Object? o) => (o is List) ? o : null;
 
     // 32×32 px hit box around the finger
@@ -131,7 +152,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         if (r == null) continue;
         final feat = r.queriedFeature.feature as Map?;
         final props = asMap(feat?['properties']);
-        final rawId = props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+        final rawId =
+            props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
         if (rawId != null) return rawId.toString();
       }
       return null;
@@ -179,7 +201,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               center: Point(coordinates: Position(lon, lat)),
               zoom: (cs.zoom + 1.6).clamp(3.0, 20.0),
             ),
-            MapAnimationOptions(duration: 500),
+             MapAnimationOptions(duration: 500),
           );
         }
         return;
@@ -189,50 +211,86 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _centerOnUser() async {
     final cam = await ref.read(initialCameraProvider.future);
-    _map?.flyTo(cam, MapAnimationOptions(duration: 1200));
+    _map?.flyTo(cam,  MapAnimationOptions(duration: 1200));
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
+    // Listen for external map navigation commands (from favorites, etc.)
+    ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
+      final map = _map;
+      if (next == null || next.id <= _lastNavId) return;
+      _lastNavId = next.id;
+
+      // If map/style not ready, queue the command to run after style load.
+      if (map == null || !_styleReady) {
+        _pendingNav = next;
+        return;
+      }
+
+      // Ease to target
+      map.easeTo(
+        CameraOptions(
+          center: Point(coordinates: Position(next.target.lng, next.target.lat)),
+          zoom: next.zoom,
+        ),
+         MapAnimationOptions(duration: 500),
+      );
+
+      // Optionally open popup (Google Maps-like: wait for camera to settle a bit)
+      // if (next.openVenueId != null) {
+      //   await Future.delayed(const Duration(milliseconds: 520));
+      //   await _showVenuePopupById(next.openVenueId!);
+      // }
+    });
+
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
+      final map = _map;
+      if (map == null || !_styleReady) return;
+
+      await _style.setVenueData(
+        map,
+        clusterableFc: next.clusterable,
+        vipFc: next.vip,
+      );
+
+      // Build the set of logo IDs we need (use the exact string used by icon-image)
+      final venues = ref.read(venuesListProvider);
+      final idToPath2 = <String, String>{};
+      for (final v in venues) {
+        if (v.isVerified) {
+          final id = _logoImageIdFor(v);
+          idToPath2[id] = 'venue_images/${v.id}/logo.webp';
+        }
+      }
+      await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
+    });
+
+    ref.listen<AsyncValue<Map<String, LiveLocation>>>(
+      friendsLocationsProvider,
+          (prev, next) async {
         final map = _map;
         if (map == null || !_styleReady) return;
-
-        await _style.setVenueData(
-          map,
-          clusterableFc: next.clusterable,
-          vipFc: next.vip,
-        );
-
-        // Build the set of logo IDs we need (use the exact string used by icon-image)
-        final venues = ref.read(venuesListProvider);
-        final idToPath2 = <String, String>{};
-        for (final v in venues) {
-          if (v.isVerified) {
-            final id = _logoImageIdFor(v);
-            // Prefer your canonical path; ignore arbitrary external URLs here
-            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
-          }
-        }
-        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
-      }
+        next.whenData((m) async {
+          final fc = friendsToFeatureCollection(m);
+          await _style.setFriendsData(map, fc);
+        });
+      },
     );
 
     // 🔄 Use the SSO-backed map for popups (no direct Firestore stream)
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-        _venuesById
+      _venuesById
         ..clear()
         ..addAll(next);
-      }
-    );
+    });
 
     // center animation updates
     ref.listen<AsyncValue<CameraOptions>>(initialCameraProvider, (prev, next) {
-        next.whenData((cam) => _map?.flyTo(cam, MapAnimationOptions(duration: 650)));
-      }
-    );
+      next.whenData((cam) => _map?.flyTo(cam,  MapAnimationOptions(duration: 650)));
+    });
 
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
@@ -250,12 +308,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
             onTapListener: _onMapTap,
           ),
           if (_loading)
-          const Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black54,
-              child: Center(child: LoadingIndicator()),
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black54,
+                child: Center(child: LoadingIndicator()),
+              ),
             ),
-          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -295,6 +353,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath);
 
     if (mounted) setState(() => _loading = false);
+
+    // ▶️ Process any queued nav command now that style is ready
+    if (_pendingNav != null) {
+      final cmd = _pendingNav!;
+      _pendingNav = null;
+
+      map.easeTo(
+        CameraOptions(
+          center: Point(coordinates: Position(cmd.target.lng, cmd.target.lat)),
+          zoom: cmd.zoom,
+        ),
+         MapAnimationOptions(duration: 500),
+      );
+
+      // if (cmd.openVenueId != null) {
+      //   await Future.delayed(const Duration(milliseconds: 520));
+      //   await _showVenuePopupById(cmd.openVenueId!);
+      // }
+    }
+
   }
+
 
 }

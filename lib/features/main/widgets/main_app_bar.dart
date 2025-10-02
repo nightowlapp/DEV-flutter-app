@@ -13,7 +13,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {

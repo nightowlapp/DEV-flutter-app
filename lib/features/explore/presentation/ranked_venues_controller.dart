@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/other_providers.dart';
+import 'package:nightowlcode/data/providers/other_providers.dart';
 import 'package:nightowlcode/features/explore/utility/venue_ranker.dart';
 import 'package:nightowlcode/features/explore/utility/venue_ranker_prefs.dart';
 import 'package:nightowlcode/models/venues/venue.dart';

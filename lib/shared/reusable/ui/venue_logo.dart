@@ -1,20 +1,16 @@
-// lib/shared/reusable/ui/venue_logo.dart
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/data/services/media_existence.dart';
+import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import '../../../core/storage/storage_url.dart';
 import '../../constants/colors.dart';
 
-//TODO call customnetworkimage.
-
 enum VenueLogoShape { circle, rounded }
 
-/// Call this to get a widget. If no valid logo, it shows a local fallback with the venue initial.
-/// New:
-/// - `hideIfNoImage`: when true, return nothing if no logo/cover/mood is available.
-/// - `allowCoverOrMoodFallback`: when false, only try logo (don’t use cover/mood in the circle).
-Widget venueLogo({
+/// Usage:
+/// VenueLogo(venue: v, size: dim, showTypeIfNoLogo: true)
+Widget VenueLogo({
   required Venue venue,
   VenueMediaHealth? media,
   String? logoUrlOverride,
@@ -23,29 +19,27 @@ Widget venueLogo({
   double size = 50,
   VenueLogoShape shape = VenueLogoShape.circle,
   double borderWidth = 1.5,
-  Color borderColor = white, // used when autoBorderByOpen = false
+  Color borderColor = transparent, // used when autoBorderByOpen = false
   BorderRadius borderRadius = const BorderRadius.all(Radius.circular(borderRadiusMedium)),
-  Color? backgroundColor,
+  Color? backgroundColor, // <- allows a subtle bg
   EdgeInsetsGeometry padding = EdgeInsets.zero,
 
   // Fallback options
-  bool showInitialFallback = true,
-  String? fallbackText,                 // default: first letter of displayName/name
+  bool showInitialFallback = true, // controls whether *any* fallback is shown
+  bool showTypeIfNoLogo = false,   // when true, use venue.type.icon instead of initials
+  String? fallbackText,
   Color fallbackBgColor = const Color(0xFF222222),
   Color fallbackTextColor = white,
   FontWeight fallbackFontWeight = FontWeight.w700,
 
-  // NEW: hide the whole thing if there’s no image at all (logo/cover/mood)
   bool hideIfNoImage = false,
-
-  // NEW: if false, do NOT fall back to cover/mood inside the logo circle
   bool allowCoverOrMoodFallback = true,
 
-  // Auto border based on "is open" (keeps callers dumb)
+  // Auto border based on "is open"
   bool autoBorderByOpen = true,
   Color openBorderColor = green,
   Color closedBorderColor = red,
-  DateTime? nowForOpenCheck, // for tests/overrides
+  DateTime? nowForOpenCheck,
 
   // extras
   Object? heroTag,
@@ -53,34 +47,38 @@ Widget venueLogo({
   VoidCallback? onTap,
   VoidCallback? onLongPress,
 }) {
-  // Pick border color automatically if enabled
   final DateTime _now = nowForOpenCheck ?? DateTime.now();
   final Color _effectiveBorder = autoBorderByOpen
-    ? (venue.isOpenNow(_now) ? openBorderColor : closedBorderColor)
-    : borderColor;
+      ? (venue.isOpenNow(_now) ? openBorderColor : closedBorderColor)
+      : borderColor;
 
-  // Local fallback badge (single letter)
   Widget _fallbackBadge() {
+    final useTypeIcon = showTypeIfNoLogo; // toggle: show icon instead of initials
     final label = (fallbackText ?? _initialOf(venue)).toUpperCase();
+
     final textStyle = TextStyle(
       color: fallbackTextColor,
       fontWeight: fallbackFontWeight,
-      fontSize: size * 0.3, // scales with size nicely
-      letterSpacing: 0.5,
+      fontSize: size * 0.36,
+      letterSpacing: 0.2,
       height: 1.0,
     );
 
     final decoration = shape == VenueLogoShape.circle
-      ? BoxDecoration(
-        shape: BoxShape.circle,
-        color: fallbackBgColor,
-        border: Border.all(color: _effectiveBorder, width: borderWidth),
-      )
-      : BoxDecoration(
-        color: fallbackBgColor,
-        borderRadius: borderRadius,
-        border: Border.all(color: _effectiveBorder, width: borderWidth),
-      );
+        ? BoxDecoration(
+      shape: BoxShape.circle,
+      color: backgroundColor ?? fallbackBgColor,
+      border: Border.all(color: _effectiveBorder, width: borderWidth),
+    )
+        : BoxDecoration(
+      color: backgroundColor ?? fallbackBgColor,
+      borderRadius: borderRadius,
+      border: Border.all(color: _effectiveBorder, width: borderWidth),
+    );
+
+    final child = useTypeIcon
+        ? Icon(venue.type.icon, color: fallbackTextColor, size: size * 0.56)
+        : FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: textStyle));
 
     return Container(
       width: size,
@@ -88,14 +86,10 @@ Widget venueLogo({
       decoration: decoration,
       alignment: Alignment.center,
       padding: padding,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(label, style: textStyle),
-      ),
+      child: child,
     );
   }
 
-  // Resolve which image to show (logo → cover → mood) unless restricted
   final url = _resolvePrimaryImageUrl(
     venue: venue,
     media: media,
@@ -106,19 +100,14 @@ Widget venueLogo({
   final hasRemoteImage = url != null && (url.startsWith('http://') || url.startsWith('https://'));
   final ImageProvider? provider = hasRemoteImage ? NetworkImage(url!) : null;
 
-  // If caller wants nothing when there’s no image at all
   if (!hasRemoteImage && hideIfNoImage) {
     return const SizedBox.shrink();
   }
 
-  // Core visual (image or fallback)
   Widget core;
   if (provider == null) {
-    // No usable URL → show fallback or nothing
     core = showInitialFallback ? _fallbackBadge() : const SizedBox.shrink();
-  }
-  else {
-    // Try load image; if it fails, use fallback
+  } else {
     core = _LogoOnceLoaded(
       provider: provider,
       size: size,
@@ -126,7 +115,7 @@ Widget venueLogo({
       borderWidth: borderWidth,
       borderColor: _effectiveBorder,
       borderRadius: borderRadius,
-      backgroundColor: backgroundColor,
+      backgroundColor: backgroundColor ?? Colors.black12,
       padding: padding,
       fallback: showInitialFallback ? _fallbackBadge() : const SizedBox.shrink(),
     );
@@ -138,12 +127,12 @@ Widget venueLogo({
   return Material(
     color: Colors.transparent,
     shape: shape == VenueLogoShape.circle
-      ? const CircleBorder()
-      : RoundedRectangleBorder(borderRadius: borderRadius),
-    child: InkWell(
-      customBorder: shape == VenueLogoShape.circle
         ? const CircleBorder()
         : RoundedRectangleBorder(borderRadius: borderRadius),
+    child: InkWell(
+      customBorder: shape == VenueLogoShape.circle
+          ? const CircleBorder()
+          : RoundedRectangleBorder(borderRadius: borderRadius),
       onTap: onTap,
       onLongPress: onLongPress,
       child: core,
@@ -154,7 +143,6 @@ Widget venueLogo({
 String _initialOf(Venue venue) {
   final s = (venue.displayName.isNotEmpty ? venue.displayName : venue.name).trim();
   if (s.isEmpty) return '?';
-  // Safely take first visible char
   return String.fromCharCode(s.runes.first);
 }
 
@@ -162,9 +150,8 @@ String? _resolvePrimaryImageUrl({
   required Venue venue,
   VenueMediaHealth? media,
   String? override,
-  required bool allowCoverOrMoodFallback, // NEW
+  required bool allowCoverOrMoodFallback,
 }) {
-  // Order: explicit override → media.logo → venue.logo → (optional cover/mood)
   final candidates = <String?>[
     override,
     if (media?.logoExists == true) media!.logoUrl,
@@ -173,14 +160,13 @@ String? _resolvePrimaryImageUrl({
     if (allowCoverOrMoodFallback) venue.coverImageUrl,
     if (allowCoverOrMoodFallback) ...venue.moodImageUrls,
   ];
-
   return _firstHttpUrl(candidates);
 }
 
 String? _firstHttpUrl(Iterable<String?> candidates) {
   for (final raw in candidates) {
     if (raw == null) continue;
-    final normalized = StorageUrl.normalize(raw.trim()); // handles gs:// & storage paths
+    final normalized = StorageUrl.normalize(raw.trim());
     if (normalized.isEmpty) continue;
     if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
       return normalized;
@@ -189,7 +175,6 @@ String? _firstHttpUrl(Iterable<String?> candidates) {
   return null;
 }
 
-/// Shows image once it loads; otherwise shows provided fallback.
 class _LogoOnceLoaded extends StatefulWidget {
   const _LogoOnceLoaded({
     required this.provider,
@@ -242,7 +227,7 @@ class _LogoOnceLoadedState extends State<_LogoOnceLoaded> {
     final config = createLocalImageConfiguration(context);
     _stream = widget.provider.resolve(config);
     _listener = ImageStreamListener(
-      (ImageInfo _, bool __) {
+          (ImageInfo _, bool __) {
         if (mounted) setState(() => _ok = true);
       },
       onError: (_, __) {
@@ -266,21 +251,21 @@ class _LogoOnceLoadedState extends State<_LogoOnceLoaded> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_ok) return widget.fallback; // fallback until image is actually ready
+    if (!_ok) return widget.fallback;
 
     final decoration = widget.shape == VenueLogoShape.circle
-      ? BoxDecoration(
-        shape: BoxShape.circle,
-        color: widget.backgroundColor ?? Colors.transparent,
-        border: Border.all(color: widget.borderColor, width: widget.borderWidth),
-      )
-      : BoxDecoration(
-        color: widget.backgroundColor ?? Colors.transparent,
-        borderRadius: widget.borderRadius,
-        border: Border.all(color: widget.borderColor, width: widget.borderWidth),
-      );
+        ? BoxDecoration(
+      shape: BoxShape.circle,
+      color: widget.backgroundColor ?? Colors.transparent,
+      border: Border.all(color: widget.borderColor, width: widget.borderWidth),
+    )
+        : BoxDecoration(
+      color: widget.backgroundColor ?? Colors.transparent,
+      borderRadius: widget.borderRadius,
+      border: Border.all(color: widget.borderColor, width: widget.borderWidth),
+    );
 
-    final image = Image(image: widget.provider, fit: BoxFit.contain);
+    final image = Image(image: widget.provider, fit: BoxFit.cover);
 
     return Container(
       width: widget.size,
@@ -288,8 +273,8 @@ class _LogoOnceLoadedState extends State<_LogoOnceLoaded> {
       decoration: decoration,
       padding: widget.padding,
       child: widget.shape == VenueLogoShape.circle
-        ? ClipOval(child: image)
-        : ClipRRect(borderRadius: widget.borderRadius, child: image),
+          ? ClipOval(child: image)
+          : ClipRRect(borderRadius: widget.borderRadius, child: image),
     );
   }
 }

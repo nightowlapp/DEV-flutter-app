@@ -10,7 +10,7 @@ import '../../../shared/constants/styles.dart';
 import '../../../shared/reusable/users/language_switcher.dart';
 
 // providers & model
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
 
 class SettingsScreen extends ConsumerStatefulWidget {

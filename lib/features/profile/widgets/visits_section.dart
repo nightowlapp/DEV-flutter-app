@@ -1,109 +1,88 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/providers/venues/venue_status_color_provider.dart';
+import '../../../data/providers/visits/visits_provider.dart';
 import '../../../shared/constants/styles.dart';
-import '../../../shared/constants/values.dart'; // verticalSpacerSmall
+import '../../../shared/constants/values.dart';
+import '../../../shared/constants/colors.dart';
+import '../../../shared/reusable/ui/venue_logo.dart';
+import '../../../shared/utility/utility.dart';
 
-class VenueVisit {
-  final String name;
-  final String image; // asset or network
-  final int visits;
-  const VenueVisit({required this.name, required this.image, required this.visits});
-}
-
-/// "My Visits" — never overflows, keeps dummy data, and matches your header spacing.
-/// - Caps the list height to: min(parent space, desired height, content height)
-/// - If only a few items, the section shrinks; otherwise it becomes scrollable.
-class VisitsSection extends StatelessWidget {
+class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to fetch-
   const VisitsSection({
     super.key,
-    this.data = const [],
-    this.badgeColor = const Color(0xFFFF8C00),
-    this.avatarRadius = 18,
-    this.height, // desired max list height; if null defaults to 240
-    this.demoWhenEmpty = true,
+    this.maxHeight, // ← nullable: if null, fills as much as parent allows
     this.title = 'My Visits',
     this.rightCaption = 'See All',
     this.onRightTap,
+    this.avatarRadius = iconSizeDefault,
+    this.badgeColor = purpleAccent,
   });
 
-  final List<VenueVisit> data;
-  final Color badgeColor;
-  final double avatarRadius;
-  final double? height;
-  final bool demoWhenEmpty;
-
-  // Header
+  /// Optional hard cap. If `null`, the section will expand to parent's height.
+  final double? maxHeight;
   final String title;
   final String rightCaption;
   final VoidCallback? onRightTap;
-
-  static const List<VenueVisit> _demo = [
-    VenueVisit(name: 'Owl Bar',    image: 'assets/nightowl/test.png', visits: 12),
-    VenueVisit(name: 'Night Lab',  image: 'assets/nightowl/test.png', visits: 9),
-    VenueVisit(name: 'Bass House', image: 'assets/nightowl/test.png', visits: 7),
-    VenueVisit(name: 'Echo Club',  image: 'assets/nightowl/test.png', visits: 6),
-    VenueVisit(name: 'Neon Room',  image: 'assets/nightowl/test.png', visits: 4),
-    VenueVisit(name: 'GrooveDen',  image: 'assets/nightowl/test.png', visits: 3),
-    VenueVisit(name: 'Lunar Pub',  image: 'assets/nightowl/test.png', visits: 2),
-    VenueVisit(name: 'Afterglow',  image: 'assets/nightowl/test.png', visits: 1),
-  ];
-
-  static const double _kHeaderHeight = 32;
+  final double avatarRadius;
+  final Color badgeColor;
 
   @override
-  Widget build(BuildContext context) {
-    final items = (data.isEmpty && demoWhenEmpty) ? _demo : data;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(myVisitsWithVenuesProvider);
 
-    // keep your numbers behavior (+323)
-    final totalVisits = items.fold<int>(0, (sum, v) => sum + v.visits) + 323;
-    final leftText = '$totalVisits';
+    // Total visits for left header
+    final total = data.fold<int>(0, (sum, e) => sum + e.visits);
 
-    // Desired max list height (soft cap)
-    final wanted = (height ?? 240).clamp(80, 6000);
+    // Row height: at least 36 for touch, equals avatar diameter otherwise
+    final rowH = math.max(avatarRadius * 2, 36.0);
+    final contentH =
+    data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
 
-    // Row height ~= avatar diameter (never smaller than 36 for touch)
-    final rowHeight = math.max(avatarRadius * 2, 36.0);
-    // Content height if we showed all rows without scrolling
-    final contentHeight = items.isEmpty
-        ? rowHeight
-        : (items.length * rowHeight) + ((items.length - 1) * 8.0);
+    // Header height (title + spacing below)
+    const headerH = 32.0 + verticalSpacerSmall;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // If parent is height-bounded (e.g., in a Column sharing space),
-        // honor the available space to prevent overflow.
-        final parentCap = constraints.hasBoundedHeight
-            ? math.max(0.0, constraints.maxHeight - _kHeaderHeight - verticalSpacerSmall)
+        final hasBounded = constraints.hasBoundedHeight;
+        final parentCap = hasBounded
+            ? math.max(0.0, constraints.maxHeight - headerH)
             : double.infinity;
 
-        final listHeight = [
-          wanted.toDouble(),
-          contentHeight,
-          parentCap,
-        ].where((v) => v.isFinite).reduce(math.min);
+        // If maxHeight is null → fill as much as possible (use parentCap).
+        // If maxHeight is set → clamp to min(parentCap, maxHeight).
+        final targetCap = maxHeight == null
+            ? parentCap
+            : math.min(parentCap, maxHeight!);
+
+        final listHeight = hasBounded ? targetCap : (maxHeight ?? contentH);
+
+        // Enable scrolling only when needed
+        final needsScroll = contentH > listHeight;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header (same layout/spacing as AchievementsSection)
+            // Header
             SizedBox(
-              height: _kHeaderHeight,
+              height: 32,
               child: Stack(
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(leftText, style: Styles.basicTextHeader),
+                    child: Text('$total', style: Styles.basicText),
                   ),
                   Align(
                     alignment: Alignment.center,
-                    child: Text(title, style: Styles.basicTextHeader),
+                    child: Text(title, style: Styles.basicText),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: InkWell(
                       onTap: onRightTap,
-                      child: Text(rightCaption, style: Styles.basicTextHeader),
+                      child: Text(rightCaption, style: Styles.basicText),
                     ),
                   ),
                 ],
@@ -111,58 +90,85 @@ class VisitsSection extends StatelessWidget {
             ),
             const SizedBox(height: verticalSpacerSmall),
 
-            // Content
-            if (items.isEmpty)
+            if (data.isEmpty)
               SizedBox(
-                height: rowHeight,
+                height: listHeight,
                 child: Center(
-                  child: Text('No visits yet', style: Styles.basicTextHeader),
+                  child: Text(
+                    'Visit venues to track your visits.',
+                    style: Styles.basicText.copyWith(color: red),
+                  ),
                 ),
               )
             else
               SizedBox(
                 height: listHeight,
                 child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.zero,
-                  itemCount: items.length,
-                  // fixed row extent -> smoother scrolling & accurate height calc
-                  itemBuilder: (context, index) {
-                    final v = items[index];
+                  primary: false,
+                  physics: needsScroll
+                      ? const ClampingScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
+                  itemCount: data.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  itemBuilder: (_, i) {
+                    final v = data[i].venue;
+                    final visits = data[i].visits;
+                    final dim = avatarRadius * 2;
+
+                    final borderColor = ref.watch(venueStatusColorProvider(v));
+
                     return SizedBox(
-                      height: rowHeight,
+                      height: rowH,
                       child: Row(
                         children: [
-                          _Avatar(image: v.image, radius: avatarRadius),
-                          const SizedBox(width: 12),
+                          VenueLogo(
+                            venue: v,
+                            size: dim,
+                            showTypeIfNoLogo: true,
+                          ),
+                          const SizedBox(width: 6),
                           Expanded(
-                            child: Text(
-                              v.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  v.displayName.isNotEmpty ? v.displayName : v.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Styles.boldText
+                                      .copyWith(fontSize: fontSizeSmall),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  Utility.formatString(v.city),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Styles.smallText.copyWith(color: blue),
+                                ),
+                              ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.white10,
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(color: badgeColor, width: 1),
                             ),
                             child: Text(
-                              '${v.visits}x',
-                              style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold),
+                              '${visits}x',
+                              style: TextStyle(
+                                  color: badgeColor, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
                       ),
                     );
                   },
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
                 ),
               ),
           ],
@@ -170,51 +176,4 @@ class VisitsSection extends StatelessWidget {
       },
     );
   }
-}
-
-/* ───────────────────────── Helper: resilient avatar ───────────────────────── */
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.image, required this.radius});
-
-  final String image;
-  final double radius;
-
-  bool get _isNetwork => image.startsWith('http');
-
-  @override
-  Widget build(BuildContext context) {
-    final dim = radius * 2;
-
-    final Widget img = _isNetwork
-        ? Image.network(
-      image,
-      width: dim,
-      height: dim,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _fallback(dim),
-    )
-        : Image.asset(
-      image,
-      width: dim,
-      height: dim,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _fallback(dim),
-    );
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(dim), // full circle
-      child: img,
-    );
-  }
-
-  Widget _fallback(double dim) => Container(
-    width: dim,
-    height: dim,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      color: Colors.white12,
-      borderRadius: BorderRadius.circular(dim),
-    ),
-    child: const Icon(Icons.location_city, color: Colors.white54, size: 18),
-  );
 }

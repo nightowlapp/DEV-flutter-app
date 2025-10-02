@@ -6,7 +6,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 
 import '../../../core/storage/venues_sso.dart';
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../data/services/media_existence.dart';
 import '../filters/filters_popup.dart';
 import '../search/search_wiring.dart';

@@ -12,15 +12,15 @@ import 'package:nightowlcode/data/services/users/profile_picture_service.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
 import 'package:nightowlcode/models/venues/venue.dart';
 
-import '../core/app_config.dart';
-import '../core/storage/venues_sso.dart';
-import '../features/explore/presentation/ranked_venues_controller.dart';
-import '../features/explore/search/search_controller.dart';
-import '../features/explore/search/search_filter.dart';
-import '../models/venues/tag.dart';
-import 'firestore_paths.dart';
-import 'repositories/storage_repository.dart';
-import 'repositories/venues/tag_repository.dart';
+import '../../core/app_config.dart';
+import '../../core/storage/venues_sso.dart';
+import '../../features/explore/presentation/ranked_venues_controller.dart';
+import '../../features/explore/search/search_controller.dart';
+import '../../features/explore/search/search_filter.dart';
+import '../../models/venues/tag.dart';
+import '../firestore_paths.dart';
+import '../repositories/storage_repository.dart';
+import '../repositories/venues/tag_repository.dart';
 
 //TODO Only keep "OTHER" providers in here.
 

@@ -4,6 +4,10 @@ class DocumentPaths {
   static const users = 'users';
   static const String emblems = 'emblems';
   static const String partyStatusDays = 'party_status_days';
+  static const String locations = 'locations';
+  static const String friendRequests = 'friend_requests';
+  static const String incoming = 'incoming';
+  static const String visits = 'visits';
 
   static String user(String id) => '$users/$id';
   static String userSub(String id, String sub) => '$users/$id/$sub';

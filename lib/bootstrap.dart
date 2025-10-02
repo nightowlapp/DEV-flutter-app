@@ -19,8 +19,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/app_config.dart';
 import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
+import 'data/providers/geofence/geofencing_orchestrator_provider.dart';
 import 'data/providers/party_status/party_status_provider.dart';
-import 'firebase_options.dart';
+import 'dev_firebase_options.dart';
+// import 'firebase_options.dart';
 
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +34,6 @@ Future<void> _preBoot() async {
 
   // ref.read(locationServiceProvider.notifier).initialize(context);
   TzUtils.ensureInitialized();
-
 
   // Fetch/sort already in init to figure out friends, venues and so on? todo
 
@@ -103,10 +104,10 @@ void bootstrap(Widget Function() builder) {
       runApp(ProviderScope(
           // child: AppLifecycleObserver(
           overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
-        child: InitTasks(              // <-- MOUNT the initializer
-          child: builder(),
-        ),
-      )
+          child: InitTasks(              // <-- MOUNT the initializer
+            child: builder(),
+          ),
+        )
       );
       // );
     }, (error, stack) {
@@ -144,7 +145,10 @@ class _InitTasksState extends ConsumerState<InitTasks> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    ref.watch(geofencingOrchestratorProvider);
+    return widget.child;
+  }
 }
 
 class VenuesBoot extends ConsumerWidget {

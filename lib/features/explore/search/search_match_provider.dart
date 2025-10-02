@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/features/explore/search/search_engine.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../presentation/ranked_venues_controller.dart';
 import 'search_controller.dart';
 

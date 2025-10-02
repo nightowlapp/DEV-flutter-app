@@ -7,7 +7,7 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/utility/custom_network_image.dart';
 
-import 'package:nightowlcode/data/other_providers.dart' show authUserProvider;
+import 'package:nightowlcode/data/providers/other_providers.dart' show authUserProvider;
 import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../../features/profile/presentation/change_profile_picture.dart';
 

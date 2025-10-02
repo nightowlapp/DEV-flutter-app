@@ -14,7 +14,7 @@ import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
-import '../../../data/likes_providers.dart';
+import '../../../data/providers/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorite_limit_provider.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../shared/constants/icons.dart';
@@ -70,7 +70,7 @@ class MoreInfoScreen extends ConsumerWidget {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
     final favStore = ref.watch(favoriteStoreProvider(venue.id),  );
 
-    final logo = venueLogo(venue: venue, showInitialFallback: false);
+    final logo = VenueLogo(venue: venue, showInitialFallback: false);
     final price = venue.effectiveEntryPrice(DateTime.now());
     final bool hasPrice = (price ?? 0) > 0;
 

@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
 import '../../../shared/constants/enums.dart';
-import '../../other_providers.dart';
+import '../other_providers.dart';
 
 /// Map a plan to its limit (central place to change)
 final planFavoriteLimitProvider =

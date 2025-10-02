@@ -8,7 +8,7 @@ import 'package:hive/hive.dart';
 
 import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/data/other_providers.dart'; // firestoreProvider
+import 'package:nightowlcode/data/providers/other_providers.dart'; // firestoreProvider
 import 'package:nightowlcode/data/firestore_paths.dart'; // DocumentPaths.venues
 
 // ----------------------------------------------------

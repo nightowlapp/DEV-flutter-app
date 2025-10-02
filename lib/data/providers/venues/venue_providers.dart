@@ -8,7 +8,7 @@ import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../models/venues/venue.dart';
 import '../../../shared/constants/enums.dart';
-import '../../other_providers.dart';
+import '../other_providers.dart';
 
 /// Map<String, Venue> built from the SSO list (reactive to SSO changes).
 final venuesByIdMapProvider = Provider.autoDispose<Map<String, Venue>>((ref) {

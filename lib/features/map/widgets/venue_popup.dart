@@ -56,16 +56,16 @@ class VenuePopup extends StatelessWidget {
                 Row(
                   children: [
                     // Avatar: if verified -> logo; else purple background circle
-                    VenueAvatar<Venue>(
-                      items: [venue],
-                      imageOf: _imageOf,
-                      borderColorOf: _statusBorder,     // green/red status ring
-                      radius: 22,
-                      borderWidth: 2,
-                      backgroundColor: venue.isVerified ? null : owlPurple, // purple only when NOT verified
-                      emptyText: '',
-                      errorChild: const SizedBox.shrink(), // hide broken icon if no image
-                    ),
+                    // venueLogo<Venue>(
+                    //   items: [venue],
+                    //   imageOf: _imageOf,
+                    //   borderColorOf: _statusBorder,     // green/red status ring
+                    //   radius: 22,
+                    //   borderWidth: 2,
+                    //   backgroundColor: venue.isVerified ? null : owlPurple, // purple only when NOT verified
+                    //   emptyText: '',
+                    //   errorChild: const SizedBox.shrink(), // hide broken icon if no image
+                    // ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

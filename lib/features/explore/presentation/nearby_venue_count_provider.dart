@@ -4,7 +4,7 @@ import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../data/services/location/location_controller.dart';
 import 'ranked_venues_controller.dart'; // rankedVenuesProvider + userPrefsProvider
 

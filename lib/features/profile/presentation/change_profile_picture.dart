@@ -8,7 +8,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../shared/constants/icons.dart';
 import '../../../shared/reusable/ui/owl_snack.dart'; // authUserProvider, profilePictureServiceProvider, userRepositoryProvider
 

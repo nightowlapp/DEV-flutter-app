@@ -8,7 +8,7 @@ import 'package:nightowlcode/shared/reusable/sign_up_or_login/sign_up.dart';
 
 import '../../../core/app_config.dart';
 import '../../../core/platform_config.dart';
-import '../../../data/other_providers.dart';
+import '../../../data/providers/other_providers.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/enums.dart';
 import '../../../shared/reusable/sign_up_or_login/simple_text_field.dart';

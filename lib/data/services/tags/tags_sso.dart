@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/storage/tags_local_store.dart';
 import '../../../models/venues/tag.dart';
-import '../../other_providers.dart';
+import '../../providers/other_providers.dart';
 
 final tagsSsoProvider = AsyncNotifierProvider<TagsSso, Map<String, Tag>>(TagsSso.new);
 

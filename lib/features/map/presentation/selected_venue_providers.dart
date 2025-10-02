@@ -1,6 +1,6 @@
 // lib/features/map/presentation/selected_venue_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/other_providers.dart'; // allVenuesStreamProvider
+import '../../../data/providers/other_providers.dart'; // allVenuesStreamProvider
 import '../../../models/venues/venue.dart';
 
 /// Holds the currently tapped/selected venue id (null = none).

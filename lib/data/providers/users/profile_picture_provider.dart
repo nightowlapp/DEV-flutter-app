@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../other_providers.dart';
+import '../other_providers.dart';
 import '../../services/media_existence.dart';
 import '../media_existence_provider.dart';
 

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/venues/venue.dart';
 import '../../firestore_paths.dart';
-import '../../other_providers.dart';
+import '../other_providers.dart';
 import 'favorites_providers.dart';
 
 /// Stream of venue IDs the user has favorited.

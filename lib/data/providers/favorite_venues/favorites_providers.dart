@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/data/services/favorite_store.dart';
 import 'package:nightowlcode/data/repositories/venues/favorites_repository.dart';
 import '../../../core/storage/firestore_favorites_data_source.dart';
-import '../../other_providers.dart';
+import '../other_providers.dart';
 import 'favorite_limit_provider.dart';
 
 final favoritesDataSourceProvider = Provider<FavoritesDataSource>((ref) {

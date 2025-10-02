@@ -26,7 +26,7 @@ class AppConfig {
   static AppConfig get current => const AppConfig(
     accessToken: String.fromEnvironment('MAPBOX_ACCESS_TOKEN',
         // defaultValue: 'pk.eyJ1IjoibmlnaHR2aWV3IiwiYSI6ImNtYjBwdmhkaTB3aTkyaXEycmY3dXQ5czUifQ.XFwAjV4tzjFwKh2h1JmKoQ'), // test
-        defaultValue: 'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpnZDM3MTAyZ3kyanNkZ2ZmOGlodHgifQ.LiuhCFihOQ8wUw9RyASb0g'),
+        defaultValue: 'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpmbmZsYTAxNnEya3M5eHJlcnlteGYifQ._IsVBAIAbKg7GZgJLdo7qA'),
     googleServerClientId: String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID',
         defaultValue: '658302244013-nn1l5bnl7trst9hcvnmlrnj2da5b62nv.apps.googleusercontent.com'),
 

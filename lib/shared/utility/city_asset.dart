@@ -1,14 +1,11 @@
 // lib/shared/utility/city_asset.dart
 library city_asset;
 
-/// Returns the asset path for a city's fallback image.
-/// "Copenhagen" -> "assets/nightowl/copenhagen.png"
-///
-/// If your filenames exactly match `venue.city` (including spaces/case),
-/// call with `slug: false`.
+const _kDefault = 'assets/nightowl/cities/default.png';
+
 String assetForCity(String? city, {bool slug = true}) {
   final raw = (city ?? '').trim();
-  if (raw.isEmpty) return 'assets/nightowl/cities/default.png';
+  if (raw.isEmpty) return _kDefault;
 
   if (!slug) return 'assets/nightowl/cities/$raw.png';
 
@@ -18,4 +15,3 @@ String assetForCity(String? city, {bool slug = true}) {
       .replaceAll(RegExp(r'^_|_$'), '');
   return 'assets/nightowl/cities/${s.isEmpty ? 'default' : s}.png';
 }
-

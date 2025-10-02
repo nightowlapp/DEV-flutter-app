@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import '../../../core/storage/app_storage.dart';
-import '../../other_providers.dart';
+import '../../../shared/party_status_parse.dart';
+import '../other_providers.dart';
 import '../../../shared/party_status_store.dart';
 import '../../repositories/users/party_status_repository.dart';
 
@@ -34,7 +35,7 @@ final partyStatusStateProvider = StateProvider<PartyStatusTypes>(
 // ➋ Color derived from the in-memory status (sync)
 final partyStatusColorForProvider = Provider.family<Color, PartyStatusTypes>((ref, s) {
     switch (s) {
-      case PartyStatusTypes.out_tonight: return purple;
+      case PartyStatusTypes.out_tonight: return purpleAccent;
       case PartyStatusTypes.house_party: return blue;
       case PartyStatusTypes.pregame:     return orange;
       case PartyStatusTypes.recovering:  return red;
@@ -155,3 +156,13 @@ final partyStatusPulsePaletteProvider = Provider<List<Color>>((ref) {
     ];
   }
 );
+
+final partyStatusForUserProvider =
+StreamProvider.family<PartyStatusTypes, String>((ref, uid) {
+  final db = ref.watch(firestoreProvider);
+  return db.collection('party_status').doc(uid).snapshots().map((snap) {
+    if (!snap.exists) return PartyStatusTypes.still_planning;
+    final data = snap.data()!;
+    return parsePartyStatus(data['status'] as String?);
+  });
+});

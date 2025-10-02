@@ -112,7 +112,7 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
           Row(children: [
           Text('Find Friends', style: Styles.basicTextHeader),
             Spacer(),
-            Text('237 Nearby')
+            Text('237 Nearby', style: Styles.smallText)
           ],),
           SizedBox(height: h * 0.02,),
 
