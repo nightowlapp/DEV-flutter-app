@@ -30,12 +30,12 @@ class MapStyle {
     // --- sources -------------------------------------------------------------
     if (!await style.styleSourceExists(srcVenuesClusterable)) {
       await style.addSource(GeoJsonSource(
-        id: srcVenuesClusterable,
-        data: _emptyFC(),
-        cluster: true,
-        clusterRadius: 64,
-        clusterMaxZoom: 15,
-      ));
+          id: srcVenuesClusterable,
+          data: _emptyFC(),
+          cluster: true,
+          clusterRadius: 64,
+          clusterMaxZoom: 15,
+        ));
     }
     if (!await style.styleSourceExists(srcVenuesVip)) {
       await style.addSource(GeoJsonSource(id: srcVenuesVip, data: _emptyFC(), cluster: false));
@@ -52,18 +52,12 @@ class MapStyle {
       await style.setStyleLayerProperty(
         lyrClusters,
         'circle-color',
-        jsonEncode([
-          'step',
-          ['get', 'point_count'],
-          deepPurple.toHex(),
-          25,
-          purple.toHex(),
-          100,
-          purpleAccent.toHex(),
-          maxSizeCluster,
-          promoFg.toHex()
-        ]),
+        jsonEncode(['step', ['get', 'point_count'], purpleAccent.toHex(), 25,
+            purple.toHex(), 100,
+            deepPurple.toHex(), maxSizeCluster, blue.toHex()]
+        )
       );
+
       await style.setStyleLayerProperty(
         lyrClusters,
         'circle-radius',
@@ -94,11 +88,11 @@ class MapStyle {
         lyrUnclusteredBg,
         'circle-color',
         jsonEncode([
-          'case',
-          ['==', ['get', 'isVerified'], true],
-          'rgba(0,0,0,0)', // transparent when verified
-          purple.toHex(),
-        ]),
+            'case',
+            ['==', ['get', 'isVerified'], true],
+            'rgba(0,0,0,0)', // transparent when verified
+            purple.toHex(),
+          ]),
       );
       await style.setStyleLayerProperty(lyrUnclusteredBg, 'circle-radius', 8.0);
       await style.setStyleLayerProperty(lyrUnclusteredBg, 'circle-opacity', 1);
@@ -117,11 +111,11 @@ class MapStyle {
         lyrVipBg,
         'circle-color',
         jsonEncode([
-          'case',
-          ['==', ['get', 'isVerified'], true],
-          'rgba(0,0,0,0)',
-          purpleAccent.toHex(),
-        ]),
+            'case',
+            ['==', ['get', 'isVerified'], true],
+            'rgba(0,0,0,0)',
+            purpleAccent.toHex(),
+          ]),
       );
       await style.setStyleLayerProperty(lyrVipBg, 'circle-radius', 16.0);
       await style.setStyleLayerProperty(lyrVipBg, 'circle-opacity', 1);
@@ -142,32 +136,32 @@ class MapStyle {
         lyrUnclustered,
         'icon-image',
         jsonEncode([
-          'case',
-          ['==', ['get', 'isVerified'], true],
-          ['get', 'logo_image_id'],
-          [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'],
-            'wine_bar',
-            ['==', ['get', 'venueType'], 'cocktail_bar'],
-            'cocktail_bar',
-            ['==', ['get', 'venueType'], 'beer_bar'],
-            'beer_bar',
-            ['==', ['get', 'venueType'], 'karaoke_bar'],
-            'karaoke_bar',
-            ['==', ['get', 'venueType'], 'sports_bar'],
-            'sports_bar',
-            ['==', ['get', 'venueType'], 'gay_bar'],
-            'gay_bar',
-            ['==', ['get', 'venueType'], 'pub'],
-            'pub',
-            ['==', ['get', 'venueType'], 'bar'],
-            'bar',
-            ['==', ['get', 'venueType'], 'club'],
-            'club',
-            'unknown'
-          ]
-        ]),
+            ['==', ['get', 'isVerified'], true],
+            ['get', 'logo_image_id'],
+            [
+              'case',
+              ['==', ['get', 'venueType'], 'wine_bar'],
+              'wine_bar',
+              ['==', ['get', 'venueType'], 'cocktail_bar'],
+              'cocktail_bar',
+              ['==', ['get', 'venueType'], 'beer_bar'],
+              'beer_bar',
+              ['==', ['get', 'venueType'], 'karaoke_bar'],
+              'karaoke_bar',
+              ['==', ['get', 'venueType'], 'sports_bar'],
+              'sports_bar',
+              ['==', ['get', 'venueType'], 'gay_bar'],
+              'gay_bar',
+              ['==', ['get', 'venueType'], 'pub'],
+              'pub',
+              ['==', ['get', 'venueType'], 'bar'],
+              'bar',
+              ['==', ['get', 'venueType'], 'club'],
+              'club',
+              'unknown'
+            ]
+          ]),
       );
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-size', 0.8);
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-allow-overlap', true);
@@ -181,19 +175,19 @@ class MapStyle {
       await style.addLayer(SymbolLayer(id: lyrLabels, sourceId: srcVenuesClusterable));
       await style.setStyleLayerProperty(lyrLabels, 'filter', jsonEncode(['!', ['has', 'point_count']]));
 
-      await style.setStyleLayerProperty(lyrLabels, 'text-field', jsonEncode([ 'format',
-        //   ['get', 'display_name'], {'text-color': white.toHex()},
-        //             '  ', {},
-        [
-          'number-format',
-          ['coalesce', ['get', 'rating'], 3.4], // fallback 0 if null
-          {
-            'min-fraction-digits': 1,
-            'max-fraction-digits': 1,
-          }
-        ],
-        {'text-color': white.toHex()},
-      ]),
+      await style.setStyleLayerProperty(lyrLabels, 'text-field', jsonEncode(['format',
+            //   ['get', 'display_name'], {'text-color': white.toHex()},
+            //             '  ', {},
+            [
+              'number-format',
+              ['coalesce', ['get', 'rating'], 3.4], // fallback 0 if null
+              {
+                'min-fraction-digits': 1,
+                'max-fraction-digits': 1,
+              }
+            ],
+            {'text-color': white.toHex()},
+          ]),
       );
       await style.setStyleLayerProperty(lyrLabels, 'text-size', 12.0);
       await style.setStyleLayerProperty(lyrLabels, 'text-color', white.toHex());
@@ -234,32 +228,32 @@ class MapStyle {
         lyrVip,
         'icon-image',
         jsonEncode([
-          'case',
-          ['==', ['get', 'isVerified'], true],
-          ['get', 'logo_image_id'],
-          [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'],
-            'wine_bar',
-            ['==', ['get', 'venueType'], 'cocktail_bar'],
-            'cocktail_bar',
-            ['==', ['get', 'venueType'], 'beer_bar'],
-            'beer_bar',
-            ['==', ['get', 'venueType'], 'karaoke_bar'],
-            'karaoke_bar',
-            ['==', ['get', 'venueType'], 'sports_bar'],
-            'sports_bar',
-            ['==', ['get', 'venueType'], 'gay_bar'],
-            'gay_bar',
-            ['==', ['get', 'venueType'], 'pub'],
-            'pub',
-            ['==', ['get', 'venueType'], 'bar'],
-            'bar',
-            ['==', ['get', 'venueType'], 'club'],
-            'club',
-            'unknown'
-          ]
-        ]),
+            ['==', ['get', 'isVerified'], true],
+            ['get', 'logo_image_id'],
+            [
+              'case',
+              ['==', ['get', 'venueType'], 'wine_bar'],
+              'wine_bar',
+              ['==', ['get', 'venueType'], 'cocktail_bar'],
+              'cocktail_bar',
+              ['==', ['get', 'venueType'], 'beer_bar'],
+              'beer_bar',
+              ['==', ['get', 'venueType'], 'karaoke_bar'],
+              'karaoke_bar',
+              ['==', ['get', 'venueType'], 'sports_bar'],
+              'sports_bar',
+              ['==', ['get', 'venueType'], 'gay_bar'],
+              'gay_bar',
+              ['==', ['get', 'venueType'], 'pub'],
+              'pub',
+              ['==', ['get', 'venueType'], 'bar'],
+              'bar',
+              ['==', ['get', 'venueType'], 'club'],
+              'club',
+              'unknown'
+            ]
+          ]),
       );
       await style.setStyleLayerProperty(lyrVip, 'icon-size', 0.95);
       await style.setStyleLayerProperty(lyrVip, 'icon-allow-overlap', true);
@@ -271,21 +265,21 @@ class MapStyle {
     if (!await style.styleLayerExists(lyrVipLabels)) {
       await style.addLayer(SymbolLayer(id: lyrVipLabels, sourceId: srcVenuesVip));
 
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-field',   jsonEncode([
-        'format',
-        ['get', 'name'], {'text-color': white.toHex()},
-        '  ', {},
-        // rating with exactly 1 decimal
-        [
-          'number-format',
-          ['coalesce', ['get', 'rating'], 3.4], // fallback 0 if null
-          {
-            'min-fraction-digits': 1,
-            'max-fraction-digits': 1,
-          }
-        ],
-        {'text-color': white.toHex()},
-      ]),
+      await style.setStyleLayerProperty(lyrVipLabels, 'text-field', jsonEncode([
+            'format',
+            ['get', 'name'], {'text-color': white.toHex()},
+            '  ', {},
+            // rating with exactly 1 decimal
+            [
+              'number-format',
+              ['coalesce', ['get', 'rating'], 3.4], // fallback 0 if null
+              {
+                'min-fraction-digits': 1,
+                'max-fraction-digits': 1,
+              }
+            ],
+            {'text-color': white.toHex()},
+          ]),
       );
       await style.setStyleLayerProperty(lyrVipLabels, 'text-size', 14.0);
       await style.setStyleLayerProperty(lyrVipLabels, 'text-color', white.toHex());
@@ -332,12 +326,12 @@ class MapStyle {
     if (!await style.styleLayerExists(lyrFriendLabels)) {
       await style.addLayer(SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends));
       await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-field', jsonEncode(['coalesce', ['get', 'name'], 'Friend']));
+        lyrFriendLabels, 'text-field', jsonEncode(['coalesce', ['get', 'name'], 'Friend']));
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-size', 12.0);
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-color', white.toHex());
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-halo-color', black.toHex());
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-halo-width', 1.2);
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-offset', const [0.0, -1.5]);
+      await style.setStyleLayerProperty(lyrFriendLabels, 'text-offset', const[0.0, -1.5]);
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-allow-overlap', false);
     }
 
@@ -351,10 +345,10 @@ class MapStyle {
   }
 
   Future<void> setVenueData(
-      MapboxMap map, {
-        required String clusterableFc,
-        required String vipFc,
-      }) async {
+    MapboxMap map, {
+      required String clusterableFc,
+      required String vipFc,
+    }) async {
     final style = map.style;
     if (await style.styleSourceExists(srcVenuesClusterable)) {
       await style.setStyleSourceProperty(srcVenuesClusterable, 'data', clusterableFc);
@@ -364,8 +358,6 @@ class MapStyle {
     }
   }
 
-
-
   Future<void> setFriendsData(MapboxMap map, String fc) async {
     if (await map.style.styleSourceExists(srcFriends)) {
       await map.style.setStyleSourceProperty(srcFriends, 'data', fc);
@@ -373,15 +365,15 @@ class MapStyle {
   }
 
   Future<void> applyFilters(
-      MapboxMap map, {
-        required bool showClosed,
-        required Set<String> allowedTypes,
-      }) async {
+    MapboxMap map, {
+      required bool showClosed,
+      required Set<String> allowedTypes,
+    }) async {
     final style = map.style;
 
     final typesList = allowedTypes.where((e) => e.isNotEmpty).toList()..sort();
     final typeExpr =
-    typesList.isEmpty ? ['has', 'venueType'] : ['in', ['get', 'venueType'], ['literal', typesList]];
+      typesList.isEmpty ? ['has', 'venueType'] : ['in', ['get', 'venueType'], ['literal', typesList]];
 
     final openPredicate = [
       'any',
@@ -392,24 +384,24 @@ class MapStyle {
     final combined = showClosed ? typeExpr : ['all', typeExpr, openPredicate];
 
     await Future.wait([
-      style.setStyleLayerProperty(
-        MapStyle.lyrUnclusteredBg,
-        'filter',
-        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
-      ),
-      style.setStyleLayerProperty(
-        MapStyle.lyrUnclustered,
-        'filter',
-        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
-      ),
-      style.setStyleLayerProperty(
-        MapStyle.lyrLabels,
-        'filter',
-        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
-      ),
-      style.setStyleLayerProperty(MapStyle.lyrVipBg, 'filter', jsonEncode(combined)),
-      style.setStyleLayerProperty(MapStyle.lyrVip, 'filter', jsonEncode(combined)),
-      style.setStyleLayerProperty(MapStyle.lyrVipLabels, 'filter', jsonEncode(combined)),
-    ]);
+        style.setStyleLayerProperty(
+          MapStyle.lyrUnclusteredBg,
+          'filter',
+          jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+        ),
+        style.setStyleLayerProperty(
+          MapStyle.lyrUnclustered,
+          'filter',
+          jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+        ),
+        style.setStyleLayerProperty(
+          MapStyle.lyrLabels,
+          'filter',
+          jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+        ),
+        style.setStyleLayerProperty(MapStyle.lyrVipBg, 'filter', jsonEncode(combined)),
+        style.setStyleLayerProperty(MapStyle.lyrVip, 'filter', jsonEncode(combined)),
+        style.setStyleLayerProperty(MapStyle.lyrVipLabels, 'filter', jsonEncode(combined)),
+      ]);
   }
 }

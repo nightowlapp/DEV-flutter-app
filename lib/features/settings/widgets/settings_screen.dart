@@ -272,6 +272,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     //     ),
     //
     //     // ---- your "lonely texts" (left intact) ----
+
+      // Text('Få notifications fra venner online', style: Styles.popShadowLogo,),
+
     //     Text("ASBJØRN?!", style: Styles.basicText),
     //     Text("Sms reklamer", style: Styles.basicText),
     //     Text("email promoting.", style: Styles.basicText),

@@ -3,8 +3,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-//    id "com.google.gms.google-services" //TODO
-//    id "com.google.firebase.crashlytics"
+    id("com.google.gms.google-services")
+//    id("com.google.firebase.crashlytics")//TODO
 }
 
 android {
@@ -15,6 +15,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // 🔑 Required for flutter_local_notifications
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -55,11 +57,13 @@ android {
     }
 }
 
-//dependencies {
+dependencies {
 //    implementation("androidx.credentials:credentials:1.3.0")
 //    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
 //    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
-//}
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+}
 
 
 flutter {

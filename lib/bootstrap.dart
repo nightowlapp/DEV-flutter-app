@@ -7,8 +7,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:nightowlcode/core/error_handler.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
@@ -30,13 +30,22 @@ import 'dev_firebase_options.dart';
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Firestore.instance.enablePersistence();
+  // Firestore.instance.enablePersistence(); // What is this?
+
+  // ref.read(locationServiceProvider.notifier).initialize(context); // TODO Sort out location first.
+
+  // Fetch cache
   await initLocalStores();
 
-  // ref.read(locationServiceProvider.notifier).initialize(context);
+  // Notifications
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  final notif = NotificationService();
+  await notif.initLocalNotifications();
+  await notif.init();
+
+  //Timezone
   TzUtils.ensureInitialized();
-  await NotificationService().init();
-  await ensureNotifReady();
 
   // Fetch/sort already in init to figure out friends, venues and so on? todo
 
@@ -78,15 +87,12 @@ Future<void> _preBoot() async {
 
 }
 
-Future<void> ensureNotifReady() async {
-  if (Platform.isAndroid) {
-    final s = await Permission.notification.status;
-    if (!s.isGranted) await Permission.notification.request();
-  }
-  // iOS already handled in NotificationService.init()
-  final token = await FirebaseMessaging.instance.getToken();
+@pragma('vm:entry-point') // required by Android
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you show local notifications for data-only pushes, init plugins here.
+  await Firebase.initializeApp();
+  // print('BG push: ${message.messageId} data=${message.data}');
 }
-
 
 Future<void> initLocalStores() async {
   final dir = await getApplicationDocumentsDirectory();
@@ -126,14 +132,6 @@ void bootstrap(Widget Function() builder) {
       handleError(error, stack);
     }
   );
-}
-
-@pragma('vm:entry-point')
-Future<void> fcmBackgroundHandler(RemoteMessage message) async {
-  // If you need Firebase here:
-  // await Firebase.initializeApp();
-  // Minimal: log/handle data; the system shows the notification when app is bg/terminated
-  // print('BG message: ${message.messageId}, data: ${message.data}');
 }
 
 class InitTasks extends ConsumerStatefulWidget {

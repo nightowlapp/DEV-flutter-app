@@ -1,0 +1,10 @@
+<!-- android/app/src/main/res/values/strings.xml -->
+<resources>
+    <string name="app_name">NightOwl</string>
+
+    <!-- Must match the ID used when creating the channel -->
+    <string name="default_notification_channel_id">nightowl_default</string>
+
+    <!-- Human-readable name shown in system settings -->
+    <string name="default_notification_channel_name">General</string>
+</resources>

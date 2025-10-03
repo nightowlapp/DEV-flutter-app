@@ -36,17 +36,6 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     // SchedulerBinding.instance.addPostFrameCallback((_) => _prewarmMapBranchSafely());
     _load();
-    FirebaseMessaging.onMessage.listen((message) { // TODO Want to seperate notifications in one folder.
-      // You could surface a local notification here if you want a foreground banner
-      // For now we keep it simple
-      final snack = SnackBar(
-        content: Text('Push received: ${message.notification?.title ?? ''}'),
-      );
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(snack);
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      // Handle deep link via message.data if needed
-    });
   }
 
   Future<void> _load() async {

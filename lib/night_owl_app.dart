@@ -13,6 +13,12 @@ class NightOwlApp extends StatelessWidget {
     final config = AppConfig.current;
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
+      // showPerformanceOverlay: true,
+      // debugShowMaterialGrid = true,
+      // showPerformanceOverlay = true,
+      // checkerboardRasterCacheImages = true,
+      // checkerboardOffscreenLayers = true,
+      // showSemanticsDebugger = true,
       title: config.appTitle,
       routerConfig: router,
       scaffoldMessengerKey: scaffoldMessengerKey,
