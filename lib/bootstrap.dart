@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -14,6 +15,7 @@ import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_config.dart';
@@ -21,6 +23,7 @@ import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
 import 'data/providers/geofence/geofencing_orchestrator_provider.dart';
 import 'data/providers/party_status/party_status_provider.dart';
+import 'data/services/notifications/notification_service.dart';
 import 'dev_firebase_options.dart';
 // import 'firebase_options.dart';
 
@@ -30,10 +33,10 @@ Future<void> _preBoot() async {
   // Firestore.instance.enablePersistence();
   await initLocalStores();
 
-  // FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
-
   // ref.read(locationServiceProvider.notifier).initialize(context);
   TzUtils.ensureInitialized();
+  await NotificationService().init();
+  await ensureNotifReady();
 
   // Fetch/sort already in init to figure out friends, venues and so on? todo
 
@@ -49,7 +52,7 @@ Future<void> _preBoot() async {
   // venues$ can be your VenuesRepository.watchViewport(...) stream, or a broader subscription around user
   // final orchestrator = GeofencingOrchestrator(
   //   location$: LocationService.location$,
-  //   venues$: VenueRepository2.,
+  //   venues$: VenueRepository.,
   //   presenceRepo: GeofencingRepository("currentUserId"),
   // );
 
@@ -73,6 +76,15 @@ Future<void> _preBoot() async {
 
   // otherq
 
+}
+
+Future<void> ensureNotifReady() async {
+  if (Platform.isAndroid) {
+    final s = await Permission.notification.status;
+    if (!s.isGranted) await Permission.notification.request();
+  }
+  // iOS already handled in NotificationService.init()
+  final token = await FirebaseMessaging.instance.getToken();
 }
 
 
@@ -170,4 +182,8 @@ class VenuesBoot extends ConsumerWidget {
       error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
+
+
 }
+
+

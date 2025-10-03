@@ -6,6 +6,7 @@ enum MainScreenName {
   map(showNav: true),
 
   calender(showNav: false),
+  // cupons(showNav: false),
 
   social(showNav: true),
   profile(showNav: true),

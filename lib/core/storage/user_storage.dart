@@ -1,0 +1,1 @@
+// Store user self + friends.TODO

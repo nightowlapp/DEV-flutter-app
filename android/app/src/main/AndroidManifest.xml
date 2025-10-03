@@ -18,13 +18,14 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-<!--    Maybe use foreground? But not now.-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>-->
-<!--    Users should be able to turn off backgroundlocation in settings?-->
     <!--Notification-->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+
+    <!--    Maybe use foreground? But not now.-->
+    <!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
+    <!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>-->
+    <!--    Users should be able to turn off backgroundlocation in settings?-->
 
 
     <application
