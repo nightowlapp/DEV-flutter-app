@@ -50,7 +50,7 @@ class User {
   final String? lastName;
   final String? biography;
 
-  final String? homeCountry; // iso2 lowercase
+  final String? homeCountryCode; // iso2 lowercase
   final String? homeTown;    // lowercase
 
   // ---- Defaults / flags ----
@@ -84,7 +84,7 @@ class User {
     this.phoneNumber,
     this.biography,
     this.profilePictureUrl,
-    this.homeCountry,
+    this.homeCountryCode,
     this.homeTown,
     this.appVersion,
 
@@ -173,7 +173,7 @@ class User {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       biography: biography ?? this.biography,
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
-      homeCountry: homeCountry ?? this.homeCountry,
+      homeCountryCode: homeCountry ?? this.homeCountryCode,
       homeTown: homeTown ?? this.homeTown,
       appVersion: appVersion ?? this.appVersion,
       isVerified: isVerified ?? this.isVerified,
@@ -202,7 +202,7 @@ class User {
     'phone': phoneNumber?.toJson(),
     'biography': biography,
     'profile_picture_url': profilePictureUrl,
-    'home_country': homeCountry,
+    'home_country': homeCountryCode,
     'home_town': homeTown,
     'app_version': appVersion,
     'is_verified': isVerified,
@@ -251,7 +251,7 @@ class User {
           : null,
       biography: _s('biography'),
       profilePictureUrl: _s('profile_picture_url'),
-      homeCountry: _s('home_country')?.toLowerCase(),
+      homeCountryCode: _s('home_country')?.toLowerCase(),
       homeTown: _s('home_town')?.toLowerCase(),
       appVersion: _s('app_version'),
 
@@ -295,7 +295,7 @@ class User {
         _phoneEq(other.phoneNumber, phoneNumber) &&
         other.biography == biography &&
         other.profilePictureUrl == profilePictureUrl &&
-        other.homeCountry == homeCountry &&
+        other.homeCountryCode == homeCountryCode &&
         other.homeTown == homeTown &&
         other.appVersion == appVersion &&
         other.isVerified == isVerified &&
@@ -324,7 +324,7 @@ class User {
       (phoneNumber?.hashCode ?? 0) ^
       (biography?.hashCode ?? 0) ^
       (profilePictureUrl?.hashCode ?? 0) ^
-      (homeCountry?.hashCode ?? 0) ^
+      (homeCountryCode?.hashCode ?? 0) ^
       (homeTown?.hashCode ?? 0) ^
       (appVersion?.hashCode ?? 0) ^
       isVerified.hashCode ^

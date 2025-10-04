@@ -9,8 +9,23 @@ class DocumentPaths {
   static const String incoming = 'incoming';
   static const String visits = 'visits';
 
+  // Notifications
+  static const notifications = 'notifications'; // parent
+  static const notificationsQueue = 'queue';    // subcollection name
+  static const String fcmToken = 'fcm_tokens';
+
+  static String senderNotifications(String senderId) => // senderid == venueid/nightowl
+      '$notifications/$senderId/$notificationsQueue';
+
   static String user(String id) => '$users/$id';
   static String userSub(String id, String sub) => '$users/$id/$sub';
+
+  // live count
+  static const liveCounts = 'live_counts';
+  static const count = 'count';
+
+  static String liveCount(String id) => '$liveCounts/$id';
+
 
   // venues
   static const venues = 'venues';

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "345476540966",
+    "firebase_url": "https://dev-nightowl-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "dev-nightowl",
     "storage_bucket": "dev-nightowl.firebasestorage.app"
   },

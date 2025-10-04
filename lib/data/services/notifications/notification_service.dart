@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:nightowlcode/data/services/notifications/token_sync_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
@@ -27,6 +28,7 @@ class NotificationService {
 
     // Get token (for debugging and optional storage)
     final token = await _fcm.getToken();
+    await TokenSyncService().syncCurrentToken();
 
     // Subscribe to a simple topic we’ll use in the function
     await _fcm.subscribeToTopic('all');
@@ -81,7 +83,8 @@ class NotificationService {
 
     // Re-subscribe on token refresh
     _fcm.onTokenRefresh.listen((_) async {
-      await _fcm.subscribeToTopic('all');
+      await _fcm.subscribeToTopic('all');   // keep if you like a global topic
+      await TokenSyncService().syncCurrentToken();
     });
   }
 

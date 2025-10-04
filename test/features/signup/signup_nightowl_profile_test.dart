@@ -70,7 +70,7 @@ void main() {
       expect(user.middleName, null);
       expect(user.lastName, null);
       expect(user.biography, null);
-      expect(user.homeCountry, null);
+      expect(user.homeCountryCode, null);
       expect(user.homeTown, null);
       expect(user.appVersion, '1.0');
       expect(user.createdAt, isNotNull);

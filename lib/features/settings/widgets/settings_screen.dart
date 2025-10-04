@@ -326,7 +326,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _kv('phoneNumber', s(u?.phoneNumber)),
         _kv('biography', s(u?.biography)),
         _kv('profilePictureUrl', s(u?.profilePictureUrl)),
-        _kv('homeCountry', s(u?.homeCountry)),
+        _kv('homeCountry', s(u?.homeCountryCode)),
         _kv('homeTown', s(u?.homeTown)),
         _kv('appVersion', s(u?.appVersion)),
         _kv('isVerified', u == null ? '' : u.isVerified.toString()),
