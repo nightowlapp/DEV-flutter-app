@@ -136,165 +136,166 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
       body:
-      ListView(children: [
-          Column(children: [
+      // ListView(children: [
+      //     Column(children: [
+      //
+      //       Image.asset('assets/nightowl/logo.png'),
+      //       Image.asset('assets/nightowl/logo2.png'),
+      //         // Image.asset('assets/nightowl/logo3.png'),
+      //
+      //       Text('NightOwl', style: Styles.gradientLogo,),
+      //       Text('NightOwl', style: Styles.logoTextGradient,),
+      //       Text('NightOwl', style: Styles.sloganTextGradient,),
+      //       Text('NightOwl', style: Styles.slogan,),
+      //       Text('NightOwl', style: Styles.popShadowLogo,),
+      //
+      //       Text('NightOwl', style: Styles.test1,),
+      //       Text('NightOwl', style: Styles.test2,),
+      //       Text('NightOwl', style: Styles.test3,),
+      //       Text('NightOwl', style: Styles.test4,),
+      //       Text('NightOwl', style: Styles.test5,),
+      //
+      //       Styles.logoCrazy('NightOwl'),
+      //       Styles.nameOrangeAttemptUpgrade(),
+      //       Styles.nameWhite(),
+      //       Styles.nameOrange(),
+      //       Styles.nameOrange(),
+      //
+      //
+      //
+      //       SizedBox(height: 100,)
+      //
+      //       ],)
+      //   ],)
 
-            Image.asset('assets/nightowl/logo.png'),
-            Image.asset('assets/nightowl/logo2.png'),
-              // Image.asset('assets/nightowl/logo3.png'),
+    ListView(
 
-            Text('NightOwl', style: Styles.gradientLogo,),
-            Text('NightOwl', style: Styles.logoTextGradient,),
-            Text('NightOwl', style: Styles.sloganTextGradient,),
-            Text('NightOwl', style: Styles.slogan,),
-            Text('NightOwl', style: Styles.popShadowLogo,),
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        _sectionHeader("Personal"),
+        _userTile("Username", _userName, onTap: () async {
+            final updated = await _editTextField(
+              context,
+              fieldLabel: "Username",
+              initial: _userName,
+            );
+            if (updated != null) setState(() => _userName = updated);
+          }
+        ),
+        _userTile("Email", _email, onTap: () async {
+            final updated = await _editTextField(
+              context,
+              fieldLabel: "Email",
+              initial: _email,
+              keyboardType: TextInputType.emailAddress,
+            );
+            if (updated != null) setState(() => _email = updated);
+          }
+        ),
 
-            Text('NightOwl', style: Styles.test1,),
-            Text('NightOwl', style: Styles.test2,),
-            Text('NightOwl', style: Styles.test3,),
-            Text('NightOwl', style: Styles.test4,),
-            Text('NightOwl', style: Styles.test5,),
+        Row(
+          children: [
+            Expanded(
+              child: _userTile("First Name", _firstName, onTap: () async {
+                  final updated = await _editTextField(
+                    context,
+                    fieldLabel: "First Name",
+                    initial: _firstName,
+                  );
+                  if (updated != null) setState(() => _firstName = updated);
+                }
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _userTile("Last Name", _lastName, onTap: () async {
+                  final updated = await _editTextField(
+                    context,
+                    fieldLabel: "Last Name",
+                    initial: _lastName,
+                  );
+                  if (updated != null) setState(() => _lastName = updated);
+                }
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: _userTile("Birthday", birthdayStr, onTap: () async {
+                  final picked = await _pickBirthday(context, _birthday);
+                  if (picked != null) setState(() => _birthday = picked);
+                }
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: _userTile("Phone", _formattedPhone(_phone), onTap: () async {
+                  final updated = await _editTextField(
+                    context,
+                    fieldLabel: "Phone",
+                    initial: _phone ?? '',
+                    keyboardType: TextInputType.phone,
+                  );
+                  if (updated != null) setState(() => _phone = updated);
+                }
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 1,
+              child: _userTile(
+                "Gender",
+                _genderLabel(_gender),
+                icon: maleIcon,
+                onTap: () async {
+                  final g = await _pickGender(context, _gender);
+                  if (g != null) setState(() => _gender = g);
+                },
+              ),
+            ),
+          ],
+        ),
+        const Divider(color: white, thickness: 0.2, height: 30),
 
-            Styles.logoCrazy('NightOwl'),
-            Styles.nameOrangeAttemptUpgrade(),
-            Styles.nameWhite(),
-            Styles.nameOrange(),
-            Styles.nameOrange(),
+        _sectionHeader("Preferences"),
+        SwitchListTile(
+          value: _shareLocation,
+          onChanged: (v) => setState(() => _shareLocation = v),
+          title: Text("Share location with friends", style: Styles.basicText),
+          activeColor: owlPurple,
+          inactiveThumbColor: grey,
+          inactiveTrackColor: grey.withOpacity(0.3),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+        ),
 
+        // ---- your "lonely texts" (left intact) ----
 
+      Text('Få notifications fra venner online', style: Styles.popShadowLogo,),
 
-            SizedBox(height: 100,)
+        Text("ASBJØRN?!", style: Styles.basicText),
+        Text("Sms reklamer", style: Styles.basicText),
+        Text("email promoting.", style: Styles.basicText),
+        Text("log ud.", style: Styles.basicText),
+        Text("Delete user.", style: Styles.basicText),
+        Text("ToS.", style: Styles.basicText),
 
-            ],)
-        ],)
+        const Divider(color: owlPurple),
 
-    // ListView(
-    //   padding: const EdgeInsets.all(16.0),
-    //   children: [
-    //     _sectionHeader("Personal"),
-    //     _userTile("Username", _userName, onTap: () async {
-    //         final updated = await _editTextField(
-    //           context,
-    //           fieldLabel: "Username",
-    //           initial: _userName,
-    //         );
-    //         if (updated != null) setState(() => _userName = updated);
-    //       }
-    //     ),
-    //     _userTile("Email", _email, onTap: () async {
-    //         final updated = await _editTextField(
-    //           context,
-    //           fieldLabel: "Email",
-    //           initial: _email,
-    //           keyboardType: TextInputType.emailAddress,
-    //         );
-    //         if (updated != null) setState(() => _email = updated);
-    //       }
-    //     ),
-    //
-    //     Row(
-    //       children: [
-    //         Expanded(
-    //           child: _userTile("First Name", _firstName, onTap: () async {
-    //               final updated = await _editTextField(
-    //                 context,
-    //                 fieldLabel: "First Name",
-    //                 initial: _firstName,
-    //               );
-    //               if (updated != null) setState(() => _firstName = updated);
-    //             }
-    //           ),
-    //         ),
-    //         const SizedBox(width: 16),
-    //         Expanded(
-    //           child: _userTile("Last Name", _lastName, onTap: () async {
-    //               final updated = await _editTextField(
-    //                 context,
-    //                 fieldLabel: "Last Name",
-    //                 initial: _lastName,
-    //               );
-    //               if (updated != null) setState(() => _lastName = updated);
-    //             }
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //     Row(
-    //       children: [
-    //         Expanded(
-    //           flex: 2,
-    //           child: _userTile("Birthday", birthdayStr, onTap: () async {
-    //               final picked = await _pickBirthday(context, _birthday);
-    //               if (picked != null) setState(() => _birthday = picked);
-    //             }
-    //           ),
-    //         ),
-    //         const SizedBox(width: 10),
-    //         Expanded(
-    //           flex: 2,
-    //           child: _userTile("Phone", _formattedPhone(_phone), onTap: () async {
-    //               final updated = await _editTextField(
-    //                 context,
-    //                 fieldLabel: "Phone",
-    //                 initial: _phone ?? '',
-    //                 keyboardType: TextInputType.phone,
-    //               );
-    //               if (updated != null) setState(() => _phone = updated);
-    //             }
-    //           ),
-    //         ),
-    //         const SizedBox(width: 10),
-    //         Expanded(
-    //           flex: 1,
-    //           child: _userTile(
-    //             "Gender",
-    //             _genderLabel(_gender),
-    //             icon: maleIcon,
-    //             onTap: () async {
-    //               final g = await _pickGender(context, _gender);
-    //               if (g != null) setState(() => _gender = g);
-    //             },
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //     const Divider(color: white, thickness: 0.2, height: 30),
-    //
-    //     _sectionHeader("Preferences"),
-    //     SwitchListTile(
-    //       value: _shareLocation,
-    //       onChanged: (v) => setState(() => _shareLocation = v),
-    //       title: Text("Share location with friends", style: Styles.basicText),
-    //       activeColor: owlOrange,
-    //       inactiveThumbColor: grey,
-    //       inactiveTrackColor: grey.withOpacity(0.3),
-    //       contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-    //     ),
-    //
-    //     // ---- your "lonely texts" (left intact) ----
+        _sectionHeader("Notifications"),
+        _favoriteClubsSection(_favoriteClubs),
 
-      // Text('Få notifications fra venner online', style: Styles.popShadowLogo,),
+        const SizedBox(height: 8),
+        const Divider(color: owlPurple),
 
-    //     Text("ASBJØRN?!", style: Styles.basicText),
-    //     Text("Sms reklamer", style: Styles.basicText),
-    //     Text("email promoting.", style: Styles.basicText),
-    //     Text("log ud.", style: Styles.basicText),
-    //     Text("Delete user.", style: Styles.basicText),
-    //     Text("ToS.", style: Styles.basicText),
-    //
-    //     const Divider(color: owlOrange),
-    //
-    //     _sectionHeader("Notifications"),
-    //     _favoriteClubsSection(_favoriteClubs),
-    //
-    //     const SizedBox(height: 8),
-    //     const Divider(color: owlOrange),
-    //
-    //     // -------- ALL AVAILABLE DATA (read-only) --------
-    //     _sectionHeader("All account data"),
-    //     ..._allDataTiles(appUser, fbUser),
-    //   ],
-    // ),
+        // -------- ALL AVAILABLE DATA (read-only) --------
+        _sectionHeader("All account data"),
+        ..._allDataTiles(appUser, fbUser),
+      ],
+    ),
     );
   }
 

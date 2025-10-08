@@ -90,7 +90,7 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(width: widget.dayWidth, child: Text(headerLabel, style: base.copyWith(fontSize: fontSizeMedium))),
+                SizedBox(width: widget.dayWidth, child: Text(headerLabel, style: base.copyWith(fontSize: fontSizeSmall))),
                 SizedBox(
                   width: widget.rangeWidth,
                   child: todayParts.isClosed
@@ -130,14 +130,14 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          SizedBox(width: widget.dayWidth, child: Text(label, style: base)),
+                          SizedBox(width: widget.dayWidth, child: Text(label, style: base.copyWith(fontSize: fontSizeSmaller))),
                           SizedBox(
                             width: widget.rangeWidth,
                             child: p.isClosed
-                              ? Text('Closed', style: base)
+                              ? Text('Closed', style: base.copyWith(fontSize: fontSizeSmaller, color: red))
                               : RichText(
                                 text: TextSpan(
-                                  style: base,
+                                  style: base.copyWith(fontSize: fontSizeSmaller),
                                   children: [
                                     TextSpan(text: '${p.open} - ${p.close}'),
                                     if (p.nextDay) _plusOne(base, widget.textColor),
@@ -146,7 +146,7 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
                               ),
                           ),
                           Text(p.isClosed ? '      ' :
-                              '$age+', style: base),
+                              '$age+', style: base.copyWith(fontSize: fontSizeSmaller)),
                           const SizedBox(width: 50), // reserved for future "busy" meter, etc.
                         ],
 

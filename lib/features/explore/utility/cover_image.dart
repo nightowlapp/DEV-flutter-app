@@ -2,49 +2,24 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/utility/city_asset.dart';
-
 import '../../../shared/utility/custom_network_image.dart';
 
+const _defaultAsset = 'assets/nightowl/cities/default.png';
+
 class CoverImage extends StatelessWidget {
-  /// Network image url (http/https, gs://, or storage path).
   final String? imageUrl;
-
-  /// Exact height. If null, uses [heightFactor] of viewport height.
   final double? height;
-
-  /// Fraction of screen height to use when [height] is null. Default 0.25.
   final double heightFactor;
-
-  /// Collapse when url empty. NOTE: we override this when no URL so that
-  /// the city fallback still shows.
   final bool hideIfEmpty;
-
-  /// Optional top overlay gradient.
   final Gradient? overlayGradient;
-
-  /// Optional foreground widget placed above the image.
   final Widget? foreground;
-
-  /// Image fit.
   final BoxFit fit;
-
-  /// Alignment for the internal OverflowBox.
   final Alignment alignment;
-
-  /// Whether to compute an appropriate memCacheWidth from current device width.
   final bool useDeviceCacheWidth;
-
-  /// Optional hard override for memCacheWidth (in pixels).
   final int? memCacheWidth;
-
-  /// Upper bound when auto-computing memCacheWidth (safety).
   final int maxAutoCacheWidth;
-
-  /// Show fallback asset while loading/error.
   final bool fallBackEnabled;
-
-  /// Asset used as fallback (we’ll pass city.png here).
-  final String? fallbackAsset;
+  final String? fallbackAsset; // e.g. city asset
 
   const CoverImage({
     super.key,
@@ -63,11 +38,10 @@ class CoverImage extends StatelessWidget {
     this.fallbackAsset,
   });
 
-  /// Convenience ctor for a media object + city fallback.
   factory CoverImage.fromMedia({
     Key? key,
-    required dynamic media, // e.g. VenueMediaHealth
-    required String? city,  // <-- pass venue.city here
+    required dynamic media,
+    required String? city,
     double? height,
     double heightFactor = 0.25,
     bool hideIfEmpty = true,
@@ -86,8 +60,6 @@ class CoverImage extends StatelessWidget {
         (media.coverUrl?.isNotEmpty ?? false);
 
     final cityAsset = assetForCity(city);
-
-    // If there is no cover URL, don’t collapse—show the city asset.
     final shouldHideIfEmpty = hasCover ? hideIfEmpty : false;
 
     return CoverImage(
@@ -123,6 +95,7 @@ class CoverImage extends StatelessWidget {
 
     final h = height ?? MediaQuery.of(context).size.height * heightFactor;
     final cacheWidth = _effectiveMemCacheWidth(context);
+    final cityAsset = (fallbackAsset ?? '').trim();
 
     return SizedBox(
       height: h,
@@ -137,21 +110,28 @@ class CoverImage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               if (url.isNotEmpty)
+              // Network first; fall back to default asset if it fails
                 CustomNetworkImage(
                   url,
                   fit: fit,
                   memCacheWidth: cacheWidth,
                   fallBackEnabled: fallBackEnabled,
-                  // <<< the magic: city.png everywhere
-                  fallbackAsset: fallbackAsset ?? 'assets/nightowl/default.png',
+                  fallbackAsset: _defaultAsset,
                 )
-              else if (fallBackEnabled && (fallbackAsset ?? '').isNotEmpty)
+              else if (fallBackEnabled)
+              // Try city asset, then default.png, then nothing
                 Image.asset(
-                  fallbackAsset!,
+                  cityAsset.isNotEmpty ? cityAsset : _defaultAsset,
                   fit: fit,
+                  errorBuilder: (_, __, ___) => Image.asset(
+                    _defaultAsset,
+                    fit: fit,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
                 )
               else
                 const SizedBox.shrink(),
+
               if (overlayGradient != null)
                 DecoratedBox(decoration: BoxDecoration(gradient: overlayGradient!)),
               if (foreground != null) foreground!,

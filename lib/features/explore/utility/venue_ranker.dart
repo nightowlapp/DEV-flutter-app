@@ -128,14 +128,14 @@ class PointRules {
     ],
 
     // Distance (bands are additive, only the first matching band applies)
-    this.distanceBands = const[
-      DistanceBand(1000, 10),   // <= 1 km  : +10
-      DistanceBand(2000, 8),    // <= 2 km  : +8
-      DistanceBand(4000, 5),    // <= 4 km  : +5
-      DistanceBand(10000, 3),   // <= 10 km : +3
+    this.distanceBands = const[ //TODO TEST VALUES.
+      DistanceBand(1000, 1000),   // <= 1 km  : +10
+      DistanceBand(2000, 800),    // <= 2 km  : +8
+      DistanceBand(4000, 500),    // <= 4 km  : +5
+      DistanceBand(10000, 300),   // <= 10 km : +3
       // > 10km → 0 by default (or penalty if beyond user max)
     ],
-    this.hardCutBeyondMaxDistance = false, // ✅ outside maxDistance sinks below inside
+    this.hardCutBeyondMaxDistance = true, // ✅ outside maxDistance sinks below inside
     this.beyondMaxDistancePenalty = -50,
 
     // Strict distance when certain party statuses (e.g. planning/recovering)
@@ -164,7 +164,7 @@ class PointRules {
     this.popMaxPoints = 16,
 
     // Trust
-    this.verifiedPoints = 20,
+    this.verifiedPoints = 25,
 
     // Personalization (effective age check; women have 1-year grace)
     this.ageFitPoints = 10,

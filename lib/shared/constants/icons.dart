@@ -23,6 +23,7 @@ final IconData maleIcon = Icons.male;
 final IconData femaleIcon = Icons.female;
 final IconData otherGenderIcon = Icons.transgender;
 
+
 // UI
 final partyStatusIcon = Icons.my_location;
 final locationIcon = Icons.my_location;
@@ -61,6 +62,7 @@ final fullScreenIcon = Icons.fullscreen;
 final copyIcon = Icons.copy;
 final shieldIcon = Icons.shield_moon;
 final infoIcon = Icons.info_outline;
+final IconData distanceIcon = Icons.near_me;
 
 
 final settingsIcon =Icons.settings;

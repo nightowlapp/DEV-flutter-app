@@ -85,6 +85,7 @@ class VenueScreenContent extends ConsumerWidget {
     final visitsAsync = ref.watch(liveVenueCountProvider(venue.id));
     final int visits = visitsAsync.value ?? 0;
 
+
     final int cap = venue.capacity;
 
     // same threshold you had, but uses live count
@@ -142,11 +143,13 @@ class VenueScreenContent extends ConsumerWidget {
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
                 MoodImagesSection(venueId: venue.id),
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
+                if (venue.tagids.length > 4)
                 VenueTagsGrid(
                   tagIds: venue.tagids,
                   viewportWidth: PlatformConfig.width(context),
                   viewportHeight: PlatformConfig.height(context),
                 ),
+                if (venue.tagids.length > 4)
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
 
                 // Bottom actions

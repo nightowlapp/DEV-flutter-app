@@ -87,202 +87,202 @@ class MoreInfoScreen extends ConsumerWidget {
       // Use slivers to avoid internal SliverPadding/layout issues
       body: CustomScrollView(
 
-          slivers: [
-            // Cover image
-            SliverToBoxAdapter(child: _header(context)),
+        slivers: [
+          // Cover image
+          SliverToBoxAdapter(child: _header(context)),
 
-            // Page content
-            SliverPadding(
+          // Page content
+          SliverPadding(
 
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate.fixed([
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate.fixed([
 
-                    // Top row: icons + rating card
-                    Row(
-                      children: [
-                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+                  // Top row: icons + rating card
+                  Row(
+                    children: [
+                      SizedBox(height: PlatformConfig.height(context) * 0.01),
 
-                        FavoriteVenueButton(store: favStore, venue: venue),
-                        const SizedBox(width: allSidePaddingDefault),
-                        LikeVenueButton(store: likeStore, venue: venue,),
-                        const SizedBox(width: allSidePaddingDefault),
-                        if(venue.isVerified) const VerifiedBadge(),
+                      FavoriteVenueButton(store: favStore, venue: venue),
+                      const SizedBox(width: allSidePaddingDefault),
+                      LikeVenueButton(store: likeStore, venue: venue,),
+                      const SizedBox(width: allSidePaddingDefault),
+                      if(venue.isVerified) const VerifiedBadge(),
 
-                        const Spacer(),
-                        RatingCard(venue: venue), // will be replaced below
-                      ],
-                    ),
-                    SizedBox(height: PlatformConfig.height(context) * 0.05,),
+                      const Spacer(),
+                      RatingCard(venue: venue), // will be replaced below
+                    ],
+                  ),
+                  SizedBox(height: PlatformConfig.height(context) * 0.05,),
 
-                    OpeningInfoHeaderBar(openingHours: venue.openingHours,
-                      defaultAgeRestriction: venue.defaultAgeRestriction, initiallyExpanded: true),
+                  OpeningInfoHeaderBar(openingHours: venue.openingHours,
+                    defaultAgeRestriction: venue.defaultAgeRestriction, initiallyExpanded: true),
 
-                    SizedBox(height: PlatformConfig.height(context) * 0.05,),
-                    Row(
-                      children: [
-                        // LEFT: tappable → show snack
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          // onTap: () => OwlSnack.show(), TODO navigation
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(locationPinIcon, size: iconSizeLarge),
-                                  SizedBox(width: PlatformConfig.width(context) * 0.01),
-                                  Column(
-                                    children: [
-                                      Text(Distance.distanceText(userLoc, venue), style: Styles.boldText),
-                                      Text(Distance.walkText(userLoc, venue), style: Styles.boldText),
-                                    ],
-                                  ),
-                                ],
-                              ),
-
-                              SizedBox(height: PlatformConfig.height(context) * 0.002),
-
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (venue.city != null || venue.city.trim().isNotEmpty)
-                                  Text(Utility.formatString(venue.city), style:
-                                    Styles.basicText.copyWith(color: blue, fontSize: fontSizeSmaller),)
-                                  else SizedBox.shrink(),
-                                  Row(
-                                    children: [
-                                      if (venue.countryCode != null || venue.countryCode.trim().isNotEmpty)
-                                      Text(venue.countryCode.toCountryName(), style:
-                                        Styles.basicText.copyWith(color: blue, fontSize: fontSizeSmallest),)
-                                      // SizedBox(width: PlatformConfig.width(context) * 0.005)
-                                      else SizedBox.shrink(),
-                                      // if (venue.timeZoneId != null || venue.timeZoneId!.trim().isNotEmpty)
-                                      // Text(venue.timeZoneId!, style: Styles.basicText.copyWith(fontSize: fontSizeSmallest),)
-                                      // else SizedBox.shrink(),
-                                    ],
-                                  ),
-                                ],
-                              )
-                            ]
-                          ),
-                        ),
-
-                        const Spacer(),
-
-                        // RIGHT: wrapped too, but onTap is a no-op
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {OwlSnack.show(context, title: 'Venue Type',
-                              message: '${venue.displayName} is a ${Utility.formatString(venue.type.name)}');
-                          },
-                          child: Row(
-                            children: [
-
-                              SizedBox(width: PlatformConfig.width(context) * 0.01),
-                              Column(
-                                children: [
-                                  Text(Utility.formatString(venue.type.name), style: Styles.boldText),
-                                ],
-                              ),
-                              Icon(venue.type.icon, size: iconSizeLarge),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: PlatformConfig.height(context) * 0.03,),
-
-                    if(venue.isVerified)
-                    Row(
-                      children: [
-                        // LEFT: tappable (shows snack)
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque, // bigger tap target
-                          onTap: () => OwlSnack.show(
-                            context,
-                            title: 'Dresscode Today',
-                            message:
-                            'The dresscode today is: ${Utility.formatString(venue.effectiveDressCode(DateTime.now()).name)}',
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(dressCodeIcon, size: iconSizeLarge),
-                              SizedBox(width: PlatformConfig.width(context) * 0.01),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(''),
-                                  Text(
-                                    Utility.formatString(
-                                      venue.effectiveDressCode(DateTime.now()).name,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const Spacer(),
-
-                        // RIGHT: wrapped too, but onTap does nothing
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          child: Row(
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  if (!hasPrice)
-                                  Text('Free\nEntrance', style: Styles.boldText)
-                                  else ...[
-                                    Text(''), // blank line above
-                                    Text(
-                                      price.toString(), // or '€${price.toStringAsFixed(0)}'
-                                      style: Styles.boldText,
-                                    ),
+                  SizedBox(height: PlatformConfig.height(context) * 0.05,),
+                  Row(
+                    children: [
+                      // LEFT: tappable → show snack
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        // onTap: () => OwlSnack.show(), TODO navigation
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(locationPinIcon, size: iconSizeLarge),
+                                SizedBox(width: PlatformConfig.width(context) * 0.01),
+                                Column(
+                                  children: [
+                                    Text(Distance.distanceText(userLoc, venue), style: Styles.boldText),
+                                    Text(Distance.walkText(userLoc, venue), style: Styles.boldText),
                                   ],
-                                ],
-                              ),
-                              SizedBox(width: PlatformConfig.width(context) * 0.01),
-                              Icon(hasPrice ? euroIcon : freeIcon, size: iconSizeLarge),
-                            ],
-                          ),
-                          onTap: () {}, // intentionally no-op TODO
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: PlatformConfig.height(context) * 0.002),
+
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (venue.city != null || venue.city.trim().isNotEmpty)
+                                Text(Utility.formatString(venue.city), style:
+                                  Styles.basicText.copyWith(color: blue, fontSize: fontSizeSmaller),)
+                                else SizedBox.shrink(),
+                                Row(
+                                  children: [
+                                    if (venue.countryCode != null || venue.countryCode.trim().isNotEmpty)
+                                    Text(venue.countryCode.toCountryName(), style:
+                                      Styles.basicText.copyWith(color: blue, fontSize: fontSizeSmallest),)
+                                    // SizedBox(width: PlatformConfig.width(context) * 0.005)
+                                    else SizedBox.shrink(),
+                                    // if (venue.timeZoneId != null || venue.timeZoneId!.trim().isNotEmpty)
+                                    // Text(venue.timeZoneId!, style: Styles.basicText.copyWith(fontSize: fontSizeSmallest),)
+                                    // else SizedBox.shrink(),
+                                  ],
+                                ),
+                              ],
+                            )
+                          ]
                         ),
-                      ],
-                    ),
-
-                    // SizedBox(height: PlatformConfig.height(context) * 0.05,),
-
-                    // Description (optional)
-                    if (venue.description.trim().isNotEmpty && venue.isVerified)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: black,
-                        border: Border.all(color: grey, width: 0.7),
-                        borderRadius: BorderRadius.circular(borderRadiusMedium),
                       ),
-                      child: Text(
-                        venue.description,
-                        style: Styles.basicText,
+
+                      const Spacer(),
+
+                      // RIGHT: wrapped too, but onTap is a no-op
+                      if(venue.type != VenueType.unknown)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {OwlSnack.show(context, title: 'Venue Type',
+                            message: '${venue.displayName} is a ${Utility.formatString(venue.type.name)}');
+                        },
+                        child: Row(
+                          children: [
+
+                            SizedBox(width: PlatformConfig.width(context) * 0.01),
+                            Column(
+                              children: [
+                                Text(Utility.formatString(venue.type.name), style: Styles.boldText),
+                              ],
+                            ),
+                            Icon(venue.type.icon, size: iconSizeLarge),
+                          ],
+                        ),
                       ),
+                    ],
+                  ),
+                  if(venue.type != VenueType.unknown)
+                  SizedBox(height: PlatformConfig.height(context) * 0.03,),
+
+                  if(venue.isVerified)
+                  Row(
+                    children: [
+                      // LEFT: tappable (shows snack)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque, // bigger tap target
+                        onTap: () => OwlSnack.show(
+                          context,
+                          title: 'Dresscode Today',
+                          message:
+                          'The dresscode today is: ${Utility.formatString(venue.effectiveDressCode(DateTime.now()).name)}',
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(dressCodeIcon, size: iconSizeLarge),
+                            SizedBox(width: PlatformConfig.width(context) * 0.01),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(''),
+                                Text(
+                                  Utility.formatString(
+                                    venue.effectiveDressCode(DateTime.now()).name,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if(venue.isVerified)
+                      const Spacer(),
+
+                      // RIGHT: wrapped too, but onTap does nothing
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (!hasPrice)
+                                Text('Free\nEntrance', style: Styles.boldText)
+                                else ...[
+                                  Text(''), // blank line above
+                                  Text(
+                                    price.toString(), // or '€${price.toStringAsFixed(0)}'
+                                    style: Styles.boldText,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            SizedBox(width: PlatformConfig.width(context) * 0.01),
+                            Icon(hasPrice ? euroIcon : freeIcon, size: iconSizeLarge),
+                          ],
+                        ),
+                        onTap: () {}, // intentionally no-op TODO
+                      ),
+                    ],
+                  ),
+
+                  // SizedBox(height: PlatformConfig.height(context) * 0.05,),
+
+                  // Description (optional)
+                  if (venue.description.trim().isNotEmpty && venue.isVerified)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: black,
+                      border: Border.all(color: grey, width: 0.7),
+                      borderRadius: BorderRadius.circular(borderRadiusMedium),
                     ),
-                    SizedBox(height: PlatformConfig.height(context) * 0.05,),
+                    child: Text(
+                      venue.description,
+                      style: Styles.basicText,
+                    ),
+                  ),
+                  SizedBox(height: PlatformConfig.height(context) * 0.05,),
 
-                    //TODO total visits? Total likes? Total favorites? Email? Phone?
+                  //TODO total visits? Total likes? Total favorites? Email? Phone?
 
+                  // RatingSummary(venue), TODO
 
-                    // RatingSummary(venue), TODO
-
-                  ]),
-              ),
+                ]),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

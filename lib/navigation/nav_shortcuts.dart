@@ -53,7 +53,6 @@ extension NavShortcuts on BuildContext {
     ref.read(mapNavControllerProvider.notifier).flyToVenue(
       v,
       zoom: zoom,
-      openPopup: true, // carry venue; MapScreen will open it
     );
   }
 }

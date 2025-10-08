@@ -1,4 +1,6 @@
 // lib/features/map/presentation/map_nav_providers.dart
+import 'dart:ffi';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
@@ -34,18 +36,27 @@ class MapNavController extends AutoDisposeNotifier<MapNavCommand?> {
   @override
   MapNavCommand? build() => null;
 
-  void flyTo(LatLng target, {double zoom = 16, bool openPopup = false, Venue? venue}) {
+  void flyTo(LatLng target, {double zoom = 16, bool openPopup = true}) {
     _seq++;
     state = MapNavCommand(
       id: _seq,
       target: target,
       zoom: zoom,
       openPopup: openPopup,
-      venue: venue,
     );
   }
 
-  void flyToVenue(Venue v, {double zoom = 16, bool openPopup = false}) {
+  void easeTo(LatLng target, {double zoom = 16, bool openPopup = true}){
+    _seq++;
+    state = MapNavCommand(
+      id: _seq,
+      target: target,
+      zoom: zoom,
+      openPopup: openPopup,
+    );
+  }
+
+  void flyToVenue(Venue v, {double zoom = 16, bool openPopup = true}) {
     _seq++;
     state = MapNavCommand(
       id: _seq,
