@@ -17,7 +17,8 @@ class PartyStatusIndicator extends ConsumerStatefulWidget {
   const PartyStatusIndicator({super.key});
 
   @override
-  ConsumerState<PartyStatusIndicator> createState() => _PartyStatusIndicatorState();
+  ConsumerState<PartyStatusIndicator> createState() =>
+      _PartyStatusIndicatorState();
 }
 
 class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
@@ -31,7 +32,8 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: _cycleDuration)..stop();
+    _controller = AnimationController(vsync: this, duration: _cycleDuration)
+      ..stop();
   }
 
   @override
@@ -77,13 +79,18 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
       onTap: () async {
         HapticFeedback.selectionClick();
 
-        final picked = await _showStatusDialog(context, ref: ref, initial: status);
+        final picked =
+            await _showStatusDialog(context, ref: ref, initial: status);
         if (!mounted || picked == null) return;
 
         ref.read(partyStatusStateProvider.notifier).state = picked;
 
         Position? pos;
-        try { pos = await Geolocator.getCurrentPosition(); } catch (_) { pos = null; }
+        try {
+          pos = await Geolocator.getCurrentPosition();
+        } catch (_) {
+          pos = null;
+        }
         if (!mounted) return;
 
         final store = ref.read(partyStatusStoreProvider);
@@ -95,21 +102,26 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
 
         if (!mounted) return;
         HapticFeedback.mediumImpact();
-        if (needsAnswer) ref.invalidate(partyStatusNeedsAnswerProvider); // Recompute to disable animation TODO Works with if?
+        if (needsAnswer)
+          ref.invalidate(
+              partyStatusNeedsAnswerProvider); // Recompute to disable animation TODO Works with if?
       },
       child: CircleAvatar(
         backgroundColor: Colors.transparent,
         radius: iconSizeDefault,
         child: needsAnswer
             ? AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) {
-            final s = math.sin(2 * math.pi * _controller.value);
-            final opacity = _minOpacity + (_maxOpacity - _minOpacity) * ((s + 1) / 2);
-            final col = _colorFromT(_controller.value, palette).withOpacity(opacity);
-            return Icon(partyStatusIcon, size: iconSizeMedium, color: col);
-          },
-        )
+                animation: _controller,
+                builder: (_, __) {
+                  final s = math.sin(2 * math.pi * _controller.value);
+                  final opacity =
+                      _minOpacity + (_maxOpacity - _minOpacity) * ((s + 1) / 2);
+                  final col = _colorFromT(_controller.value, palette)
+                      .withOpacity(opacity);
+                  return Icon(partyStatusIcon,
+                      size: iconSizeMedium, color: col);
+                },
+              )
             : Icon(partyStatusIcon, size: iconSizeMedium, color: baseColor),
       ),
     );
@@ -117,10 +129,10 @@ class _PartyStatusIndicatorState extends ConsumerState<PartyStatusIndicator>
 }
 
 Future<PartyStatusTypes?> _showStatusDialog(
-    BuildContext context, {
-      required WidgetRef ref,
-      required PartyStatusTypes initial,
-    }) {
+  BuildContext context, {
+  required WidgetRef ref,
+  required PartyStatusTypes initial,
+}) {
   return showDialog<PartyStatusTypes>(
     context: context,
     builder: (dialogCtx) => PopupDialogDefault(
@@ -133,8 +145,10 @@ Future<PartyStatusTypes?> _showStatusDialog(
             return ListTile(
               selected: it == initial,
               selectedTileColor: bg,
-              leading: Icon(partyStatusIcon, color: color, size: iconSizeDefault),
-              title: Text(Utility.formatString(it.name), style: Styles.popupText),
+              leading:
+                  Icon(partyStatusIcon, color: color, size: iconSizeDefault),
+              title:
+                  Text(Utility.formatString(it.name), style: Styles.popupText),
               onTap: () {
                 HapticFeedback.selectionClick();
                 Navigator.of(dialogCtx).pop<PartyStatusTypes>(it);

@@ -105,10 +105,11 @@ final venuesLocalStoreProvider = FutureProvider<VenuesLocalStore>((ref) async {
   return VenuesLocalStore.open();
 });
 
-final venuesSsoProvider = AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
+final venuesSsoProvider =
+    AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 class VenuesSso extends AsyncNotifier<List<Venue>> {
-  StreamSubscription<QuerySnapshot<Venue>>? _subDelta;    // add/modify
+  StreamSubscription<QuerySnapshot<Venue>>? _subDelta; // add/modify
   StreamSubscription<QuerySnapshot<Venue>>? _subRemovals; // delete-only
   KeepAliveLink? _keepAlive;
 
@@ -144,18 +145,19 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
 
   Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
     final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
-      fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-      toFirestore: (v, _) => VenueFirestore.toMap(v),
-    );
+          fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+          toFirestore: (v, _) => VenueFirestore.toMap(v),
+        );
     final snap = await col.get(const GetOptions(source: Source.server));
     return snap.docs.map((d) => d.data()).toList(growable: false);
   }
 
-  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
+  Future<void> _startLiveSync(
+      FirebaseFirestore db, VenuesLocalStore store) async {
     final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
-      fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-      toFirestore: (v, _) => VenueFirestore.toMap(v),
-    );
+          fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+          toFirestore: (v, _) => VenueFirestore.toMap(v),
+        );
 
     final lastSync = await store.getLastSync();
 
@@ -164,7 +166,8 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     Query<Venue> deltaQ = col;
     try {
       if (lastSync != null) {
-        deltaQ = deltaQ.where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync));
+        deltaQ = deltaQ.where('updated_at',
+            isGreaterThan: Timestamp.fromDate(lastSync));
       }
       deltaStream = deltaQ.snapshots();
     } catch (_) {
@@ -189,7 +192,8 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       }
 
       for (final change in qs.docChanges) {
-        if (change.type == DocumentChangeType.added || change.type == DocumentChangeType.modified) {
+        if (change.type == DocumentChangeType.added ||
+            change.type == DocumentChangeType.modified) {
           final v = change.doc.data();
           if (v != null) {
             await store.upsert(v);

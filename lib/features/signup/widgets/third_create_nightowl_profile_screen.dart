@@ -32,11 +32,16 @@ class _ThirdCreateNightowlProfileScreenState
     _password.text = ref.read(passwordProvider);
     _password.addListener(() {
       setState(() {}); // for button state
-      ref.read(passwordProvider.notifier).state = _password.text; // in-memory only
+      ref.read(passwordProvider.notifier).state =
+          _password.text; // in-memory only
     });
   }
+
   @override
-  void dispose() { if (_ownsController) _password.dispose(); super.dispose(); }
+  void dispose() {
+    if (_ownsController) _password.dispose();
+    super.dispose();
+  }
 
   bool get _minOk => _password.text.trim().length >= 6;
 

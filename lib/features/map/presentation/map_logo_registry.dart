@@ -13,9 +13,11 @@ class MapLogoRegistry {
 
   final _loaded = <String>{};
 
-  Future<void> syncIdToUrl({   // keep the name if you like; it’s really ID->path
+  Future<void> syncIdToUrl({
+    // keep the name if you like; it’s really ID->path
     required MapboxMap map,
-    required Map<String, String> images, // id -> "venue_images/<id>/logo.webp" | gs://... | https://...
+    required Map<String, String>
+        images, // id -> "venue_images/<id>/logo.webp" | gs://... | https://...
     int maxSize = 96,
   }) async {
     final style = map.style;
@@ -38,20 +40,31 @@ class MapLogoRegistry {
 
       try {
         await style.addStyleImage(
-          id, 1.0, mbx, false,
-          const <ImageStretches?>[], const <ImageStretches?>[], null,
+          id,
+          1.0,
+          mbx,
+          false,
+          const <ImageStretches?>[],
+          const <ImageStretches?>[],
+          null,
         );
         _loaded.add(id);
       } catch (_) {
         try {
           // await style.removeStyleImage(id);
           await style.addStyleImage(
-            id, 1.0, mbx, false,
-            const <ImageStretches?>[], const <ImageStretches?>[], null,
+            id,
+            1.0,
+            mbx,
+            false,
+            const <ImageStretches?>[],
+            const <ImageStretches?>[],
+            null,
           );
           _loaded.add(id);
         } catch (e2) {
-          if (kDebugMode) debugPrint('MapLogoRegistry: add failed for $id -> $e2');
+          if (kDebugMode)
+            debugPrint('MapLogoRegistry: add failed for $id -> $e2');
         }
       }
     }
@@ -76,7 +89,8 @@ class MapLogoRegistry {
       final paint = ui.Paint()..isAntiAlias = true;
       canvas.drawImageRect(
         decoded,
-        ui.Rect.fromLTWH(0, 0, decoded.width.toDouble(), decoded.height.toDouble()),
+        ui.Rect.fromLTWH(
+            0, 0, decoded.width.toDouble(), decoded.height.toDouble()),
         ui.Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
         paint,
       );
@@ -87,7 +101,8 @@ class MapLogoRegistry {
 
       return MbxImage(width: w, height: h, data: data.buffer.asUint8List());
     } catch (e) {
-      if (kDebugMode) debugPrint('MapLogoRegistry: loadAsMbxImage failed for $path -> $e');
+      if (kDebugMode)
+        debugPrint('MapLogoRegistry: loadAsMbxImage failed for $path -> $e');
       return null;
     }
   }
@@ -110,16 +125,20 @@ class MapLogoRegistry {
     final storage = FirebaseStorage.instance;
 
     // Use Firebase SDK for anything we can resolve as a Firebase ref
-    if (path.startsWith('gs://') || _isFirebaseStorageHttps(path) || !path.startsWith('http')) {
+    if (path.startsWith('gs://') ||
+        _isFirebaseStorageHttps(path) ||
+        !path.startsWith('http')) {
       try {
         final ref = path.startsWith('gs://')
             ? storage.refFromURL(path)
             : (path.startsWith('http')
-            ? storage.refFromURL(path) // https -> refFromURL keeps auth
-            : storage.ref(path));      // bucket relative path
+                ? storage.refFromURL(path) // https -> refFromURL keeps auth
+                : storage.ref(path)); // bucket relative path
         return await ref.getData(8 * 1024 * 1024);
       } catch (e) {
-        if (kDebugMode) debugPrint('MapLogoRegistry: Firebase getData failed for $path -> $e');
+        if (kDebugMode)
+          debugPrint(
+              'MapLogoRegistry: Firebase getData failed for $path -> $e');
         return null;
       }
     }
@@ -129,7 +148,8 @@ class MapLogoRegistry {
       final f = await DefaultCacheManager().getSingleFile(path);
       return f.readAsBytes();
     } catch (e) {
-      if (kDebugMode) debugPrint('MapLogoRegistry: HTTP fetch failed for $path -> $e');
+      if (kDebugMode)
+        debugPrint('MapLogoRegistry: HTTP fetch failed for $path -> $e');
       return null;
     }
   }

@@ -54,9 +54,13 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
         Stack(
           children: [
             Center(child: Text('Refer a Friend', style: Styles.boldText)),
-             Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Icon(qrCodeIcon, color: owlPurple),
+              child: Icon(
+                qrCodeIcon,
+                color: owlPurple,
+                size: iconSizeDefault,
+              ),
             ),
           ],
         ),
@@ -68,8 +72,8 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               const pad = allSidePaddingDefault * 2;
-              final double maxSide = (constraints.maxWidth - pad)
-                  .clamp(80.0, 2048.0) / 2;
+              final double maxSide =
+                  (constraints.maxWidth - pad).clamp(80.0, 2048.0) / 2;
 
               return Container(
                 padding: const EdgeInsets.all(allSidePaddingDefault),
@@ -114,7 +118,8 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
             _SmallOutlinedButton(
               icon: Icons.ios_share,
               label: 'Share link',
-              onPressed: () => Share.share(inviteLink, subject: 'Join me on NightOwl'),
+              onPressed: () =>
+                  Share.share(inviteLink, subject: 'Join me on NightOwl'),
             ),
             _SmallOutlinedButton(
               icon: copyIcon,
@@ -130,23 +135,23 @@ class ReferAFriendLeftDrawer extends StatelessWidget {
                 );
               },
             ),
-            _SmallOutlinedButton(
-              icon: Icons.key,
-              label: 'Redeem code',
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                backgroundColor: black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(borderRadiusDefault),
-                ),
-                builder: (_) => const RedeemReferralSheet(),
-              ),
-            ),
+            // _SmallOutlinedButton( //TODO THink this should be moved to signup? Figure out how to refer a friend.
+            //   icon: Icons.key,
+            //   label: 'Redeem code',
+            //   onPressed: () => showModalBottomSheet(
+            //     context: context,
+            //     backgroundColor: black,
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(borderRadiusDefault),
+            //     ),
+            //     builder: (_) => const RedeemReferralSheet(),
+            //   ),
+            // ),
           ],
         ),
 
-        const SizedBox(height: verticalSpacerSmall),
-        Center(child: Text('Your code: $inviteCode', style: Styles.basicTextHeader)),
+        // const SizedBox(height: verticalSpacerSmall),
+        // Center(child: Text('Your code: $inviteCode', style: Styles.basicTextHeader)),
       ],
     );
   }
@@ -216,9 +221,8 @@ class _QrFromNetwork extends StatelessWidget {
       errorBuilder: (_, __, ___) => Container(
         width: size,
         height: size,
-        color: Colors.black,
         alignment: Alignment.center,
-        child: const Text('QR unavailable', style: TextStyle(color: white)),
+        child: Text('No QR', style: Styles.basicText.copyWith(color: red)),
       ),
     );
   }

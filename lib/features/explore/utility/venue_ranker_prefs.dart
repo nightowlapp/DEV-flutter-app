@@ -18,10 +18,9 @@ class UserPrefs {
   });
 
   factory UserPrefs.fromUser(model.User u) => UserPrefs(
-    preferredTypes: u.preferredVenueTypes,
-    maxDistanceKm: u.maxDistanceKm,
-    age: u.age,
-    partyStatus: u.currentPartyStatus,
-    gender: u.gender
-  );
+      preferredTypes: u.preferredVenueTypes,
+      maxDistanceKm: u.maxDistanceKm,
+      age: u.age,
+      partyStatus: u.currentPartyStatus,
+      gender: u.gender);
 }

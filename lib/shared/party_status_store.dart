@@ -18,11 +18,11 @@ const kPartyStatusAnsweredDayKey = 'user.currentPartyStatus.answeredDayKey';
 abstract class PartyStatusStore {
   Future<PartyStatusTypes?> loadStatus();
   Future<void> saveStatus(
-      PartyStatusTypes value, {
-        PartyStatusChange change = PartyStatusChange.manual,
-        Position? position,
-        bool writeToCloud = true,
-      });
+    PartyStatusTypes value, {
+    PartyStatusChange change = PartyStatusChange.manual,
+    Position? position,
+    bool writeToCloud = true,
+  });
 }
 
 /* ---------- Local ---------- */
@@ -52,18 +52,16 @@ class SharedPrefsPartyStatusStore implements PartyStatusStore {
 
     try {
       return PartyStatusTypes.values.firstWhere((e) => e.name == stored);
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
 
   @override
   Future<void> saveStatus(
-      PartyStatusTypes value, {
-        PartyStatusChange change = PartyStatusChange.manual,
-        Position? position,
-        bool writeToCloud = true,
-      }) async {
+    PartyStatusTypes value, {
+    PartyStatusChange change = PartyStatusChange.manual,
+    Position? position,
+    bool writeToCloud = true,
+  }) async {
     final currentDay = partyStatusDayKey(DateTime.now());
     await _prefs.setString(_kVal, value.name);
     await _prefs.setString(_kDay, currentDay);
@@ -103,11 +101,11 @@ class FirestorePartyStatusStore implements PartyStatusStore {
 
   @override
   Future<void> saveStatus(
-      PartyStatusTypes value, {
-        PartyStatusChange change = PartyStatusChange.manual,
-        Position? position,
-        bool writeToCloud = true,
-      }) async {
+    PartyStatusTypes value, {
+    PartyStatusChange change = PartyStatusChange.manual,
+    Position? position,
+    bool writeToCloud = true,
+  }) async {
     await local.saveStatus(value, change: change);
     if (writeToCloud) {
       await repo.recordStatus(

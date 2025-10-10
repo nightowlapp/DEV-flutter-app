@@ -25,7 +25,7 @@ class AuthRepository {
   final UserRepository _users;
 
   final String _serverClientId; // Web OAuth client ID
-  final String? _iosClientId;   // iOS client ID (optional)
+  final String? _iosClientId; // iOS client ID (optional)
 
   bool _googleReady = false;
 
@@ -34,7 +34,10 @@ class AuthRepository {
   // }
 
   Future<void> _ensureGoogleInit() async {
-    if (_googleReady || kIsWeb) { _googleReady = true; return; }
+    if (_googleReady || kIsWeb) {
+      _googleReady = true;
+      return;
+    }
     if (_serverClientId.isEmpty) {
       throw StateError('GOOGLE_SERVER_CLIENT_ID is empty on Android.');
     }
@@ -42,7 +45,9 @@ class AuthRepository {
       serverClientId: _serverClientId,
       clientId: _iosClientId, // null on Android is fine
     );
-    try { await GoogleSignIn.instance.attemptLightweightAuthentication(); } catch (_) {}
+    try {
+      await GoogleSignIn.instance.attemptLightweightAuthentication();
+    } catch (_) {}
     _googleReady = true;
   }
 
@@ -70,7 +75,10 @@ class AuthRepository {
 
   Future<fb.User?> signInWithApple() async {
     final apple = await SignInWithApple.getAppleIDCredential(
-      scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName
+      ],
     );
     final oauth = fb.OAuthProvider('apple.com').credential(
       idToken: apple.identityToken,
@@ -81,17 +89,21 @@ class AuthRepository {
     return u;
   }
 
-  Future<fb.User?> signUpWithEmailPassword(String email, String password) async {
+  Future<fb.User?> signUpWithEmailPassword(
+      String email, String password) async {
     final cred = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(), password: password,
+      email: email.trim(),
+      password: password,
     );
     final u = cred.user;
     return u;
   }
 
-  Future<fb.User?> signInWithEmailPassword(String email, String password) async {
+  Future<fb.User?> signInWithEmailPassword(
+      String email, String password) async {
     final cred = await _auth.signInWithEmailAndPassword(
-      email: email.trim(), password: password,
+      email: email.trim(),
+      password: password,
     );
     final u = cred.user;
     return u;
@@ -99,16 +111,21 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _auth.signOut();
-    if (!kIsWeb) { try { await GoogleSignIn.instance.signOut(); } catch (_) {} }
+    if (!kIsWeb) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
   }
 
   Stream<model.User?> authUser$() {
     return _auth.authStateChanges().asyncExpand((fb.User? au) async* {
-      if (au == null) { yield null; return; }
+      if (au == null) {
+        yield null;
+        return;
+      }
       yield await _users.getById(au.uid);
       yield* _users.watchById(au.uid);
     });
   }
-
-
 }

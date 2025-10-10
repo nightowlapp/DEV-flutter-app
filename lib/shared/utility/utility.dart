@@ -1,6 +1,8 @@
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'lat_lng.dart';
+
 class Utility {
   static String formatString(String input) {
     // Replace underscores, hyphens with space
@@ -8,41 +10,41 @@ class Utility {
     // Insert space before capital letters (for camelCase or PascalCase)
     input = input.replaceAllMapped(
       RegExp(r'([a-z])([A-Z])'),
-          (match) => '${match.group(1)} ${match.group(2)}',
+      (match) => '${match.group(1)} ${match.group(2)}',
     );
     // Normalize whitespaces
     input = input.replaceAll(RegExp(r'\s+'), ' ').trim();
     // Split and capitalize
-    return input
-        .split(' ')
-        .map((word) => _capitalize(word))
-        .join(' ');
+    return input.split(' ').map((word) => _capitalize(word)).join(' ');
   }
+
   static String _capitalize(String word) {
     if (word.isEmpty) return '';
     if (word.toUpperCase() == word) return word; // Keep acronyms
     return word[0].toUpperCase() + word.substring(1).toLowerCase();
   }
 
-
   static const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   static const months = [
-    'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   static String dayShort(DateTime d) => days[(d.weekday - 1) % 7];
   static String monthShort(DateTime d) => months[d.month - 1];
   static String _two(int n) => n < 10 ? '0$n' : '$n';
   static String hhmm(DateTime dt) => '${_two(dt.hour)}:${_two(dt.minute)}';
-
-
-
-
-
-
-
 }
-
 
 /// Call [TzUtils.ensureInitialized()] once at app start.
 class TzUtils {
@@ -62,7 +64,8 @@ class TzUtils {
       if (tzid == null || tzid.isEmpty) return DateTime.now();
       final loc = tz.getLocation(tzid);
       return tz.TZDateTime.now(loc);
-    } catch (_) {
+    }
+    catch (_) {
       // Unknown tz id → fallback gracefully
       return DateTime.now();
     }
@@ -75,7 +78,8 @@ class TzUtils {
       if (tzid == null || tzid.isEmpty) return moment;
       final loc = tz.getLocation(tzid);
       return tz.TZDateTime.from(moment, loc);
-    } catch (_) {
+    }
+    catch (_) {
       return moment;
     }
   }
@@ -89,12 +93,35 @@ class TzUtils {
   }
 }
 
+class Polyline6 {
+  static List<LatLng> decode(String str) {
+    final List<LatLng> out = [];
+    int index = 0, lat = 0, lon = 0;
 
+    while (index < str.length) {
+      int b, shift = 0, result = 0;
+      do {
+        b = str.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      }
+      while (b >= 0x20);
+      final dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
 
+      shift = 0;
+      result = 0;
+      do {
+        b = str.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      }
+      while (b >= 0x20);
+      final dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lon += dlng;
 
-
-
-
-
-
-
+      out.add(LatLng(lat / 1e6, lon / 1e6));
+    }
+    return out;
+  }
+}

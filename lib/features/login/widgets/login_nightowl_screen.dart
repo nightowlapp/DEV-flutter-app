@@ -44,11 +44,10 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
 
   void _recomputeCanContinue() {
     setState(() {
-      _canContinue =
-          _mailPhoneInputController.text.isNotEmpty &&
-              _mailPhoneInputController.text.length > 3 &&
-              _passwordInputController.text.isNotEmpty &&
-              _passwordInputController.text.length > 5;
+      _canContinue = _mailPhoneInputController.text.isNotEmpty &&
+          _mailPhoneInputController.text.length > 3 &&
+          _passwordInputController.text.isNotEmpty &&
+          _passwordInputController.text.length > 5;
     });
   }
 
@@ -66,7 +65,9 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e'), behavior: SnackBarBehavior.floating),
+          SnackBar(
+              content: Text('Login failed: $e'),
+              behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -104,7 +105,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                     cursorColor: owlPurple,
                     onChanged: (_) => _recomputeCanContinue(),
                     validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Email is required' : null,
+                        (v == null || v.isEmpty) ? 'Email is required' : null,
                   ),
                   SizedBox(height: verticalSpacerMedium),
                   SimpleTextField(
@@ -114,8 +115,9 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                     obscureText: true,
                     cursorColor: owlPurple,
                     onChanged: (_) => _recomputeCanContinue(),
-                    validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Password is required' : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Password is required'
+                        : null,
                   ),
                   SizedBox(height: verticalSpacerMedium),
                   Center(
@@ -131,14 +133,15 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                             children: [
                               Icon(
                                 _stayLoggedIn
-                                  ? checkBoxCheckedIcon
-                                  : checkBoxUncheckedIcon,
+                                    ? checkBoxCheckedIcon
+                                    : checkBoxUncheckedIcon,
                                 color: owlPurple,
                               ),
                               const SizedBox(width: horizontalSpacerSmall),
                               Text(
                                 'Stay logged in',
-                                style: Styles.boldText.copyWith(fontSize: fontSizeMedium),
+                                style: Styles.boldText
+                                    .copyWith(fontSize: fontSizeMedium),
                               ),
                             ],
                           ),
@@ -149,9 +152,11 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
                   SizedBox(height: verticalSpacerVeryBig),
                   OwlButton(
                     label: _isLoading ? 'Logging in...' : 'Login',
-                    backgroundColor: _canContinue && !_isLoading ? owlPurple : grey,
+                    backgroundColor:
+                        _canContinue && !_isLoading ? owlPurple : grey,
                     textColor: _canContinue && !_isLoading ? white : grey,
-                    onPressed: _canContinue && !_isLoading ? _handleLogin : null,
+                    onPressed:
+                        _canContinue && !_isLoading ? _handleLogin : null,
                   ),
                 ],
               ),

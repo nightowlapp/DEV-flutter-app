@@ -9,7 +9,8 @@ class NightOwlApp extends StatelessWidget {
   const NightOwlApp({super.key});
 
   @override
-  Widget build(BuildContext context) { // TODO look into setting up start correct.
+  Widget build(BuildContext context) {
+    // TODO look into setting up start correct.
     final config = AppConfig.current;
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
@@ -25,19 +26,16 @@ class NightOwlApp extends StatelessWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: AppTheme().defaultAppTheme,
 
-
 // navigatorKey:
 
       // locale: const Locale('en'),
       // supportedLocales: const [Locale('en')],
 
-
       // localizationsDelegates: const [
-        // GlobalMaterialLocalizations.delegate,
-        // GlobalWidgetsLocalizations.delegate,
-        // GlobalCupertinoLocalizations.delegate,
+      // GlobalMaterialLocalizations.delegate,
+      // GlobalWidgetsLocalizations.delegate,
+      // GlobalCupertinoLocalizations.delegate,
       // ],
     );
   }
 }
-

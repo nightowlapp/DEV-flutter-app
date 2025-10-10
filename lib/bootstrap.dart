@@ -79,12 +79,11 @@ Future<void> _preBoot() async {
 
   MapboxOptions.setAccessToken(token);
   SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // otherq
-
 }
 
 @pragma('vm:entry-point') // required by Android
@@ -109,29 +108,28 @@ void bootstrap(Widget Function() builder) {
 
   // Uncaught async errors (zone)
   runZonedGuarded(() async {
-      // Engine-level errors (Dart 3+)
-      PlatformDispatcher.instance.onError = (error, stack) {
-        handleError(error, stack);
-        return true; // tell engine we handled it
-      };
-
-      await _preBoot();
-      // authStateChanges() TODO to stay signed in when login!.
-
-      final prefs = await SharedPreferences.getInstance();
-      runApp(ProviderScope(
-          // child: AppLifecycleObserver(
-          overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
-          child: InitTasks(              // <-- MOUNT the initializer
-            child: builder(),
-          ),
-        )
-      );
-      // );
-    }, (error, stack) {
+    // Engine-level errors (Dart 3+)
+    PlatformDispatcher.instance.onError = (error, stack) {
       handleError(error, stack);
-    }
-  );
+      return true; // tell engine we handled it
+    };
+
+    await _preBoot();
+    // authStateChanges() TODO to stay signed in when login!.
+
+    final prefs = await SharedPreferences.getInstance();
+    runApp(ProviderScope(
+      // child: AppLifecycleObserver(
+      overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
+      child: InitTasks(
+        // <-- MOUNT the initializer
+        child: builder(),
+      ),
+    ));
+    // );
+  }, (error, stack) {
+    handleError(error, stack);
+  });
 }
 
 class InitTasks extends ConsumerStatefulWidget {
@@ -150,8 +148,8 @@ class _InitTasksState extends ConsumerState<InitTasks> {
     Future.microtask(() => ref.read(venuesSsoProvider.future));
 
     Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
-    Future.microtask(() => ref.read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d
-
+    Future.microtask(() => ref
+        .read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d
   }
 
   @override
@@ -180,8 +178,4 @@ class VenuesBoot extends ConsumerWidget {
       error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
-
-
 }
-
-

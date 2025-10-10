@@ -7,6 +7,7 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
 import '../../../shared/constants/icons.dart';
+import '../../../shared/constants/values.dart';
 
 class FindFriendsSection extends StatefulWidget {
   const FindFriendsSection({super.key});
@@ -21,7 +22,7 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
   // ---- mock data (no providers) ----
   late final List<_FriendCandidate> _allCandidates = List.generate(
     120,
-        (i) => _FriendCandidate(
+    (i) => _FriendCandidate(
       id: 'u$i',
       firstName: 'User',
       lastName: '#$i',
@@ -63,7 +64,7 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
     if (_query.isEmpty) return _allCandidates;
     final q = _query.toLowerCase();
     return _allCandidates.where((u) =>
-    u.firstName.toLowerCase().contains(q) ||
+        u.firstName.toLowerCase().contains(q) ||
         u.lastName.toLowerCase().contains(q));
   }
 
@@ -100,6 +101,8 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final nearbyCount = 1;
+    // ref.watch(nearbyUsersCountProvider);
     final h = PlatformConfig.height(context);
     final w = PlatformConfig.width(context);
 
@@ -109,13 +112,20 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-          Text('Find Friends', style: Styles.basicTextHeader),
-            Spacer(),
-            Text('237 Nearby', style: Styles.smallText)
-          ],),
-          SizedBox(height: h * 0.02,),
-
+          Row(
+            children: [
+              Text('Find Friends', style: Styles.basicTextHeader),
+              Spacer(),
+              _CountText(
+                count: nearbyCount,
+                label: ' nearby',
+                semanticsLabelWhenUnknown: 'Nearby venues',
+              ),
+            ],
+          ),
+          SizedBox(
+            height: h * 0.02,
+          ),
 
           // search
           Container(
@@ -146,8 +156,9 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
             ),
           ),
 
-          SizedBox(height: h * 0.02,),
-
+          SizedBox(
+            height: h * 0.02,
+          ),
 
           // vertical list (downwards). Give it finite height to embed cleanly.
           SizedBox(
@@ -155,70 +166,72 @@ class _FindFriendsSectionState extends State<FindFriendsSection> {
             child: _visible.isEmpty
                 ? _EmptyState(query: _query)
                 : ListView.separated(
-              controller: _scroll,
-              padding: EdgeInsets.zero,
-              itemCount: _visible.length + (hasMore ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                if (index >= _visible.length) {
-                  // loader row
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: _loadingMore
-                          ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: LoadingIndicator(),
-                      )
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                }
+                    controller: _scroll,
+                    padding: EdgeInsets.zero,
+                    itemCount: _visible.length + (hasMore ? 1 : 0),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      if (index >= _visible.length) {
+                        // loader row
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: _loadingMore
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: LoadingIndicator(),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        );
+                      }
 
-                final u = _visible[index];
+                      final u = _visible[index];
 
-                return InkWell(
-                  onTap: () {
-                    // TODO: navigate to profile
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      color: black,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: white, width: 1),
-                    ),
-                    child: ListTile(
-                      contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      leading: ProfilePictureAvatar(
-                        size: w * 0.14,
-                        showOnlyInitials: true,
-
-                      ),
-                      title: Text(
-                        '${u.firstName} ${u.lastName}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: white, fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: const Text(
-                        'Suggested • Nearby • Verified',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.person_add_alt_1_outlined, color: owlPurple),
-                        onPressed: () => _sendFriendRequest(u),
-                        tooltip: 'Add friend',
-                      ),
-                    ),
+                      return InkWell(
+                        onTap: () {
+                          // TODO: navigate to profile
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            color: black,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: white, width: 1),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            leading: ProfilePictureAvatar(
+                              size: w * 0.14,
+                              showOnlyInitials: true,
+                            ),
+                            title: Text(
+                              '${u.firstName} ${u.lastName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: white, fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              'Suggested • Nearby • Verified',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 12),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.person_add_alt_1_outlined,
+                                  color: owlPurple),
+                              onPressed: () => _sendFriendRequest(u),
+                              tooltip: 'Add friend',
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -243,11 +256,59 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final msg = query.isEmpty ? 'No suggestions yet' : 'No results for “$query”';
+    final msg =
+        query.isEmpty ? 'No suggestions yet' : 'No results for “$query”';
     return Center(
       child: Text(
         msg,
         style: const TextStyle(color: Colors.white70),
+      ),
+    );
+  }
+}
+
+class _CountText extends StatelessWidget {
+  const _CountText({
+    required this.count,
+    required this.label,
+    required this.semanticsLabelWhenUnknown,
+  });
+
+  final int? count;
+  final String label;
+  final String semanticsLabelWhenUnknown;
+
+  @override
+  Widget build(BuildContext context) {
+    if (count == null) return const SizedBox.shrink();
+
+    final plural = (label.trim() == 'matches' || label.contains('matches'))
+        ? (count == 1 ? ' match' : ' matches')
+        : label;
+    final numColor = (count == 0) ? red : owlPurple;
+    return Semantics(
+      label: count == null ? semanticsLabelWhenUnknown : '$count$plural',
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '${count ?? ''}',
+              style: TextStyle(
+                color: numColor,
+                fontWeight: FontWeight.w700,
+                fontSize: fontSizeSmall,
+              ),
+            ),
+            TextSpan(
+              text: plural,
+              style: const TextStyle(
+                color: white,
+                fontWeight: FontWeight.w300,
+                fontSize: fontSizeSmall,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

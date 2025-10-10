@@ -26,9 +26,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-        wireSearchController(ref, _searchCtrl); // ← hook search logic
-      }
-    );
+      wireSearchController(ref, _searchCtrl); // ← hook search logic
+    });
   }
 
   @override
@@ -70,7 +69,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               data: (_) {
                 if (visible.isEmpty) {
                   return const Center(
-                    child: Text('No venues found', style: TextStyle(color: red)),
+                    child:
+                        Text('No venues found', style: TextStyle(color: red)),
                   );
                 }
                 return AnimatedVenuesGrid(

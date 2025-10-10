@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
-class Emblem { // TOdo look throrught and decide definitively.
+class Emblem {
+  // TOdo look throrught and decide definitively.
   final String id;
   final String name;
-  final String emoji;           // or icon in the future
+  final String emoji; // or icon in the future
   final String? description;
   final DateTime createdAt;
-  final DateTime achievedAt;    // fixed typo
+  final DateTime achievedAt; // fixed typo
   final int points;
   final String reward;
 
@@ -32,31 +33,32 @@ class Emblem { // TOdo look throrught and decide definitively.
       return toDate();
     }
     if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-    if (v is String) return DateTime.tryParse(v) ?? (fallback ?? DateTime.now());
+    if (v is String)
+      return DateTime.tryParse(v) ?? (fallback ?? DateTime.now());
     return fallback ?? DateTime.now();
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'emoji': emoji,
-    'description': description,
-    'created_at': createdAt.toIso8601String(),
-    'achieved_at': achievedAt.toIso8601String(),
-    'points': points,
-    'reward': reward,
-  }..removeWhere((_, v) => v == null);
+        'id': id,
+        'name': name,
+        'emoji': emoji,
+        'description': description,
+        'created_at': createdAt.toIso8601String(),
+        'achieved_at': achievedAt.toIso8601String(),
+        'points': points,
+        'reward': reward,
+      }..removeWhere((_, v) => v == null);
 
   factory Emblem.fromJson(Map<String, dynamic> json) => Emblem(
-    id: (json['id'] as String),
-    name: (json['name'] as String).trim(),
-    emoji: (json['emoji'] as String).trim(),
-    description: (json['description'] as String?)?.trim(),
-    createdAt: _asDate(json['created_at']),
-    achievedAt: _asDate(json['achieved_at']),
-    points: (json['points'] as num).toInt(),
-    reward: (json['reward'] as String).trim(),
-  );
+        id: (json['id'] as String),
+        name: (json['name'] as String).trim(),
+        emoji: (json['emoji'] as String).trim(),
+        description: (json['description'] as String?)?.trim(),
+        createdAt: _asDate(json['created_at']),
+        achievedAt: _asDate(json['achieved_at']),
+        points: (json['points'] as num).toInt(),
+        reward: (json['reward'] as String).trim(),
+      );
 
   Emblem copyWith({
     String? id,
@@ -82,17 +84,17 @@ class Emblem { // TOdo look throrught and decide definitively.
   @override
   bool operator ==(Object o) =>
       identical(this, o) ||
-          (o is Emblem &&
-              o.id == id &&
-              o.name == name &&
-              o.emoji == emoji &&
-              o.description == description &&
-              o.createdAt == createdAt &&
-              o.achievedAt == achievedAt &&
-              o.points == points &&
-              o.reward == reward);
+      (o is Emblem &&
+          o.id == id &&
+          o.name == name &&
+          o.emoji == emoji &&
+          o.description == description &&
+          o.createdAt == createdAt &&
+          o.achievedAt == achievedAt &&
+          o.points == points &&
+          o.reward == reward);
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, emoji, description, createdAt, achievedAt, points, reward);
+  int get hashCode => Object.hash(
+      id, name, emoji, description, createdAt, achievedAt, points, reward);
 }

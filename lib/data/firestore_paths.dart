@@ -11,10 +11,11 @@ class DocumentPaths {
 
   // Notifications
   static const notifications = 'notifications'; // parent
-  static const notificationsQueue = 'queue';    // subcollection name
+  static const notificationsQueue = 'queue'; // subcollection name
   static const String fcmToken = 'fcm_tokens';
 
-  static String senderNotifications(String senderId) => // senderid == venueid/nightowl
+  static String senderNotifications(
+          String senderId) => // senderid == venueid/nightowl
       '$notifications/$senderId/$notificationsQueue';
 
   static String user(String id) => '$users/$id';
@@ -25,7 +26,6 @@ class DocumentPaths {
   static const count = 'count';
 
   static String liveCount(String id) => '$liveCounts/$id';
-
 
   // venues
   static const venues = 'venues';
@@ -39,8 +39,6 @@ class DocumentPaths {
   static const String favorites = 'favorites';
   static const String likes = 'likes';
   static const String entries = 'entries';
-
-
 }
 
 class StoragePaths {
@@ -49,7 +47,7 @@ class StoragePaths {
   static const profilePicture = 'profile_picture';
 
   static String userImage(String userId, String fileName) =>
-  '$userImages/$userId/$fileName';
+      '$userImages/$userId/$fileName';
 
   // Venues
   static const venueImages = 'venue_images';
@@ -57,8 +55,7 @@ class StoragePaths {
   static const venueLogo = 'logo'; // .webp
 
   static String venueImage(String venueId, String fileName) =>
-  '$venueImages/$venueId/$fileName';
+      '$venueImages/$venueId/$fileName';
 
   static const nightOwlImages = 'nightowl_images';
-
 }

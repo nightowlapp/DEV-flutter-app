@@ -10,9 +10,9 @@ void main() {
 //   WidgetsFlutterBinding.ensureInitialized();
 //   runApp(const App());
 //   push heavy init off the first frame
-  // WidgetsBinding.instance.addPostFrameCallback((_) async {
-  //   await Bootstrap()._preBoot;
-  // });
+// WidgetsBinding.instance.addPostFrameCallback((_) async {
+//   await Bootstrap()._preBoot;
+// });
 // }
 //Offload CPU work to an isolate (compute) instead of blocking the UI isolate. //TODO
 //Avoid synchronous file I/O during initState of your first screen.

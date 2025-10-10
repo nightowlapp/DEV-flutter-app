@@ -69,7 +69,8 @@ class _FourthCreateNightowlProfileScreenState
     try {
       final draft = ref.read(signUpDraftProvider);
       final authRepo = ref.read(authRepositoryProvider);
-      final userRepo = ref.read(userRepositoryProvider); // Add this to access UserRepository
+      final userRepo =
+          ref.read(userRepositoryProvider); // Add this to access UserRepository
       final finalize = ref.read(userFinalizeServiceProvider);
 
       // 1.0) Check username availability
@@ -78,7 +79,6 @@ class _FourthCreateNightowlProfileScreenState
       if (!usernameAvail) {
         throw Exception('Username already taken.');
       }
-
 
       // 1.1) Create auth user (fails if email exists)
       final email = (draft.email ?? '').trim().toLowerCase();
@@ -93,7 +93,8 @@ class _FourthCreateNightowlProfileScreenState
 
       // 2) Create Firestore user doc (new only)
       final appV = await ref.read(appVersionProvider.future);
-      await finalize.createFromDraft(  // Note: we'll add this method below
+      await finalize.createFromDraft(
+        // Note: we'll add this method below
         draft: draft,
         appVersion: appV.label,
       );
@@ -103,18 +104,21 @@ class _FourthCreateNightowlProfileScreenState
 
       if (!mounted) return;
       context.pushNamedPage('chooseFavoriteVenues');
-    } on fb.FirebaseAuthException catch (e) { //TODO remove firebase from here.
+    } on fb.FirebaseAuthException catch (e) {
+      //TODO remove firebase from here.
       final msg = e.code == 'email-already-in-use'
           ? 'Email already in use. Please sign in or use a different email.'
           : (e.code == 'weak-password'
-          ? 'Please choose a stronger password.'
-          : 'Auth error: ${e.message}');
+              ? 'Please choose a stronger password.'
+              : 'Auth error: ${e.message}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create profile: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not create profile: $e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -129,7 +133,9 @@ class _FourthCreateNightowlProfileScreenState
       appBar: const MainAppBar(
         showBack: true,
         titleText: 'Final Details',
-        actions: [CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))],
+        actions: [
+          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontal),

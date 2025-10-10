@@ -34,12 +34,12 @@ import 'more_info_screen.dart';
 
 // -------------------- LIVE COUNT PROVIDERS --------------------
 // Stream<int> -> Riverpod provider so we can watch it in the UI.
-final liveVenueCountProvider =
-StreamProvider.family<int, String>((ref, venueId) => liveVenueCount(venueId));
+final liveVenueCountProvider = StreamProvider.family<int, String>(
+    (ref, venueId) => liveVenueCount(venueId));
 
 // (Optional) all counts if you ever need them elsewhere.
 final liveAllVenueCountsProvider =
-StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
+    StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
 
 class VenueScreenContent extends ConsumerWidget {
   const VenueScreenContent({
@@ -47,11 +47,11 @@ class VenueScreenContent extends ConsumerWidget {
     required this.venue,
     this.media,
     this.userLoc,
-    this.walkText,               // optional: if you already computed it
-    this.isOpen,                 // optional: border color around logo
-    this.tags,                   // optional: override tags
-    this.rating,                 // optional: show rating card if provided
-    this.ratingCount,            // optional: "(123)"
+    this.walkText, // optional: if you already computed it
+    this.isOpen, // optional: border color around logo
+    this.tags, // optional: override tags
+    this.rating, // optional: show rating card if provided
+    this.ratingCount, // optional: "(123)"
     this.onTapOpeningHours,
     this.onTapMoreInfo,
     this.onTapBarCard,
@@ -85,14 +85,14 @@ class VenueScreenContent extends ConsumerWidget {
     final visitsAsync = ref.watch(liveVenueCountProvider(venue.id));
     final int visits = visitsAsync.value ?? 0;
 
-
     final int cap = venue.capacity;
 
     // same threshold you had, but uses live count
     final bool showStats = visits > 10 || (cap > 0 && (visits / cap!) >= 0.20);
 
     // safe % filled
-    final int percentFilled = (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
+    final int percentFilled =
+        (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
 
     return Column(
       children: [
@@ -136,7 +136,7 @@ class VenueScreenContent extends ConsumerWidget {
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding:
-            const EdgeInsets.symmetric(horizontal: allSidePaddingDefault),
+                const EdgeInsets.symmetric(horizontal: allSidePaddingDefault),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -144,13 +144,13 @@ class VenueScreenContent extends ConsumerWidget {
                 MoodImagesSection(venueId: venue.id),
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
                 if (venue.tagids.length > 4)
-                VenueTagsGrid(
-                  tagIds: venue.tagids,
-                  viewportWidth: PlatformConfig.width(context),
-                  viewportHeight: PlatformConfig.height(context),
-                ),
+                  VenueTagsGrid(
+                    tagIds: venue.tagids,
+                    viewportWidth: PlatformConfig.width(context),
+                    viewportHeight: PlatformConfig.height(context),
+                  ),
                 if (venue.tagids.length > 4)
-                SizedBox(height: PlatformConfig.height(context) * 0.05),
+                  SizedBox(height: PlatformConfig.height(context) * 0.05),
 
                 // Bottom actions
                 Row(
@@ -301,22 +301,22 @@ class VenueScreenContent extends ConsumerWidget {
             child: r.isClosed
                 ? Text('Closed today', style: baseStyle.copyWith(color: red))
                 : RichText(
-              text: TextSpan(
-                style: baseStyle,
-                children: [
-                  TextSpan(text: '${r.open} - ${r.close}'),
-                  if (r.nextDay)
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.baseline,
-                      baseline: TextBaseline.alphabetic,
-                      child: Transform.translate(
-                        offset: const Offset(2, -5),
-                        child: Text('+1', style: supStyle),
-                      ),
+                    text: TextSpan(
+                      style: baseStyle,
+                      children: [
+                        TextSpan(text: '${r.open} - ${r.close}'),
+                        if (r.nextDay)
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Transform.translate(
+                              offset: const Offset(2, -5),
+                              child: Text('+1', style: supStyle),
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
-            ),
+                  ),
           ),
         ),
       ),

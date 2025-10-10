@@ -7,24 +7,29 @@ class FirestoreFavoritesDataSource implements FavoritesDataSource {
   FirestoreFavoritesDataSource(this.db);
   final FirebaseFirestore db;
 
-  CollectionReference<Map<String, dynamic>> _col(String userId) =>
-      db.collection(DocumentPaths.users).doc(userId).collection(DocumentPaths.favorites);
+  CollectionReference<Map<String, dynamic>> _col(String userId) => db
+      .collection(DocumentPaths.users)
+      .doc(userId)
+      .collection(DocumentPaths.favorites);
 
   @override
-  Future<bool> isFavorite({required String userId, required String venueId}) async {
+  Future<bool> isFavorite(
+      {required String userId, required String venueId}) async {
     final doc = await _col(userId).doc(venueId).get();
     return doc.exists;
   }
 
   @override
-  Future<void> addFavorite({required String userId, required String venueId}) async {
+  Future<void> addFavorite(
+      {required String userId, required String venueId}) async {
     await _col(userId).doc(venueId).set({
       'created_at': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
   @override
-  Future<void> removeFavorite({required String userId, required String venueId}) async {
+  Future<void> removeFavorite(
+      {required String userId, required String venueId}) async {
     await _col(userId).doc(venueId).delete();
   }
 
@@ -42,7 +47,9 @@ class FirestoreFavoritesDataSource implements FavoritesDataSource {
 
   @override
   Stream<List<String>> watchFavoriteVenueIds({required String userId}) {
-    return _col(userId).orderBy('created_at', descending: true).snapshots()
+    return _col(userId)
+        .orderBy('created_at', descending: true)
+        .snapshots()
         .map((s) => s.docs.map((d) => d.id).toList());
   }
 }

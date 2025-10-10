@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/features/explore/search/search_query.dart';
 
 final searchQueryProvider =
-AutoDisposeNotifierProvider<SearchController, SearchQuery>(SearchController.new);
+    AutoDisposeNotifierProvider<SearchController, SearchQuery>(
+        SearchController.new);
 
 class SearchController extends AutoDisposeNotifier<SearchQuery> {
   Timer? _debounce;
@@ -14,7 +15,8 @@ class SearchController extends AutoDisposeNotifier<SearchQuery> {
   @override
   SearchQuery build() => const SearchQuery.empty();
 
-  void attach(TextEditingController c, {Duration debounce = const Duration(milliseconds: 160)}) {
+  void attach(TextEditingController c,
+      {Duration debounce = const Duration(milliseconds: 160)}) {
     if (_attached == c) return;
     _attached?.removeListener(_onText);
     _attached = c..addListener(_onText);

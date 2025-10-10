@@ -48,14 +48,13 @@ class SafetyModeToggle extends StatelessWidget {
             ),
             Align(
               alignment: Alignment.centerLeft,
-              child:
-              GestureDetector(child: 
-                Icon(
+              child: GestureDetector(
+                child: Icon(
                   infoIcon,
                   color: owlPurple,
                   size: iconSizeDefault,
                 ),
-              // onTap: InformationPopup(title: '', children: [],),
+                // onTap: InformationPopup(title: '', children: [],),
               ),
               //TODO onpress EXPLAIn.
             ),
@@ -77,17 +76,17 @@ class SafetyModeToggle extends StatelessWidget {
                   ),
                 ),
                 child: isOn
-                  ? Text.rich(
-                    key: const ValueKey('count_on'),
-                    TextSpan(
-                      text: '$trustedContactsCount',
-                      style: trustedContactsCount > 2
-                        ? Styles.boldText.copyWith(color: green)
-                        : Styles.boldText.copyWith(color: red),
-                    ),
-                    style: Styles.boldText,
-                  )
-                  : const SizedBox.shrink(key: ValueKey('count_off')),
+                    ? Text.rich(
+                        key: const ValueKey('count_on'),
+                        TextSpan(
+                          text: '$trustedContactsCount',
+                          style: trustedContactsCount > 2
+                              ? Styles.boldText.copyWith(color: green)
+                              : Styles.boldText.copyWith(color: red),
+                        ),
+                        style: Styles.boldText,
+                      )
+                    : const SizedBox.shrink(key: ValueKey('count_off')),
               ),
             )
           ],
@@ -121,65 +120,67 @@ class SafetyModeToggle extends StatelessWidget {
             Expanded(
               // ---------- smooth swap between "Not sharing" and "Sharing..." ----------
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 2000),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: SizeTransition(
-                    sizeFactor: anim,
-                    axisAlignment: -1.0, // grow from top for tidy layout
-                    child: child,
-                  ),
-                ),
-                child: !isOn
-                  ? Text.rich(
-                    key: const ValueKey('status_off'),
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          // text: 'Not',
-                          style:
-                          Styles.boldText.copyWith(color: red), // red
+                  duration: const Duration(milliseconds: 2000),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: SizeTransition(
+                          sizeFactor: anim,
+                          axisAlignment: -1.0, // grow from top for tidy layout
+                          child: child,
                         ),
-                        // const TextSpan(text: ' sharing location'),
-                        const TextSpan(text: ''),
-                      ],
-                    ),
-                    textAlign: TextAlign.left,
-                    softWrap: true,
-                    overflow: TextOverflow.visible,
-                    style: Styles.boldText,
-                  )
-                  : // Replace only the ON case Text.rich with the version below (adds soft break hints)
-                  Text.rich(
-                    key: const ValueKey('status_on'),
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: 'Informing\u200B'),
-                        TextSpan(
-                          text: '$trustedContactsCount',
-                          style: Styles.boldText.copyWith(
-                            color: trustedContactsCount == 0 ? red : green,
+                      ),
+                  child: !isOn
+                      ? Text.rich(
+                          key: const ValueKey('status_off'),
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                // text: 'Not',
+                                style:
+                                    Styles.boldText.copyWith(color: red), // red
+                              ),
+                              // const TextSpan(text: ' sharing location'),
+                              const TextSpan(text: ''),
+                            ],
                           ),
-                        ),
-                        const TextSpan(text: '\u200B'), // allow wrap right before "trusted"
-                        TextSpan(
-                          text: ' trusted ',
-                          style: Styles.boldText.copyWith(color: green),
-                        ),
-                        TextSpan(
-                          text: 'contact${trustedContactsCount == 1 ? '' : 's'}',
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.left,
-                    softWrap: true,
-                    overflow: TextOverflow.visible,
-                    style: Styles.boldText,
-                  )
-
-              ),
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                          style: Styles.boldText,
+                        )
+                      : // Replace only the ON case Text.rich with the version below (adds soft break hints)
+                      Text.rich(
+                          key: const ValueKey('status_on'),
+                          TextSpan(
+                            children: [
+                              const TextSpan(text: 'Informing\u200B'),
+                              TextSpan(
+                                text: '$trustedContactsCount',
+                                style: Styles.boldText.copyWith(
+                                  color:
+                                      trustedContactsCount == 0 ? red : green,
+                                ),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      '\u200B'), // allow wrap right before "trusted"
+                              TextSpan(
+                                text: ' trusted ',
+                                style: Styles.boldText.copyWith(color: green),
+                              ),
+                              TextSpan(
+                                text:
+                                    'contact${trustedContactsCount == 1 ? '' : 's'}',
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                          style: Styles.boldText,
+                        )),
             ),
           ],
         ),

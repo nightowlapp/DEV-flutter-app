@@ -5,7 +5,13 @@ import '../../../models/users/user.dart';
 
 class FriendsController extends StateNotifier<List<User>> {
   FriendsController()
-      : super([ //TODO
-  User(id: '', email: '', userName: '', birthDate: DateTime.now(), gender: Gender.male),]);
-
+      : super([
+          //TODO
+          User(
+              id: '',
+              email: '',
+              userName: '',
+              birthDate: DateTime.now(),
+              gender: Gender.male),
+        ]);
 }

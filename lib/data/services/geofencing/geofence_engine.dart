@@ -8,8 +8,12 @@ class GeofenceEvent {
   final String venueId;
   final bool enter; // true=enter, false=exit
   final DateTime at;
-  GeofenceEvent.enter(this.venueId) : enter = true,  at = DateTime.now();
-  GeofenceEvent.exit (this.venueId) : enter = false, at = DateTime.now();
+  GeofenceEvent.enter(this.venueId)
+      : enter = true,
+        at = DateTime.now();
+  GeofenceEvent.exit(this.venueId)
+      : enter = false,
+        at = DateTime.now();
 }
 
 class GeofenceEngine {
@@ -31,7 +35,7 @@ class GeofenceEngine {
   StreamSubscription? _sub;
 
   // committed state
-  String? _inside;                        // current committed venueId (or null)
+  String? _inside; // current committed venueId (or null)
   ({double lat, double lng})? _lastPoint; // last known point
 
   // dwell state
@@ -113,7 +117,8 @@ class GeofenceEngine {
       if (z.polygon.isNotEmpty) {
         if (_pointInPolygon(lat, lng, z.polygon)) return z.venueId;
       } else {
-        if (Distance.meters(lat, lng, z.center.lat, z.center.lng) <= z.radiusM) {
+        if (Distance.meters(lat, lng, z.center.lat, z.center.lng) <=
+            z.radiusM) {
           return z.venueId;
         }
       }
@@ -128,7 +133,9 @@ class GeofenceEngine {
       final xi = poly[i].lng, yi = poly[i].lat;
       final xj = poly[j].lng, yj = poly[j].lat;
       final intersect = ((yi > lat) != (yj > lat)) &&
-          (lng < (xj - xi) * (lat - yi) / ((yj - yi) == 0 ? 1e-12 : (yj - yi)) + xi);
+          (lng <
+              (xj - xi) * (lat - yi) / ((yj - yi) == 0 ? 1e-12 : (yj - yi)) +
+                  xi);
       if (intersect) inside = !inside;
     }
     return inside;

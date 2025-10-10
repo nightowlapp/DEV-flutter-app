@@ -79,6 +79,11 @@ class LikeStore extends ChangeNotifier {
     }
   }
 
-  Future<void> setLiked()  async { if (!isLiked) await toggle(); }
-  Future<void> setUnliked() async { if (isLiked)  await toggle(); }
+  Future<void> setLiked() async {
+    if (!isLiked) await toggle();
+  }
+
+  Future<void> setUnliked() async {
+    if (isLiked) await toggle();
+  }
 }

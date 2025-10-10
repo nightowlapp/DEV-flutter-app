@@ -107,15 +107,15 @@ class _ChooseFavoriteVenuesScreenState
     if (_query.isNotEmpty) {
       displayVenues = allVenues
           .where((v) =>
-      (_labelFor(v)).toLowerCase().contains(_query) ||
-          v.id.toLowerCase().contains(_query))
+              (_labelFor(v)).toLowerCase().contains(_query) ||
+              v.id.toLowerCase().contains(_query))
           .toList();
     }
 
     // Split into selected vs unselected for the strip + grid
     final selected = displayVenues.where((v) => favIds.contains(v.id)).toList();
     final unselected =
-    displayVenues.where((v) => !favIds.contains(v.id)).toList();
+        displayVenues.where((v) => !favIds.contains(v.id)).toList();
 
     final screenWidth = MediaQuery.of(context).size.width;
     const itemWidth = 60.0;
@@ -151,14 +151,12 @@ class _ChooseFavoriteVenuesScreenState
                           onChanged: _onSearch,
                           decoration: InputDecoration(
                             hintText: 'Search Venues',
-                            hintStyle:
-                            TextStyle(color: Colors.grey.shade400),
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
                             filled: true,
                             fillColor: const Color(0xFF1E1E1E),
-                            prefixIcon:
-                            Icon(Icons.search, color: owlPurple),
+                            prefixIcon: Icon(Icons.search, color: owlPurple),
                             contentPadding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                                const EdgeInsets.symmetric(vertical: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -214,53 +212,57 @@ class _ChooseFavoriteVenuesScreenState
                       height: 90,
                       child: useTwoRows
                           ? Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 5,
-                        runSpacing: 5,
-                        children: selected
-                            .map(
-                              (v) => Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5),
-                            child: _VenueItem(
-                              venue: v,
-                              isSelected: true,
-                              onTap: () => _onToggleVenue(
-                                  context, v, true),
-                            ),
-                          ),
-                        )
-                            .toList(),
-                      )
+                              alignment: WrapAlignment.center,
+                              spacing: 5,
+                              runSpacing: 5,
+                              children: selected
+                                  .map(
+                                    (v) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 5),
+                                      child: _VenueItem(
+                                        venue: v,
+                                        isSelected: true,
+                                        onTap: () =>
+                                            _onToggleVenue(context, v, true),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            )
                           : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: selected
-                              .map(
-                                (v) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 2),
-                              child: _VenueItem(
-                                venue: v,
-                                isSelected: true,
-                                onTap: () => _onToggleVenue(
-                                    context, v, true),
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: selected
+                                    .map(
+                                      (v) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 2),
+                                        child: _VenueItem(
+                                          venue: v,
+                                          isSelected: true,
+                                          onTap: () =>
+                                              _onToggleVenue(context, v, true),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
                             ),
-                          )
-                              .toList(),
-                        ),
-                      ),
                     ),
                     Text(
                       'Tap again to unselect',
                       textAlign: TextAlign.center,
                       style: Styles.smallText,
                     ),
-                    SizedBox(height: PlatformConfig.height(context)*0.01,),
+                    SizedBox(
+                      height: PlatformConfig.height(context) * 0.01,
+                    ),
                     Divider(color: owlPurple),
-                    SizedBox(height: PlatformConfig.height(context)*0.02,),
+                    SizedBox(
+                      height: PlatformConfig.height(context) * 0.02,
+                    ),
                   ],
 
                   // Grid of unselected venues
@@ -268,7 +270,7 @@ class _ChooseFavoriteVenuesScreenState
                     child: Scrollbar(
                       child: GridView.builder(
                         gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 6,
                           mainAxisSpacing: 6,
@@ -307,21 +309,19 @@ class _ChooseFavoriteVenuesScreenState
                             label: 'Save',
                             textColor: selectedCount > 0 ? white : grey,
                             backgroundColor:
-                            selectedCount > 0 ? owlPurple : grey,
+                                selectedCount > 0 ? owlPurple : grey,
                             onPressed: selectedCount > 0
                                 ? () {
-                              // Favorites already persisted on tap.
-                              context.goScreen(
-                                  MainScreenName.explore);
-                            }
+                                    // Favorites already persisted on tap.
+                                    context.goScreen(MainScreenName.explore);
+                                  }
                                 : null,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(
-                      height: PlatformConfig.height(context) * 0.02),
+                  SizedBox(height: PlatformConfig.height(context) * 0.02),
                 ],
               ),
             ),
@@ -332,9 +332,7 @@ class _ChooseFavoriteVenuesScreenState
   }
 
   String _labelFor(Venue v) {
-    final name = (v.displayName?.isNotEmpty ?? false)
-        ? v.displayName!
-        : v.name;
+    final name = (v.displayName?.isNotEmpty ?? false) ? v.displayName! : v.name;
     return name.trim();
   }
 }
@@ -382,9 +380,10 @@ class _VenueItem extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border:
-              isSelected ? Border.all(color: owlPurple, width: 3) : null,
+                  isSelected ? Border.all(color: owlPurple, width: 3) : null,
             ),
-            child: VenueLogo(venue: venue, showTypeIfNoLogo: true), //TODO check if work.
+            child: VenueLogo(
+                venue: venue, showTypeIfNoLogo: true), //TODO check if work.
           ),
         ],
       ),

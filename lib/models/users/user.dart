@@ -51,7 +51,7 @@ class User {
   final String? biography;
 
   final String? homeCountryCode; // iso2 lowercase
-  final String? homeTown;    // lowercase
+  final String? homeTown; // lowercase
 
   // ---- Defaults / flags ----
   final String? appVersion;
@@ -191,42 +191,45 @@ class User {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    // NOTE: 'id' is intentionally NOT included here; repo injects it on read only
-    'email': email,
-    'user_name': userName,
-    'birth_date': birthDate.toIso8601String(),
-    'gender': _enumToString(gender),
-    'first_name': firstName,
-    'middle_name': middleName,
-    'last_name': lastName,
-    'phone': phoneNumber?.toJson(),
-    'biography': biography,
-    'profile_picture_url': profilePictureUrl,
-    'home_country': homeCountryCode,
-    'home_town': homeTown,
-    'app_version': appVersion,
-    'is_verified': isVerified,
-    'level': level,
-    'xp': xp,
-    'preferred_venue_types': preferredVenueTypes.map(_enumToString).toList(),
-    'max_distance_km': maxDistanceKm,
-    'roles': roles.map(_enumToString).toList(),
-    'subscription_type': _enumToString(subscriptionType),
-    'platform_type': _enumToString(platformType),
-    'current_party_status': _enumToString(currentPartyStatus),
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
-  }..removeWhere((_, v) => v == null);
+        // NOTE: 'id' is intentionally NOT included here; repo injects it on read only
+        'email': email,
+        'user_name': userName,
+        'birth_date': birthDate.toIso8601String(),
+        'gender': _enumToString(gender),
+        'first_name': firstName,
+        'middle_name': middleName,
+        'last_name': lastName,
+        'phone': phoneNumber?.toJson(),
+        'biography': biography,
+        'profile_picture_url': profilePictureUrl,
+        'home_country': homeCountryCode,
+        'home_town': homeTown,
+        'app_version': appVersion,
+        'is_verified': isVerified,
+        'level': level,
+        'xp': xp,
+        'preferred_venue_types':
+            preferredVenueTypes.map(_enumToString).toList(),
+        'max_distance_km': maxDistanceKm,
+        'roles': roles.map(_enumToString).toList(),
+        'subscription_type': _enumToString(subscriptionType),
+        'platform_type': _enumToString(platformType),
+        'current_party_status': _enumToString(currentPartyStatus),
+        'created_at': createdAt.toIso8601String(),
+        'updated_at': updatedAt.toIso8601String(),
+      }..removeWhere((_, v) => v == null);
 
   factory User.fromJson(Map<String, dynamic> json) {
-    dynamic _v(String k1, [String? k2]) => json[k1] ?? (k2 != null ? json[k2] : null);
+    dynamic _v(String k1, [String? k2]) =>
+        json[k1] ?? (k2 != null ? json[k2] : null);
     DateTime _asDate(dynamic v, {DateTime? fallback}) {
       if (v == null) return fallback ?? DateTime.now();
       if (v is DateTime) return v;
       final tsType = v.runtimeType.toString();
       if (tsType == 'Timestamp') return (v as dynamic).toDate() as DateTime;
       if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-      if (v is String) return DateTime.tryParse(v) ?? (fallback ?? DateTime.now());
+      if (v is String)
+        return DateTime.tryParse(v) ?? (fallback ?? DateTime.now());
       return fallback ?? DateTime.now();
     }
 
@@ -234,7 +237,8 @@ class User {
     List<dynamic>? _l(String k1, [String? k2]) => _v(k1, k2) as List<dynamic>?;
 
     final rolesList = (_l('roles') ?? const []).cast<String>();
-    final venueTypesList = (_l('preferred_venue_types') ?? const []).cast<String>();
+    final venueTypesList =
+        (_l('preferred_venue_types') ?? const []).cast<String>();
 
     return User(
       id: _s('id') ?? '',
@@ -242,7 +246,6 @@ class User {
       userName: _s('user_name', 'userName') ?? '',
       birthDate: _asDate(_v('birth_date')),
       gender: _enumFromString(_s('gender'), Gender.values, Gender.other),
-
       firstName: _s('first_name', 'firstName'),
       middleName: _s('middle_name', 'middleName'),
       lastName: _s('last_name', 'lastName'),
@@ -254,27 +257,28 @@ class User {
       homeCountryCode: _s('home_country')?.toLowerCase(),
       homeTown: _s('home_town')?.toLowerCase(),
       appVersion: _s('app_version'),
-
       isVerified: (json['is_verified'] as bool?) ?? false,
       level: (json['level'] as num?)?.toInt() ?? 0,
       xp: ((json['xp'] as num?) ?? 0).toDouble(),
       preferredVenueTypes: venueTypesList.isEmpty
           ? allVenueTypes()
           : venueTypesList
-          .map((s) => _enumFromString<VenueType>(s, VenueType.values, VenueType.unknown))
-          .toSet(),
+              .map((s) => _enumFromString<VenueType>(
+                  s, VenueType.values, VenueType.unknown))
+              .toSet(),
       maxDistanceKm: ((json['max_distance_km'] as num?) ?? 50).toDouble(),
       roles: rolesList.isEmpty
           ? const {UserRole.user}
           : rolesList
-          .map((s) => _enumFromString<UserRole>(s, UserRole.values, UserRole.user))
-          .toSet(),
-      subscriptionType: _enumFromString(
-          _s('subscription_type'), SubscriptionTypesUser.values, SubscriptionTypesUser.free),
-      platformType:
-      _enumFromString(_s('platform_type'), PlatformType.values, _detectPlatformType()),
-      currentPartyStatus: _enumFromString(
-          _s('current_party_status'), PartyStatusTypes.values, PartyStatusTypes.still_planning),
+              .map((s) =>
+                  _enumFromString<UserRole>(s, UserRole.values, UserRole.user))
+              .toSet(),
+      subscriptionType: _enumFromString(_s('subscription_type'),
+          SubscriptionTypesUser.values, SubscriptionTypesUser.free),
+      platformType: _enumFromString(
+          _s('platform_type'), PlatformType.values, _detectPlatformType()),
+      currentPartyStatus: _enumFromString(_s('current_party_status'),
+          PartyStatusTypes.values, PartyStatusTypes.still_planning),
       createdAt: _asDate(_v('created_at')),
       updatedAt: _asDate(_v('updated_at')),
     );

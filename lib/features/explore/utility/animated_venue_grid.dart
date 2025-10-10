@@ -166,9 +166,13 @@ class _RowOfTwo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _AnimatedVenueCell(venue: left,  mediaById: mediaById, userLoc: userLoc)),
+        Expanded(
+            child: _AnimatedVenueCell(
+                venue: left, mediaById: mediaById, userLoc: userLoc)),
         const SizedBox(width: horizontalSpacerLarge),
-        Expanded(child: _AnimatedVenueCell(venue: right, mediaById: mediaById, userLoc: userLoc)),
+        Expanded(
+            child: _AnimatedVenueCell(
+                venue: right, mediaById: mediaById, userLoc: userLoc)),
       ],
     );
   }
@@ -194,24 +198,28 @@ class _AnimatedVenueCell extends StatelessWidget {
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, anim) {
         final fade = CurvedAnimation(parent: anim, curve: Curves.easeOut);
-        final slide = Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero).animate(fade);
-        return FadeTransition(opacity: fade, child: SlideTransition(position: slide, child: child));
+        final slide =
+            Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero)
+                .animate(fade);
+        return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(position: slide, child: child));
       },
       child: venue == null
           ? const SizedBox(key: ValueKey('__empty__'), height: 0)
           : VenueCard(
-        key: ValueKey(switchKey),
-        venue: venue!,
-        userLocation: userLoc,
-        media: mediaById[venue!.id],
-        onTap: () {
-          context.pushVenue(
-            venue!,
-            media: mediaById[venue!.id],
-            userLoc: userLoc,
-          );
-        },
-      ),
+              key: ValueKey(switchKey),
+              venue: venue!,
+              userLocation: userLoc,
+              media: mediaById[venue!.id],
+              onTap: () {
+                context.pushVenue(
+                  venue!,
+                  media: mediaById[venue!.id],
+                  userLoc: userLoc,
+                );
+              },
+            ),
     );
   }
 }

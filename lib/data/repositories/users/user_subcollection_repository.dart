@@ -10,10 +10,9 @@ class UserSocialRepository {
   UserSocialRepository(this._db);
 
   // -------- Favorites --------
-  CollectionReference<FavoriteVenue> _favoritesCol(String uid) =>
-      _db
-          .collection(DocumentPaths.userSub(uid, DocumentPaths.favorites))
-          .withConverter<FavoriteVenue>(
+  CollectionReference<FavoriteVenue> _favoritesCol(String uid) => _db
+      .collection(DocumentPaths.userSub(uid, DocumentPaths.favorites))
+      .withConverter<FavoriteVenue>(
         fromFirestore: (snap, _) =>
             FavoriteVenue.fromJson(snap.data()!, snap.id),
         toFirestore: (f, _) => f.toJson(),
@@ -28,22 +27,19 @@ class UserSocialRepository {
   Future<void> removeFavorite(String uid, String venueId) =>
       _favoritesCol(uid).doc(venueId).delete();
 
-  Stream<List<String>> watchFavoriteVenueIds(String uid) =>
-      _favoritesCol(uid)
-          .orderBy('created_at', descending: true)
-          .snapshots()
-          .map((q) => q.docs.map((d) => d.id).toList());
+  Stream<List<String>> watchFavoriteVenueIds(String uid) => _favoritesCol(uid)
+      .orderBy('created_at', descending: true)
+      .snapshots()
+      .map((q) => q.docs.map((d) => d.id).toList());
 
   Future<bool> isFavorite(String uid, String venueId) async =>
       (await _favoritesCol(uid).doc(venueId).get()).exists;
 
   // -------- Likes --------
-  CollectionReference<LikedVenue> _likesCol(String uid) =>
-      _db
-          .collection(DocumentPaths.userSub(uid, DocumentPaths.likes))
-          .withConverter<LikedVenue>(
-        fromFirestore: (snap, _) =>
-            LikedVenue.fromJson(snap.data()!, snap.id),
+  CollectionReference<LikedVenue> _likesCol(String uid) => _db
+      .collection(DocumentPaths.userSub(uid, DocumentPaths.likes))
+      .withConverter<LikedVenue>(
+        fromFirestore: (snap, _) => LikedVenue.fromJson(snap.data()!, snap.id),
         toFirestore: (l, _) => l.toJson(),
       );
 
@@ -55,20 +51,18 @@ class UserSocialRepository {
   Future<void> unlikeVenue(String uid, String venueId) =>
       _likesCol(uid).doc(venueId).delete();
 
-  Stream<List<String>> watchLikedVenueIds(String uid) =>
-      _likesCol(uid)
-          .orderBy('created_at', descending: true)
-          .snapshots()
-          .map((q) => q.docs.map((d) => d.id).toList());
+  Stream<List<String>> watchLikedVenueIds(String uid) => _likesCol(uid)
+      .orderBy('created_at', descending: true)
+      .snapshots()
+      .map((q) => q.docs.map((d) => d.id).toList());
 
   Future<bool> isLiked(String uid, String venueId) async =>
       (await _likesCol(uid).doc(venueId).get()).exists;
 
   // -------- Emblems --------
-  CollectionReference<Emblem> _emblemsCol(String uid) =>
-      _db
-          .collection(DocumentPaths.userSub(uid, DocumentPaths.emblems))
-          .withConverter<Emblem>(
+  CollectionReference<Emblem> _emblemsCol(String uid) => _db
+      .collection(DocumentPaths.userSub(uid, DocumentPaths.emblems))
+      .withConverter<Emblem>(
         fromFirestore: (snap, _) => Emblem.fromJson({
           'id': snap.id, // inject id from doc id
           ...?snap.data(),
@@ -84,25 +78,25 @@ class UserSocialRepository {
   Future<void> deleteEmblem(String uid, String emblemId) =>
       _emblemsCol(uid).doc(emblemId).delete();
 
-  Stream<List<Emblem>> watchEmblem(String uid) =>
-      _emblemsCol(uid)
-          .orderBy('unlocked_at', descending: true)
-          .snapshots()
-          .map((q) => q.docs.map((d) => d.data()).toList());
+  Stream<List<Emblem>> watchEmblem(String uid) => _emblemsCol(uid)
+      .orderBy('unlocked_at', descending: true)
+      .snapshots()
+      .map((q) => q.docs.map((d) => d.data()).toList());
 }
 
 // --- cross-user collectionGroup helpers (client side) ---
 
 /// Users who liked a venue (returns userIds).
-Stream<List<String>> userIdsWhoLikedVenue(FirebaseFirestore db, String venueId) {
+Stream<List<String>> userIdsWhoLikedVenue(
+    FirebaseFirestore db, String venueId) {
   return db
       .collectionGroup(DocumentPaths.likes)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.docs
-      .map((d) => d.reference.parent.parent?.id)
-      .whereType<String>()
-      .toList());
+          .map((d) => d.reference.parent.parent?.id)
+          .whereType<String>()
+          .toList());
 }
 
 /// Real-time count of favorites for a venue (downloads matching docs).

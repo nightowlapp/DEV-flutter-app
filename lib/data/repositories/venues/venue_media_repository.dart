@@ -119,7 +119,8 @@ class VenueMediaRepository {
 
     final cover = await _pickAndUrl(rootFiles, 'cover', _imgExts);
     final logo = await _pickAndUrl(rootFiles, 'logo', _imgExts);
-    final defaultOffer = await _pickAndUrl(rootFiles, 'default_offer', _imgExts);
+    final defaultOffer =
+        await _pickAndUrl(rootFiles, 'default_offer', _imgExts);
     final barCard = await _pickAndUrl(rootFiles, 'bar_card', const ['pdf']);
 
     // 2) mood_images/*
@@ -154,9 +155,11 @@ class VenueMediaRepository {
   // ---------- helpers ----------
 
   /// Pick a file by base name + preferred extensions, return download URL (or null).
-  Future<String?> _pickAndUrl(List<Reference> files, String base, List<String> exts) async {
+  Future<String?> _pickAndUrl(
+      List<Reference> files, String base, List<String> exts) async {
     // Partition root files by nameWithoutExt
-    final grouped = groupBy<Reference, String>(files, (r) => _nameNoExt(r.name));
+    final grouped =
+        groupBy<Reference, String>(files, (r) => _nameNoExt(r.name));
     final candidates = grouped[base] ?? const <Reference>[];
     if (candidates.isEmpty) return null;
 
@@ -191,7 +194,7 @@ class VenueMediaRepository {
         int myIndex = -1;
         // critical section
         // ignore: unnecessary_statements
-            () {
+        () {
           // poor-man's lock to keep indices stable
           synchronized(lock, () {
             if (!it.moveNext()) return;
@@ -241,7 +244,7 @@ class VenueMediaRepository {
 
     return SplayTreeMap.from(
       out,
-          (a, b) => a.index.compareTo(b.index), // keep Monday..Sunday order
+      (a, b) => a.index.compareTo(b.index), // keep Monday..Sunday order
     );
   }
 
@@ -257,4 +260,5 @@ class VenueMediaRepository {
 }
 
 /// Tiny sync block for the simple concurrency helper above.
-Future<T> synchronized<T>(Object lock, FutureOr<T> Function() action) async => await action();
+Future<T> synchronized<T>(Object lock, FutureOr<T> Function() action) async =>
+    await action();

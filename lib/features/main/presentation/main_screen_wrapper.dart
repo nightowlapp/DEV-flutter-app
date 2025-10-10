@@ -33,7 +33,8 @@ class MainScreenWrapper extends StatelessWidget {
     }
   }
 
-  bool get locationServiceAllowed{ //TODO Find smart way to get current permission.
+  bool get locationServiceAllowed {
+    //TODO Find smart way to get current permission.
 // if(Geolocator.checkPermission() == LocationPermission.whileInUse ||
 // Geolocator.checkPermission() == LocationPermission.always)
     return true;

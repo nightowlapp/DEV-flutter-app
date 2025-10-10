@@ -44,7 +44,7 @@ final latLngSafeStreamProvider = StreamProvider<LatLng>((ref) async* {
       .latLngStream(distanceFilterMeters: 5)
       .distinct(
         (a, b) => Distance.meters(a.lat, a.lng, b.lat, b.lng) < 1.5,
-  )
+      )
       .handleError((_) {
     // swallow errors for engine use
   });

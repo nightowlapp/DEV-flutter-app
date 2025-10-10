@@ -23,7 +23,6 @@ final IconData maleIcon = Icons.male;
 final IconData femaleIcon = Icons.female;
 final IconData otherGenderIcon = Icons.transgender;
 
-
 // UI
 final partyStatusIcon = Icons.my_location;
 final locationIcon = Icons.my_location;
@@ -56,7 +55,7 @@ final invisible = Icons.visibility_off;
 final visible = Icons.visibility;
 final mailIcon = Icons.mail_outline;
 final passwordIcon = Icons.lock_outline;
-final globeIcon =Icons.public;
+final globeIcon = Icons.public;
 final qrCodeIcon = Icons.qr_code_2;
 final fullScreenIcon = Icons.fullscreen;
 final copyIcon = Icons.copy;
@@ -64,8 +63,7 @@ final shieldIcon = Icons.shield_moon;
 final infoIcon = Icons.info_outline;
 final IconData distanceIcon = Icons.near_me;
 
-
-final settingsIcon =Icons.settings;
+final settingsIcon = Icons.settings;
 final errorIcon = Icons.error_outline;
 
 // Navigation chevrons
@@ -74,14 +72,10 @@ final chevronDownIcon = CupertinoIcons.chevron_down;
 final chevronLeftIcon = CupertinoIcons.chevron_left;
 final chevronRightIcon = CupertinoIcons.chevron_right;
 
-
-
-
 // const defaultGooglePlusIcon = FontAwesomeIcons.googlePlusG;
 // const defaultGooglePlayIcon = FontAwesomeIcons.googlePlay;
 // const defaultAppStoreIcon = FontAwesomeIcons.appStore;
 // // REDDIT YT ....
-
 
 // Location
 final wineBarIcon = Icons.wine_bar;
@@ -95,13 +89,10 @@ final unknowBarIcon = Icons.nightlife;
 final barIcon = Icons.table_bar;
 final clubIcon = Icons.flourescent;
 
-
 // const defaultLocationDot = FontAwesomeIcons.locationDot;
 // const defaultLocationDotLocked = FontAwesomeIcons.locationPinLock;
 // const defaultCompassIcon = FontAwesomeIcons.compass;
 // final defaultCompassIcon12 = MdiIcons.compass;
-
-
 
 // Utility
 // const defaultDownArrow = FontAwesomeIcons.chevronDown;
@@ -126,18 +117,12 @@ final clubIcon = Icons.flourescent;
 // ScreenName.venues => Icons.wine_bar,
 // ScreenName.venues => Icons.local_bar,
 
-
-
-
-
 // // const defaultSize = 20.0;
 // const defaultSettingIcon = Icon(
 //   Icons.tune,
 //   color: defaultColor,
 //   // size: defaultSize,
 // );
-
-
 
 // const defaultProfileIcon = FontAwesomeIcons.person;
 
@@ -146,5 +131,3 @@ final clubIcon = Icons.flourescent;
 // const defaultLocationDot = FontAwesomeIcons.mapLocation;
 // const defaultLocationDot = FontAwesomeIcons.magnifyingGlassLocation; Okay
 // const defaultLocationDot = FontAwesomeIcons.locationArrow;
-
-

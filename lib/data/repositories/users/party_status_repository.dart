@@ -85,9 +85,9 @@ class PartyStatusRepository {
     final status = (raw == null || raw.isEmpty)
         ? null
         : PartyStatusTypes.values.firstWhere(
-          (e) => e.name == raw,
-      orElse: () => PartyStatusTypes.still_planning,
-    );
+            (e) => e.name == raw,
+            orElse: () => PartyStatusTypes.still_planning,
+          );
 
     return CurrentPartyStatus(status!);
   }

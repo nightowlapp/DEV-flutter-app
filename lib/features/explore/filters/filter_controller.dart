@@ -8,7 +8,7 @@ import '../presentation/ranked_venues_controller.dart'; // for userPrefsProvider
 /// - maxDistanceKm = user's pref (if present)
 /// - types = all (empty set = no restriction)
 final _defaultFiltersProvider =
-Provider.autoDispose<AdvancedSearchFilter>((ref) {
+    Provider.autoDispose<AdvancedSearchFilter>((ref) {
   final prefs = ref.watch(userPrefsProvider);
   return AdvancedSearchFilter(
     openNowOnly: true,
@@ -19,8 +19,8 @@ Provider.autoDispose<AdvancedSearchFilter>((ref) {
 });
 
 final filtersProvider =
-StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
-      (ref) {
+    StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
+  (ref) {
     final defaults = ref.watch(_defaultFiltersProvider);
     return FilterController(defaults);
   },

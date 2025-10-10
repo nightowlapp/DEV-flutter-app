@@ -8,9 +8,11 @@ import 'friends_provider.dart'; // exposes: final friendsProvider = Provider<Lis
 
 // --- Auth (reactive) ---
 final _authStateProvider = //TODO move elsewhere
-StreamProvider<fb.User?>((ref) => fb.FirebaseAuth.instance.authStateChanges());
+    StreamProvider<fb.User?>(
+        (ref) => fb.FirebaseAuth.instance.authStateChanges());
 
-final authUserIdProvider = Provider<String?>((ref) { //TODO Have elsewhere
+final authUserIdProvider = Provider<String?>((ref) {
+  //TODO Have elsewhere
   final auth = ref.watch(_authStateProvider).value;
   return auth?.uid; // null if signed out
 });

@@ -25,7 +25,8 @@ class RankedVenuesState {
 }
 
 /// Ranker knobs that can change live
-final rankerRulesProvider = StateProvider<PointRules>((_) => const PointRules());
+final rankerRulesProvider =
+    StateProvider<PointRules>((_) => const PointRules());
 final userPrefsProvider = StateProvider<UserPrefs?>((_) => null);
 
 /// A ranker built from live rules + prefs
@@ -35,11 +36,12 @@ final _venueRankerProvider = Provider<VenueRanker>((ref) {
   return VenueRanker(rules: rules, prefs: prefs);
 });
 
-class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> {
+class RankedVenuesNotifier
+    extends StateNotifier<AsyncValue<RankedVenuesState>> {
   RankedVenuesNotifier(this.ref)
       : _svc = VenueMediaService(
-    MediaExistence(prefs: ref.read(sharedPrefsProvider)), // central prefs
-  ),
+          MediaExistence(prefs: ref.read(sharedPrefsProvider)), // central prefs
+        ),
         super(const AsyncLoading()) {
     _init();
   }
@@ -56,7 +58,7 @@ class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> 
 
   void _init() {
     _venuesSub = ref.watch(allVenuesStreamProvider.stream).listen(
-          (venues) {
+      (venues) {
         _venues = venues;
         _updateState();
         _probeMedia(venues);
@@ -78,7 +80,7 @@ class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> 
     });
 
     ref.listen(rankerRulesProvider, (_, __) => _updateState());
-    ref.listen(userPrefsProvider,   (_, __) => _updateState());
+    ref.listen(userPrefsProvider, (_, __) => _updateState());
   }
 
   void _updateState() {
@@ -110,7 +112,7 @@ class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> 
       force: true,
     )
         .listen(
-          (entry) {
+      (entry) {
         _media = {..._media, entry.key: entry.value};
         _updateState();
       },
@@ -146,4 +148,3 @@ class RankedVenuesNotifier extends StateNotifier<AsyncValue<RankedVenuesState>> 
     super.dispose();
   }
 }
-

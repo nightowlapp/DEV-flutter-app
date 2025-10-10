@@ -6,13 +6,13 @@ import '../../firestore_paths.dart';
 class UserRepository {
   UserRepository(FirebaseFirestore db)
       : _users = db.collection(DocumentPaths.users).withConverter<model.User>(
-    fromFirestore: (snap, _) {
-      final data = snap.data() ?? const <String, dynamic>{};
-      // inject docId as 'id' for the Dart model; DO NOT store it
-      return model.User.fromJson({'id': snap.id, ...data});
-    },
-    toFirestore: (u, _) => _userToFirestore(u),
-  );
+              fromFirestore: (snap, _) {
+                final data = snap.data() ?? const <String, dynamic>{};
+                // inject docId as 'id' for the Dart model; DO NOT store it
+                return model.User.fromJson({'id': snap.id, ...data});
+              },
+              toFirestore: (u, _) => _userToFirestore(u),
+            );
 
   final CollectionReference<model.User> _users;
 
@@ -126,15 +126,16 @@ Map<String, Object?> _userToFirestore(model.User u) {
 }
 
 // Users who liked a venue:
-Stream<List<String>> userIdsWhoLikedVenue(FirebaseFirestore db, String venueId) {
+Stream<List<String>> userIdsWhoLikedVenue(
+    FirebaseFirestore db, String venueId) {
   return db
       .collectionGroup(DocumentPaths.likes)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.docs
-      .map((d) => d.reference.parent.parent?.id)
-      .whereType<String>()
-      .toList());
+          .map((d) => d.reference.parent.parent?.id)
+          .whereType<String>()
+          .toList());
 }
 
 // Count favorites for a venue:

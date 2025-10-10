@@ -26,7 +26,8 @@ Future<void> showFiltersPopup(BuildContext context, WidgetRef ref) async {
       );
     },
     pageBuilder: (ctx, _, __) {
-      final dy = PlatformConfig.height(context) * 0.035; // 10% of platform height
+      final dy =
+          PlatformConfig.height(context) * 0.035; // 10% of platform height
       return Center(
         child: Transform.translate(
           offset: Offset(0, dy),
@@ -88,7 +89,7 @@ class _FiltersCard extends ConsumerWidget {
                     onChanged: ctrl.setOpenNow,
                     activeColor: owlPurple,
                     trackOutlineColor:
-                    WidgetStatePropertyAll(grey.withOpacity(.5)),
+                        WidgetStatePropertyAll(grey.withOpacity(.5)),
                     inactiveThumbColor: grey,
                     inactiveTrackColor: grey.withOpacity(.35),
                   ),
@@ -117,13 +118,14 @@ class _FiltersCard extends ConsumerWidget {
                       _CardSection(
                         title: 'Distance',
                         trailing: Text(
-                              () {
+                          () {
                             final v = filters.maxDistanceKm;
                             if (v == null || v == 0) return 'off';
                             if (v >= 60) return '60+ km';
                             return '${v.round()} km';
                           }(),
-                          style: Styles.basicText.copyWith(fontWeight: FontWeight.w600),
+                          style: Styles.basicText
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +161,8 @@ class _FiltersCard extends ConsumerWidget {
                           filters.minRating == null
                               ? 'any'
                               : '${filters.minRating!.toStringAsFixed(1)}+',
-                          style: Styles.basicText.copyWith(fontWeight: FontWeight.w600),
+                          style: Styles.basicText
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                         child: Row(
                           children: [
@@ -193,9 +196,6 @@ class _FiltersCard extends ConsumerWidget {
 
                       SizedBox(height: verticalSpacerDefault),
 
-
-
-
                       //TODO NEED CHANGE
                       // Types (chips)
                       _CardSection(
@@ -204,14 +204,16 @@ class _FiltersCard extends ConsumerWidget {
                           filters.types.isEmpty
                               ? 'All'
                               : '${filters.types.length}',
-                          style: Styles.basicText.copyWith(fontWeight: FontWeight.w600),
+                          style: Styles.basicText
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
                             // "All" chip visually selected when none chosen
-                            FilterChip( //TODO remove all.
+                            FilterChip(
+                              //TODO remove all.
                               label: Text(''),
                               selected: filters.types.isEmpty,
                               onSelected: (_) {
@@ -225,13 +227,11 @@ class _FiltersCard extends ConsumerWidget {
                               selectedColor: owlPurple,
                               backgroundColor: grey,
                               side: BorderSide(
-                                color: filters.types.isEmpty
-                                    ? owlPurple
-                                    : grey,
+                                color: filters.types.isEmpty ? owlPurple : grey,
                                 width: 0.7,
                               ),
                               materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
+                                  MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
                             ),
                             ...VenueType.values
@@ -241,18 +241,16 @@ class _FiltersCard extends ConsumerWidget {
                               return FilterChip(
                                 label: Text(
                                   Utility.formatString(t.name),
-                                  style: TextStyle(
-                                      color: sel ? black : white),
+                                  style: TextStyle(color: sel ? black : white),
                                 ),
                                 selected: sel,
                                 onSelected: (_) => ctrl.toggleType(t),
                                 selectedColor: owlPurple,
                                 backgroundColor: grey.withOpacity(.25),
                                 side: BorderSide(
-                                    color: sel ? owlPurple : grey,
-                                    width: 0.7),
+                                    color: sel ? owlPurple : grey, width: 0.7),
                                 materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
+                                    MaterialTapTargetSize.shrinkWrap,
                                 visualDensity: VisualDensity.compact,
                               );
                             }),
@@ -320,8 +318,8 @@ class _CardSection extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                    color: white, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(color: white, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               if (trailing != null) trailing!,
@@ -357,8 +355,7 @@ class _EmojiScale extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isEmoji ? 16 : 12,
                   color: white.withOpacity(.85),
-                  fontWeight:
-                  isEmoji ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isEmoji ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
@@ -389,7 +386,7 @@ class _RatingFace extends StatelessWidget {
       face = '⭐';
     }
     return Text(
-    face,
+      face,
     );
   }
 }

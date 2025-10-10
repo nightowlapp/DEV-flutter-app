@@ -12,7 +12,8 @@ class TagsLocalStore {
     if (jsonStr == null) return const <Tag>[];
     final list = (jsonDecode(jsonStr) as List).cast<Map<String, dynamic>>();
     return [
-      for (final m in list) Tag.fromJson(m['data'] as Map<String, dynamic>, m['id'] as String),
+      for (final m in list)
+        Tag.fromJson(m['data'] as Map<String, dynamic>, m['id'] as String),
     ];
   }
 

@@ -35,8 +35,6 @@ class UserFinalizeService {
       isVerified: false,
     );
 
-
-
-    await _users.create(user);  // Create-only (no update/merge)
+    await _users.create(user); // Create-only (no update/merge)
   }
 }

@@ -17,16 +17,17 @@ final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
   final state = ranked.asData?.value;
 
   // Prefer the controller's userLoc; if it's null, peek at raw location (optional).
-  final LatLng? userLoc = state?.userLoc
-      ?? ref.watch(currentLatLngProvider).asData?.value; // safe fallback
+  final LatLng? userLoc = state?.userLoc ??
+      ref.watch(currentLatLngProvider).asData?.value; // safe fallback
 
   // Read max distance from prefs, fallback to default.
   final double maxKm =
-  (ref.watch(userPrefsProvider)?.maxDistanceKm ?? _kDefaultMaxDistanceKm)
-      .toDouble();
+      (ref.watch(userPrefsProvider)?.maxDistanceKm ?? _kDefaultMaxDistanceKm)
+          .toDouble();
 
-  if (userLoc == null) return null;                  // still waiting on location
-  if (state == null || state.venues.isEmpty) return null; // venues not ready yet
+  if (userLoc == null) return null; // still waiting on location
+  if (state == null || state.venues.isEmpty)
+    return null; // venues not ready yet
   if (maxKm <= 0) return 0;
 
   final maxMeters = maxKm * 1000.0;

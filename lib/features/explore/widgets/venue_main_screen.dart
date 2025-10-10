@@ -13,7 +13,6 @@ import 'package:nightowlcode/data/services/media_existence.dart';
 
 import '../../../shared/reusable/ui/verified_badge.dart';
 
-
 class VenueMainScreen extends StatelessWidget {
   const VenueMainScreen({
     super.key,
@@ -27,7 +26,7 @@ class VenueMainScreen extends StatelessWidget {
   final LatLng? userLoc;
 
   String get _title =>
-  venue.displayName.isNotEmpty ? venue.displayName : venue.name;
+      venue.displayName.isNotEmpty ? venue.displayName : venue.name;
 
   @override
   Widget build(BuildContext context) {
@@ -46,16 +45,17 @@ class VenueMainScreen extends StatelessWidget {
         showBack: true,
         centerTitle: true,
         action: logo,
-        backgroundColor: black,),
+        backgroundColor: black,
+      ),
       //TODO looks cool with image at top but dificoult to see name and click back.
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: sidePaddingDefault),
-          child: VenueScreenContent(
-            venue: venue,
-            media: media,
-            userLoc: userLoc,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: sidePaddingDefault),
+        child: VenueScreenContent(
+          venue: venue,
+          media: media,
+          userLoc: userLoc,
         ),
+      ),
     );
   }
 }

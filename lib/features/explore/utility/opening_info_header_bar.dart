@@ -12,7 +12,7 @@ class OpeningInfoHeaderBar extends StatefulWidget {
     required this.openingHours,
     required this.defaultAgeRestriction,
     this.initiallyExpanded = false,
-    this.now,                               // pass venue-local now if you have it
+    this.now, // pass venue-local now if you have it
     this.dayWidth = 100,
     this.rangeWidth = 110,
     this.borderColor = grey,
@@ -48,13 +48,14 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
 
   // --- small helper for a superscript +1 ---
   InlineSpan _plusOne(TextStyle base, Color color) => WidgetSpan(
-    alignment: PlaceholderAlignment.baseline,
-    baseline: TextBaseline.alphabetic,
-    child: Transform.translate(
-      offset: const Offset(1, -4),
-      child: Text('+1', style: Styles.smallText.copyWith(fontWeight: FontWeight.w600)),
-    ),
-  );
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: Transform.translate(
+          offset: const Offset(1, -4),
+          child: Text('+1',
+              style: Styles.smallText.copyWith(fontWeight: FontWeight.w600)),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +64,17 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
 
     // If currently open due to yesterday's overnight, show yesterday’s row.
     final status = oh.statusAt(now);
-    final displayDate = (status.phase == OpeningPhase.open && status.fromYesterday)
-      ? now.subtract(const Duration(days: 1))
-      : now;
+    final displayDate =
+        (status.phase == OpeningPhase.open && status.fromYesterday)
+            ? now.subtract(const Duration(days: 1))
+            : now;
 
     final headerLabel = DateFormat.EEEE().format(displayDate);
 
     // Reuse your formatter for the header day
     final todayParts = oh.todayRangeParts24h(localNow: displayDate);
-    final ageToday = oh.activeAgeRestriction(displayDate) ?? widget.defaultAgeRestriction;
+    final ageToday =
+        oh.activeAgeRestriction(displayDate) ?? widget.defaultAgeRestriction;
 
     final base = Styles.boldText.copyWith(letterSpacing: 1);
 
@@ -90,20 +93,26 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(width: widget.dayWidth, child: Text(headerLabel, style: base.copyWith(fontSize: fontSizeSmall))),
+                SizedBox(
+                    width: widget.dayWidth,
+                    child: Text(headerLabel,
+                        style: base.copyWith(fontSize: fontSizeSmall))),
                 SizedBox(
                   width: widget.rangeWidth,
                   child: todayParts.isClosed
-                    ? Text('Closed', style: base)
-                    : RichText(
-                      text: TextSpan(
-                        style: base,
-                        children: [
-                          TextSpan(text: '${todayParts.open} - ${todayParts.close}'),
-                          if (todayParts.nextDay) _plusOne(base, widget.textColor),
-                        ],
-                      ),
-                    ),
+                      ? Text('Closed', style: base)
+                      : RichText(
+                          text: TextSpan(
+                            style: base,
+                            children: [
+                              TextSpan(
+                                  text:
+                                      '${todayParts.open} - ${todayParts.close}'),
+                              if (todayParts.nextDay)
+                                _plusOne(base, widget.textColor),
+                            ],
+                          ),
+                        ),
                 ),
                 Text('$ageToday+', style: base),
                 IconButton(
@@ -111,7 +120,9 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
                   constraints: const BoxConstraints(),
                   iconSize: 16,
                   onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                  icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more, color: widget.textColor),
+                  icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: widget.textColor),
                 ),
               ],
             ),
@@ -120,41 +131,50 @@ class _OpeningInfoHeaderBarState extends State<OpeningInfoHeaderBar> {
             if (_isExpanded) ...[
               Column(
                 children: List.generate(6, (i) {
-                    final d = displayDate.add(Duration(days: i + 1));
-                    final label = DateFormat.EEEE().format(d);
-                    final p = oh.todayRangeParts24h(localNow: d);
-                    final age = oh.activeAgeRestriction(d) ?? widget.defaultAgeRestriction;;
+                  final d = displayDate.add(Duration(days: i + 1));
+                  final label = DateFormat.EEEE().format(d);
+                  final p = oh.todayRangeParts24h(localNow: d);
+                  final age = oh.activeAgeRestriction(d) ??
+                      widget.defaultAgeRestriction;
+                  ;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(width: widget.dayWidth, child: Text(label, style: base.copyWith(fontSize: fontSizeSmaller))),
-                          SizedBox(
-                            width: widget.rangeWidth,
-                            child: p.isClosed
-                              ? Text('Closed', style: base.copyWith(fontSize: fontSizeSmaller, color: red))
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                            width: widget.dayWidth,
+                            child: Text(label,
+                                style:
+                                    base.copyWith(fontSize: fontSizeSmaller))),
+                        SizedBox(
+                          width: widget.rangeWidth,
+                          child: p.isClosed
+                              ? Text('Closed',
+                                  style: base.copyWith(
+                                      fontSize: fontSizeSmaller, color: red))
                               : RichText(
-                                text: TextSpan(
-                                  style: base.copyWith(fontSize: fontSizeSmaller),
-                                  children: [
-                                    TextSpan(text: '${p.open} - ${p.close}'),
-                                    if (p.nextDay) _plusOne(base, widget.textColor),
-                                  ],
+                                  text: TextSpan(
+                                    style: base.copyWith(
+                                        fontSize: fontSizeSmaller),
+                                    children: [
+                                      TextSpan(text: '${p.open} - ${p.close}'),
+                                      if (p.nextDay)
+                                        _plusOne(base, widget.textColor),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                          ),
-                          Text(p.isClosed ? '      ' :
-                              '$age+', style: base.copyWith(fontSize: fontSizeSmaller)),
-                          const SizedBox(width: 50), // reserved for future "busy" meter, etc.
-                        ],
-
-                      ),
-                    );
-                  }
-                ),
-
+                        ),
+                        Text(p.isClosed ? '      ' : '$age+',
+                            style: base.copyWith(fontSize: fontSizeSmaller)),
+                        const SizedBox(
+                            width:
+                                50), // reserved for future "busy" meter, etc.
+                      ],
+                    ),
+                  );
+                }),
               ),
             ],
           ],

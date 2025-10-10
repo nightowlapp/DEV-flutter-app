@@ -16,7 +16,6 @@ import '../../../shared/reusable/users/party_status_indicator.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
 import '../../profile/presentation/change_profile_picture.dart';
 
-
 class MainScreenRightDrawer extends StatelessWidget {
   const MainScreenRightDrawer({super.key});
 
@@ -50,14 +49,16 @@ class MainScreenRightDrawer extends StatelessWidget {
                 children: [
                   Consumer(
                     builder: (context, ref, _) {
-                      final hasPic = ref.watch(hasCurrentUserProfilePictureProvider);
+                      final hasPic =
+                          ref.watch(hasCurrentUserProfilePictureProvider);
 
                       return ProfilePictureAvatar(
                         size: PlatformConfig.width(context) * 0.15,
 
                         // Let the avatar show its prompt only when there is NO picture:
                         // (disablePrompt == true => no prompt)
-                        disablePrompt: hasPic, // hasPic -> no prompt; !hasPic -> prompt
+                        disablePrompt:
+                            hasPic, // hasPic -> no prompt; !hasPic -> prompt
 
                         // Only handle the "hasPic" case here; for !hasPic the avatar will prompt.
                         onTap: () async {
@@ -97,7 +98,7 @@ class MainScreenRightDrawer extends StatelessWidget {
               const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
-              const CityNowSectionRightDrawer(),
+              // const CityNowSectionRightDrawer(), TODO after events are made.
             ],
           ),
         ),
@@ -105,5 +106,3 @@ class MainScreenRightDrawer extends StatelessWidget {
     );
   }
 }
-
-

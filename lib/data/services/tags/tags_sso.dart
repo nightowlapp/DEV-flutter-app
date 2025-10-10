@@ -7,7 +7,8 @@ import '../../../core/storage/tags_local_store.dart';
 import '../../../models/venues/tag.dart';
 import '../../providers/other_providers.dart';
 
-final tagsSsoProvider = AsyncNotifierProvider<TagsSso, Map<String, Tag>>(TagsSso.new);
+final tagsSsoProvider =
+    AsyncNotifierProvider<TagsSso, Map<String, Tag>>(TagsSso.new);
 
 class TagsSso extends AsyncNotifier<Map<String, Tag>> {
   StreamSubscription? _sub;
@@ -17,13 +18,13 @@ class TagsSso extends AsyncNotifier<Map<String, Tag>> {
   Future<Map<String, Tag>> build() async {
     // 1) serve cached immediately
     final cachedList = await _store.readAll();
-    final cached = { for (final t in cachedList) t.id: t };
+    final cached = {for (final t in cachedList) t.id: t};
     state = AsyncData(cached);
 
     // 2) subscribe to Firestore
     final db = ref.read(firestoreProvider);
-    final col = db.collection('tags')
-        .withConverter<Tag>(fromFirestore: Tag.fromFirestore, toFirestore: Tag.toFirestore);
+    final col = db.collection('tags').withConverter<Tag>(
+        fromFirestore: Tag.fromFirestore, toFirestore: Tag.toFirestore);
 
     _sub?.cancel();
     _sub = col.snapshots().listen((snap) async {

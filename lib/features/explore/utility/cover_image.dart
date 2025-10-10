@@ -110,7 +110,7 @@ class CoverImage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               if (url.isNotEmpty)
-              // Network first; fall back to default asset if it fails
+                // Network first; fall back to default asset if it fails
                 CustomNetworkImage(
                   url,
                   fit: fit,
@@ -119,7 +119,7 @@ class CoverImage extends StatelessWidget {
                   fallbackAsset: _defaultAsset,
                 )
               else if (fallBackEnabled)
-              // Try city asset, then default.png, then nothing
+                // Try city asset, then default.png, then nothing
                 Image.asset(
                   cityAsset.isNotEmpty ? cityAsset : _defaultAsset,
                   fit: fit,
@@ -131,9 +131,9 @@ class CoverImage extends StatelessWidget {
                 )
               else
                 const SizedBox.shrink(),
-
               if (overlayGradient != null)
-                DecoratedBox(decoration: BoxDecoration(gradient: overlayGradient!)),
+                DecoratedBox(
+                    decoration: BoxDecoration(gradient: overlayGradient!)),
               if (foreground != null) foreground!,
             ],
           ),

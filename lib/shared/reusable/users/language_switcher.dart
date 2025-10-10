@@ -6,7 +6,6 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import '../ui/popup_dialog_default.dart';
 
 class LanguageSwitcher extends StatelessWidget {
-
   const LanguageSwitcher({
     super.key,
     this.radius = iconSizeMedium,
@@ -21,10 +20,10 @@ class LanguageSwitcher extends StatelessWidget {
       onTap: () => _showLanguageDialog(context),
       child: CircleAvatar(
         backgroundColor: transparent,
-radius: iconSizeDefault,
+        radius: iconSizeDefault,
         child: Image.asset(
           'assets/flags/uk.png',
-          width: radius*1.3,
+          width: radius * 1.3,
           height: radius,
           fit: BoxFit.cover,
         ),

@@ -15,9 +15,11 @@ class LiveLocationPublisher {
     if (uid == null) return;
 
     var perm = await Geolocator.checkPermission();
-    if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+    if (perm == LocationPermission.denied ||
+        perm == LocationPermission.deniedForever) {
       perm = await Geolocator.requestPermission();
-      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) return;
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) return;
     }
 
     final settings = const LocationSettings(
@@ -26,7 +28,8 @@ class LiveLocationPublisher {
     );
 
     await _sub?.cancel();
-    _sub = Geolocator.getPositionStream(locationSettings: settings).listen((pos) async {
+    _sub = Geolocator.getPositionStream(locationSettings: settings)
+        .listen((pos) async {
       if (!_shouldSend(pos)) return;
       _lastSent = pos;
 
@@ -43,10 +46,14 @@ class LiveLocationPublisher {
 
   bool _shouldSend(Position p) {
     if (_lastSent == null) return true;
-    final lastTs = _lastSent!.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+    final lastTs =
+        _lastSent!.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
     final dt = (p.timestamp ?? DateTime.now()).difference(lastTs).inSeconds;
     final dist = Geolocator.distanceBetween(
-      _lastSent!.latitude, _lastSent!.longitude, p.latitude, p.longitude,
+      _lastSent!.latitude,
+      _lastSent!.longitude,
+      p.latitude,
+      p.longitude,
     );
     return dt >= 10 || dist >= 30;
   }

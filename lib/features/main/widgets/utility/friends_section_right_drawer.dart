@@ -6,7 +6,8 @@ class FriendsSectionRightDrawer extends StatefulWidget {
   const FriendsSectionRightDrawer({super.key});
 
   @override
-  State<FriendsSectionRightDrawer> createState() => _FriendsSectionRightDrawerState();
+  State<FriendsSectionRightDrawer> createState() =>
+      _FriendsSectionRightDrawerState();
 }
 
 class _FriendsSectionRightDrawerState extends State<FriendsSectionRightDrawer> {
@@ -16,7 +17,7 @@ class _FriendsSectionRightDrawerState extends State<FriendsSectionRightDrawer> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Stack(
-    // const logoSize = logoIcon; //TODO
+          // const logoSize = logoIcon; //TODO
 
           children: [
             Center(child: Text('Friends', style: Styles.boldText)),
@@ -26,16 +27,16 @@ class _FriendsSectionRightDrawerState extends State<FriendsSectionRightDrawer> {
             ),
           ],
         ),
-
         const SizedBox(height: verticalSpacerSmall),
-
         SizedBox(
           height: 50,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: 20,
-            separatorBuilder: (_, __) => const SizedBox(width: horizontalSpacerSmall),
-            itemBuilder: (_, i) => const CircleAvatar(radius: circleAvatarSizeDefault),
+            separatorBuilder: (_, __) =>
+                const SizedBox(width: horizontalSpacerSmall),
+            itemBuilder: (_, i) =>
+                const CircleAvatar(radius: circleAvatarSizeDefault),
           ),
         ),
       ],

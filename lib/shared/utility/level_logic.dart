@@ -13,7 +13,8 @@ abstract class LevelCurve {
 /// Linear: base + (level-1) * increment
 class LinearCurve implements LevelCurve {
   LinearCurve({required this.base, required this.increment})
-      : assert(base > 0), assert(increment >= 0);
+      : assert(base > 0),
+        assert(increment >= 0);
   final double base;
   final double increment;
 
@@ -25,7 +26,8 @@ class LinearCurve implements LevelCurve {
 /// Exponential: base * growth^(level-1)
 class ExponentialCurve implements LevelCurve {
   ExponentialCurve({required this.base, required this.growth})
-      : assert(base > 0), assert(growth >= 1.0);
+      : assert(base > 0),
+        assert(growth >= 1.0);
   final double base;
   final double growth;
 
@@ -50,9 +52,9 @@ class CustomCurve implements LevelCurve {
 class PowerCurve implements LevelCurve {
   PowerCurve({required this.start, required this.scale, required this.exponent})
       : assert(exponent > 1);
-  final double start;     // XP for local L1 in this segment
-  final double scale;     // ramp rate
-  final double exponent;  // 1.6–2.6 typical
+  final double start; // XP for local L1 in this segment
+  final double scale; // ramp rate
+  final double exponent; // 1.6–2.6 typical
 
   @override
   double deltaForLevel(int localLevel) {
@@ -64,8 +66,8 @@ class PowerCurve implements LevelCurve {
 /// Piecewise helper types
 class CurveSegment {
   const CurveSegment({required this.start, this.end, required this.curve});
-  final int start;        // inclusive
-  final int? end;         // inclusive; null = infinity
+  final int start; // inclusive
+  final int? end; // inclusive; null = infinity
   final LevelCurve curve;
 
   bool contains(int level) => level >= start && (end == null || level <= end!);
@@ -75,7 +77,8 @@ class CurveSegment {
 class PiecewiseCurve implements LevelCurve {
   PiecewiseCurve(List<CurveSegment> segments)
       : assert(segments.isNotEmpty),
-        _segments = (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
+        _segments =
+            (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
     assert(_segments.first.start == 1, 'First segment must start at level 1');
   }
   final List<CurveSegment> _segments;
@@ -83,7 +86,7 @@ class PiecewiseCurve implements LevelCurve {
   @override
   double deltaForLevel(int level) {
     final seg = _segments.firstWhere(
-          (s) => s.contains(level),
+      (s) => s.contains(level),
       orElse: () => _segments.last,
     );
     return seg.curve.deltaForLevel(seg.local(level));
@@ -98,14 +101,14 @@ class LevelProgress {
     required this.totalXp,
   });
 
-  final int level;            // current level (1-based)
-  final double xpIntoLevel;   // XP earned within this level
-  final double xpForLevel;    // XP needed to complete this level
-  final double totalXp;       // total lifetime XP
+  final int level; // current level (1-based)
+  final double xpIntoLevel; // XP earned within this level
+  final double xpForLevel; // XP needed to complete this level
+  final double totalXp; // total lifetime XP
 
   double get progress01 =>
       xpForLevel <= 0 ? 1.0 : (xpIntoLevel / xpForLevel).clamp(0.0, 1.0);
-  double get xpToNext   => (xpForLevel - xpIntoLevel).clamp(0.0, double.infinity);
+  double get xpToNext => (xpForLevel - xpIntoLevel).clamp(0.0, double.infinity);
 }
 
 class LevelLogic {

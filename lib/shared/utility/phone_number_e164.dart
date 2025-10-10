@@ -1,6 +1,6 @@
 class PhoneNumberE164 {
-  final String e164;           // "+4522334455"
-  final String? countryIso2;   // "DK"
+  final String e164; // "+4522334455"
+  final String? countryIso2; // "DK"
   const PhoneNumberE164({required this.e164, this.countryIso2});
 
   // E.164: "+" then digits; max 15 digits total, leading digit 1-9 (no leading 0 country code).
@@ -44,9 +44,9 @@ class PhoneNumberE164 {
   }
 
   Map<String, dynamic> toMap() => {
-    'e164': e164,
-    if (countryIso2 != null) 'countryIso2': countryIso2,
-  };
+        'e164': e164,
+        if (countryIso2 != null) 'countryIso2': countryIso2,
+      };
 
   factory PhoneNumberE164.fromMap(Map<String, dynamic> map) {
     return PhoneNumberE164(

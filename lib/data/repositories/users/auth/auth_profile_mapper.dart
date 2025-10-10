@@ -6,8 +6,8 @@ import '../../../../features/signup/presentation/sign_up_draft_notifier.dart';
 /// Call this right after a successful Firebase sign-in to prefill the local draft.
 Future<void> prefillDraftFromFirebaseUser(WidgetRef ref, fb.User u) async {
   ref.read(signUpDraftProvider.notifier).mergeExternalProfile(
-    displayName: u.displayName,
-    email: u.email,
-    photoUrl: u.photoURL,
-  );
+        displayName: u.displayName,
+        email: u.email,
+        photoUrl: u.photoURL,
+      );
 }

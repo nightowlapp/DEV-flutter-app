@@ -96,14 +96,14 @@ class _CalenderScreenState extends State<CalenderScreen> {
       builder: (_) => PopupDialogDefault(
         title: '', //TODO
         children: [
-      ListTile(
-
-    title: Text('Are you going out on $day ${date.day} $month?', style: Styles.popupText), //TODO
-    onTap: () {
-    Navigator.pop(context);
-    },
-    ),],
-
+          ListTile(
+            title: Text('Are you going out on $day ${date.day} $month?',
+                style: Styles.popupText), //TODO
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -195,22 +195,23 @@ class _DaySectionCardState extends State<_DaySectionCard>
           ),
 
           // Expandable content
-          AnimatedSize( //TODO animate fold out and in.
+          AnimatedSize(
+            //TODO animate fold out and in.
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: widget.expanded
                 ? Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: widget.schedule.events.isEmpty
-                    ? const [_NoEventsTile()]
-                    : widget.schedule.events
-                    .map((e) => _EventTile(event: e))
-                    .toList(),
-              ),
-            )
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: widget.schedule.events.isEmpty
+                          ? const [_NoEventsTile()]
+                          : widget.schedule.events
+                              .map((e) => _EventTile(event: e))
+                              .toList(),
+                    ),
+                  )
                 : const SizedBox.shrink(),
           ),
         ],
@@ -246,7 +247,7 @@ class _DayDateBadge extends StatelessWidget {
         DecoratedBox(
           decoration: ShapeDecoration(
             color: cs.primaryContainer,
-            shape: StadiumBorder(side: BorderSide(color:grey)),
+            shape: StadiumBorder(side: BorderSide(color: grey)),
           ),
           child: SizedBox(
             height: _kBadgeHeight,
@@ -321,7 +322,8 @@ class _EventTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.place_rounded, size: 16, color: cs.secondary),
+                        Icon(Icons.place_rounded,
+                            size: 16, color: cs.secondary),
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
@@ -418,12 +420,11 @@ class DummyCalendarData {
     'Room 3F',
   ];
 
-
-
   /// Generates [days] of deterministic dummy schedules starting at [from].
   static List<DaySchedule> generate({required DateTime from, int days = 30}) {
     final base = DateTime(from.year, from.month, from.day);
-    final rng = Random(base.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay);
+    final rng =
+        Random(base.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay);
 
     return List.generate(days, (i) {
       final day = base.add(Duration(days: i));
@@ -433,11 +434,12 @@ class DummyCalendarData {
         final startHour = 8 + rng.nextInt(9); // 08..16
         final startMin = rng.nextBool() ? 0 : 30;
         final durHours = 1 + rng.nextInt(2); // 1..2h
-        final start = DateTime(day.year, day.month, day.day, startHour, startMin);
+        final start =
+            DateTime(day.year, day.month, day.day, startHour, startMin);
         final end = start.add(Duration(hours: durHours));
         final title = _titles[rng.nextInt(_titles.length)];
         final location =
-        rng.nextBool() ? _places[rng.nextInt(_places.length)] : null;
+            rng.nextBool() ? _places[rng.nextInt(_places.length)] : null;
         final note = rng.nextInt(5) == 0 ? 'Bring notes & laptop' : null;
         return CalendarEvent(
           title: title,
@@ -446,7 +448,8 @@ class DummyCalendarData {
           location: location,
           note: note,
         );
-      })..sort((a, b) => a.start.compareTo(b.start));
+      })
+        ..sort((a, b) => a.start.compareTo(b.start));
 
       return DaySchedule(date: day, events: events);
     });
@@ -458,7 +461,18 @@ class DummyCalendarData {
 class _Fmt {
   static const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   static const _months = [
-    'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   static String dayShort(DateTime d) => _days[(d.weekday - 1) % 7];
@@ -466,4 +480,3 @@ class _Fmt {
   static String _two(int n) => n < 10 ? '0$n' : '$n';
   static String hhmm(DateTime dt) => '${_two(dt.hour)}:${_two(dt.minute)}';
 }
-

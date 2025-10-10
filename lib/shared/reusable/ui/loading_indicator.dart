@@ -29,9 +29,11 @@ class LoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSecondary;
 
-    return
-      SpinKitRotatingCircle(color: color, duration: const Duration(seconds: 2),);
-      IgnorePointer(
+    return SpinKitRotatingCircle(
+      color: color,
+      duration: const Duration(seconds: 2),
+    );
+    IgnorePointer(
       child: SafeArea(
         top: false,
         child: Align(
@@ -42,12 +44,12 @@ class LoadingIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: enableGlow
                     ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.28),
-                    blurRadius: 12,
-                    spreadRadius: 3,
-                  )
-                ]
+                        BoxShadow(
+                          color: color.withOpacity(0.28),
+                          blurRadius: 12,
+                          spreadRadius: 3,
+                        )
+                      ]
                     : const [],
               ),
               child: _RotatingCircle(
@@ -101,7 +103,7 @@ class _RotatingCircle extends StatefulWidget {
 class _RotatingCircleState extends State<_RotatingCircle>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-  AnimationController(vsync: this, duration: widget.duration)..repeat();
+      AnimationController(vsync: this, duration: widget.duration)..repeat();
 
   late final Animation<double> _animX = Tween(begin: 0.0, end: 180.0).animate(
     CurvedAnimation(

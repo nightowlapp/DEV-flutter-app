@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 //Core
@@ -16,9 +15,12 @@ const white = Colors.white;
 const grey = Color.fromRGBO(66, 66, 66, 1);
 const transparent = Colors.transparent;
 
-const owlGreenBlue        = Color.fromRGBO(0, 191, 165, 1.0);  // #00BFA5  (teal-ish, balanced)
-const owlGreenBlueGreener = Color.fromRGBO(26, 188, 156, 1.0); // #1ABC9C  (leans green)
-const owlGreenBlueBluer   = Color.fromRGBO(38, 198, 218, 1.0); // #26C6DA  (leans blue)
+const owlGreenBlue =
+    Color.fromRGBO(0, 191, 165, 1.0); // #00BFA5  (teal-ish, balanced)
+const owlGreenBlueGreener =
+    Color.fromRGBO(26, 188, 156, 1.0); // #1ABC9C  (leans green)
+const owlGreenBlueBluer =
+    Color.fromRGBO(38, 198, 218, 1.0); // #26C6DA  (leans blue)
 
 // Status colors
 const green = Colors.green;
@@ -38,8 +40,8 @@ const friendColor = Colors.teal;
 
 const mapLightOrange = Color(0xFF78350F);
 const mapDarkOrange = Color(0xFF33130A);
-const mapGreen = Color(0xFF2ECC71);          // #2ECC71
-const mapRed = Color(0xFFE74C3C);          // #E74C3C
+const mapGreen = Color(0xFF2ECC71); // #2ECC71
+const mapRed = Color(0xFFE74C3C); // #E74C3C
 
 const TEST = Colors.pink;
 
@@ -48,10 +50,9 @@ const lighterBlack = Color.fromARGB(221, 184, 178, 178);
 // const owlPurple = Colors.deepPurple;
 // const owlOrangeDark = Color(0x0AE87701); // owlOrange.opacity(0.04)
 
-
 // Core semantics
 
-const mapGrey555 = Color(0xFF555555);            // #555555
+const mapGrey555 = Color(0xFF555555); // #555555
 const onHoldBg = Color(0xFF2E1A09);
 const degradedBg = Color(0xFF3A1D0F);
 const technoBg = Color(0xFF0F1029);
@@ -166,8 +167,6 @@ const jazzFg = Color(0xFF34D399);
 const cocktailsBg = Color(0xFF1A0F14);
 const cocktailsFg = Color(0xFFFB7185);
 
-
-
 extension ColorHex on Color {
   /// '#RRGGBB' or '#RRGGBBAA' (alpha at the end = RGBA)
   String toHex({bool includeAlpha = false, bool leadingHashSign = true}) {
@@ -179,6 +178,7 @@ extension ColorHex on Color {
     return '${leadingHashSign ? '#' : ''}${body.toUpperCase()}';
   }
 }
+
 extension HexToColor on String {
   Color toColor({bool eightIsRgba = true}) {
     var s = trim().toUpperCase();
@@ -192,7 +192,7 @@ extension HexToColor on String {
       if (eightIsRgba) {
         // RRGGBBAA -> AARRGGBB
         final rgb = s.substring(0, 6);
-        final aa  = s.substring(6, 8);
+        final aa = s.substring(6, 8);
         return Color(int.parse('$aa$rgb', radix: 16));
       } else {
         // AARRGGBB
@@ -203,7 +203,8 @@ extension HexToColor on String {
       final r = s[0], g = s[1], b = s[2];
       final a = (s.length == 4) ? s[3] : 'F';
       final full = '${r * 2}${g * 2}${b * 2}${a * 2}'; // RRGGBBAA
-      return Color(int.parse('${full.substring(6, 8)}${full.substring(0, 6)}', radix: 16));
+      return Color(int.parse('${full.substring(6, 8)}${full.substring(0, 6)}',
+          radix: 16));
     }
     throw FormatException('Invalid hex color: $this');
   }
@@ -211,8 +212,8 @@ extension HexToColor on String {
   /// Convenience: returns a Dart literal like "Color(0xFFE87701)".
   String toColorConstLiteral({bool eightIsRgba = true}) {
     final c = toColor(eightIsRgba: eightIsRgba);
-    final v = c.value.toRadixString(16).padLeft(8, '0').toUpperCase(); // AARRGGBB
+    final v =
+        c.value.toRadixString(16).padLeft(8, '0').toUpperCase(); // AARRGGBB
     return 'Color(0x$v)';
   }
 }
-

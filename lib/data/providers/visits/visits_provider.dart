@@ -13,9 +13,9 @@ class VisitUi {
 
 final myVisitsWithVenuesProvider = Provider<List<VisitUi>>((ref) {
   final sessions = ref.watch(myVisitSessionsProvider).maybeWhen(
-    data: (v) => v,
-    orElse: () => const <VisitSession>[],
-  );
+        data: (v) => v,
+        orElse: () => const <VisitSession>[],
+      );
   final venues = ref.watch(venuesListProvider);
   final byId = {for (final v in venues) v.id: v};
 

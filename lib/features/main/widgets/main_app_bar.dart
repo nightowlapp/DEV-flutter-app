@@ -23,14 +23,14 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.title,
     this.titleColor,
     this.centerTitle = true,
-    this.backgroundColor,            // defaults to transparent
-    this.leading,                    // defaults to NightOwl logo
-    this.showBack = false,           // if true & canPop, shows back instead of logo
+    this.backgroundColor, // defaults to transparent
+    this.leading, // defaults to NightOwl logo
+    this.showBack = false, // if true & canPop, shows back instead of logo
     this.onBack,
     this.actions,
     this.action,
     this.logoImage,
-    this.onTapSettings,              // optional handler; defaults to /settings
+    this.onTapSettings, // optional handler; defaults to /settings
     this.screen,
     this.verifiedVenue = false,
   });
@@ -71,7 +71,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     // default = gradient
     if (titleColor == null) return Styles.logoTextGradient;
     // when a solid color is requested, remove the gradient foreground first
-    return Styles.logoTextGradient.copyWith( //TODO not working.
+    return Styles.logoTextGradient.copyWith(
+      //TODO not working.
       color: titleColor,
     );
   }
@@ -80,8 +81,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final router = GoRouter.of(context);
     if (router.canPop()) {
       router.pop();
-    }
-    else {
+    } else {
       Navigator.of(context).maybePop();
     }
   }
@@ -99,25 +99,22 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: EdgeInsets.zero,
         onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
         icon: logoImage != null
-          ? CircleAvatar(
-            radius: borderRadiusDefault,
-            backgroundImage:
-            logoImage,
-            backgroundColor: Colors.transparent,
-          )
-          :
-          Icon(burgerMenu),
-
+            ? CircleAvatar(
+                radius: borderRadiusDefault,
+                backgroundImage: logoImage,
+                backgroundColor: Colors.transparent,
+              )
+            : Icon(burgerMenu),
       ),
     );
 
     final Widget? resolvedLeading = leading ??
-      (showBack && canPop
-        ? IconButton(
-          icon: Icon(chevronLeftIcon),
-          onPressed: onBack ?? () => _defaultBack(context),
-        )
-        : defaultLeading);
+        (showBack && canPop
+            ? IconButton(
+                icon: Icon(chevronLeftIcon),
+                onPressed: onBack ?? () => _defaultBack(context),
+              )
+            : defaultLeading);
 
     // Build default trailing (settings? + end-drawer avatar)
 
@@ -130,31 +127,30 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       defaultActions.add(
         IconButton(
           icon: Icon(settingsIcon),
-          onPressed: () => context.pushNamedPage(SettingsScreen.routeName,),
+          onPressed: () => context.pushNamedPage(
+            SettingsScreen.routeName,
+          ),
         ),
       );
-    }
-    else {
-      defaultActions.add(
-        ProfilePictureAvatar(
-          onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
-        )
-      );
+    } else {
+      defaultActions.add(ProfilePictureAvatar(
+        onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
+      ));
     }
 
     final List<Widget> resolvedActions =
-      actions ?? (action != null ? <Widget>[action!] : defaultActions);
+        actions ?? (action != null ? <Widget>[action!] : defaultActions);
     final Widget resolvedTitle = title ??
-      Text(
-        titleText ?? 'NightOwl',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: _resolvedTitleStyle,
-      );
+        Text(
+          titleText ?? 'NightOwl',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _resolvedTitleStyle,
+        );
 
     return AppBar(
       elevation: 0,
-      toolbarHeight: _kHeight,                         // always 44
+      toolbarHeight: _kHeight, // always 44
       backgroundColor: backgroundColor ?? transparent, // transparent by default
       automaticallyImplyLeading: false,
       leading: resolvedLeading,

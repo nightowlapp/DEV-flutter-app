@@ -1,5 +1,6 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui show Image, ImageByteFormat, Codec, FrameInfo, instantiateImageCodec;
+import 'dart:ui' as ui
+    show Image, ImageByteFormat, Codec, FrameInfo, instantiateImageCodec;
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
@@ -42,7 +43,7 @@ class ProfilePictureService {
     bool archivePrevious = true,
   }) async {
     final canonicalPath =
-    StoragePaths.userImage(uid, '${StoragePaths.profilePicture}.webp');
+        StoragePaths.userImage(uid, '${StoragePaths.profilePicture}.webp');
     final canonicalRef = _storage.ref().child(canonicalPath);
 
     if (archivePrevious) {
@@ -124,10 +125,10 @@ class _TranscodeResult {
 
 extension _Transcode on ProfilePictureService {
   Future<_TranscodeResult> _transcodeToWebp(
-      Uint8List original, {
-        required int maxDim,
-        required int quality,
-      }) async {
+    Uint8List original, {
+    required int maxDim,
+    required int quality,
+  }) async {
     // Decode only to get original dimensions
     final origUi = await _decodeUiImage(original);
     final ow = origUi.width, oh = origUi.height;
@@ -156,13 +157,14 @@ extension _Transcode on ProfilePictureService {
       }
 
       final uiAfter = await _decodeUiImage(Uint8List.fromList(out));
-      return _TranscodeResult(Uint8List.fromList(out), uiAfter.width, uiAfter.height);
+      return _TranscodeResult(
+          Uint8List.fromList(out), uiAfter.width, uiAfter.height);
     } on MissingPluginException {
       // Plugin not registered on this build
       throw UnsupportedError(
         'WebP encoder is not available on this build '
-            '(flutter_image_compress not registered). '
-            'Perform a full rebuild and ensure platform support.',
+        '(flutter_image_compress not registered). '
+        'Perform a full rebuild and ensure platform support.',
       );
     }
   }

@@ -12,7 +12,9 @@ class SegmentRules {
     final Map<String, dynamic> m = _tryDecode(json);
     final List<dynamic> list = (m['rules'] as List?) ?? const [];
     return SegmentRules(
-      rules: list.map((e) => SegmentRule.fromMap(e as Map<String, dynamic>)).toList(),
+      rules: list
+          .map((e) => SegmentRule.fromMap(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 

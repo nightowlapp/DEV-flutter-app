@@ -61,26 +61,27 @@ class FavoriteVenueButton extends ConsumerStatefulWidget {
   final Color emptyColor;
 
   @override
-  ConsumerState<FavoriteVenueButton> createState() => _FavoriteVenueButtonState();
+  ConsumerState<FavoriteVenueButton> createState() =>
+      _FavoriteVenueButtonState();
 }
 
 class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     with TickerProviderStateMixin {
   // Pulse when tapping (both add/remove)
-  late final AnimationController _pulseCtr =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-  late final Animation<double> _pulse =
-  Tween(begin: 1.0, end: 1.15).chain(CurveTween(curve: Curves.easeOut)).animate(_pulseCtr);
+  late final AnimationController _pulseCtr = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 180));
+  late final Animation<double> _pulse = Tween(begin: 1.0, end: 1.15)
+      .chain(CurveTween(curve: Curves.easeOut))
+      .animate(_pulseCtr);
 
   // Star burst when switching to favorite
-  late final AnimationController _burstCtr =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 2820));
+  late final AnimationController _burstCtr = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2820));
   late final Animation<double> _burst =
-  CurvedAnimation(parent: _burstCtr, curve: Curves.easeOutCubic);
+      CurvedAnimation(parent: _burstCtr, curve: Curves.easeOutCubic);
 
   bool _showBurst = false;
   bool _prevFav = false;
-
 
   @override
   void initState() {
@@ -90,7 +91,8 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     widget.store.init();
     _burstCtr.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
-        setState(() => _showBurst = false); // make sure stars are gone after anim
+        setState(
+            () => _showBurst = false); // make sure stars are gone after anim
       }
     });
   }
@@ -160,8 +162,12 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   height: PlatformConfig.height(ctx) * 0.04,
                   child: OwlButton(
                     label: widget.addDenyText,
-                    onPressed: () { doAdd = false; Navigator.of(ctx).pop(); },
-                    textColor: red, borderColor: red,
+                    onPressed: () {
+                      doAdd = false;
+                      Navigator.of(ctx).pop();
+                    },
+                    textColor: red,
+                    borderColor: red,
                   ),
                 ),
               ),
@@ -171,8 +177,12 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   height: PlatformConfig.height(ctx) * 0.04,
                   child: OwlButton(
                     label: widget.addConfirmText,
-                    onPressed: () { doAdd = true; Navigator.of(ctx).pop(); },
-                    textColor: owlPurple, borderColor: owlPurple,
+                    onPressed: () {
+                      doAdd = true;
+                      Navigator.of(ctx).pop();
+                    },
+                    textColor: owlPurple,
+                    borderColor: owlPurple,
                   ),
                 ),
               ),
@@ -191,7 +201,8 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     bool doRemove = false;
     final label = _venueLabel(widget.venue);
     final title = widget.removeTitle ?? 'Unfavorite $label';
-    final text  = widget.removeText  ?? 'Are you sure you want to unfavorite $label?';
+    final text =
+        widget.removeText ?? 'Are you sure you want to unfavorite $label?';
 
     await showDialog(
       context: ctx,
@@ -208,8 +219,13 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   height: PlatformConfig.height(ctx) * 0.04,
                   child: OwlButton(
                     label: widget.undoText,
-                    onPressed: () { doRemove = false; Navigator.of(ctx).pop(); },
-                    textColor: owlPurple, borderColor: owlPurple, borderRadius: borderRadiusSmall,
+                    onPressed: () {
+                      doRemove = false;
+                      Navigator.of(ctx).pop();
+                    },
+                    textColor: owlPurple,
+                    borderColor: owlPurple,
+                    borderRadius: borderRadiusSmall,
                   ),
                 ),
               ),
@@ -219,8 +235,13 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
                   height: PlatformConfig.height(ctx) * 0.04,
                   child: OwlButton(
                     label: widget.confirmRemoveText,
-                    onPressed: () { doRemove = true; Navigator.of(ctx).pop(); },
-                    textColor: red, borderColor: red, borderRadius: borderRadiusSmall,
+                    onPressed: () {
+                      doRemove = true;
+                      Navigator.of(ctx).pop();
+                    },
+                    textColor: red,
+                    borderColor: red,
+                    borderRadius: borderRadiusSmall,
                   ),
                 ),
               ),
@@ -233,10 +254,10 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     return doRemove;
   }
 
-
   Future<void> _showTooManyDialog(BuildContext ctx, int limit) async {
     // read the premium plan limit for the upsell line
-    final premiumLimit = ref.read(planFavoriteLimitProvider(SubscriptionTypesUser.premium));
+    final premiumLimit =
+        ref.read(planFavoriteLimitProvider(SubscriptionTypesUser.premium));
 
     await showDialog(
       context: ctx,
@@ -244,27 +265,28 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
       builder: (_) => PopupDialogDefault(
         title: 'Too many favorites',
         children: [
-          Text('You’ve hit your limit of $limit favorites. Upgrade to Premium to get notifications and special offers from your $premiumLimit favorites venues.',
+          Text(
+              'You’ve hit your limit of $limit favorites. Upgrade to Premium to get notifications and special offers from your $premiumLimit favorites venues.',
               style: Styles.popupText),
-
           SizedBox(height: PlatformConfig.height(ctx) * 0.02),
           SizedBox(
             height: PlatformConfig.height(ctx) * 0.04,
             child: OwlButton(
               label: 'Upgrade To Premium',
-              onPressed: () => Navigator.of(ctx).pop(),//TODO
-              textColor: owlPurple, borderColor: owlPurple, borderRadius: borderRadiusSmall,
+              onPressed: () => Navigator.of(ctx).pop(), //TODO
+              textColor: owlPurple, borderColor: owlPurple,
+              borderRadius: borderRadiusSmall,
             ),
           ),
-
           SizedBox(height: PlatformConfig.height(ctx) * 0.02),
-
           SizedBox(
             height: PlatformConfig.height(ctx) * 0.04,
             child: OwlButton(
               label: 'OK',
               onPressed: () => Navigator.of(ctx).pop(),
-              textColor: red, borderColor: red, borderRadius: borderRadiusSmall,
+              textColor: red,
+              borderColor: red,
+              borderRadius: borderRadiusSmall,
             ),
           ),
         ],
@@ -355,12 +377,13 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
             ),
 
             // Star burst – only visible while the burst animation runs
-            if (_showBurst) _StarBurst(
-              t: _burst,
-              color: widget.fullColor,
-              baseIcon: widget.fullIcon,
-              baseSize: widget.size,
-            ),
+            if (_showBurst)
+              _StarBurst(
+                t: _burst,
+                color: widget.fullColor,
+                baseIcon: widget.fullIcon,
+                baseSize: widget.size,
+              ),
           ],
         ),
       ),

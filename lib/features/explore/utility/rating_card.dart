@@ -32,7 +32,7 @@ class RatingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final double rating = venue.rating ?? 0.0;
     final String countText =
-    showCount ? '(${_formatRatingCount(venue.ratingCount)})' : '';
+        showCount ? '(${_formatRatingCount(venue.ratingCount)})' : '';
 
     return SizedBox(
       width: width,
@@ -56,7 +56,6 @@ class RatingCard extends StatelessWidget {
                 style: Styles.boldText.copyWith(color: textColor),
               ),
             ),
-
 
             // stars + small rating count (bottom-right)
             Expanded(

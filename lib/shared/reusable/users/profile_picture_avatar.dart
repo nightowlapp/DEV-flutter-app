@@ -7,7 +7,8 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/utility/custom_network_image.dart';
 
-import 'package:nightowlcode/data/providers/other_providers.dart' show authUserProvider;
+import 'package:nightowlcode/data/providers/other_providers.dart'
+    show authUserProvider;
 import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../../features/profile/presentation/change_profile_picture.dart';
 
@@ -66,11 +67,12 @@ class ProfilePictureAvatar extends StatelessWidget {
         // 2) Border color from party status (unless overridden)
         final autoColor = ref.watch(partyStatusColorProvider);
         final effectiveBorderColor = borderColor ?? autoColor;
-        final hasBorder = borderWidth > 0 && effectiveBorderColor != transparent;
+        final hasBorder =
+            borderWidth > 0 && effectiveBorderColor != transparent;
 
         // 3) Choose the image url: explicit override > user photo
         final effectiveImageUrl =
-        (imageUrl?.trim().isNotEmpty == true) ? imageUrl : userPhotoUrl;
+            (imageUrl?.trim().isNotEmpty == true) ? imageUrl : userPhotoUrl;
 
         // 4) Build avatar core
         Widget avatar = _buildAvatar(
@@ -109,7 +111,8 @@ class ProfilePictureAvatar extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: backgroundColor ?? Colors.transparent,
-              border: Border.all(color: effectiveBorderColor, width: borderWidth),
+              border:
+                  Border.all(color: effectiveBorderColor, width: borderWidth),
             ),
             child: avatar,
           );
@@ -157,11 +160,10 @@ class ProfilePictureAvatar extends StatelessWidget {
           child: SizedBox(
             width: size,
             height: size,
-            child: CustomNetworkImage(
-              effectiveImageUrl!,               // supports http(s)/gs://
-              fit: BoxFit.cover,
-              fallBackEnabled: false
-            ),
+            child:
+                CustomNetworkImage(effectiveImageUrl!, // supports http(s)/gs://
+                    fit: BoxFit.cover,
+                    fallBackEnabled: false),
           ),
         ),
       );
@@ -180,7 +182,13 @@ class ProfilePictureAvatar extends StatelessWidget {
     final value = (initials ?? '').trim();
     final safe = value.isEmpty
         ? ''
-        : value.split(RegExp(r'\s+')).take(2).map((w) => w[0]).join().toUpperCase();
-    return Center(child: Text(safe, style: Styles.boldText, textAlign: TextAlign.center));
+        : value
+            .split(RegExp(r'\s+'))
+            .take(2)
+            .map((w) => w[0])
+            .join()
+            .toUpperCase();
+    return Center(
+        child: Text(safe, style: Styles.boldText, textAlign: TextAlign.center));
   }
 }

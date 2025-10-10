@@ -16,12 +16,12 @@ class LocationStatus {
 
   bool get ready =>
       servicesEnabled &&
-          (permission == LocationPermission.whileInUse ||
-              permission == LocationPermission.always);
+      (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always);
 
   bool get isDenied =>
       permission == LocationPermission.denied ||
-          permission == LocationPermission.unableToDetermine;
+      permission == LocationPermission.unableToDetermine;
 
   bool get isDeniedForever => permission == LocationPermission.deniedForever;
 

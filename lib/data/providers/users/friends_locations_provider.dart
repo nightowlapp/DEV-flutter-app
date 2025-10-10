@@ -8,7 +8,8 @@ import '../../../models/users/live_location.dart';
 
 final friendsIdsProvider = Provider<List<String>>((ref) => <String>[]);
 
-final friendsLocationsProvider = StreamProvider<Map<String, LiveLocation>>((ref) {
+final friendsLocationsProvider =
+    StreamProvider<Map<String, LiveLocation>>((ref) {
   final ids = ref.watch(friendsIdsProvider);
   final db = FirebaseFirestore.instance;
   if (ids.isEmpty) return const Stream.empty();
@@ -42,7 +43,8 @@ final friendsLocationsProvider = StreamProvider<Map<String, LiveLocation>>((ref)
       if (snap.docChanges.isEmpty) {
         latest
           ..removeWhere((k, _) => chunk.contains(k))
-          ..addEntries(snap.docs.map((d) => MapEntry(d.id, LiveLocation.fromDoc(d.id, d.data()))));
+          ..addEntries(snap.docs.map(
+              (d) => MapEntry(d.id, LiveLocation.fromDoc(d.id, d.data()))));
       }
       emit();
     });

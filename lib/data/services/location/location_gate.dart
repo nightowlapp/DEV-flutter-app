@@ -48,7 +48,7 @@ class _LocationGateState extends ConsumerState<LocationGate> {
     } else if (status.isDeniedForever) {
       title = 'Permission Required';
       body =
-      'Location permission is permanently denied. Please enable it in Settings.';
+          'Location permission is permanently denied. Please enable it in Settings.';
       actions = [
         _actionButton('Open App Settings', () async => ctrl.openAppSettings()),
       ];

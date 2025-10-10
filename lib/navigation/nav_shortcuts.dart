@@ -23,7 +23,8 @@ extension NavShortcuts on BuildContext {
     GoRouter.of(this).goNamed(screen.routeName);
   }
 
-  Future<T?> pushNamedPage<T extends Object?>(String routeName, {Object? extra}) {
+  Future<T?> pushNamedPage<T extends Object?>(String routeName,
+      {Object? extra}) {
     return GoRouter.of(this).pushNamed<T>(routeName, extra: extra);
   }
 
@@ -31,7 +32,8 @@ extension NavShortcuts on BuildContext {
     GoRouter.of(this).replaceNamed(routeName, extra: extra);
   }
 
-  Future<T?> pushVenue<T extends Object?>(Venue v, {VenueMediaHealth? media, LatLng? userLoc}) {
+  Future<T?> pushVenue<T extends Object?>(Venue v,
+      {VenueMediaHealth? media, LatLng? userLoc}) {
     return GoRouter.of(this).pushNamed<T>(
       'venue',
       pathParameters: {'id': v.id},
@@ -40,7 +42,8 @@ extension NavShortcuts on BuildContext {
   }
 
   /// Switch to Map tab, wait a tick so listeners attach, then command the map.
-  Future<void> goToMapAndFocusVenue(WidgetRef ref, Venue v, {double zoom = 16}) async {
+  Future<void> goToMapAndFocusVenue(WidgetRef ref, Venue v,
+      {double zoom = 16}) async {
     final scaffold = Scaffold.maybeOf(this);
     scaffold?.closeEndDrawer();
     scaffold?.closeDrawer();
@@ -51,8 +54,8 @@ extension NavShortcuts on BuildContext {
     await Future.delayed(const Duration(milliseconds: 1));
 
     ref.read(mapNavControllerProvider.notifier).flyToVenue(
-      v,
-      zoom: zoom,
-    );
+          v,
+          zoom: zoom,
+        );
   }
 }

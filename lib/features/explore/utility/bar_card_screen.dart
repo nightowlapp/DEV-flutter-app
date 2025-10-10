@@ -32,36 +32,48 @@ class BarCardScreen extends ConsumerWidget {
     final async = ref.watch(venueMediaBundleProvider(args.venueId));
 
     return Scaffold(
-      appBar: MainAppBar(showBack: true, titleText: "${args.venueName}'s Bar Card", actions: const []),
+      appBar: MainAppBar(
+          showBack: true,
+          titleText: "${args.venueName}'s Bar Card",
+          actions: const []),
       body: async.when(
         loading: () => const Center(child: LoadingIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: white))),
+        error: (e, _) => Center(
+            child: Text('Error: $e', style: const TextStyle(color: white))),
         data: (bundle) {
           final raw = bundle.barCardPdfUrl;
           if (raw == null || raw.isEmpty) {
-            return const Center(child: Text('No bar card available', style: TextStyle(color: red)));
+            return const Center(
+                child: Text('No bar card available',
+                    style: TextStyle(color: red)));
           }
           final url = StorageUrl.normalize(raw);
 
           return FutureBuilder<Uint8List>(
-            future: DefaultCacheManager().getSingleFile(url).then((f) => f.readAsBytes()),
+            future: DefaultCacheManager()
+                .getSingleFile(url)
+                .then((f) => f.readAsBytes()),
             builder: (ctx, snap) {
               if (snap.connectionState != ConnectionState.done) {
                 return const Center(child: LoadingScreen());
               }
               if (snap.hasError || !snap.hasData) {
-                return const Center(child: Text('Failed to load PDF', style: TextStyle(color: red)));
+                return const Center(
+                    child: Text('Failed to load PDF',
+                        style: TextStyle(color: red)));
               }
 
               try {
-                final controller = PdfControllerPinch(document: PdfDocument.openData(snap.data!));
+                final controller = PdfControllerPinch(
+                    document: PdfDocument.openData(snap.data!));
                 return PdfViewPinch(
                   controller: controller,
                   backgroundDecoration: const BoxDecoration(color: black),
                 );
               } on PlatformException catch (e) {
                 // Graceful fallback—show URL so the user can open externally
-                return _PdfErrorFallback(url: url, message: '${e.code}: ${e.message}');
+                return _PdfErrorFallback(
+                    url: url, message: '${e.code}: ${e.message}');
               }
             },
           );
@@ -80,12 +92,14 @@ class _PdfErrorFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('Couldn’t open PDF\n$message', textAlign: TextAlign.center, style: const TextStyle(color: red)),
+        Text('Couldn’t open PDF\n$message',
+            textAlign: TextAlign.center, style: const TextStyle(color: red)),
         const SizedBox(height: 12),
         TextButton(
           onPressed: () {
             Clipboard.setData(ClipboardData(text: url));
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF URL copied')));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('PDF URL copied')));
           },
           child: const Text('Copy PDF URL'),
         ),

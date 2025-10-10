@@ -14,11 +14,14 @@ List<Venue> filterVenues(List<Venue> input, SearchQuery q) {
 
 bool _matches(Venue v, SearchQuery q) {
   // Prepare searchable blob (normalized)
-  final title = (v.displayName.isNotEmpty ? Utility.formatString(v.displayName) : Utility.formatString(v.name));
-  final city  = v.city;
-  final desc  = v.description;
+  final title = (v.displayName.isNotEmpty
+      ? Utility.formatString(v.displayName)
+      : Utility.formatString(v.name));
+  final city = v.city;
+  final desc = v.description;
 
-  final haystack = _normalize('$title ${desc.isNotEmpty ? " $desc" : ""} ${city.isNotEmpty ? " $city" : ""}');
+  final haystack = _normalize(
+      '$title ${desc.isNotEmpty ? " $desc" : ""} ${city.isNotEmpty ? " $city" : ""}');
 
   // AND across tokens
   for (final term in q.terms) {
@@ -32,5 +35,3 @@ String _normalize(String s) {
   final stripped = SearchQuery.removeDiacritics(lower);
   return stripped;
 }
-
-

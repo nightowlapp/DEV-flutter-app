@@ -26,5 +26,4 @@ class JsonUtility {
     });
     return result;
   }
-
 }

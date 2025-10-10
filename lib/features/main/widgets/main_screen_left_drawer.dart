@@ -8,7 +8,6 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
 
-
 class MainScreenLeftDrawer extends StatelessWidget {
   const MainScreenLeftDrawer({super.key});
 
@@ -54,46 +53,49 @@ class MainScreenLeftDrawer extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  SizedBox(width: PlatformConfig.width(context) * 0.4, child:
-                    Text('Owlnight.com', style: Styles.linkText(context))
-                  ),],
+                  SizedBox(
+                      width: PlatformConfig.width(context) * 0.4,
+                      child: Text('Owlnight.com',
+                          style: Styles.linkText(context))),
+                ],
               ),
               const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
-              const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,),
+              // const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,),  //TODO Does this even make sense? Owls nearby?
 
-              const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlPurple),
-              const SizedBox(height: verticalSpacerSmall),
+              // const SizedBox(height: verticalSpacerSmall),
+              // const Divider(color: owlPurple),
+              // const SizedBox(height: verticalSpacerSmall),
 
-              // const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,), //TODO Owls nearby?
-              const ReferAFriendLeftDrawer(inviteCode: 'aszxe213', inviteLink: '',), //TODO functionallity
+              const ReferAFriendLeftDrawer(
+                inviteCode: 'aszxe213',
+                inviteLink: '',
+              ), //TODO functionallity
 
-              const SizedBox(height: verticalSpacerSmall),
-              const Divider(color: owlPurple),
-              const SizedBox(height: verticalSpacerSmall),
+              // const SizedBox(height: verticalSpacerSmall),
+              // const Divider(color: owlPurple),
+              // const SizedBox(height: verticalSpacerSmall),
 
-
-              const SafetyModeToggle(
-              //TODO brain storm hvad dette gør. Sender notifikation til venner? Forøger deres icon på map? Beder personen tjekke ind hvert 15/30 sekund - ellers slår den alarm? Ringe til Politiet?
-              //TODO Mpåske skifter hele layoutet til Ring til politi - alt er lukket ned udover "livsvigtige funktioner"?
-              //TODO Undersøg hvad nuværende tiltag har og folk bruger.
-              //TODO Safety mode? Nødopkald? Share location to friends with message "going home"
-              // isOn: false,
-              //   selectedDurationMinutes: 180,
-              //   trustedContactsCount: 3,
-              //   // onChanged: (v) {
-              //   // return null
-              //   //   TODO: wire to provider/state + start/stop location sharing
-              //   // },
-              //   onDurationSelected: (m) {
-              //     // TODO: update provider/state with duration m
-              //   },
-              //   onManageTrusted: () {
-              //     // TODO: navigate to /settings/safety or similar
-              //   },
-              ),
+              // const SafetyModeToggle(
+              // //TODO brain storm hvad dette gør. Sender notifikation til venner? Forøger deres icon på map? Beder personen tjekke ind hvert 15/30 sekund - ellers slår den alarm? Ringe til Politiet?
+              // //TODO Mpåske skifter hele layoutet til Ring til politi - alt er lukket ned udover "livsvigtige funktioner"?
+              // //TODO Undersøg hvad nuværende tiltag har og folk bruger.
+              // //TODO Safety mode? Nødopkald? Share location to friends with message "going home"
+              // // isOn: false,
+              // //   selectedDurationMinutes: 180,
+              // //   trustedContactsCount: 3,
+              // //   // onChanged: (v) {
+              // //   // return null
+              // //   //   TODO: wire to provider/state + start/stop location sharing
+              // //   // },
+              // //   onDurationSelected: (m) {
+              // //     // TODO: update provider/state with duration m
+              // //   },
+              // //   onManageTrusted: () {
+              // //     // TODO: navigate to /settings/safety or similar
+              // //   },
+              // ),
             ],
           ),
         ),
@@ -101,5 +103,3 @@ class MainScreenLeftDrawer extends StatelessWidget {
     );
   }
 }
-
-

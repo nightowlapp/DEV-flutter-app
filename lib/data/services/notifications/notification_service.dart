@@ -15,7 +15,6 @@ class NotificationService {
   final _fln = FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-
     await ensureNotifReady();
 
     // Ask permission (iOS, Android 13+)
@@ -23,7 +22,9 @@ class NotificationService {
 
     // iOS: show heads-up while foreground
     await _fcm.setForegroundNotificationPresentationOptions(
-      alert: true, badge: true, sound: true,
+      alert: true,
+      badge: true,
+      sound: true,
     );
 
     // Get token (for debugging and optional storage)
@@ -49,7 +50,9 @@ class NotificationService {
             .doc(token)
             .set({
           'token': token,
-          'platform': Platform.isIOS ? 'ios' : (Platform.isAndroid ? 'android' : 'other'),
+          'platform': Platform.isIOS
+              ? 'ios'
+              : (Platform.isAndroid ? 'android' : 'other'),
           'created_at': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
@@ -83,7 +86,7 @@ class NotificationService {
 
     // Re-subscribe on token refresh
     _fcm.onTokenRefresh.listen((_) async {
-      await _fcm.subscribeToTopic('all');   // keep if you like a global topic
+      await _fcm.subscribeToTopic('all'); // keep if you like a global topic
       await TokenSyncService().syncCurrentToken();
     });
   }
@@ -91,7 +94,8 @@ class NotificationService {
   Future<void> initLocalNotifications() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
-    await _fln.initialize(const InitializationSettings(android: android, iOS: ios));
+    await _fln
+        .initialize(const InitializationSettings(android: android, iOS: ios));
 
     if (Platform.isAndroid) {
       const channel = AndroidNotificationChannel(

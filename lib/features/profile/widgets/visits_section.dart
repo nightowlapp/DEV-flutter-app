@@ -10,7 +10,8 @@ import '../../../shared/constants/colors.dart';
 import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/utility/utility.dart';
 
-class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to fetch-
+class VisitsSection extends ConsumerWidget {
+  //TODO Cache so user doesnt have to fetch-
   const VisitsSection({
     super.key,
     this.maxHeight, // ← nullable: if null, fills as much as parent allows
@@ -39,7 +40,7 @@ class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to
     // Row height: at least 36 for touch, equals avatar diameter otherwise
     final rowH = math.max(avatarRadius * 2, 36.0);
     final contentH =
-    data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
+        data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
 
     // Header height (title + spacing below)
     const headerH = 32.0 + verticalSpacerSmall;
@@ -53,9 +54,8 @@ class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to
 
         // If maxHeight is null → fill as much as possible (use parentCap).
         // If maxHeight is set → clamp to min(parentCap, maxHeight).
-        final targetCap = maxHeight == null
-            ? parentCap
-            : math.min(parentCap, maxHeight!);
+        final targetCap =
+            maxHeight == null ? parentCap : math.min(parentCap, maxHeight!);
 
         final listHeight = hasBounded ? targetCap : (maxHeight ?? contentH);
 
@@ -135,7 +135,9 @@ class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  v.displayName.isNotEmpty ? v.displayName : v.name,
+                                  v.displayName.isNotEmpty
+                                      ? v.displayName
+                                      : v.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Styles.boldText
@@ -162,7 +164,8 @@ class VisitsSection extends ConsumerWidget { //TODO Cache so user doesnt have to
                             child: Text(
                               '${visits}x',
                               style: TextStyle(
-                                  color: badgeColor, fontWeight: FontWeight.w600),
+                                  color: badgeColor,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],

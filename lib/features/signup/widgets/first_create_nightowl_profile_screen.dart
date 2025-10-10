@@ -30,7 +30,8 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
           child: Container(
             decoration: const BoxDecoration(
               color: black,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(borderRadiusDefault)),
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(borderRadiusDefault)),
             ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -38,14 +39,22 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 40, height: 4, margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2)),
                   ),
                   Row(
                     children: [
-                      const Text('Terms of Service', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                      const Text('Terms of Service',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 18)),
                       const Spacer(),
-                      IconButton(icon: const Icon(Icons.close, color: white), onPressed: () => Navigator.of(ctx).pop()),
+                      IconButton(
+                          icon: const Icon(Icons.close, color: white),
+                          onPressed: () => Navigator.of(ctx).pop()),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -54,7 +63,8 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                     child: SingleChildScrollView(
                       child: Text(
                         TermsOfService.tosText,
-                        style: Styles.basicText.copyWith(fontSize: fontSizeMedium),
+                        style:
+                            Styles.basicText.copyWith(fontSize: fontSizeMedium),
                       ),
                     ),
                   ),
@@ -79,7 +89,9 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
       appBar: const MainAppBar(
         showBack: true,
         titleText: 'Birthdate',
-        actions: [CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))],
+        actions: [
+          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontal),
@@ -90,7 +102,8 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
             DatePicker(
               initialDate: draft.birthdate,
               legalAge: 18,
-              onChanged: (d) => ref.read(signUpDraftProvider.notifier).setBirthdate(d),
+              onChanged: (d) =>
+                  ref.read(signUpDraftProvider.notifier).setBirthdate(d),
             ),
             if (draft.birthdate != null && !ageOk) ...[
               const SizedBox(height: 8),
@@ -107,14 +120,22 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: () => ref.read(signUpDraftProvider.notifier).setAcceptedTos(!draft.acceptedTos),
-                    child: Icon(draft.acceptedTos ? checkBoxCheckedIcon : checkBoxUncheckedIcon, color: owlPurple),
+                    onTap: () => ref
+                        .read(signUpDraftProvider.notifier)
+                        .setAcceptedTos(!draft.acceptedTos),
+                    child: Icon(
+                        draft.acceptedTos
+                            ? checkBoxCheckedIcon
+                            : checkBoxUncheckedIcon,
+                        color: owlPurple),
                   ),
                   const SizedBox(width: horizontalSpacerSmall),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Accept ', style: Styles.boldText.copyWith(fontSize: fontSizeMedium)),
+                      Text('Accept ',
+                          style: Styles.boldText
+                              .copyWith(fontSize: fontSizeMedium)),
                       GestureDetector(
                         onTap: () => _showTOS(context),
                         child: Text(

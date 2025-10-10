@@ -27,7 +27,8 @@ class _CacheEntry {
 
   static _CacheEntry? fromJson(Map<String, dynamic>? m) {
     if (m == null) return null;
-    return _CacheEntry(m['e'] == true, (m['t'] as num?)?.toInt() ?? 0, m['u'] as String?);
+    return _CacheEntry(
+        m['e'] == true, (m['t'] as num?)?.toInt() ?? 0, m['u'] as String?);
   }
 }
 
@@ -45,7 +46,6 @@ class MediaExistence {
         _positiveTtl = positiveTtl ?? const Duration(hours: 24),
         _negativeTtl = negativeTtl ?? const Duration(minutes: 10),
         _maxEntries = maxEntries ?? 512;
-
 
   final SharedPreferences _prefs;
   final FirebaseStorage _storage;
@@ -65,7 +65,8 @@ class MediaExistence {
     try {
       final Map<String, dynamic> m = json.decode(raw);
       for (final e in m.entries) {
-        final ce = _CacheEntry.fromJson((e.value as Map).cast<String, dynamic>());
+        final ce =
+            _CacheEntry.fromJson((e.value as Map).cast<String, dynamic>());
         if (ce != null) _mem[e.key] = ce;
       }
     } catch (_) {}
@@ -74,7 +75,8 @@ class MediaExistence {
   Future<void> _flushPrefs() async {
     if (_mem.length > _maxEntries) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      final sorted = _mem.entries.sortedBy<num>((e) => (now - e.value.tsMillis));
+      final sorted =
+          _mem.entries.sortedBy<num>((e) => (now - e.value.tsMillis));
       final toRemove = _mem.length - _maxEntries;
       for (var i = 0; i < toRemove; i++) {
         _mem.remove(sorted[i].key);
@@ -85,7 +87,9 @@ class MediaExistence {
   }
 
   bool _looksLikeUrl(String s) =>
-      s.startsWith('http://') || s.startsWith('https://') || s.startsWith('gs://');
+      s.startsWith('http://') ||
+      s.startsWith('https://') ||
+      s.startsWith('gs://');
 
   String _cacheKeyOf(String refOrUrl) => refOrUrl.trim();
 
@@ -99,7 +103,9 @@ class MediaExistence {
     _mem.remove(_cacheKeyOf(refOrUrl));
     await _flushPrefs();
   }
-  Future<MediaExistenceResult> check(String refOrUrl, {bool force = false}) async {
+
+  Future<MediaExistenceResult> check(String refOrUrl,
+      {bool force = false}) async {
     await _loadPrefs();
     final raw = refOrUrl.trim();
     if (raw.isEmpty) return const MediaExistenceResult(exists: false);
@@ -108,7 +114,8 @@ class MediaExistence {
     if (!force && cached != null) {
       final ttl = cached.exists ? _positiveTtl : _negativeTtl;
       if (_isFresh(cached, ttl)) {
-        return MediaExistenceResult(exists: cached.exists, downloadUrl: cached.url);
+        return MediaExistenceResult(
+            exists: cached.exists, downloadUrl: cached.url);
       }
     }
 
@@ -116,19 +123,19 @@ class MediaExistence {
     final directUrl = StorageUrl.normalize(raw);
 
     // Trust direct URLs to avoid startup stutter. Let the image widget handle 404s with fallback.
-    final entry = _CacheEntry(true, DateTime.now().millisecondsSinceEpoch, directUrl);
+    final entry =
+        _CacheEntry(true, DateTime.now().millisecondsSinceEpoch, directUrl);
     _mem[raw] = entry;
     await _flushPrefs();
     return MediaExistenceResult(exists: true, downloadUrl: directUrl);
   }
 
-
   /// Batch with limited concurrency.
   Future<Map<String, MediaExistenceResult>> checkAll(
-      Iterable<String> refsOrUrls, {
-        int concurrency = 6,
-        bool force = false,
-      }) async {
+    Iterable<String> refsOrUrls, {
+    int concurrency = 6,
+    bool force = false,
+  }) async {
     final out = <String, MediaExistenceResult>{};
     final it = refsOrUrls.iterator;
 
@@ -208,13 +215,15 @@ class VenueMediaService {
     );
   }
 }
+
 extension VenueMediaServiceProgressive on VenueMediaService {
   Stream<MapEntry<String, VenueMediaHealth>> probeVenuesProgressive(
-      Iterable<VenueLike> venues, {
-        int concurrency = 12,
-        bool force = false,
-      }) {
-    final controller = StreamController<MapEntry<String, VenueMediaHealth>>.broadcast();
+    Iterable<VenueLike> venues, {
+    int concurrency = 12,
+    bool force = false,
+  }) {
+    final controller =
+        StreamController<MapEntry<String, VenueMediaHealth>>.broadcast();
     final queue = Queue<VenueLike>()..addAll(venues);
 
     Future<void> worker() async {

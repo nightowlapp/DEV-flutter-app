@@ -6,7 +6,7 @@ import '../../services/location/location_providers.dart';
 import '../other_providers.dart';
 
 final geofencingOrchestratorProvider =
-Provider.autoDispose<GeofencingOrchestrator?>((ref) {
+    Provider.autoDispose<GeofencingOrchestrator?>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   final uid = auth.currentUser?.uid;
   if (uid == null) return null;

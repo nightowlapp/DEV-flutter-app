@@ -24,7 +24,9 @@ final visibleVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
 
   // 3) apply filters
   final userLoc = ranked.userLoc;
-  xs = xs.where((v) => venuePassesFilters(v, filters, userLoc: userLoc)).toList();
+  xs = xs
+      .where((v) => venuePassesFilters(v, filters, userLoc: userLoc))
+      .toList();
 
   return xs;
 }, name: 'visibleVenuesProvider');

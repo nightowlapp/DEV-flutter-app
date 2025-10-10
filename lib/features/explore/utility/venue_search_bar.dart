@@ -45,7 +45,8 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
   @override
   Widget build(BuildContext context) {
     final nearbyCount = ref.watch(nearbyVenueCountProvider);
-    final matchCount  = ref.watch(searchMatchCountProvider); // ← null when not searching
+    final matchCount =
+        ref.watch(searchMatchCountProvider); // ← null when not searching
     final hasText = widget.controller.text.trim().isNotEmpty;
 
     return Padding(
@@ -69,7 +70,8 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
             borderSide: const BorderSide(color: grey, width: 0.7),
           ),
           prefixIcon: Icon(exploreIcon, color: white),
-          suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+          suffixIconConstraints:
+              const BoxConstraints(minWidth: 0, minHeight: 0),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -79,29 +81,31 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 switchOutCurve: Curves.easeIn,
                 child: hasText
                     ? Padding(
-                  key: const ValueKey('matches'),
-                  padding: const EdgeInsets.only(right: 0),
-                  child: _CountText(
-                    count: matchCount ?? 0,
-                    label: ' matches',
-                    semanticsLabelWhenUnknown: 'Search matches',
-                  ),
-                )
+                        key: const ValueKey('matches'),
+                        padding: const EdgeInsets.only(right: 0),
+                        child: _CountText(
+                          count: matchCount ?? 0,
+                          label: ' matches',
+                          semanticsLabelWhenUnknown: 'Search matches',
+                        ),
+                      )
                     : Padding(
-                  key: const ValueKey('nearby'),
-                  padding: const EdgeInsets.only(right: 0),
-                  child: _CountText(
-                    count: nearbyCount,
-                    label: ' nearby',
-                    semanticsLabelWhenUnknown: 'Nearby venues',
-                  ),
-                ),
+                        key: const ValueKey('nearby'),
+                        padding: const EdgeInsets.only(right: 0),
+                        child: _CountText(
+                          count: nearbyCount,
+                          label: ' nearby',
+                          semanticsLabelWhenUnknown: 'Nearby venues',
+                        ),
+                      ),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 0),
                 constraints: const BoxConstraints(),
-                icon: Icon(tuneIcon, color: white), //TODO Turn orange if not default settings. SAVE settings.
+                icon: Icon(tuneIcon,
+                    color:
+                        white), //TODO Turn orange if not default settings. SAVE settings.
                 onPressed: widget.onTapTune,
                 tooltip: 'Filters',
               ),

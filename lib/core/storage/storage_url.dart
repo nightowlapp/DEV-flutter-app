@@ -3,7 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 
 class StorageUrl {
   static String get _bucket {
-    final b = Firebase.app().options.storageBucket; // comes from firebase_options.dart
+    final b = Firebase.app()
+        .options
+        .storageBucket; // comes from firebase_options.dart
     if (b == null || b.isEmpty) {
       throw StateError('No storageBucket configured in Firebase options.');
     }

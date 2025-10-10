@@ -24,26 +24,25 @@ import '../repositories/venues/tag_repository.dart';
 
 //TODO Only keep "OTHER" providers in here.
 
-
 // --- Low-level singletons ---
-final firebaseAuthProvider = Provider<fb.FirebaseAuth>((ref) => fb.FirebaseAuth.instance);
-final firestoreProvider   = Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
+final firebaseAuthProvider =
+    Provider<fb.FirebaseAuth>((ref) => fb.FirebaseAuth.instance);
+final firestoreProvider =
+    Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
 
 // Current Firebase user (null when signed out)
 final authStateProvider = StreamProvider<fb.User?>(
-      (ref) => ref.watch(firebaseAuthProvider).authStateChanges(),
+  (ref) => ref.watch(firebaseAuthProvider).authStateChanges(),
 );
 
 // --- Repos ---
 final userRepositoryProvider = Provider<UserRepository>(
-      (ref) => UserRepository(ref.watch(firestoreProvider)),
+  (ref) => UserRepository(ref.watch(firestoreProvider)),
 );
-
 
 final profilePictureServiceProvider = Provider<ProfilePictureService>((ref) {
   return ProfilePictureService(ref.read(firebaseStorageProvider));
 });
-
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final cfg = AppConfig.current;
@@ -51,12 +50,13 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     auth: ref.watch(firebaseAuthProvider),
     users: ref.watch(userRepositoryProvider),
     googleServerClientId: cfg.googleServerClientId,
-    googleIosClientId: cfg.googleIosClientId.isEmpty ? null : cfg.googleIosClientId,
+    googleIosClientId:
+        cfg.googleIosClientId.isEmpty ? null : cfg.googleIosClientId,
   );
 });
 
 final authUserProvider = StreamProvider<model.User?>(
-      (ref) => ref.watch(authRepositoryProvider).authUser$(),
+  (ref) => ref.watch(authRepositoryProvider).authUser$(),
 );
 
 final userFinalizeServiceProvider = Provider<UserFinalizeService>((ref) {
@@ -65,15 +65,16 @@ final userFinalizeServiceProvider = Provider<UserFinalizeService>((ref) {
   return UserFinalizeService(users, auth);
 });
 
-final firebaseStorageProvider = Provider<FirebaseStorage>((ref) => FirebaseStorage.instance);
+final firebaseStorageProvider =
+    Provider<FirebaseStorage>((ref) => FirebaseStorage.instance);
 final storageRepositoryProvider = Provider<StorageRepository>(
-      (ref) => StorageRepository(ref.watch(firebaseStorageProvider)),
+  (ref) => StorageRepository(ref.watch(firebaseStorageProvider)),
 );
 
 // --- Tags (recommended: live streams, no Hive) ---
 // DI for repo
 final tagRepositoryProvider = Provider<TagRepository>(
-      (ref) => TagRepository(db: ref.watch(firestoreProvider)),
+  (ref) => TagRepository(db: ref.watch(firestoreProvider)),
 );
 
 // Fixed priority: first 3 per your requirement, then sensible order.
@@ -107,13 +108,13 @@ int _typeRank(TagType t) {
 
 /// Live tags for a venue (reactive to website edits)
 final venueTagsStreamProvider =
-StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
+    StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
   return ref.watch(tagRepositoryProvider).watchByIds(tagIds);
 });
 
 /// Live + sorted by type priority, then A–Z //TODO want to fetch and store all tags (update storage if changes).
 final venueSortedTagsProvider =
-StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
+    StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
   return ref.watch(venueTagsStreamProvider(tagIds).stream).map((tags) {
     final list = List<Tag>.from(tags);
     list.sort((a, b) {
@@ -125,7 +126,6 @@ StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
   });
 });
 
-
 // --- Venues ---
 final venueRepositoryProvider = Provider<VenueRepository>((ref) {
   final db = ref.watch(firestoreProvider);
@@ -134,7 +134,7 @@ final venueRepositoryProvider = Provider<VenueRepository>((ref) {
 
 /// One-shot (if you need it)
 final allVenuesFutureProvider = FutureProvider<List<Venue>>(
-      (ref) => ref.watch(venueRepositoryProvider).getAll(),
+  (ref) => ref.watch(venueRepositoryProvider).getAll(),
   name: 'allVenuesFutureProvider',
 );
 
@@ -143,14 +143,14 @@ final allVenuesFutureProvider = FutureProvider<List<Venue>>(
 final allVenuesStreamProvider = StreamProvider<List<Venue>>((ref) {
   final db = ref.watch(firestoreProvider);
   final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
-    fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap), // ✅
-    toFirestore: (v, _) => VenueFirestore.toMap(v),                // ✅
-  );
+        fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap), // ✅
+        toFirestore: (v, _) => VenueFirestore.toMap(v), // ✅
+      );
   return col.snapshots().map((q) => q.docs.map((d) => d.data()).toList());
 }, name: 'allVenuesStreamProvider');
 
-final rankedVenuesProvider =
-StateNotifierProvider.autoDispose<RankedVenuesNotifier, AsyncValue<RankedVenuesState>>((ref) {
+final rankedVenuesProvider = StateNotifierProvider.autoDispose<
+    RankedVenuesNotifier, AsyncValue<RankedVenuesState>>((ref) {
   return RankedVenuesNotifier(ref);
 });
 
@@ -158,7 +158,7 @@ StateNotifierProvider.autoDispose<RankedVenuesNotifier, AsyncValue<RankedVenuesS
 /// - watches rankedVenuesProvider (source of truth)
 /// - watches searchQueryProvider (user input)
 final exploreFilteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
-  final base = ref.watch(venuesListProvider);      // <-- from local SSO
+  final base = ref.watch(venuesListProvider); // <-- from local SSO
   final q = ref.watch(searchQueryProvider);
   return filterVenues(base, q);
 });
@@ -174,13 +174,15 @@ final venuesListProvider = Provider<List<Venue>>((ref) {
   return async.maybeWhen(data: (l) => l, orElse: () => const <Venue>[]);
 });
 
-
 // Grab a single venue by id (updates reactively when SSO changes)
 final venueByIdProvider = Provider.family<Venue?, String>((ref, id) {
   final all = ref.watch(venuesListProvider);
-  try { return all.firstWhere((v) => v.id == id); } catch (_) { return null; }
+  try {
+    return all.firstWhere((v) => v.id == id);
+  } catch (_) {
+    return null;
+  }
 });
-
 
 final visibleVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
   // Later you can intersect with viewport. For now: use filtered list.

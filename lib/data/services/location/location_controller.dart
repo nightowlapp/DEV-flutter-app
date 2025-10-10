@@ -50,7 +50,8 @@ class LocationController extends StateNotifier<LocationStatus> {
   }
 
   Future<void> openAppPermissions() async {
-    await AppPermissionNavigator.openAppLocationPermission(); // app -> permissions
+    await AppPermissionNavigator
+        .openAppLocationPermission(); // app -> permissions
     await refresh();
   }
 
@@ -103,8 +104,8 @@ class LocationController extends StateNotifier<LocationStatus> {
 }
 
 final locationControllerProvider =
-StateNotifierProvider<LocationController, LocationStatus>(
-      (ref) {
+    StateNotifierProvider<LocationController, LocationStatus>(
+  (ref) {
     final c = LocationController();
     ref.onDispose(c.dispose);
     return c;
@@ -116,7 +117,6 @@ final currentLatLngProvider = FutureProvider<LatLng?>((ref) async {
   if (!status.ready) return null;
   return ref.read(locationControllerProvider.notifier).currentLatLngOrNull();
 });
-
 
 class AppPermissionNavigator {
   static const _ch = MethodChannel('nightowl/permissions');

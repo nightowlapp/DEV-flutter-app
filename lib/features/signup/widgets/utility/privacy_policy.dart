@@ -1,4 +1,3 @@
-
 class PrivacyPolicy {
   static const String privacyText = '''
 Privacy Policy — NightOwl (GDPR)

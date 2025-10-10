@@ -6,8 +6,8 @@ class LiveLocation {
   final double lat;
   final double lng;
   final double? accuracy; // meters
-  final double? heading;  // deg
-  final double? speed;    // m/s
+  final double? heading; // deg
+  final double? speed; // m/s
   final DateTime timestamp; // from Firestore 'timestamp'
 
   LiveLocation({
@@ -22,13 +22,13 @@ class LiveLocation {
 
   /// Firestore payload (snake_case + 'timestamp' as Firestore Timestamp)
   Map<String, dynamic> toJson() => {
-    'lat': lat,
-    'lng': lng,
-    'accuracy': accuracy,
-    'heading': heading,
-    'speed': speed,
-    'timestamp': FieldValue.serverTimestamp(), // ✅ Timestamp
-  };
+        'lat': lat,
+        'lng': lng,
+        'accuracy': accuracy,
+        'heading': heading,
+        'speed': speed,
+        'timestamp': FieldValue.serverTimestamp(), // ✅ Timestamp
+      };
 
   /// Parse from Firestore
   static LiveLocation fromDoc(String uid, Map<String, dynamic> m) {

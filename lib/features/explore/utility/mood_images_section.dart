@@ -15,20 +15,20 @@ class MoodImagesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext c, WidgetRef ref) =>
       ref.watch(venueMediaBundleProvider(venueId)).when(
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
-        data: (b) {
-          final mood = b.moodImageUrls.map(StorageUrl.normalize).toList();
-          return mood.isEmpty
-              ? const SizedBox.shrink()
-              : _HStrip(
-            urls: mood,
-            height: PlatformConfig.height(c) * 0.2,
-            itemExtent: PlatformConfig.width(c) * 0.3,
-            radius: borderRadiusDefault,
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (b) {
+              final mood = b.moodImageUrls.map(StorageUrl.normalize).toList();
+              return mood.isEmpty
+                  ? const SizedBox.shrink()
+                  : _HStrip(
+                      urls: mood,
+                      height: PlatformConfig.height(c) * 0.2,
+                      itemExtent: PlatformConfig.width(c) * 0.3,
+                      radius: borderRadiusDefault,
+                    );
+            },
           );
-        },
-      );
 }
 
 class _HStrip extends StatelessWidget {
@@ -59,29 +59,29 @@ class _HStrip extends StatelessWidget {
   Widget build(BuildContext c) => urls.isEmpty
       ? const SizedBox.shrink()
       : SizedBox(
-    height: height,
-    child: ListView.separated(
-      padding: padding,
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      itemCount: urls.length,
-      separatorBuilder: (_, __) => SizedBox(width: spacing),
-      itemBuilder: (_, i) => ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: InkWell(
-          onTap: () => _open(c, i),
-          child: Hero(
-            tag: urls[i],
-            child: SizedBox(
-              width: itemExtent,
-              height: height,
-              child: CustomNetworkImage(urls[i], fit: fit),
+          height: height,
+          child: ListView.separated(
+            padding: padding,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: urls.length,
+            separatorBuilder: (_, __) => SizedBox(width: spacing),
+            itemBuilder: (_, i) => ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: InkWell(
+                onTap: () => _open(c, i),
+                child: Hero(
+                  tag: urls[i],
+                  child: SizedBox(
+                    width: itemExtent,
+                    height: height,
+                    child: CustomNetworkImage(urls[i], fit: fit),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    ),
-  );
+        );
 }
 
 class _Gallery extends StatefulWidget {
@@ -119,25 +119,31 @@ class _GalleryState extends State<_Gallery> {
                   tag: widget.urls[i],
                   child: InteractiveViewer(
                     maxScale: 4,
-                    child: CustomNetworkImage(widget.urls[i], fit: BoxFit.contain),
+                    child:
+                        CustomNetworkImage(widget.urls[i], fit: BoxFit.contain),
                   ),
                 ),
               ),
             ),
             Positioned(
-              top: 8, left: 8,
+              top: 8,
+              left: 8,
               child: IconButton(
                 icon: const Icon(Icons.close, color: white),
                 onPressed: () => Navigator.of(c).pop(),
               ),
             ),
             Positioned(
-              bottom: 12, left: 0, right: 0,
+              bottom: 12,
+              left: 0,
+              right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black54, borderRadius: BorderRadius.circular(20),
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '${_idx + 1}/${widget.urls.length}',

@@ -20,18 +20,19 @@ Widget VenueLogo({
   VenueLogoShape shape = VenueLogoShape.circle,
   double borderWidth = 1.5,
   Color borderColor = transparent, // used when autoBorderByOpen = false
-  BorderRadius borderRadius = const BorderRadius.all(Radius.circular(borderRadiusMedium)),
+  BorderRadius borderRadius =
+      const BorderRadius.all(Radius.circular(borderRadiusMedium)),
   Color? backgroundColor, // <- allows a subtle bg
   EdgeInsetsGeometry padding = EdgeInsets.zero,
 
   // Fallback options
   bool showInitialFallback = true, // controls whether *any* fallback is shown
-  bool showTypeIfNoLogo = false,   // when true, use venue.type.icon instead of initials
+  bool showTypeIfNoLogo =
+      false, // when true, use venue.type.icon instead of initials
   String? fallbackText,
   Color fallbackBgColor = const Color(0xFF222222),
   Color fallbackTextColor = white,
   FontWeight fallbackFontWeight = FontWeight.w700,
-
   bool hideIfNoImage = false,
   bool allowCoverOrMoodFallback = true,
 
@@ -53,7 +54,8 @@ Widget VenueLogo({
       : borderColor;
 
   Widget _fallbackBadge() {
-    final useTypeIcon = showTypeIfNoLogo; // toggle: show icon instead of initials
+    final useTypeIcon =
+        showTypeIfNoLogo; // toggle: show icon instead of initials
     final label = (fallbackText ?? _initialOf(venue)).toUpperCase();
 
     final textStyle = TextStyle(
@@ -66,19 +68,20 @@ Widget VenueLogo({
 
     final decoration = shape == VenueLogoShape.circle
         ? BoxDecoration(
-      shape: BoxShape.circle,
-      color: backgroundColor ?? fallbackBgColor,
-      border: Border.all(color: _effectiveBorder, width: borderWidth),
-    )
+            shape: BoxShape.circle,
+            color: backgroundColor ?? fallbackBgColor,
+            border: Border.all(color: _effectiveBorder, width: borderWidth),
+          )
         : BoxDecoration(
-      color: backgroundColor ?? fallbackBgColor,
-      borderRadius: borderRadius,
-      border: Border.all(color: _effectiveBorder, width: borderWidth),
-    );
+            color: backgroundColor ?? fallbackBgColor,
+            borderRadius: borderRadius,
+            border: Border.all(color: _effectiveBorder, width: borderWidth),
+          );
 
     final child = useTypeIcon
         ? Icon(venue.type.icon, color: fallbackTextColor, size: size * 0.56)
-        : FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: textStyle));
+        : FittedBox(
+            fit: BoxFit.scaleDown, child: Text(label, style: textStyle));
 
     return Container(
       width: size,
@@ -97,7 +100,8 @@ Widget VenueLogo({
     allowCoverOrMoodFallback: allowCoverOrMoodFallback,
   );
 
-  final hasRemoteImage = url != null && (url.startsWith('http://') || url.startsWith('https://'));
+  final hasRemoteImage =
+      url != null && (url.startsWith('http://') || url.startsWith('https://'));
   final ImageProvider? provider = hasRemoteImage ? NetworkImage(url!) : null;
 
   if (!hasRemoteImage && hideIfNoImage) {
@@ -117,7 +121,8 @@ Widget VenueLogo({
       borderRadius: borderRadius,
       backgroundColor: backgroundColor ?? Colors.black12,
       padding: padding,
-      fallback: showInitialFallback ? _fallbackBadge() : const SizedBox.shrink(),
+      fallback:
+          showInitialFallback ? _fallbackBadge() : const SizedBox.shrink(),
     );
   }
 
@@ -141,7 +146,8 @@ Widget VenueLogo({
 }
 
 String _initialOf(Venue venue) {
-  final s = (venue.displayName.isNotEmpty ? venue.displayName : venue.name).trim();
+  final s =
+      (venue.displayName.isNotEmpty ? venue.displayName : venue.name).trim();
   if (s.isEmpty) return '?';
   return String.fromCharCode(s.runes.first);
 }
@@ -227,7 +233,7 @@ class _LogoOnceLoadedState extends State<_LogoOnceLoaded> {
     final config = createLocalImageConfiguration(context);
     _stream = widget.provider.resolve(config);
     _listener = ImageStreamListener(
-          (ImageInfo _, bool __) {
+      (ImageInfo _, bool __) {
         if (mounted) setState(() => _ok = true);
       },
       onError: (_, __) {
@@ -255,15 +261,17 @@ class _LogoOnceLoadedState extends State<_LogoOnceLoaded> {
 
     final decoration = widget.shape == VenueLogoShape.circle
         ? BoxDecoration(
-      shape: BoxShape.circle,
-      color: widget.backgroundColor ?? Colors.transparent,
-      border: Border.all(color: widget.borderColor, width: widget.borderWidth),
-    )
+            shape: BoxShape.circle,
+            color: widget.backgroundColor ?? Colors.transparent,
+            border: Border.all(
+                color: widget.borderColor, width: widget.borderWidth),
+          )
         : BoxDecoration(
-      color: widget.backgroundColor ?? Colors.transparent,
-      borderRadius: widget.borderRadius,
-      border: Border.all(color: widget.borderColor, width: widget.borderWidth),
-    );
+            color: widget.backgroundColor ?? Colors.transparent,
+            borderRadius: widget.borderRadius,
+            border: Border.all(
+                color: widget.borderColor, width: widget.borderWidth),
+          );
 
     final image = Image(image: widget.provider, fit: BoxFit.cover);
 

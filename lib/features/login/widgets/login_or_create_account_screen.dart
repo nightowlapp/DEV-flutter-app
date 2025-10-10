@@ -11,6 +11,7 @@ import 'package:nightowlcode/shared/reusable/users/language_switcher.dart';
 
 import '../../../core/storage/app_storage.dart';
 import '../../main/widgets/main_app_bar.dart';
+
 enum StartDecision { loading, showLogin, goExplore }
 
 // ✅ sync prefs read
@@ -25,7 +26,7 @@ final startDecisionProvider = Provider<StartDecision>((ref) {
   final stay = ref.watch(stayLoggedInProvider); // bool
 
   if (auth.isLoading) return StartDecision.loading;
-  if (auth.hasError)  return StartDecision.showLogin;
+  if (auth.hasError) return StartDecision.showLogin;
 
   final user = auth.value;
   if (user != null && stay) return StartDecision.goExplore;
@@ -45,7 +46,8 @@ class LoginOrCreateAccountScreen extends ConsumerWidget {
 
     final decision = ref.watch(startDecisionProvider);
 
-    if (decision == StartDecision.loading || decision == StartDecision.goExplore) {
+    if (decision == StartDecision.loading ||
+        decision == StartDecision.goExplore) {
       return const _LoadingScaffold();
     }
     return const _LoginBody();
@@ -101,7 +103,8 @@ class _LoginBody extends StatelessWidget {
                         Image.asset(
                           'assets/nightowl/logo.png',
                           height: PlatformConfig.height(context) * 0.3,
-                          errorBuilder: (context, _, __) => const SizedBox.shrink(),
+                          errorBuilder: (context, _, __) =>
+                              const SizedBox.shrink(),
                         ),
                         Styles.logoCrazy('Claim the Night'),
                       ],
@@ -118,7 +121,8 @@ class _LoginBody extends StatelessWidget {
                       OwlButton(
                         label: "Create Account",
                         backgroundColor: owlPurple,
-                        onPressed: () => context.pushNamedPage('firstCreateNightowlProfile'),
+                        onPressed: () =>
+                            context.pushNamedPage('firstCreateNightowlProfile'),
                       ),
                       SizedBox(height: PlatformConfig.height(context) * 0.01),
                       const Divider(color: grey),

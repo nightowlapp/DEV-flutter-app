@@ -10,7 +10,8 @@ LatLng _readLatLng(dynamic v) {
     final m = (v as Map).cast<String, dynamic>();
     final lat = (m['lat'] ?? m['latitude']) as num?;
     final lng = (m['lng'] ?? m['longitude']) as num?;
-    if (lat != null && lng != null) return LatLng(lat.toDouble(), lng.toDouble());
+    if (lat != null && lng != null)
+      return LatLng(lat.toDouble(), lng.toDouble());
   }
   throw StateError('Invalid LatLng payload: $v');
 }
@@ -50,8 +51,10 @@ class VenueFirestore {
       'mood_image_urls': v.moodImageUrls,
 
       // timestamps
-      'created_at': v.createdAt == null ? null : Timestamp.fromDate(v.createdAt!),
-      'updated_at': v.updatedAt == null ? null : Timestamp.fromDate(v.updatedAt!),
+      'created_at':
+          v.createdAt == null ? null : Timestamp.fromDate(v.createdAt!),
+      'updated_at':
+          v.updatedAt == null ? null : Timestamp.fromDate(v.updatedAt!),
 
       // misc
       'default_entry_price': v.defaultEntryPrice,
@@ -102,22 +105,26 @@ class VenueFirestore {
       ),
       entry: entry,
       geohash: (data['geohash'] as String?) ?? '',
-      defaultAgeRestriction: (data['default_age_restriction'] as num?)?.toInt() ?? 18,
+      defaultAgeRestriction:
+          (data['default_age_restriction'] as num?)?.toInt() ?? 18,
       capacity: (data['capacity'] as num?)?.toInt() ?? 100,
       coverImageUrl: data['cover_image_url'] as String?,
-      moodImageUrls: (data['mood_image_urls'] as List<dynamic>? ?? const []).cast<String>(),
+      moodImageUrls: (data['mood_image_urls'] as List<dynamic>? ?? const [])
+          .cast<String>(),
       timeZoneId: (data['time_zone_id'] as String?),
       createdAt: _ts(data['created_at']),
       updatedAt: _ts(data['updated_at']),
-      defaultEntryPrice: (data['default_entry_price'] as num?)?.toDouble() ?? 0.0,
+      defaultEntryPrice:
+          (data['default_entry_price'] as num?)?.toDouble() ?? 0.0,
       links: (data['links'] as Map<String, dynamic>?)
-          ?.map((k, v) => MapEntry(k, v as String)) ??
+              ?.map((k, v) => MapEntry(k, v as String)) ??
           const {},
       email: data['email'] as String?,
       phone: data['phone'] as String?,
-      subscriptionType: subscriptionTypeFromString(data['subscription_type'] as String?),
-      defaultDressCode:
-      dressCodeTypeFromString((data['default_dress_code'] as String?) ?? 'none'),
+      subscriptionType:
+          subscriptionTypeFromString(data['subscription_type'] as String?),
+      defaultDressCode: dressCodeTypeFromString(
+          (data['default_dress_code'] as String?) ?? 'none'),
       isVerified: data['is_verified'] as bool? ?? false,
       primaryColorHex: data['primary_color_hex'] as String?,
       secondaryColorHex: data['secondary_color_hex'] as String?,
@@ -128,24 +135,27 @@ class VenueFirestore {
 
   // --- Exact signatures that CollectionReference.withConverter expects -----
   static Venue fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> snap,
-      SnapshotOptions? _,
-      ) => fromSnapshot(snap);
+    DocumentSnapshot<Map<String, dynamic>> snap,
+    SnapshotOptions? _,
+  ) =>
+      fromSnapshot(snap);
 
   static Map<String, Object?> toFirestore(
-      Venue v,
-      SetOptions? _,
-      ) => toMap(v);
+    Venue v,
+    SetOptions? _,
+  ) =>
+      toMap(v);
 }
 
 /// Centralized typed collection builder.
 class VenueCollections {
-  VenueCollections({FirebaseFirestore? db}) : db = db ?? FirebaseFirestore.instance;
+  VenueCollections({FirebaseFirestore? db})
+      : db = db ?? FirebaseFirestore.instance;
   final FirebaseFirestore db;
 
   CollectionReference<Venue> get venues =>
       db.collection(DocumentPaths.venues).withConverter<Venue>(
-        fromFirestore: VenueFirestore.fromFirestore,
-        toFirestore: VenueFirestore.toFirestore,
-      );
+            fromFirestore: VenueFirestore.fromFirestore,
+            toFirestore: VenueFirestore.toFirestore,
+          );
 }

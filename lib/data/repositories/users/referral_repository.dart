@@ -17,10 +17,10 @@ class ReferralConfig {
     this.codeLength = 6,
   });
 
-  final String baseInviteUrl;      // e.g. https://owlnight.com/invite
-  final int inviterAwardXp;       // EXP for the inviter
-  final int inviteeAwardXp;       // EXP for the invitee
-  final int codeLength;            // default 6
+  final String baseInviteUrl; // e.g. https://owlnight.com/invite
+  final int inviterAwardXp; // EXP for the inviter
+  final int inviteeAwardXp; // EXP for the invitee
+  final int codeLength; // default 6
 }
 
 final referralConfigProvider = Provider<ReferralConfig>((ref) {
@@ -64,15 +64,22 @@ class ReferralRepository {
       final codeRef = _db.collection('referral_codes').doc(code);
       final codeSnap = await tx.get(codeRef);
       if (codeSnap.exists) {
-        throw StateError('Collision; retry'); // extremely unlikely due to pre-check
+        throw StateError(
+            'Collision; retry'); // extremely unlikely due to pre-check
       }
-      tx.set(codeRef, {
-        'owner_uid': uid,
-        'created_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      tx.set(userRef, {
-        'inviteCode': code,
-      }, SetOptions(merge: true));
+      tx.set(
+          codeRef,
+          {
+            'owner_uid': uid,
+            'created_at': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+      tx.set(
+          userRef,
+          {
+            'inviteCode': code,
+          },
+          SetOptions(merge: true));
     });
 
     return code;
@@ -122,8 +129,7 @@ class ReferralRepository {
       }
 
       // Idempotency for this code specifically
-      final redeemedRef =
-      inviteeRef.collection('referrals_redeemed').doc(code);
+      final redeemedRef = inviteeRef.collection('referrals_redeemed').doc(code);
       final redeemedSnap = await tx.get(redeemedRef);
       if (redeemedSnap.exists) {
         throw StateError('This code was already used by you');
@@ -131,16 +137,22 @@ class ReferralRepository {
 
       // Update inviter
       final inviterRef = users.doc(inviterUid);
-      tx.set(inviterRef, {
-        'xp': FieldValue.increment(config.inviterAwardXp),
-        'referralCount': FieldValue.increment(1),
-      }, SetOptions(merge: true));
+      tx.set(
+          inviterRef,
+          {
+            'xp': FieldValue.increment(config.inviterAwardXp),
+            'referralCount': FieldValue.increment(1),
+          },
+          SetOptions(merge: true));
 
       // Update invitee (+ mark referredBy)
-      tx.set(inviteeRef, {
-        'xp': FieldValue.increment(config.inviteeAwardXp),
-        'referredBy': inviterUid,
-      }, SetOptions(merge: true));
+      tx.set(
+          inviteeRef,
+          {
+            'xp': FieldValue.increment(config.inviteeAwardXp),
+            'referredBy': inviterUid,
+          },
+          SetOptions(merge: true));
 
       // Idempotency marker
       tx.set(redeemedRef, {
@@ -177,11 +189,14 @@ class ReferralRepository {
   }
 
   Future<String> _generateUniqueCode() async {
-    const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // no 0,1,I,O for readability
+    const alphabet =
+        '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // no 0,1,I,O for readability
     final rnd = Random.secure();
 
     Future<String> gen() async {
-      return List.generate(config.codeLength, (_) => alphabet[rnd.nextInt(alphabet.length)]).join();
+      return List.generate(
+              config.codeLength, (_) => alphabet[rnd.nextInt(alphabet.length)])
+          .join();
     }
 
     // Try a few times; collisions are extremely unlikely
@@ -191,7 +206,8 @@ class ReferralRepository {
       if (!snap.exists) return candidate;
     }
     // Last resort: longer code
-    return List.generate(config.codeLength + 2, (_) => alphabet[rnd.nextInt(alphabet.length)]).join();
+    return List.generate(config.codeLength + 2,
+        (_) => alphabet[rnd.nextInt(alphabet.length)]).join();
   }
 }
 

@@ -8,7 +8,6 @@ import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 import '../../../data/providers/users/friend_request_provider.dart';
 import '../../../models/users/friend_request.dart';
 
-
 class FriendRequestsSection extends ConsumerWidget {
   const FriendRequestsSection({super.key});
 
@@ -24,11 +23,20 @@ class FriendRequestsSection extends ConsumerWidget {
         ),
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         child: incoming.when(
-          loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator(color: owlPurple))),
-          error: (e, _) => SizedBox(height: 120, child: Center(child: Text('Error: $e', style: Styles.smallText))),
+          loading: () => const SizedBox(
+              height: 120,
+              child:
+                  Center(child: CircularProgressIndicator(color: owlPurple))),
+          error: (e, _) => SizedBox(
+              height: 120,
+              child: Center(child: Text('Error: $e', style: Styles.smallText))),
           data: (list) {
             if (list.isEmpty) {
-              return const SizedBox(height: 120, child: Center(child: Text('No friend requests', style: TextStyle(color: white))));
+              return const SizedBox(
+                  height: 120,
+                  child: Center(
+                      child: Text('No friend requests',
+                          style: TextStyle(color: white))));
             }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +82,9 @@ class _RequestRow extends ConsumerWidget {
           const ProfilePictureAvatar(size: 44, showOnlyInitials: true),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('Request from ${req.fromUid}', style: const TextStyle(color: white, fontWeight: FontWeight.w600)),
+            child: Text('Request from ${req.fromUid}',
+                style:
+                    const TextStyle(color: white, fontWeight: FontWeight.w600)),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -85,9 +95,11 @@ class _RequestRow extends ConsumerWidget {
           const SizedBox(width: 6),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: owlPurple, foregroundColor: white,
+              backgroundColor: owlPurple,
+              foregroundColor: white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => repo.approve(req),
             child: const Text('Approve'),

@@ -14,7 +14,7 @@ final hasCurrentUserProfilePictureProvider = Provider<bool>((ref) {
 });
 
 final currentUserAvatarHealthProvider =
-FutureProvider<MediaExistenceResult>((ref) async {
+    FutureProvider<MediaExistenceResult>((ref) async {
   final asyncUser = ref.watch(authUserProvider);
   final url = asyncUser.maybeWhen(
     data: (u) => u?.profilePictureUrl,
@@ -29,9 +29,9 @@ FutureProvider<MediaExistenceResult>((ref) async {
 
 // Same check but for any user id (live)
 final userHasProfilePictureProvider =
-StreamProvider.family<bool, String>((ref, uid) {
+    StreamProvider.family<bool, String>((ref, uid) {
   final repo = ref.watch(userRepositoryProvider);
   return repo.watchById(uid).map(
         (u) => (u?.profilePictureUrl?.trim().isNotEmpty ?? false),
-  );
+      );
 });

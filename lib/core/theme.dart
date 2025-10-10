@@ -12,18 +12,22 @@ class AppTheme {
       brightness: Brightness.dark,
     ),
     useMaterial3: true,
-    textTheme: GoogleFonts.bitterTextTheme().copyWith(
-      bodySmall: GoogleFonts.bitter(fontSize: fontSizeSmallest, color: white),
-      bodyMedium: GoogleFonts.bitter(fontSize: fontSizeSmall,color: white),
-      bodyLarge: GoogleFonts.bitter(fontSize: fontSizeMedium,color: white),
+    textTheme: GoogleFonts.bitterTextTheme()
+        .copyWith(
+          bodySmall:
+              GoogleFonts.bitter(fontSize: fontSizeSmallest, color: white),
+          bodyMedium: GoogleFonts.bitter(fontSize: fontSizeSmall, color: white),
+          bodyLarge: GoogleFonts.bitter(fontSize: fontSizeMedium, color: white),
 
 // Todo all of these variants:
 // displayLarge: ,
 // headlineLarge: ,
 // titleLarge: ,
 //         labelSmall:
-    ).apply(  bodyColor: white,
-      displayColor: white,),
-
+        )
+        .apply(
+          bodyColor: white,
+          displayColor: white,
+        ),
   );
 }

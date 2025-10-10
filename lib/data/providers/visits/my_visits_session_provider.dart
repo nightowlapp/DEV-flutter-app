@@ -13,7 +13,10 @@ final myVisitSessionsProvider = StreamProvider<List<VisitSession>>((ref) {
   final uid = auth.currentUser?.uid;
   if (uid == null) return const Stream.empty();
 
-  final col = db.collection(DocumentPaths.users).doc(uid).collection(DocumentPaths.visits);
+  final col = db
+      .collection(DocumentPaths.users)
+      .doc(uid)
+      .collection(DocumentPaths.visits);
   return col
       .orderBy('entered_at', descending: true)
       .limit(1000)

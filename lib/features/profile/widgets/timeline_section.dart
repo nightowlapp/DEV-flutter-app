@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 
 class WeekHours {
-  final int week;     // ISO week number, e.g. 36
+  final int week; // ISO week number, e.g. 36
   final double hours; // hours spent that week
   const WeekHours({required this.week, required this.hours});
 }
@@ -71,7 +71,8 @@ class TimelineSection extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.center,
-            child: Text(title, style: Styles.basicText, textAlign: TextAlign.center),
+            child: Text(title,
+                style: Styles.basicText, textAlign: TextAlign.center),
           ),
           if (rightCaption != null)
             Align(
@@ -92,7 +93,9 @@ class TimelineSection extends StatelessWidget {
 
     // Clean data
     final cleaned = data
-        .map((e) => WeekHours(week: e.week, hours: (e.hours.isFinite && e.hours > 0) ? e.hours : 0))
+        .map((e) => WeekHours(
+            week: e.week,
+            hours: (e.hours.isFinite && e.hours > 0) ? e.hours : 0))
         .toList(growable: false);
 
     if (cleaned.isEmpty) {
@@ -103,7 +106,9 @@ class TimelineSection extends StatelessWidget {
           const SizedBox(height: 8),
           _chartFrame(
             height: height,
-            child: const Center(child: Text('No data', style: TextStyle(color: Colors.white54))),
+            child: const Center(
+                child:
+                    Text('No data', style: TextStyle(color: Colors.white54))),
           ),
         ],
       );
@@ -116,8 +121,10 @@ class TimelineSection extends StatelessWidget {
     final divisions = (safeTicks - 1);
     final yLabels = List.generate(safeTicks, (i) => (yMax * (i / divisions)));
 
-    final yStyle = yLabelStyle ?? const TextStyle(fontSize: 11, color: Colors.white70);
-    final xStyle = xLabelStyle ?? const TextStyle(fontSize: 11, color: Colors.white70);
+    final yStyle =
+        yLabelStyle ?? const TextStyle(fontSize: 11, color: Colors.white70);
+    final xStyle =
+        xLabelStyle ?? const TextStyle(fontSize: 11, color: Colors.white70);
 
     // --- FIX: compute a safe gutter for X labels (prevents bottom overflow)
     final xSampleH = _textHeight(context, xStyle, '88');
@@ -126,8 +133,10 @@ class TimelineSection extends StatelessWidget {
 
     // Layout sizes
     final safeHeight = height.clamp(100.0, double.infinity);
-    final contentHeight = (safeHeight - padding.vertical).clamp(60.0, double.infinity);
-    final barAreaHeight = (contentHeight - xGutter).clamp(40.0, double.infinity);
+    final contentHeight =
+        (safeHeight - padding.vertical).clamp(60.0, double.infinity);
+    final barAreaHeight =
+        (contentHeight - xGutter).clamp(40.0, double.infinity);
 
     // width for all bars
     final totalBars = cleaned.length;
@@ -156,9 +165,10 @@ class TimelineSection extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: yLabels.reversed
                           .map((v) => Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(v.round().toString(), style: yStyle),
-                      ))
+                                alignment: Alignment.centerRight,
+                                child:
+                                    Text(v.round().toString(), style: yStyle),
+                              ))
                           .toList(growable: false),
                     ),
                   ),
@@ -191,7 +201,9 @@ class TimelineSection extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       border: Border(
                                         top: BorderSide(
-                                          color: i == 0 ? Colors.transparent : gridColor,
+                                          color: i == 0
+                                              ? Colors.transparent
+                                              : gridColor,
                                           width: 1,
                                         ),
                                       ),
@@ -211,12 +223,14 @@ class TimelineSection extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           border: Border(
-                                            right: BorderSide(color: gridColor, width: 0.5),
+                                            right: BorderSide(
+                                                color: gridColor, width: 0.5),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (i != totalBars - 1) SizedBox(width: spacing),
+                                    if (i != totalBars - 1)
+                                      SizedBox(width: spacing),
                                   ],
                                 ],
                               ),
@@ -234,11 +248,14 @@ class TimelineSection extends StatelessWidget {
                                       areaHeight: barAreaHeight - 1,
                                       width: barWidth,
                                       color: barColor,
-                                      onTap: onBarTap == null ? null : () => onBarTap!(cleaned[i]),
+                                      onTap: onBarTap == null
+                                          ? null
+                                          : () => onBarTap!(cleaned[i]),
                                       semanticsLabel:
-                                      'Week ${cleaned[i].week}, ${cleaned[i].hours.toStringAsFixed(1)} hours',
+                                          'Week ${cleaned[i].week}, ${cleaned[i].hours.toStringAsFixed(1)} hours',
                                     ),
-                                    if (i != totalBars - 1) SizedBox(width: spacing),
+                                    if (i != totalBars - 1)
+                                      SizedBox(width: spacing),
                                   ],
                                 ],
                               ),
@@ -256,7 +273,9 @@ class TimelineSection extends StatelessWidget {
                               SizedBox(
                                 width: barWidth,
                                 child: Center(
-                                  child: Text('${cleaned[i].week}', style: xStyle, overflow: TextOverflow.visible),
+                                  child: Text('${cleaned[i].week}',
+                                      style: xStyle,
+                                      overflow: TextOverflow.visible),
                                 ),
                               ),
                               if (i != totalBars - 1) SizedBox(width: spacing),
@@ -291,10 +310,14 @@ class TimelineSection extends StatelessWidget {
     final exp = (math.log(x) / math.ln10).floor();
     final f = x / math.pow(10.0, exp);
     double nice;
-    if (f <= 1)      nice = 1;
-    else if (f <= 2) nice = 2;
-    else if (f <= 5) nice = 5;
-    else             nice = 10;
+    if (f <= 1)
+      nice = 1;
+    else if (f <= 2)
+      nice = 2;
+    else if (f <= 5)
+      nice = 5;
+    else
+      nice = 10;
     return (nice * math.pow(10.0, exp)).toDouble();
   }
 
@@ -343,7 +366,8 @@ class _Bar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = (max <= 0 ? 0 : (hours / max) * areaHeight).clamp(0.0, areaHeight);
+    final h =
+        (max <= 0 ? 0 : (hours / max) * areaHeight).clamp(0.0, areaHeight);
 
     return Semantics(
       label: semanticsLabel,

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/providers/other_providers.dart';                // allVenuesStreamProvider
+import '../../../data/providers/other_providers.dart'; // allVenuesStreamProvider
 import '../../../models/venues/venue.dart';
 import '../../../shared/constants/enums.dart';
-import 'mappers.dart';                // fcFromFeatures, venueToFeature (see note below)
+import 'mappers.dart'; // fcFromFeatures, venueToFeature (see note below)
 
 /* Output for the map: two FCs (clusterable/free + vip/paying) */
 class MapVenuesGeoJson {

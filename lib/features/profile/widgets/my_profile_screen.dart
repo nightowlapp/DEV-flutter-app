@@ -42,10 +42,12 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
     final p = LevelLogic.progress(totalXp);
 
     final xpThisLevel = LevelLogic.calculateThisLevelTotalXp(
-      currentXp: totalXp, currentLevel: p.level,
+      currentXp: totalXp,
+      currentLevel: p.level,
     );
     final currentXp = LevelLogic.calculateUserXpThisLevel(
-      currentXp: totalXp, currentLevel: p.level,
+      currentXp: totalXp,
+      currentLevel: p.level,
     );
 
     return Scaffold(
@@ -75,7 +77,8 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(u.displayFullName, style: Styles.fullNameDisplay),
+                                Text(u.displayFullName,
+                                    style: Styles.fullNameDisplay),
                                 const SizedBox(height: verticalSpacerVerySmall),
                                 Text(u.userName, style: Styles.usernameDisplay),
                               ],
@@ -99,14 +102,14 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                         width: PlatformConfig.width(context) * 0.25,
                         child: 1 > 2
                             ? OwlButton(
-                          label: 'My Stats',
-                          onPressed: _openStats,
-                          fullWidth: false,
-                          textColor: owlPurple,
-                          borderColor: transparent,
-                          backgroundColor: black,
-                          textStyle: Styles.basicText,
-                        )
+                                label: 'My Stats',
+                                onPressed: _openStats,
+                                fullWidth: false,
+                                textColor: owlPurple,
+                                borderColor: transparent,
+                                backgroundColor: black,
+                                textStyle: Styles.basicText,
+                              )
                             : const SizedBox.shrink(),
                       ),
                       SizedBox(height: PlatformConfig.height(context) * 0.02),
@@ -124,11 +127,14 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
               // Level indicator
               LevelIndicator(
-                levelLabel: u.level.toInt() == 1337 ? 'Level 1337' : 'Level ${p.level.toInt()}',
+                levelLabel: u.level.toInt() == 1337
+                    ? 'Level 1337'
+                    : 'Level ${p.level.toInt()}',
                 current: u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
                 total: u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(),
                 height: PlatformConfig.height(context) * 0.05,
-                gradient: const LinearGradient(colors: [owlPurple, purple, owlPurple, purple]),
+                gradient: const LinearGradient(
+                    colors: [owlPurple, purple, owlPurple, purple]),
                 trackColor: grey,
               ),
 

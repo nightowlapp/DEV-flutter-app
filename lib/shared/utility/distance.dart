@@ -72,10 +72,10 @@ class Distance {
   // -------------------- walking time --------------------
 
   static double walkMinutesFromMeters(
-      double meters, {
-        double speedMps = kDefaultWalkMps,
-        double detourFactor = kDefaultDetourFactor,
-      }) {
+    double meters, {
+    double speedMps = kDefaultWalkMps,
+    double detourFactor = kDefaultDetourFactor,
+  }) {
     if (meters.isNaN || meters.isInfinite || meters <= 0) return 0;
     if (speedMps <= 0) return 0;
     final effectiveMeters = meters * (detourFactor <= 0 ? 1.0 : detourFactor);
@@ -84,11 +84,11 @@ class Distance {
   }
 
   static double walkMinutesLatLng(
-      LatLng a,
-      LatLng b, {
-        double speedMps = kDefaultWalkMps,
-        double detourFactor = kDefaultDetourFactor,
-      }) =>
+    LatLng a,
+    LatLng b, {
+    double speedMps = kDefaultWalkMps,
+    double detourFactor = kDefaultDetourFactor,
+  }) =>
       walkMinutesFromMeters(
         metersLatLng(a, b),
         speedMps: speedMps,
@@ -96,10 +96,10 @@ class Distance {
       );
 
   static int walkMinutesRounded(
-      double meters, {
-        double speedMps = kDefaultWalkMps,
-        double detourFactor = kDefaultDetourFactor,
-      }) {
+    double meters, {
+    double speedMps = kDefaultWalkMps,
+    double detourFactor = kDefaultDetourFactor,
+  }) {
     final m = walkMinutesFromMeters(
       meters,
       speedMps: speedMps,
@@ -114,10 +114,10 @@ class Distance {
   /// From 60 min up to < 9 hours show whole-hour values ("1 hr", "2 hr", ...).
   /// At or above 9 hours cap as "9+ hr".
   static String formatWalkMinutes(
-      double meters, {
-        double speedMps = kDefaultWalkMps,
-        double detourFactor = kDefaultDetourFactor,
-      }) {
+    double meters, {
+    double speedMps = kDefaultWalkMps,
+    double detourFactor = kDefaultDetourFactor,
+  }) {
     final mins = walkMinutesRounded(
       meters,
       speedMps: speedMps,
@@ -128,9 +128,9 @@ class Distance {
 
   /// Venue-style walking time from KM (helper if you already have km).
   static String walkingTimeTextVenueKm(
-      double km, {
-        double speedKmh = 3.6,
-      }) {
+    double km, {
+    double speedKmh = 3.6,
+  }) {
     if (km.isNaN || km.isInfinite || km <= 0 || speedKmh <= 0) return '—';
     final mins = (km / speedKmh * 60).ceil();
     return _formatMinutesAsVenue(mins);
@@ -169,4 +169,25 @@ class Distance {
   }
 
   static double _deg(double d) => d * math.pi / 180.0;
+}
+
+
+class Bounds {
+  final double minLat, minLng, maxLat, maxLng;
+  const Bounds(this.minLat, this.minLng, this.maxLat, this.maxLng);
+  LatLng get center => LatLng((minLat + maxLat) / 2, (minLng + maxLng) / 2);
+
+  static Bounds fromPoints(Iterable<LatLng> pts) {
+    final it = pts.iterator;
+    if (!it.moveNext()) return const Bounds(0, 0, 0, 0);
+    double minLat = it.current.lat, maxLat = it.current.lat;
+    double minLng = it.current.lng, maxLng = it.current.lng;
+    for (final p in pts) {
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lat > maxLat) maxLat = p.lat;
+      if (p.lng < minLng) minLng = p.lng;
+      if (p.lng > maxLng) maxLng = p.lng;
+    }
+    return Bounds(minLat, minLng, maxLat, maxLng);
+  }
 }

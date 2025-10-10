@@ -5,7 +5,7 @@ final sharedPrefsProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences not initialized');
 });
 
-final sharedPrefsFutureProvider = FutureProvider<SharedPreferences>((ref) async {
+final sharedPrefsFutureProvider =
+    FutureProvider<SharedPreferences>((ref) async {
   return await SharedPreferences.getInstance();
 });
-

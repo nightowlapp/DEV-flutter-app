@@ -24,12 +24,12 @@ class PartyStatusEntry {
   });
 
   Map<String, dynamic> toJson() => {
-    'party_status': partyStatus.name,
-    'change': partyStatusChange.name,
-    'created_at': Timestamp.fromDate(createdAt),
-    if (location != null) 'location': location,
-    if (accuracy != null) 'accuracy': accuracy,
-  };
+        'party_status': partyStatus.name,
+        'change': partyStatusChange.name,
+        'created_at': Timestamp.fromDate(createdAt),
+        if (location != null) 'location': location,
+        if (accuracy != null) 'accuracy': accuracy,
+      };
 
   static PartyStatusEntry fromSnapshot(
       DocumentSnapshot<Map<String, dynamic>> snap) {
@@ -39,11 +39,11 @@ class PartyStatusEntry {
     return PartyStatusEntry(
       id: snap.id,
       partyStatus: PartyStatusTypes.values.firstWhere(
-            (e) => e.name == (d['party_status'] as String? ?? ''),
+        (e) => e.name == (d['party_status'] as String? ?? ''),
         orElse: () => PartyStatusTypes.still_planning,
       ),
       partyStatusChange: PartyStatusChange.values.firstWhere(
-            (e) => e.name == (d['change'] as String? ?? ''),
+        (e) => e.name == (d['change'] as String? ?? ''),
         orElse: () => PartyStatusChange.manual,
       ),
       createdAt: dt,

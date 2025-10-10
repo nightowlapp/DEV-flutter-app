@@ -23,7 +23,7 @@ class VenueCard extends ConsumerWidget {
     this.onTap,
     this.onLongPress, // optional override
     this.overrideFallbackAsset,
-    this.longPressZoom = 16,
+    this.longPressZoom = 15,
     this.hapticOnLongPress = true,
   });
 
@@ -51,18 +51,18 @@ class VenueCard extends ConsumerWidget {
       Styles.smallText.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600);
 
   Widget _pill(String text) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-    decoration: BoxDecoration(
-      color: text.isNotEmpty ? black : transparent,
-      borderRadius: BorderRadius.circular(borderRadiusDefault),
-    ),
-    child: Text(
-      text,
-      style: _pillStyle,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    ),
-  );
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        decoration: BoxDecoration(
+          color: text.isNotEmpty ? black : transparent,
+          borderRadius: BorderRadius.circular(borderRadiusDefault),
+        ),
+        child: Text(
+          text,
+          style: _pillStyle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,20 +109,20 @@ class VenueCard extends ConsumerWidget {
                     Positioned.fill(
                       child: overrideFallbackAsset == null
                           ? CoverImage.fromMedia(
-                        media: media,
-                        city: venue.city,
-                        height: height,
-                        fit: BoxFit.cover,
-                      )
+                              media: media,
+                              city: venue.city,
+                              height: height,
+                              fit: BoxFit.cover,
+                            )
                           : CoverImage(
-                        imageUrl: (media?.coverExists == true &&
-                            (media?.coverUrl?.isNotEmpty ?? false))
-                            ? media!.coverUrl
-                            : null,
-                        fallbackAsset: overrideFallbackAsset,
-                        height: height,
-                        fit: BoxFit.cover,
-                      ),
+                              imageUrl: (media?.coverExists == true &&
+                                      (media?.coverUrl?.isNotEmpty ?? false))
+                                  ? media!.coverUrl
+                                  : null,
+                              fallbackAsset: overrideFallbackAsset,
+                              height: height,
+                              fit: BoxFit.cover,
+                            ),
                     ),
 
                     // Title pill (top)
@@ -135,7 +135,7 @@ class VenueCard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: black.withOpacity(0.7),
                           borderRadius:
-                          BorderRadius.circular(borderRadiusDefault),
+                              BorderRadius.circular(borderRadiusDefault),
                         ),
                         child: Center(
                           child: Text(

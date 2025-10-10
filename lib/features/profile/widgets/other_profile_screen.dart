@@ -12,7 +12,8 @@ class FriendProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {@override
+class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: black,
@@ -26,7 +27,7 @@ class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {@override
               // Full name and username
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const[
+                children: const [
                   Text(
                     'Poul Magne Skov',
                     style: TextStyle(
@@ -46,19 +47,17 @@ class _ProfileScreenState extends ConsumerState<FriendProfileScreen> {@override
               ),
 
               // Avatar
-              ProfilePictureAvatar( //TODO Friend
+              ProfilePictureAvatar(
+                //TODO Friend
                 imageUrl: 'assets/nightowl/test.png',
                 size: PlatformConfig.width(context) * 0.15,
               ),
 
-            //TODO Show users favorite venues. Achievements. Level. Fælles venner. Amount of friends. Messages.
-
+              //TODO Show users favorite venues. Achievements. Level. Fælles venner. Amount of friends. Messages.
             ],
           ),
         ),
       ),
     );
   }
-
-
 }

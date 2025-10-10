@@ -32,9 +32,9 @@ class MyFriendsSection extends ConsumerWidget {
     for (final f in friends) {
       final uid = _friendUidOf(f);
       final status = ref.watch(partyStatusForUserProvider(uid)).maybeWhen(
-        data: (s) => s,
-        orElse: () => PartyStatusTypes.still_planning,
-      );
+            data: (s) => s,
+            orElse: () => PartyStatusTypes.still_planning,
+          );
       if (status != PartyStatusTypes.still_planning &&
           status != PartyStatusTypes.recovering) {
         active++;
@@ -48,7 +48,6 @@ class MyFriendsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(height: h * 0.01),
-
         Row(
           children: [
             Text('My Friends', style: Styles.basicTextHeader),
@@ -56,9 +55,7 @@ class MyFriendsSection extends ConsumerWidget {
             Text('$active/${friends.length}', style: Styles.smallText),
           ],
         ),
-
         SizedBox(height: h * 0.02),
-
         SizedBox(
           height: h * 0.10,
           child: ListView.separated(
@@ -69,15 +66,18 @@ class MyFriendsSection extends ConsumerWidget {
               final f = friends[index];
               final uid = _friendUidOf(f);
 
-              final status = ref.watch(partyStatusForUserProvider(uid)).maybeWhen(
-                data: (s) => s,
-                orElse: () => PartyStatusTypes.still_planning,
-              );
+              final status =
+                  ref.watch(partyStatusForUserProvider(uid)).maybeWhen(
+                        data: (s) => s,
+                        orElse: () => PartyStatusTypes.still_planning,
+                      );
               final ringColor = ref.watch(partyStatusColorForProvider(status));
 
               return GestureDetector(
                 onTap: onTapFriend == null ? null : () => onTapFriend!(f),
-                onLongPress: onLongPressFriend == null ? null : () => onLongPressFriend!(f),
+                onLongPress: onLongPressFriend == null
+                    ? null
+                    : () => onLongPressFriend!(f),
                 child: ProfilePictureAvatar(
                   size: w * 0.15,
                   showOnlyInitials: true,
@@ -88,7 +88,6 @@ class MyFriendsSection extends ConsumerWidget {
             },
           ),
         ),
-
       ],
     );
   }

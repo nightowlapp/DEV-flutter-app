@@ -7,7 +7,6 @@ import '../../../data/providers/other_providers.dart';
 import '../../../data/services/tags/tag_helpers.dart';
 import '../../../models/venues/tag.dart';
 
-
 /// Lightweight, no-dependency tag pills (adjust styling to your design).
 class VenueTagsGrid extends ConsumerWidget {
   const VenueTagsGrid({
@@ -36,7 +35,9 @@ class VenueTagsGrid extends ConsumerWidget {
     final tagWidth = viewportWidth * 0.4;
     final tagHeight = viewportHeight * 0.13;
     const vPad = 8.0, hPad = 6.0;
-    const mainAxisSpacing = 10.0, crossAxisSpacing = 5.0, childAspectRatio = 5.0;
+    const mainAxisSpacing = 10.0,
+        crossAxisSpacing = 5.0,
+        childAspectRatio = 5.0;
     const chipHeight = 28.0;
 
     return SizedBox(
@@ -64,13 +65,13 @@ class VenueTagsGrid extends ConsumerWidget {
   }
 
   Widget _boxed(Widget child) => Container(
-    decoration: BoxDecoration(
-      color: black,
-      border: Border.all(color: white, width: 1.5),
-      borderRadius: BorderRadius.circular(borderRadiusSmall),
-    ),
-    child: child,
-  );
+        decoration: BoxDecoration(
+          color: black,
+          border: Border.all(color: white, width: 1.5),
+          borderRadius: BorderRadius.circular(borderRadiusSmall),
+        ),
+        child: child,
+      );
 }
 
 Widget _tagChip(Tag tag, width, height) {
@@ -85,8 +86,10 @@ Widget _tagChip(Tag tag, width, height) {
       borderRadius: BorderRadius.circular(borderRadiusSmallest),
       border: Border.all(color: color, width: 1),
       boxShadow: [
-        BoxShadow(color: color.withOpacity(0.40), blurRadius: 8, spreadRadius: 1),
-        BoxShadow(color: color.withOpacity(0.20), blurRadius: 2, spreadRadius: 0.5),
+        BoxShadow(
+            color: color.withOpacity(0.40), blurRadius: 8, spreadRadius: 1),
+        BoxShadow(
+            color: color.withOpacity(0.20), blurRadius: 2, spreadRadius: 0.5),
       ],
     ),
     padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -101,7 +104,8 @@ Widget _tagChip(Tag tag, width, height) {
             border: Border.all(color: color, width: 0.7),
           ),
           alignment: Alignment.center,
-          child: Text(emoji, style: const TextStyle(fontSize: fontSizeMediumPlus)),
+          child:
+              Text(emoji, style: const TextStyle(fontSize: fontSizeMediumPlus)),
         ),
         const SizedBox(width: 4),
         Expanded(

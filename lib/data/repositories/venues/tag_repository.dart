@@ -5,14 +5,16 @@ import '../../../models/venues/tag.dart';
 
 class TagRepository {
   final FirebaseFirestore _db;
-  TagRepository({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  TagRepository({FirebaseFirestore? db})
+      : _db = db ?? FirebaseFirestore.instance;
 
   CollectionReference<Tag> get _tags =>
-      _db.collection('tags')
-          .withConverter<Tag>(fromFirestore: Tag.fromFirestore, toFirestore: Tag.toFirestore);
+      _db.collection('tags').withConverter<Tag>(
+          fromFirestore: Tag.fromFirestore, toFirestore: Tag.toFirestore);
 
   /// Watch a single tag
-  Stream<Tag?> watchById(String id) => _tags.doc(id).snapshots().map((s) => s.data());
+  Stream<Tag?> watchById(String id) =>
+      _tags.doc(id).snapshots().map((s) => s.data());
 
   /// Watch many by IDs (chunked whereIn). Emits merged, ordered by the incoming ids list.
   Stream<List<Tag>> watchByIds(List<String> ids) {
@@ -28,7 +30,7 @@ class TagRepository {
 
     final controller = StreamController<List<Tag>>();
     final subs = <StreamSubscription>[];
-    final map = <String, Tag?>{ for (final id in clean) id: null };
+    final map = <String, Tag?>{for (final id in clean) id: null};
 
     void emitIfReady() {
       // We emit on *every* change; nulls (not found) are skipped
@@ -42,7 +44,7 @@ class TagRepository {
 
     for (final id in clean) {
       final sub = _tags.doc(id).snapshots().listen(
-            (snap) {
+        (snap) {
           map[id] = snap.data(); // can be null if doc doesn't exist
           emitIfReady();
         },

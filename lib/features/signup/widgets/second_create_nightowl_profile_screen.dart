@@ -129,7 +129,9 @@ class _SecondCreateNightowlProfileScreenState
       appBar: const MainAppBar(
         showBack: true,
         titleText: 'Email',
-        actions: [CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))],
+        actions: [
+          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontal),
@@ -140,17 +142,17 @@ class _SecondCreateNightowlProfileScreenState
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             PlatformConfig.isAndroid
                 ? OwlButton(
-              icon: googleIcon,
-              label: _busy ? 'Signing in...' : 'Continue with Google',
-              backgroundColor: owlPurple,
-              onPressed: _busy ? null : _doGoogle,
-            )
+                    icon: googleIcon,
+                    label: _busy ? 'Signing in...' : 'Continue with Google',
+                    backgroundColor: owlPurple,
+                    onPressed: _busy ? null : _doGoogle,
+                  )
                 : OwlButton(
-              icon: appleIcon,
-              label: _busy ? 'Signing in...' : 'Continue with Apple',
-              backgroundColor: owlPurple,
-              onPressed: _busy ? null : _doApple,
-            ),
+                    icon: appleIcon,
+                    label: _busy ? 'Signing in...' : 'Continue with Apple',
+                    backgroundColor: owlPurple,
+                    onPressed: _busy ? null : _doApple,
+                  ),
             SizedBox(height: PlatformConfig.height(context) * 0.01),
             const Divider(color: grey),
             SizedBox(height: PlatformConfig.height(context) * 0.01),

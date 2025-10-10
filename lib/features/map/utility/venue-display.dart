@@ -1,6 +1,4 @@
-
-openVenueList() {
-}
+openVenueList() {}
 //   List<Widget> _openVenueList(BuildContext context, LatLng userLocation) {
 //     List<Venue> venues;
 //     return venues.map((v) {

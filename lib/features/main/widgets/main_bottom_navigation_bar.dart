@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+
 class MainBottomNavigationBar extends StatelessWidget {
   final List<MainScreenName> tabs;
   final int currentIndex;
@@ -28,7 +29,8 @@ class MainBottomNavigationBar extends StatelessWidget {
       items: [
         for (final s in tabs)
           BottomNavigationBarItem(
-            icon: Icon(s.icon, color: s == MainScreenName.admin ? adminColor : null),
+            icon: Icon(s.icon,
+                color: s == MainScreenName.admin ? adminColor : null),
             label: s.label,
           ),
       ],

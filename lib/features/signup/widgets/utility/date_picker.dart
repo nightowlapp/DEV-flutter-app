@@ -27,7 +27,7 @@ class DatePicker extends StatefulWidget {
     this.legalAgeColor = owlPurple,
     this.fontSize = 14.0,
     this.contentPadding =
-    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
     this.restrictPickerToLegalAge = false,
     this.barrierColor = const Color(0x99000000),
     this.sheetBackgroundColor = black,
@@ -82,7 +82,7 @@ class _DatePickerState extends State<DatePicker> {
   Widget build(BuildContext context) {
     final DateTime today = DateTime.now();
     final DateTime legalAgeAgo =
-    DateTime(today.year - widget.legalAge, today.month, today.day);
+        DateTime(today.year - widget.legalAge, today.month, today.day);
 
     final bool showHint = _selectedDate == null;
     final bool isTooYoung =
@@ -99,7 +99,7 @@ class _DatePickerState extends State<DatePicker> {
         decoration: BoxDecoration(
           color: widget.backgroundColor,
           border:
-          Border.all(color: widget.borderColor, width: widget.borderWidth),
+              Border.all(color: widget.borderColor, width: widget.borderWidth),
           borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
         child: Center(
@@ -119,7 +119,7 @@ class _DatePickerState extends State<DatePicker> {
   Future<void> _openDatePickerWheel() async {
     final now = DateTime.now();
     final legalAgeAgo =
-    DateTime(now.year - widget.legalAge, now.month, now.day);
+        DateTime(now.year - widget.legalAge, now.month, now.day);
 
     final minDate = DateTime(1900);
     final maxDate = widget.restrictPickerToLegalAge ? legalAgeAgo : now;
@@ -156,7 +156,7 @@ class _DatePickerState extends State<DatePicker> {
                 ),
                 Padding(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: Row(
                     children: [
                       TextButton(

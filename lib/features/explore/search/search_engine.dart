@@ -10,7 +10,9 @@ import 'search_query.dart';
 
 typedef NowInTz = DateTime Function(String? tzid);
 
-final venueSearchEngineProvider = Provider.autoDispose<VenueSearchEngine>((ref) { //TODO go in depth at some point.
+final venueSearchEngineProvider =
+    Provider.autoDispose<VenueSearchEngine>((ref) {
+  //TODO go in depth at some point.
   // If you have a real tz resolver, inject it here. Fallback: device time.
   final nowInTz = (String? _) => DateTime.now();
   return VenueSearchEngine(nowInTz: nowInTz);
@@ -36,38 +38,55 @@ class VenueSearchEngine {
 
       // OPEN
       if (t == 'open' || t == 'opennow' || t == 'opennow' || t == 'now') {
-        spec.openNow = true; continue;
+        spec.openNow = true;
+        continue;
       }
       if (t == 'opentoday' || t == 'today') {
-        spec.openToday = true; continue;
+        spec.openToday = true;
+        continue;
       }
 
       // VERIFIED
       if (t == 'verified' || t == 'official') {
-        spec.verifiedOnly = true; continue;
+        spec.verifiedOnly = true;
+        continue;
       }
 
       // AGE: 18+, age:18, age>=18
       final age = _parseNumberWithPlus(t, prefixes: const ['age', 'a']);
-      if (age != null && age >= 18) { // 10..40 → age restriction
-        spec.minAge = age; continue;
+      if (age != null && age >= 18) {
+        // 10..40 → age restriction
+        spec.minAge = age;
+        continue;
       }
 
       // RATING: r:4.2, rating>=4, 4.5★, 4+, (numbers <= 5 are assumed rating)
       final rating = _parseRating(t);
-      if (rating != null) { spec.minRating = rating; continue; }
+      if (rating != null) {
+        spec.minRating = rating;
+        continue;
+      }
 
       // PRICE: price<=10 / p<=10 / €10 / $10 (simple "max price")
       final price = _parsePriceMax(t);
-      if (price != null) { spec.maxPrice = price; continue; }
+      if (price != null) {
+        spec.maxPrice = price;
+        continue;
+      }
 
       // TYPE: enum name or synonyms (club, bar, pub, lounge, etc.)
       final type = _parseType(t);
-      if (type != null) { spec.types.add(type); continue; }
+      if (type != null) {
+        spec.types.add(type);
+        continue;
+      }
 
       // DISTANCE: within:5km / <=5km (optional)
       final distKm = _parseDistanceKm(t);
-      if (distKm != null) { spec.maxDistanceKm = distKm; continue; }
+      if (distKm != null) {
+        spec.maxDistanceKm = distKm;
+        continue;
+      }
 
       // otherwise → text term
       spec.textTerms.add(t);
@@ -76,7 +95,8 @@ class VenueSearchEngine {
   }
 
   // ---------- match ----------
-  bool _matches(Venue v, _Spec s) { // TODO make tags and all the others
+  bool _matches(Venue v, _Spec s) {
+    // TODO make tags and all the others
     final now = nowInTz(v.timeZoneId);
 
     // OPEN
@@ -115,12 +135,13 @@ class VenueSearchEngine {
 
     // TEXT: name/alt name/desc/city + some numeric fields formatted
     if (s.textTerms.isNotEmpty) {
-      final blob = _normalize('${v.displayName.isNotEmpty ? v.displayName : v.name} '
-          '${v.description} ${v.city} '
-          '${v.countryCode} '
-          '${v.defaultAgeRestriction}+ '
-          '${v.rating?.toStringAsFixed(1) ?? ''} '
-          '${describeEnum(v.type)}');
+      final blob =
+          _normalize('${v.displayName.isNotEmpty ? v.displayName : v.name} '
+              '${v.description} ${v.city} '
+              '${v.countryCode} '
+              '${v.defaultAgeRestriction}+ '
+              '${v.rating?.toStringAsFixed(1) ?? ''} '
+              '${describeEnum(v.type)}');
       for (final term in s.textTerms) {
         if (!blob.contains(term)) return false;
       }
@@ -163,18 +184,21 @@ class VenueSearchEngine {
 
   double? _parsePriceMax(String t) {
     // price<=10 / p<=10 / €10 / $10
-    final rx = RegExp(r'^(?:price|p)?\s*(?:<=|=|:)?\s*(?:€|\$)?\s*([0-9]+(?:\.[0-9]+)?)$');
+    final rx = RegExp(
+        r'^(?:price|p)?\s*(?:<=|=|:)?\s*(?:€|\$)?\s*([0-9]+(?:\.[0-9]+)?)$');
     final m = rx.firstMatch(t);
     return m == null ? null : double.tryParse(m.group(1)!);
   }
 
   double? _parseDistanceKm(String t) {
     // within:5km / <=5km / 5km
-    final rx = RegExp(r'^(?:within|dist|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$');
+    final rx =
+        RegExp(r'^(?:within|dist|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$');
     final m = rx.firstMatch(t);
     return m == null ? null : double.tryParse(m.group(1)!);
   }
 }
+
 // Extend with your set of types/synonyms
 final Map<String, VenueType> _typeMap = {
   'club': VenueType.club,

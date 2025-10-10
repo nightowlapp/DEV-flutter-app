@@ -6,10 +6,12 @@ import '../other_providers.dart';
 
 /// Map a plan to its limit (central place to change)
 final planFavoriteLimitProvider =
-Provider.family<int, SubscriptionTypesUser>((ref, plan) {
+    Provider.family<int, SubscriptionTypesUser>((ref, plan) {
   switch (plan) {
-    case SubscriptionTypesUser.free:    return 5;
-    case SubscriptionTypesUser.premium: return 15;
+    case SubscriptionTypesUser.free:
+      return 5;
+    case SubscriptionTypesUser.premium:
+      return 15;
   }
 });
 

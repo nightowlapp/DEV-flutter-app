@@ -4,28 +4,28 @@ import 'tags_sso.dart';
 
 /// Your preferred display order (edit anytime)
 final tagTypeOrderProvider = StateProvider<List<TagType>>((_) => const [
-  TagType.venue_type, // put anywhere you like
-  TagType.entry_price,
-  TagType.vibe,
-  TagType.music,
-  TagType.amenity,
-  TagType.smoking_policy,
+      TagType.venue_type, // put anywhere you like
+      TagType.entry_price,
+      TagType.vibe,
+      TagType.music,
+      TagType.amenity,
+      TagType.smoking_policy,
 
 //TODO make others equally valuable
-  TagType.dress_code,
-  TagType.event,
-  TagType.crowd,
-  TagType.payment,
-  TagType.hours,
-  TagType.reservation,
-  TagType.accessibility,
-  TagType.service,
-  TagType.neighborhood,
-  TagType.sound,
-  TagType.special,
-  TagType.age_restriction,
-  TagType.other,
-]);
+      TagType.dress_code,
+      TagType.event,
+      TagType.crowd,
+      TagType.payment,
+      TagType.hours,
+      TagType.reservation,
+      TagType.accessibility,
+      TagType.service,
+      TagType.neighborhood,
+      TagType.sound,
+      TagType.special,
+      TagType.age_restriction,
+      TagType.other,
+    ]);
 
 int _rank(TagType t, List<TagType> order) {
   final i = order.indexOf(t);
@@ -34,7 +34,7 @@ int _rank(TagType t, List<TagType> order) {
 
 /// Get tags for a set of IDs from local SSO (no network), sorted by your order then A–Z.
 final localSortedTagsByIdsProvider =
-Provider.family<List<Tag>, List<String>>((ref, ids) {
+    Provider.family<List<Tag>, List<String>>((ref, ids) {
   final mapAsync = ref.watch(tagsSsoProvider);
   return mapAsync.maybeWhen(
     data: (map) {

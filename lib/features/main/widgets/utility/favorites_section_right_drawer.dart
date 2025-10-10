@@ -20,17 +20,19 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progress   = ref.watch(favoritesProgressProvider);
+    final progress = ref.watch(favoritesProgressProvider);
     final countAsync = ref.watch(favoritesCountProvider);
     final venuesAsync = ref.watch(favoriteVenuesProvider);
 
     final currentCount = countAsync.maybeWhen(data: (c) => c, orElse: () => 0);
-    final currentText  = countAsync.maybeWhen(data: (c) => '$c', orElse: () => '');
-    final limitText    = progress.unlimited ? '∞' : '${progress.limit}';
-    final half         = progress.unlimited ? 0 : (progress.limit / 2).floor();
+    final currentText =
+        countAsync.maybeWhen(data: (c) => '$c', orElse: () => '');
+    final limitText = progress.unlimited ? '∞' : '${progress.limit}';
+    final half = progress.unlimited ? 0 : (progress.limit / 2).floor();
 
     final Color brand = owlPurple;
-    final Color currentColor = progress.unlimited ? brand : (currentCount <= half ? red : brand);
+    final Color currentColor =
+        progress.unlimited ? brand : (currentCount <= half ? red : brand);
     final Color limitColor = brand;
 
     return Column(
@@ -46,12 +48,16 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                   children: [
                     TextSpan(
                       text: currentText,
-                      style: Styles.basicText.copyWith(color: currentColor, fontWeight: FontWeight.w600),
+                      style: Styles.basicText.copyWith(
+                          color: currentColor, fontWeight: FontWeight.w600),
                     ),
-                    TextSpan(text: ' / ', style: Styles.basicText.copyWith(color: white)),
+                    TextSpan(
+                        text: ' / ',
+                        style: Styles.basicText.copyWith(color: white)),
                     TextSpan(
                       text: limitText,
-                      style: Styles.basicText.copyWith(color: limitColor, fontWeight: FontWeight.w600),
+                      style: Styles.basicText.copyWith(
+                          color: limitColor, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -60,7 +66,6 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: verticalSpacerSmall),
-
         SizedBox(
           height: 50,
           child: venuesAsync.when(
@@ -69,16 +74,17 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
             data: (venues) {
               if (venues.isEmpty) {
                 return Center(
-                  child: Text('No favorites', style: Styles.smallText.copyWith(color: red)),
+                  child: Text('No favorites',
+                      style: Styles.smallText.copyWith(color: red)),
                 );
               }
 
               final now = DateTime.now();
               final list = [...venues]..sort((a, b) {
-                final ao = a.isOpenNow(now);
-                final bo = b.isOpenNow(now);
-                return (bo ? 1 : 0) - (ao ? 1 : 0);
-              });
+                  final ao = a.isOpenNow(now);
+                  final bo = b.isOpenNow(now);
+                  return (bo ? 1 : 0) - (ao ? 1 : 0);
+                });
 
               final slots = math.max(list.length, minSlots);
               const itemPad = horizontalSpacerSmall;
@@ -94,12 +100,14 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                     final v = list[i];
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: itemPad / 2),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: itemPad / 2),
                       child: VenueLogo(
                         venue: v,
                         size: logoSize,
                         shape: VenueLogoShape.circle,
-                        tooltip: v.displayName.isNotEmpty ? v.displayName : v.name,
+                        tooltip:
+                            v.displayName.isNotEmpty ? v.displayName : v.name,
                         onTap: () async {
                           await context.goToMapAndFocusVenue(ref, v, zoom: 16);
                         },

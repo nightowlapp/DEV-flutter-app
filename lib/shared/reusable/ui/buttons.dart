@@ -112,7 +112,6 @@ import 'package:nightowlcode/shared/constants/values.dart';
 //   }
 // }
 
-
 class OwlButton extends StatelessWidget {
   const OwlButton({
     super.key,
@@ -152,7 +151,8 @@ class OwlButton extends StatelessWidget {
     final Color fg = textColor ?? (bg == transparent ? owlPurple : white);
     final Color sideColor = borderColor ?? white;
 
-    final double iconArea = icon == null ? 0 : (iconSize + iconPadding.horizontal);
+    final double iconArea =
+        icon == null ? 0 : (iconSize + iconPadding.horizontal);
 
     final button = ElevatedButton(
       onPressed: onPressed,
@@ -163,7 +163,8 @@ class OwlButton extends StatelessWidget {
         padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          side: BorderSide(color: sideColor, width: sideColor == transparent ? 0 : 1),
+          side: BorderSide(
+              color: sideColor, width: sideColor == transparent ? 0 : 1),
         ),
       ),
       child: Row(
@@ -173,11 +174,11 @@ class OwlButton extends StatelessWidget {
           SizedBox(
             width: iconArea,
             child: icon == null
-              ? const SizedBox.shrink()
-              : Padding(
-                padding: iconPadding,
-                child: Icon(icon, size: iconSize, color: fg),
-              ),
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: iconPadding,
+                    child: Icon(icon, size: iconSize, color: fg),
+                  ),
           ),
           // centered text (no Expanded)
           Padding(
@@ -188,12 +189,12 @@ class OwlButton extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: textStyle ??
-                TextStyle(
-                  color: fg,
-                  fontWeight: FontWeight.w600,
-                  fontSize: fontSizeMedium,
-                  letterSpacing: 0,
-                ),
+                  TextStyle(
+                    color: fg,
+                    fontWeight: FontWeight.w600,
+                    fontSize: fontSizeMedium,
+                    letterSpacing: 0,
+                  ),
             ),
           ),
           // right spacer same as left to keep text visually centered

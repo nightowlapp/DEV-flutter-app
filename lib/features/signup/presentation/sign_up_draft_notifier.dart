@@ -12,27 +12,64 @@ class SignUpDraftNotifier extends StateNotifier<SignUpDraft> {
   static SignUpDraft _load(SharedPreferences p) {
     final raw = p.getString(_k);
     if (raw == null) return const SignUpDraft();
-    try { return SignUpDraft.fromJson(jsonDecode(raw) as Map<String, dynamic>); }
-    catch (_) { return const SignUpDraft(); }
+    try {
+      return SignUpDraft.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return const SignUpDraft();
+    }
   }
 
   void _save() => _prefs.setString(_k, jsonEncode(state.toJson()));
 
   // Mutations
-  void setBirthdate(DateTime d) { state = state.copyWith(birthdate: d); _save(); }
-  void setUsername(String u)    { state = state.copyWith(username: u.trim()); _save(); }
-  void setGender(g)             { state = state.copyWith(gender: g); _save(); }
-  void setEmail(String e)       { state = state.copyWith(email: e.trim()); _save(); }
-  void setLocalPhoto(String p)  { state = state.copyWith(localPhotoPath: p); _save(); }
-  void setRemotePhoto(String u) { state = state.copyWith(remotePhotoUrl: u); _save(); }
-  void setAcceptedTos(bool v)   { state = state.copyWith(acceptedTos: v); _save(); }
-  void clear()                  { state = const SignUpDraft(); _prefs.remove(_k); }
+  void setBirthdate(DateTime d) {
+    state = state.copyWith(birthdate: d);
+    _save();
+  }
+
+  void setUsername(String u) {
+    state = state.copyWith(username: u.trim());
+    _save();
+  }
+
+  void setGender(g) {
+    state = state.copyWith(gender: g);
+    _save();
+  }
+
+  void setEmail(String e) {
+    state = state.copyWith(email: e.trim());
+    _save();
+  }
+
+  void setLocalPhoto(String p) {
+    state = state.copyWith(localPhotoPath: p);
+    _save();
+  }
+
+  void setRemotePhoto(String u) {
+    state = state.copyWith(remotePhotoUrl: u);
+    _save();
+  }
+
+  void setAcceptedTos(bool v) {
+    state = state.copyWith(acceptedTos: v);
+    _save();
+  }
+
+  void clear() {
+    state = const SignUpDraft();
+    _prefs.remove(_k);
+  }
 
   /// Generic merge that keeps this layer free of Firebase imports.
-  void mergeExternalProfile({String? displayName, String? email, String? photoUrl}) {
+  void mergeExternalProfile(
+      {String? displayName, String? email, String? photoUrl}) {
     state = state.copyWith(
-      username: state.username ?? (displayName?.trim().isEmpty ?? true ? null : displayName!.trim()),
-      email: state.email ?? (email?.trim().isEmpty ?? true ? null : email!.trim().toLowerCase()),
+      username: state.username ??
+          (displayName?.trim().isEmpty ?? true ? null : displayName!.trim()),
+      email: state.email ??
+          (email?.trim().isEmpty ?? true ? null : email!.trim().toLowerCase()),
       remotePhotoUrl: state.remotePhotoUrl ?? photoUrl,
     );
     _save();
@@ -59,7 +96,7 @@ final canContinueFirstStepProvider = Provider<bool>((ref) {
 
 /// Public provider
 final signUpDraftProvider =
-StateNotifierProvider<SignUpDraftNotifier, SignUpDraft>((ref) {
-  final prefs = ref.watch(sharedPrefsProvider);        // central instance
+    StateNotifierProvider<SignUpDraftNotifier, SignUpDraft>((ref) {
+  final prefs = ref.watch(sharedPrefsProvider); // central instance
   return SignUpDraftNotifier(prefs);
 });

@@ -13,23 +13,23 @@ import '../../core/storage/storage_url.dart';
 /// - Optional clipping via borderRadius
 class CustomNetworkImage extends StatelessWidget {
   const CustomNetworkImage(
-      this.url, {
-        super.key,
-        this.fit = BoxFit.cover,
-        this.memCacheWidth = 1024,
-        this.width,
-        this.height,
-        this.borderRadius,
-        this.clipBehavior = Clip.antiAlias,
-        this.fadeInDuration = const Duration(milliseconds: 200),
-        this.fadeOutDuration = const Duration(milliseconds: 120),
-        this.alignment = Alignment.center,
-        this.cacheKey,
-        this.httpHeaders,
-        this.fallbackAsset = 'assets/nightowl/logo.png',
-        this.fallBackEnabled = true,
-        this.normalizeStorage = true,
-      });
+    this.url, {
+    super.key,
+    this.fit = BoxFit.cover,
+    this.memCacheWidth = 1024,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.clipBehavior = Clip.antiAlias,
+    this.fadeInDuration = const Duration(milliseconds: 200),
+    this.fadeOutDuration = const Duration(milliseconds: 120),
+    this.alignment = Alignment.center,
+    this.cacheKey,
+    this.httpHeaders,
+    this.fallbackAsset = 'assets/nightowl/logo.png',
+    this.fallBackEnabled = true,
+    this.normalizeStorage = true,
+  });
 
   final String url;
   final BoxFit fit;
@@ -58,16 +58,16 @@ class CustomNetworkImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget fullBleedFallback() => _wrap(
-      fallBackEnabled
-          ? Image.asset(
-        fallbackAsset,
-        width: width,
-        height: height,
-        fit: fit,               // <-- FULL BLEED
-        alignment: alignment,
-      )
-          : const SizedBox.shrink(),
-    );
+          fallBackEnabled
+              ? Image.asset(
+                  fallbackAsset,
+                  width: width,
+                  height: height,
+                  fit: fit, // <-- FULL BLEED
+                  alignment: alignment,
+                )
+              : const SizedBox.shrink(),
+        );
 
     final raw = url.trim();
     final resolved = normalizeStorage ? StorageUrl.normalize(raw) : raw;
@@ -90,7 +90,8 @@ class CustomNetworkImage extends StatelessWidget {
       placeholder: (_, __) => fullBleedFallback(),
       errorWidget: (_, __, err) {
         assert(() {
-          if (kDebugMode) debugPrint('CustomNetworkImage error for $resolved -> $err');
+          if (kDebugMode)
+            debugPrint('CustomNetworkImage error for $resolved -> $err');
           return true;
         }());
         return fullBleedFallback();

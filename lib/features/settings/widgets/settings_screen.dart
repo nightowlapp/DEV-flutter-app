@@ -32,7 +32,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _gender; // 'm' | 'f' | 'o'
   bool _shareLocation = true;
 
-  final List<String> _favoriteClubs = const[
+  final List<String> _favoriteClubs = const [
     'Bassline',
     'Velvet Room',
     'Neon District',
@@ -48,48 +48,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (appUser == null && fbUser == null) return;
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+      if (!mounted) return;
 
-        String email = '';
-        String userName = '';
-        String first = '';
-        String last = '';
-        DateTime? birth;
-        String? phone;
-        String? genderLetter;
+      String email = '';
+      String userName = '';
+      String first = '';
+      String last = '';
+      DateTime? birth;
+      String? phone;
+      String? genderLetter;
 
-        double maxDistanceKm;
+      double maxDistanceKm;
 
-        if (appUser != null) {
-          email = appUser.email;
-          userName = appUser.userName;
-          first = (appUser.firstName ?? '').trim();
-          last = (appUser.lastName ?? '').trim();
+      if (appUser != null) {
+        email = appUser.email;
+        userName = appUser.userName;
+        first = (appUser.firstName ?? '').trim();
+        last = (appUser.lastName ?? '').trim();
 
-          // If no first/last but display name exists, split it
-          if (first.isEmpty && last.isEmpty) {
-            final dn = appUser.displayFullName.trim();
-            if (dn.isNotEmpty) {
-              final parts = dn.split(RegExp(r'\s+'));
-              first = parts.isNotEmpty ? parts.first : '';
-              last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-            }
-          }
-
-          birth = appUser.birthDate;
-          phone = appUser.phoneNumber?.toString(); // generic string form
-          genderLetter = _genderLetterFromEnum(appUser.gender);
-          maxDistanceKm = appUser.maxDistanceKm;
-          userName = appUser.userName;
-        }
-
-        // Fallbacks from Firebase if missing
-        email = _firstNonEmpty(email, fbUser?.email, _email);
-        if (phone == null || phone.trim().isEmpty) {
-          phone = fbUser?.phoneNumber ?? _phone;
-        }
-        if ((first + last).trim().isEmpty) {
-          final dn = (fbUser?.displayName ?? '').trim();
+        // If no first/last but display name exists, split it
+        if (first.isEmpty && last.isEmpty) {
+          final dn = appUser.displayFullName.trim();
           if (dn.isNotEmpty) {
             final parts = dn.split(RegExp(r'\s+'));
             first = parts.isNotEmpty ? parts.first : '';
@@ -97,19 +76,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         }
 
-        setState(() {
-            _email = email;
-            _userName = userName;
-            _firstName = first;
-            _lastName = last;
-            _birthday = birth;
-            _phone = phone;
-            _gender = genderLetter; // 'm' | 'f' | 'o'
-            _hydrated = true;
-          }
-        );
+        birth = appUser.birthDate;
+        phone = appUser.phoneNumber?.toString(); // generic string form
+        genderLetter = _genderLetterFromEnum(appUser.gender);
+        maxDistanceKm = appUser.maxDistanceKm;
+        userName = appUser.userName;
       }
-    );
+
+      // Fallbacks from Firebase if missing
+      email = _firstNonEmpty(email, fbUser?.email, _email);
+      if (phone == null || phone.trim().isEmpty) {
+        phone = fbUser?.phoneNumber ?? _phone;
+      }
+      if ((first + last).trim().isEmpty) {
+        final dn = (fbUser?.displayName ?? '').trim();
+        if (dn.isNotEmpty) {
+          final parts = dn.split(RegExp(r'\s+'));
+          first = parts.isNotEmpty ? parts.first : '';
+          last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        }
+      }
+
+      setState(() {
+        _email = email;
+        _userName = userName;
+        _firstName = first;
+        _lastName = last;
+        _birthday = birth;
+        _phone = phone;
+        _gender = genderLetter; // 'm' | 'f' | 'o'
+        _hydrated = true;
+      });
+    });
   }
 
   // ===== UI =====
@@ -120,15 +118,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _maybeHydrate(appUser, fbUser);
 
     final birthdayStr = _birthday == null
-      ? ''
-      : '${_two(_birthday!.day)}-${_two(_birthday!.month)}-${_birthday!.year}';
+        ? ''
+        : '${_two(_birthday!.day)}-${_two(_birthday!.month)}-${_birthday!.year}';
 
     return Scaffold(
-      appBar: AppBar( // TODO Main APp bar
+      appBar: AppBar(
+        // TODO Main APp bar
         backgroundColor: black,
         title: const Text('Settings'),
         centerTitle: true,
-        actions: const[
+        actions: const [
           Padding(
             padding: EdgeInsets.only(right: 8),
             child: LanguageSwitcher(),
@@ -136,53 +135,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
       body:
-      // ListView(children: [
-      //     Column(children: [
-      //
-      //       Image.asset('assets/nightowl/logo.png'),
-      //       Image.asset('assets/nightowl/logo2.png'),
-      //         // Image.asset('assets/nightowl/logo3.png'),
-      //
-      //       Text('NightOwl', style: Styles.gradientLogo,),
-      //       Text('NightOwl', style: Styles.logoTextGradient,),
-      //       Text('NightOwl', style: Styles.sloganTextGradient,),
-      //       Text('NightOwl', style: Styles.slogan,),
-      //       Text('NightOwl', style: Styles.popShadowLogo,),
-      //
-      //       Text('NightOwl', style: Styles.test1,),
-      //       Text('NightOwl', style: Styles.test2,),
-      //       Text('NightOwl', style: Styles.test3,),
-      //       Text('NightOwl', style: Styles.test4,),
-      //       Text('NightOwl', style: Styles.test5,),
-      //
-      //       Styles.logoCrazy('NightOwl'),
-      //       Styles.nameOrangeAttemptUpgrade(),
-      //       Styles.nameWhite(),
-      //       Styles.nameOrange(),
-      //       Styles.nameOrange(),
-      //
-      //
-      //
-      //       SizedBox(height: 100,)
-      //
-      //       ],)
-      //   ],)
+          // ListView(children: [
+          //     Column(children: [
+          //
+          //       Image.asset('assets/nightowl/logo.png'),
+          //       Image.asset('assets/nightowl/logo2.png'),
+          //         // Image.asset('assets/nightowl/logo3.png'),
+          //
+          //       Text('NightOwl', style: Styles.gradientLogo,),
+          //       Text('NightOwl', style: Styles.logoTextGradient,),
+          //       Text('NightOwl', style: Styles.sloganTextGradient,),
+          //       Text('NightOwl', style: Styles.slogan,),
+          //       Text('NightOwl', style: Styles.popShadowLogo,),
+          //
+          //       Text('NightOwl', style: Styles.test1,),
+          //       Text('NightOwl', style: Styles.test2,),
+          //       Text('NightOwl', style: Styles.test3,),
+          //       Text('NightOwl', style: Styles.test4,),
+          //       Text('NightOwl', style: Styles.test5,),
+          //
+          //       Styles.logoCrazy('NightOwl'),
+          //       Styles.nameOrangeAttemptUpgrade(),
+          //       Styles.nameWhite(),
+          //       Styles.nameOrange(),
+          //       Styles.nameOrange(),
+          //
+          //
+          //
+          //       SizedBox(height: 100,)
+          //
+          //       ],)
+          //   ],)
 
-    ListView(
-
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _sectionHeader("Personal"),
-        _userTile("Username", _userName, onTap: () async {
+          ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _sectionHeader("Personal"),
+          _userTile("Username", _userName, onTap: () async {
             final updated = await _editTextField(
               context,
               fieldLabel: "Username",
               initial: _userName,
             );
             if (updated != null) setState(() => _userName = updated);
-          }
-        ),
-        _userTile("Email", _email, onTap: () async {
+          }),
+          _userTile("Email", _email, onTap: () async {
             final updated = await _editTextField(
               context,
               fieldLabel: "Email",
@@ -190,50 +187,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               keyboardType: TextInputType.emailAddress,
             );
             if (updated != null) setState(() => _email = updated);
-          }
-        ),
+          }),
 
-        Row(
-          children: [
-            Expanded(
-              child: _userTile("First Name", _firstName, onTap: () async {
+          Row(
+            children: [
+              Expanded(
+                child: _userTile("First Name", _firstName, onTap: () async {
                   final updated = await _editTextField(
                     context,
                     fieldLabel: "First Name",
                     initial: _firstName,
                   );
                   if (updated != null) setState(() => _firstName = updated);
-                }
+                }),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _userTile("Last Name", _lastName, onTap: () async {
+              const SizedBox(width: 16),
+              Expanded(
+                child: _userTile("Last Name", _lastName, onTap: () async {
                   final updated = await _editTextField(
                     context,
                     fieldLabel: "Last Name",
                     initial: _lastName,
                   );
                   if (updated != null) setState(() => _lastName = updated);
-                }
+                }),
               ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: _userTile("Birthday", birthdayStr, onTap: () async {
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _userTile("Birthday", birthdayStr, onTap: () async {
                   final picked = await _pickBirthday(context, _birthday);
                   if (picked != null) setState(() => _birthday = picked);
-                }
+                }),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: _userTile("Phone", _formattedPhone(_phone), onTap: () async {
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: _userTile("Phone", _formattedPhone(_phone),
+                    onTap: () async {
                   final updated = await _editTextField(
                     context,
                     fieldLabel: "Phone",
@@ -241,61 +235,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     keyboardType: TextInputType.phone,
                   );
                   if (updated != null) setState(() => _phone = updated);
-                }
+                }),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 1,
-              child: _userTile(
-                "Gender",
-                _genderLabel(_gender),
-                icon: maleIcon,
-                onTap: () async {
-                  final g = await _pickGender(context, _gender);
-                  if (g != null) setState(() => _gender = g);
-                },
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 1,
+                child: _userTile(
+                  "Gender",
+                  _genderLabel(_gender),
+                  icon: maleIcon,
+                  onTap: () async {
+                    final g = await _pickGender(context, _gender);
+                    if (g != null) setState(() => _gender = g);
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-        const Divider(color: white, thickness: 0.2, height: 30),
+            ],
+          ),
+          const Divider(color: white, thickness: 0.2, height: 30),
 
-        _sectionHeader("Preferences"),
-        SwitchListTile(
-          value: _shareLocation,
-          onChanged: (v) => setState(() => _shareLocation = v),
-          title: Text("Share location with friends", style: Styles.basicText),
-          activeColor: owlPurple,
-          inactiveThumbColor: grey,
-          inactiveTrackColor: grey.withOpacity(0.3),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-        ),
+          _sectionHeader("Preferences"),
+          SwitchListTile(
+            value: _shareLocation,
+            onChanged: (v) => setState(() => _shareLocation = v),
+            title: Text("Share location with friends", style: Styles.basicText),
+            activeColor: owlPurple,
+            inactiveThumbColor: grey,
+            inactiveTrackColor: grey.withOpacity(0.3),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+          ),
 
-        // ---- your "lonely texts" (left intact) ----
+          // ---- your "lonely texts" (left intact) ----
 
-      Text('Få notifications fra venner online', style: Styles.popShadowLogo,),
+          Text(
+            'Få notifications fra venner online',
+            style: Styles.popShadowLogo,
+          ),
 
-        Text("ASBJØRN?!", style: Styles.basicText),
-        Text("Sms reklamer", style: Styles.basicText),
-        Text("email promoting.", style: Styles.basicText),
-        Text("log ud.", style: Styles.basicText),
-        Text("Delete user.", style: Styles.basicText),
-        Text("ToS.", style: Styles.basicText),
+          Text("ASBJØRN?!", style: Styles.basicText),
+          Text("Sms reklamer", style: Styles.basicText),
+          Text("email promoting.", style: Styles.basicText),
+          Text("log ud.", style: Styles.basicText),
+          Text("Delete user.", style: Styles.basicText),
+          Text("ToS.", style: Styles.basicText),
 
-        const Divider(color: owlPurple),
+          const Divider(color: owlPurple),
 
-        _sectionHeader("Notifications"),
-        _favoriteClubsSection(_favoriteClubs),
+          _sectionHeader("Notifications"),
+          _favoriteClubsSection(_favoriteClubs),
 
-        const SizedBox(height: 8),
-        const Divider(color: owlPurple),
+          const SizedBox(height: 8),
+          const Divider(color: owlPurple),
 
-        // -------- ALL AVAILABLE DATA (read-only) --------
-        _sectionHeader("All account data"),
-        ..._allDataTiles(appUser, fbUser),
-      ],
-    ),
+          // -------- ALL AVAILABLE DATA (read-only) --------
+          _sectionHeader("All account data"),
+          ..._allDataTiles(appUser, fbUser),
+        ],
+      ),
     );
   }
 
@@ -303,57 +299,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _allDataTiles(model.User? u, fb.User? fbu) {
     String s(Object? v) => v == null ? '' : v.toString();
     String enumS(Enum? e) => e == null ? '' : e.name;
-    String dateS(DateTime? d) =>
-    d == null ? '' : '${_two(d.day)}-${_two(d.month)}-${d.year} ${_two(d.hour)}:${_two(d.minute)}';
-    String setS(Set? set) =>
-    set == null || set.isEmpty ? '' : set.map((e) => (e is Enum) ? e.name : e.toString()).join(', ');
-    String listS(List? list) =>
-    list == null || list.isEmpty ? '' : list.map((e) => e.toString()).join(', ');
+    String dateS(DateTime? d) => d == null
+        ? ''
+        : '${_two(d.day)}-${_two(d.month)}-${d.year} ${_two(d.hour)}:${_two(d.minute)}';
+    String setS(Set? set) => set == null || set.isEmpty
+        ? ''
+        : set.map((e) => (e is Enum) ? e.name : e.toString()).join(', ');
+    String listS(List? list) => list == null || list.isEmpty
+        ? ''
+        : list.map((e) => e.toString()).join(', ');
 
     final tiles = <Widget>[];
 
     // Model.User
     tiles.addAll([
-        _kv('id', s(u?.id)),
-        _kv('email', s(u?.email)),
-        _kv('userName', s(u?.userName)),
-        _kv('firstName', s(u?.firstName)),
-        _kv('middleName', s(u?.middleName)),
-        _kv('lastName', s(u?.lastName)),
-        _kv('displayFullName', s(u?.displayFullName)),
-        _kv('birthDate', dateS(u?.birthDate)),
-        _kv('age', u == null ? '' : u.age.toString()),
-        _kv('gender', enumS(u?.gender)),
-        _kv('phoneNumber', s(u?.phoneNumber)),
-        _kv('biography', s(u?.biography)),
-        _kv('profilePictureUrl', s(u?.profilePictureUrl)),
-        _kv('homeCountry', s(u?.homeCountryCode)),
-        _kv('homeTown', s(u?.homeTown)),
-        _kv('appVersion', s(u?.appVersion)),
-        _kv('isVerified', u == null ? '' : u.isVerified.toString()),
-        _kv('level', u == null ? '' : u.level.toString()),
-        _kv('xp', u == null ? '' : u.xp.toStringAsFixed(0)),
-        _kv('preferredVenueTypes', setS(u?.preferredVenueTypes)),
-        _kv('maxDistanceKm', u == null ? '' : u.maxDistanceKm.toStringAsFixed(1)),
-        _kv('roles', setS(u?.roles)),
-        _kv('subscriptionType', enumS(u?.subscriptionType)),
-        _kv('platformType', enumS(u?.platformType)),
-      ]);
+      _kv('id', s(u?.id)),
+      _kv('email', s(u?.email)),
+      _kv('userName', s(u?.userName)),
+      _kv('firstName', s(u?.firstName)),
+      _kv('middleName', s(u?.middleName)),
+      _kv('lastName', s(u?.lastName)),
+      _kv('displayFullName', s(u?.displayFullName)),
+      _kv('birthDate', dateS(u?.birthDate)),
+      _kv('age', u == null ? '' : u.age.toString()),
+      _kv('gender', enumS(u?.gender)),
+      _kv('phoneNumber', s(u?.phoneNumber)),
+      _kv('biography', s(u?.biography)),
+      _kv('profilePictureUrl', s(u?.profilePictureUrl)),
+      _kv('homeCountry', s(u?.homeCountryCode)),
+      _kv('homeTown', s(u?.homeTown)),
+      _kv('appVersion', s(u?.appVersion)),
+      _kv('isVerified', u == null ? '' : u.isVerified.toString()),
+      _kv('level', u == null ? '' : u.level.toString()),
+      _kv('xp', u == null ? '' : u.xp.toStringAsFixed(0)),
+      _kv('preferredVenueTypes', setS(u?.preferredVenueTypes)),
+      _kv('maxDistanceKm', u == null ? '' : u.maxDistanceKm.toStringAsFixed(1)),
+      _kv('roles', setS(u?.roles)),
+      _kv('subscriptionType', enumS(u?.subscriptionType)),
+      _kv('platformType', enumS(u?.platformType)),
+    ]);
 
     // Firebase user (extra diagnostics)
     tiles.addAll([
-        const SizedBox(height: 12),
-        _sectionHeader('Firebase'),
-        _kv('uid', s(fbu?.uid)),
-        _kv('email', s(fbu?.email)),
-        _kv('emailVerified', fbu == null ? '' : fbu.emailVerified.toString()),
-        _kv('phoneNumber', s(fbu?.phoneNumber)),
-        _kv('displayName', s(fbu?.displayName)),
-        _kv('tenantId', s(fbu?.tenantId)),
-        _kv('providerIds', fbu == null ? '' : listS(fbu.providerData.map((p) => p.providerId).toList())),
-        _kv('creationTime', dateS(fbu?.metadata.creationTime)),
-        _kv('lastSignInTime', dateS(fbu?.metadata.lastSignInTime)),
-      ]);
+      const SizedBox(height: 12),
+      _sectionHeader('Firebase'),
+      _kv('uid', s(fbu?.uid)),
+      _kv('email', s(fbu?.email)),
+      _kv('emailVerified', fbu == null ? '' : fbu.emailVerified.toString()),
+      _kv('phoneNumber', s(fbu?.phoneNumber)),
+      _kv('displayName', s(fbu?.displayName)),
+      _kv('tenantId', s(fbu?.tenantId)),
+      _kv(
+          'providerIds',
+          fbu == null
+              ? ''
+              : listS(fbu.providerData.map((p) => p.providerId).toList())),
+      _kv('creationTime', dateS(fbu?.metadata.creationTime)),
+      _kv('lastSignInTime', dateS(fbu?.metadata.lastSignInTime)),
+    ]);
 
     return tiles;
   }
@@ -368,7 +371,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           Expanded(flex: 4, child: Text(k, style: Styles.basicText)),
           const SizedBox(width: 8),
-          Expanded(flex: 6, child: Text(shown, style: Styles.basicText, textAlign: TextAlign.right)),
+          Expanded(
+              flex: 6,
+              child: Text(shown,
+                  style: Styles.basicText, textAlign: TextAlign.right)),
         ],
       ),
     );
@@ -377,16 +383,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /* ========================== UI PARTS ========================== */
 
   Widget _sectionHeader(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 10, top: 6),
-    child: Text(text, style: Styles.basicTextHeader),
-  );
+        padding: const EdgeInsets.only(bottom: 10, top: 6),
+        child: Text(text, style: Styles.basicTextHeader),
+      );
 
   Widget _userTile(
     String label,
     String value, {
-      IconData? icon,
-      required VoidCallback onTap,
-    }) {
+    IconData? icon,
+    required VoidCallback onTap,
+  }) {
     // Show actual or "" (no placeholder text)
     final shown = value.trim();
     return ListTile(
@@ -403,10 +409,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(icon, size: 16, color: white),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Icon(icon, size: 16, color: white),
+              ),
             Flexible(
               child: Text(
                 shown,
@@ -447,38 +453,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<String?> _editTextField(
     BuildContext context, {
-      required String fieldLabel,
-      required String initial,
-      TextInputType keyboardType = TextInputType.text,
-    }) async {
+    required String fieldLabel,
+    required String initial,
+    TextInputType keyboardType = TextInputType.text,
+  }) async {
     final controller = TextEditingController(text: initial);
     final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        title: Text('Edit $fieldLabel'),
-        content: TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: fieldLabel,
-            border: const OutlineInputBorder(),
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF1C1C1E),
+            title: Text('Edit $fieldLabel'),
+            content: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              decoration: InputDecoration(
+                hintText: fieldLabel,
+                border: const OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Save')),
+            ],
           ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
-        ],
-      ),
-    ) ??
-      false;
+        ) ??
+        false;
 
     if (ok) return controller.text.trim();
     return null;
   }
 
-  Future<DateTime?> _pickBirthday(BuildContext context, DateTime? current) async {
+  Future<DateTime?> _pickBirthday(
+      BuildContext context, DateTime? current) async {
     final now = DateTime.now();
     final initial = current ?? DateTime(now.year - 21, now.month, now.day);
     final first = DateTime(1900, 1, 1);
@@ -539,7 +550,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListTile(
       leading: Icon(icon, color: white),
       title: Text(label, style: Styles.basicText),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: owlPurple) : const SizedBox.shrink(),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: owlPurple)
+          : const SizedBox.shrink(),
       onTap: () => Navigator.pop(ctx, value),
     );
   }
@@ -577,14 +590,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case 'o':
         return 'Other';
       default:
-      return '';
+        return '';
     }
   }
+
   static IconData? _genderIcon(model.Gender g) {
-    switch (g){
-      case model.Gender.female: return femaleIcon;
-      case model.Gender.male: return maleIcon;
-      case model.Gender.other: return otherGenderIcon;
+    switch (g) {
+      case model.Gender.female:
+        return femaleIcon;
+      case model.Gender.male:
+        return maleIcon;
+      case model.Gender.other:
+        return otherGenderIcon;
     }
   }
 
@@ -602,7 +619,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case model.Gender.female:
         return 'f';
       default:
-      return 'o';
+        return 'o';
     }
   }
 }

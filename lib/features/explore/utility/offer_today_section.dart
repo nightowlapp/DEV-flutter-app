@@ -15,39 +15,44 @@ class OfferTodaySection extends ConsumerWidget {
   @override
   Widget build(BuildContext c, WidgetRef ref) =>
       ref.watch(venueMediaBundleProvider(venueId)).when(
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
-        data: (b) {
-          // pick today's daily offer, else default offer
-          final todayIdx = DateTime.now().weekday - 1; // Mon=0..Sun=6
-          String? url;
-          for (final e in b.dailyOfferUrls.entries) {
-            if (e.key.index == todayIdx) { url = StorageUrl.normalize(e.value); break; }
-          }
-          url ??= (b.defaultOfferUrl?.isNotEmpty == true) ? StorageUrl.normalize(b.defaultOfferUrl!) : null;
-          if (url == null) return const SizedBox.shrink();
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (b) {
+              // pick today's daily offer, else default offer
+              final todayIdx = DateTime.now().weekday - 1; // Mon=0..Sun=6
+              String? url;
+              for (final e in b.dailyOfferUrls.entries) {
+                if (e.key.index == todayIdx) {
+                  url = StorageUrl.normalize(e.value);
+                  break;
+                }
+              }
+              url ??= (b.defaultOfferUrl?.isNotEmpty == true)
+                  ? StorageUrl.normalize(b.defaultOfferUrl!)
+                  : null;
+              if (url == null) return const SizedBox.shrink();
 
-          final w = PlatformConfig.width(c) * 0.72;
-          final h = PlatformConfig.height(c) * 0.24;
+              final w = PlatformConfig.width(c) * 0.72;
+              final h = PlatformConfig.height(c) * 0.24;
 
-          return Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadiusDefault),
-              child: InkWell(
-                onTap: () => _open(c, url!),
-                child: Hero(
-                  tag: url!,
-                  child: SizedBox(
-                    width: w,
-                    height: h,
-                    child: CustomNetworkImage(url, fit: BoxFit.cover),
+              return Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(borderRadiusDefault),
+                  child: InkWell(
+                    onTap: () => _open(c, url!),
+                    child: Hero(
+                      tag: url!,
+                      child: SizedBox(
+                        width: w,
+                        height: h,
+                        child: CustomNetworkImage(url, fit: BoxFit.cover),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           );
-        },
-      );
 
   void _open(BuildContext c, String url) {
     Navigator.of(c).push(PageRouteBuilder(
@@ -79,7 +84,8 @@ class _OfferViewer extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 8, left: 8,
+              top: 8,
+              left: 8,
               child: IconButton(
                 icon: const Icon(Icons.close, color: white),
                 onPressed: () => Navigator.of(c).pop(),

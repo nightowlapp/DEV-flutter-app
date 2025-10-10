@@ -20,19 +20,26 @@ class TokenSyncService {
     final user = userSnap.data() ?? {};
 
     final gender = ((user['gender'] as String?) ?? 'other').toLowerCase();
-    final country = ((user['home_country_code'] as String?) ?? 'dk').toLowerCase();
+    final country =
+        ((user['home_country_code'] as String?) ?? 'dk').toLowerCase();
 
-    final birth = _asDateTime(user['birth_date']); // Timestamp | String | DateTime | null
-    final ageBucket = _computeAgeBucket(birth);    // "18".."34", "35+", "all"
+    final birth =
+        _asDateTime(user['birth_date']); // Timestamp | String | DateTime | null
+    final ageBucket = _computeAgeBucket(birth); // "18".."34", "35+", "all"
 
-    final ref = _db.collection(DocumentPaths.users).doc(uid).collection(DocumentPaths.fcmToken).doc(token);
+    final ref = _db
+        .collection(DocumentPaths.users)
+        .doc(uid)
+        .collection(DocumentPaths.fcmToken)
+        .doc(token);
 
     await ref.set({
       'token': token,
-      'platform': Platform.isIOS ? 'ios' : (Platform.isAndroid ? 'android' : 'other'),
-      'country_code': country,        // lowercase
-      'gender': gender,               // lowercase
-      'age_bucket': ageBucket,        // string
+      'platform':
+          Platform.isIOS ? 'ios' : (Platform.isAndroid ? 'android' : 'other'),
+      'country_code': country, // lowercase
+      'gender': gender, // lowercase
+      'age_bucket': ageBucket, // string
       'created_at': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -49,7 +56,8 @@ class TokenSyncService {
     if (birth == null) return 'all';
     final now = DateTime.now();
     var age = now.year - birth.year;
-    if (now.month < birth.month || (now.month == birth.month && now.day < birth.day)) {
+    if (now.month < birth.month ||
+        (now.month == birth.month && now.day < birth.day)) {
       age--;
     }
     if (age <= 18) return '18';

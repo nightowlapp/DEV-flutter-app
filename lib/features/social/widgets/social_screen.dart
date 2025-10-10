@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
@@ -17,10 +16,9 @@ class SocialScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _SocialScreen();
-
 }
-class _SocialScreen extends ConsumerState<SocialScreen> {
 
+class _SocialScreen extends ConsumerState<SocialScreen> {
   @override
   Widget build(BuildContext context) {
     final friends = ref.watch(sortedFriendsProvider);
@@ -29,38 +27,39 @@ class _SocialScreen extends ConsumerState<SocialScreen> {
     final w = PlatformConfig.width(context);
     final bool newRequests = false;
 
-    return Scaffold(body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: h * 0.01),
+    return Scaffold(
+      body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: h * 0.01),
 
 // const FriendRequestsSection(),
 
-            // ✅ New reusable section
-            MyFriendsSection(
-              onTapFriend: (f) {
-                // TODO: open profile
-              },
-              onLongPressFriend: (f) {
-                // TODO: open map and focus on friend
-              },
-            ),
+              // ✅ New reusable section
+              MyFriendsSection(
+                onTapFriend: (f) {
+                  // TODO: open profile
+                },
+                onLongPressFriend: (f) {
+                  // TODO: open map and focus on friend
+                },
+              ),
 
-            // IF no friends:
+              // IF no friends:
               //           FIND FRIENDS SECTION instead of freinds. otherwise just find firends.
-              const Divider(color: white,),
+              const Divider(
+                color: white,
+              ),
 
-              SizedBox(height: h * 0.02,),
+              SizedBox(
+                height: h * 0.02,
+              ),
 
-
-            const FindFriendsSection(),
-          ],
-
-        )
-      ),
+              const FindFriendsSection(),
+            ],
+          )),
     );
   }
-
 }

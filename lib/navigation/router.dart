@@ -34,19 +34,19 @@ import '../features/social/widgets/social_screen.dart';
 
 typedef ScreenBuilderWithKey = Widget Function(Key? key);
 final List<MainScreenName> kBranchOrder =
-List<MainScreenName>.unmodifiable(_rootBuilders.keys);
+    List<MainScreenName>.unmodifiable(_rootBuilders.keys);
 
 // --- Tab root registry (single source of truth) ---
 final Map<MainScreenName, ScreenBuilderWithKey> _rootBuilders = {
-  MainScreenName.explore:  (key) => ExploreScreen(key: key),
-  MainScreenName.map:      (key) => MapScreen(key: key),
+  MainScreenName.explore: (key) => ExploreScreen(key: key),
+  MainScreenName.map: (key) => MapScreen(key: key),
   MainScreenName.calender: (key) => CalenderScreen(key: key),
-  MainScreenName.social:   (key) => SocialScreen(key: key),
-  MainScreenName.profile:  (key) => MyProfileScreen(key: key),
+  MainScreenName.social: (key) => SocialScreen(key: key),
+  MainScreenName.profile: (key) => MyProfileScreen(key: key),
 
   // Placeholders to keep API stable
-  MainScreenName.venues:   (key) => const Center(child: Text('Venues')),
-  MainScreenName.admin:    (key) => const Center(child: Text('Admin')),
+  MainScreenName.venues: (key) => const Center(child: Text('Venues')),
+  MainScreenName.admin: (key) => const Center(child: Text('Admin')),
 };
 
 Widget _buildRoot(MainScreenName s, Key key) {
@@ -69,43 +69,43 @@ final GoRouter router = GoRouter(
       path: '/login',
       name: 'login',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: LoginScreen()),
+          const NoTransitionPage(child: LoginScreen()),
     ),
     GoRoute(
       path: '/login-or-create',
       name: 'loginOrCreate',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: LoginOrCreateAccountScreen()),
+          const NoTransitionPage(child: LoginOrCreateAccountScreen()),
     ),
     GoRoute(
       path: '/first-create-nightowl-profile',
       name: 'firstCreateNightowlProfile',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: FirstCreateNightowlProfileScreen()),
+          const NoTransitionPage(child: FirstCreateNightowlProfileScreen()),
     ),
     GoRoute(
       path: '/second-create-nightowl-profile',
       name: 'secondCreateNightowlProfile',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: SecondCreateNightowlProfileScreen()),
+          const NoTransitionPage(child: SecondCreateNightowlProfileScreen()),
     ),
     GoRoute(
       path: '/third-create-nightowl-profile',
       name: 'thirdCreateNightowlProfile',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: ThirdCreateNightowlProfileScreen()),
+          const NoTransitionPage(child: ThirdCreateNightowlProfileScreen()),
     ),
     GoRoute(
       path: '/fourth-create-nightowl-profile',
       name: 'fourthCreateNightowlProfile',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: FourthCreateNightowlProfileScreen()),
+          const NoTransitionPage(child: FourthCreateNightowlProfileScreen()),
     ),
     GoRoute(
       path: '/choose-favorite-venues',
       name: 'chooseFavoriteVenues',
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: ChooseFavoriteVenuesScreen()),
+          const NoTransitionPage(child: ChooseFavoriteVenuesScreen()),
     ),
     // GoRoute(
     //   path: '/optional-details',
@@ -138,7 +138,7 @@ final GoRouter router = GoRouter(
       path: '/settings',
       name: SettingsScreen.routeName,
       pageBuilder: (context, state) =>
-      const NoTransitionPage(child: SettingsScreen()),
+          const NoTransitionPage(child: SettingsScreen()),
       // const NoTransitionPage(child: LoadingScreen()),
     ),
     // in your router config
@@ -185,8 +185,8 @@ final GoRouter router = GoRouter(
               GoRoute(
                 path: '/${s.name}',
                 name: s.name,
-                pageBuilder: (context, state) =>
-                    NoTransitionPage(child: _buildRoot(s, PageStorageKey(s.name))),
+                pageBuilder: (context, state) => NoTransitionPage(
+                    child: _buildRoot(s, PageStorageKey(s.name))),
               ),
             ],
           ),

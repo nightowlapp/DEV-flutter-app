@@ -20,19 +20,17 @@ Future<void> changeProfilePicture(BuildContext context, WidgetRef ref) async {
 }
 
 Future<void> changeProfilePictureWithContainer(
-    BuildContext context,
-    ProviderContainer container, {
-      ImageSource? source, // if null -> chooser sheet
-    }) async {
+  BuildContext context,
+  ProviderContainer container, {
+  ImageSource? source, // if null -> chooser sheet
+}) async {
   // 🔑 Use a root context that survives popping sheets/dialogs
-  final rootCtx = Navigator
-      .of(context, rootNavigator: true)
-      .context;
+  final rootCtx = Navigator.of(context, rootNavigator: true).context;
 
   final user = container.read(authUserProvider).maybeWhen(
-    data: (u) => u,
-    orElse: () => null,
-  );
+        data: (u) => u,
+        orElse: () => null,
+      );
   if (user == null) {
     OwlSnack.show(
       rootCtx,
@@ -69,19 +67,22 @@ Future<void> changeProfilePictureWithContainer(
       archivePrevious: true,
     );
     await repo.upsert(user.copyWith(profilePictureUrl: result.downloadUrl));
-    OwlSnack.show(rootCtx,
+    OwlSnack.show(
+      rootCtx,
       title: 'Profile Picture uploaded',
       message: 'Looking sharp! ✨',
       variant: OwlSnackVariant.success,
     );
   } on UnsupportedError catch (e) {
-    OwlSnack.show(rootCtx,
+    OwlSnack.show(
+      rootCtx,
       title: 'Failed to upload picture',
       message: e.message ?? e.toString(),
       variant: OwlSnackVariant.error,
     );
   } catch (e) {
-    OwlSnack.show(rootCtx,
+    OwlSnack.show(
+      rootCtx,
       title: 'Failed to upload picture',
       message: '$e',
       variant: OwlSnackVariant.error,
@@ -93,8 +94,8 @@ Future<void> changeProfilePictureWithContainer(
 
 Future<ImageSource?> _chooseSource(BuildContext context) {
   return showModalBottomSheet<ImageSource>(
-    context: context,               // pass rootCtx from caller
-    useRootNavigator: true,         // show above dialogs
+    context: context, // pass rootCtx from caller
+    useRootNavigator: true, // show above dialogs
     backgroundColor: black,
     showDragHandle: true,
     builder: (ctx) => SafeArea(
@@ -108,7 +109,8 @@ Future<ImageSource?> _chooseSource(BuildContext context) {
               color: owlPurple,
             ),
             title: Text('Take photo', style: Styles.basicText),
-            onTap: () => Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
+            onTap: () =>
+                Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
           ),
           ListTile(
             leading: const Icon(
@@ -117,7 +119,8 @@ Future<ImageSource?> _chooseSource(BuildContext context) {
               color: owlPurple,
             ),
             title: Text('Choose from gallery', style: Styles.basicText),
-            onTap: () => Navigator.of(ctx, rootNavigator: true).pop(ImageSource.gallery),
+            onTap: () =>
+                Navigator.of(ctx, rootNavigator: true).pop(ImageSource.gallery),
           ),
         ],
       ),

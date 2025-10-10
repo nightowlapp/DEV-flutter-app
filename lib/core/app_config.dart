@@ -12,7 +12,7 @@ class AppConfig {
   final String googleServerClientId;
   final String googleIosClientId;
 
-  const AppConfig( {
+  const AppConfig({
     this.env = 'dev',
     this.appTitle = 'NightOwl',
     required this.accessToken,
@@ -21,28 +21,26 @@ class AppConfig {
   });
 
   bool get isProd => env == 'prod';
-  bool get isDev  => env == 'dev';
+  bool get isDev => env == 'dev';
 
   static AppConfig get current => const AppConfig(
-    accessToken: String.fromEnvironment('MAPBOX_ACCESS_TOKEN',
-        // defaultValue: 'pk.eyJ1IjoibmlnaHR2aWV3IiwiYSI6ImNtYjBwdmhkaTB3aTkyaXEycmY3dXQ5czUifQ.XFwAjV4tzjFwKh2h1JmKoQ'), // test
-        defaultValue: 'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpmbmZsYTAxNnEya3M5eHJlcnlteGYifQ._IsVBAIAbKg7GZgJLdo7qA'),
-    googleServerClientId: String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID',
-        defaultValue: '658302244013-nn1l5bnl7trst9hcvnmlrnj2da5b62nv.apps.googleusercontent.com'),
-
-
-
-
-    googleIosClientId:String.fromEnvironment('GOOGLE_IOS_CLIENT_ID', defaultValue: ''),
-  );
-
+        accessToken: String.fromEnvironment('MAPBOX_ACCESS_TOKEN',
+            // defaultValue: 'pk.eyJ1IjoibmlnaHR2aWV3IiwiYSI6ImNtYjBwdmhkaTB3aTkyaXEycmY3dXQ5czUifQ.XFwAjV4tzjFwKh2h1JmKoQ'), // test
+            defaultValue:
+                'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpmbmZsYTAxNnEya3M5eHJlcnlteGYifQ._IsVBAIAbKg7GZgJLdo7qA'),
+        googleServerClientId: String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID',
+            defaultValue:
+                '658302244013-nn1l5bnl7trst9hcvnmlrnj2da5b62nv.apps.googleusercontent.com'),
+        googleIosClientId:
+            String.fromEnvironment('GOOGLE_IOS_CLIENT_ID', defaultValue: ''),
+      );
 }
 
 // static const String AppVersion = '0.1.0';
 
 class AppVersionInfo {
-  final String version;    // e.g. 0.1.0
-  final String build;      // e.g. 12
+  final String version; // e.g. 0.1.0
+  final String build; // e.g. 12
   const AppVersionInfo(this.version, this.build);
   String get label => '$version+$build';
 }

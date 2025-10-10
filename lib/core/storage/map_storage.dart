@@ -10,7 +10,7 @@ import 'package:archive/archive_io.dart';
 
 class MapStorage {
   MapStorage({
-    this.maxEntries = 200,             // ~tiles across a few cities
+    this.maxEntries = 200, // ~tiles across a few cities
     this.defaultTtl1 = const Duration(minutes: 15),
     String? namespace,
   }) : _ns = namespace ?? 'v1';
@@ -96,10 +96,13 @@ class MapStorage {
     if (files.length <= maxEntries) return;
 
     // Sort by last modified ascending (oldest first), delete extras
-    files.sort((a, b) => a.statSync().modified.compareTo(b.statSync().modified));
+    files
+        .sort((a, b) => a.statSync().modified.compareTo(b.statSync().modified));
     final toDelete = files.length - maxEntries;
     for (var i = 0; i < toDelete; i++) {
-      try { await files[i].delete(); } catch (_) {}
+      try {
+        await files[i].delete();
+      } catch (_) {}
     }
   }
 }

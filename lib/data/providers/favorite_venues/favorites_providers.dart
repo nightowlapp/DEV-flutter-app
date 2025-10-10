@@ -16,8 +16,8 @@ final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
 });
 
 // Simpler: pass only venueId. Limit/admin are derived inside.
-final favoriteStoreProvider =
-ChangeNotifierProvider.family.autoDispose<FavoriteStore, String>((ref, venueId) {
+final favoriteStoreProvider = ChangeNotifierProvider.family
+    .autoDispose<FavoriteStore, String>((ref, venueId) {
   ref.watch(authStateProvider); // refresh on auth changes
   final repo = ref.watch(favoritesRepositoryProvider);
   final maxFavorites = ref.watch(favoriteLimitProvider);
@@ -26,7 +26,8 @@ ChangeNotifierProvider.family.autoDispose<FavoriteStore, String>((ref, venueId) 
 
   bool getIsAdmin() {
     final async = ref.read(authUserProvider);
-    return async.maybeWhen(data: (u) => (u?.isAdmin ?? false), orElse: () => false);
+    return async.maybeWhen(
+        data: (u) => (u?.isAdmin ?? false), orElse: () => false);
   }
 
   final store = FavoriteStore(
@@ -53,10 +54,12 @@ final favoritesCountProvider = StreamProvider<int>((ref) {
 });
 
 /// Combines current count + limit in one place.
-final favoritesProgressProvider = Provider<({int current, int limit, bool unlimited})>((ref) {
+final favoritesProgressProvider =
+    Provider<({int current, int limit, bool unlimited})>((ref) {
   final current = ref.watch(favoritesCountProvider).maybeWhen(
-    data: (c) => c, orElse: () => 0,
-  );
+        data: (c) => c,
+        orElse: () => 0,
+      );
   final limit = ref.watch(favoriteLimitProvider);
   final unlimited = limit >= 9999;
   return (current: current, limit: limit, unlimited: unlimited);

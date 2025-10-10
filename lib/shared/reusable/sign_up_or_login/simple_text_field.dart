@@ -21,13 +21,13 @@ class SimpleTextField extends StatefulWidget {
     this.backgroundColor = transparent,
     this.textColor = owlPurple,
     this.hintColor = greyLighter,
-    this.borderColor =white,
+    this.borderColor = white,
     this.focusedBorderColor = owlPurple,
     this.cursorColor = white,
     this.borderRadius = borderRadiusMedium,
     this.borderWidth = 1.5,
     this.contentPadding =
-    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
   });
 
   final TextEditingController controller;
@@ -90,7 +90,9 @@ class _SimpleTextFieldState extends State<SimpleTextField> {
       obscureText: _obscure,
       cursorColor: cc,
       style: TextStyle(color: fg),
-      keyboardType: widget.obscureText ? TextInputType.visiblePassword : TextInputType.text,
+      keyboardType: widget.obscureText
+          ? TextInputType.visiblePassword
+          : TextInputType.text,
       onChanged: widget.onChanged,
       validator: widget.validator,
       decoration: InputDecoration(
@@ -105,15 +107,15 @@ class _SimpleTextFieldState extends State<SimpleTextField> {
             : Icon(widget.leadingIcon, color: white),
         suffixIcon: widget.obscureText && widget.enableObscureToggle
             ? IconButton(
-          icon: Icon(
-            _obscure ? invisible : visible,
-            color: hc,
-          ),
-          onPressed: () => setState(() => _obscure = !_obscure),
-        )
+                icon: Icon(
+                  _obscure ? invisible : visible,
+                  color: hc,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              )
             : (widget.trailingIcon == null
-            ? null
-            : Icon(widget.trailingIcon, color: hc)),
+                ? null
+                : Icon(widget.trailingIcon, color: hc)),
         border: baseBorder,
         enabledBorder: baseBorder,
         focusedBorder: focusedBorder,

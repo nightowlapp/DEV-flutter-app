@@ -52,16 +52,17 @@ class LikeVenueButton extends StatefulWidget {
 class _LikeVenueButtonState extends State<LikeVenueButton>
     with TickerProviderStateMixin {
   // Pulse when tapping (both like/unlike)
-  late final AnimationController _pulseCtr =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-  late final Animation<double> _pulse =
-  Tween(begin: 1.0, end: 1.15).chain(CurveTween(curve: Curves.easeOut)).animate(_pulseCtr);
+  late final AnimationController _pulseCtr = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 180));
+  late final Animation<double> _pulse = Tween(begin: 1.0, end: 1.15)
+      .chain(CurveTween(curve: Curves.easeOut))
+      .animate(_pulseCtr);
 
   // Heart burst when switching to liked
-  late final AnimationController _burstCtr =
-  AnimationController(vsync: this, duration: const Duration(milliseconds: 2820));
+  late final AnimationController _burstCtr = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2820));
   late final Animation<double> _burst =
-  CurvedAnimation(parent: _burstCtr, curve: Curves.easeOutCubic);
+      CurvedAnimation(parent: _burstCtr, curve: Curves.easeOutCubic);
 
   bool _showBurst = false;
   bool _prevLiked = false;
@@ -127,7 +128,8 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
     bool doRemove = false;
     final label = _venueLabel(widget.venue);
     final title = widget.confirmTitle ?? 'Unlike $label';
-    final text  = widget.confirmText  ?? 'Are you sure you want to unlike $label?';
+    final text =
+        widget.confirmText ?? 'Are you sure you want to unlike $label?';
 
     await showDialog(
       context: ctx,
@@ -179,7 +181,9 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
   }
 
   Future<void> _onTap(BuildContext ctx) async {
-    _pulseCtr.forward(from: 0).whenComplete(() => _pulseCtr.reverse()); // instant feedback
+    _pulseCtr
+        .forward(from: 0)
+        .whenComplete(() => _pulseCtr.reverse()); // instant feedback
 
     await widget.store.init();
 
@@ -193,12 +197,16 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
     } on StateError catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(content: Text('Please sign in to like.'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+            content: Text('Please sign in to like.'),
+            behavior: SnackBarBehavior.floating),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+            content: Text('Something went wrong. Please try again.'),
+            behavior: SnackBarBehavior.floating),
       );
     }
   }
@@ -239,12 +247,13 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
             ),
 
             // Heart burst (3 hearts) – only visible while the burst animation runs
-            if (_showBurst) _HeartBurst(
-              t: _burst,
-              color: widget.fullColor,
-              baseIcon: widget.fullIcon,
-              baseSize: widget.size,
-            ),
+            if (_showBurst)
+              _HeartBurst(
+                t: _burst,
+                color: widget.fullColor,
+                baseIcon: widget.fullIcon,
+                baseSize: widget.size,
+              ),
           ],
         ),
       ),

@@ -5,11 +5,11 @@ import 'package:nightowlcode/shared/utility/distance.dart';
 import 'advanced_search_filter.dart';
 
 bool venuePassesFilters(
-    Venue v,
-    AdvancedSearchFilter f, {
-      LatLng? userLoc,
-      DateTime? nowLocalForVenue,
-    }) {
+  Venue v,
+  AdvancedSearchFilter f, {
+  LatLng? userLoc,
+  DateTime? nowLocalForVenue,
+}) {
   // distance
   if (f.maxDistanceKm != null && userLoc != null) {
     final meters = Distance.metersLatLng(userLoc, v.entry);

@@ -76,7 +76,8 @@ class FavoriteStore extends ChangeNotifier {
     final next = !_isFavorite;
 
     if (next && !getIsAdmin()) {
-      final current = await repository.countFavorites(userId: uid, atMost: maxFavorites);
+      final current =
+          await repository.countFavorites(userId: uid, atMost: maxFavorites);
       if (current >= maxFavorites) {
         throw FavoriteLimitException(maxFavorites);
       }
@@ -99,6 +100,7 @@ class FavoriteStore extends ChangeNotifier {
       rethrow;
     }
   }
+
   Future<bool> canAdd() async {
     if (!_ready) await init();
     if (getIsAdmin()) return true;
@@ -113,7 +115,11 @@ class FavoriteStore extends ChangeNotifier {
     return current < maxFavorites;
   }
 
+  Future<void> setFavorite() async {
+    if (!isFavorite) await toggle();
+  }
 
-  Future<void> setFavorite()  async { if (!isFavorite) await toggle(); }
-  Future<void> unsetFavorite() async { if (isFavorite)  await toggle(); }
+  Future<void> unsetFavorite() async {
+    if (isFavorite) await toggle();
+  }
 }

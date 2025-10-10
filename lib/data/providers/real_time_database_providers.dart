@@ -17,7 +17,7 @@ Stream<Map<String, int>> liveAllVenueCounts() {
 }
 
 // or per venue
-Stream<int> liveVenueCount(String venueId) =>
-    FirebaseDatabase.instance.ref('${DocumentPaths.liveCounts}/$venueId/${DocumentPaths.count}')
-        .onValue.map((e) => (e.snapshot.value as int?) ?? 0);
-
+Stream<int> liveVenueCount(String venueId) => FirebaseDatabase.instance
+    .ref('${DocumentPaths.liveCounts}/$venueId/${DocumentPaths.count}')
+    .onValue
+    .map((e) => (e.snapshot.value as int?) ?? 0);

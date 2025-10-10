@@ -1,6 +1,5 @@
 //TODO move all firestore related providers in here.
 
-
 import '../../core/storage/firestore_likes_data_source.dart';
 import 'other_providers.dart';
 import '../repositories/venues/like_repository.dart';
@@ -40,5 +39,3 @@ final likeStoreProvider = ChangeNotifierProvider.family
 
   return store;
 });
-
-

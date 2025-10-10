@@ -7,14 +7,16 @@ class VenueRepository {
   VenueRepository({FirebaseFirestore? db}) : _c = VenueCollections(db: db);
   final VenueCollections _c;
 
-  Stream<List<Venue>> watchAll({int? limit, String orderBy = 'created_at', bool desc = true}) {
+  Stream<List<Venue>> watchAll(
+      {int? limit, String orderBy = 'created_at', bool desc = true}) {
     Query<Venue> q = _c.venues;
     if (orderBy.isNotEmpty) q = q.orderBy(orderBy, descending: desc);
     if (limit != null) q = q.limit(limit);
     return q.snapshots().map((s) => s.docs.map((d) => d.data()).toList());
   }
 
-  Future<List<Venue>> getAll({int? limit, String orderBy = 'created_at', bool desc = true}) async {
+  Future<List<Venue>> getAll(
+      {int? limit, String orderBy = 'created_at', bool desc = true}) async {
     Query<Venue> q = _c.venues;
     if (orderBy.isNotEmpty) q = q.orderBy(orderBy, descending: desc);
     if (limit != null) q = q.limit(limit);
@@ -22,8 +24,10 @@ class VenueRepository {
     return snap.docs.map((d) => d.data()).toList();
   }
 
-  Stream<Venue?> watchById(String id) => _c.venues.doc(id).snapshots().map((s) => s.data());
-  Future<Venue?> getById(String id) async => (await _c.venues.doc(id).get()).data();
+  Stream<Venue?> watchById(String id) =>
+      _c.venues.doc(id).snapshots().map((s) => s.data());
+  Future<Venue?> getById(String id) async =>
+      (await _c.venues.doc(id).get()).data();
 
   Future<void> update(Venue v) async {
     final ref = _c.venues.doc(v.id);

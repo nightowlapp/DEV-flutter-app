@@ -8,7 +8,8 @@ class CityNowSectionRightDrawer extends StatefulWidget {
   const CityNowSectionRightDrawer({super.key});
 
   @override
-  State<CityNowSectionRightDrawer> createState() => _CityNowSectionRightDrawerState();
+  State<CityNowSectionRightDrawer> createState() =>
+      _CityNowSectionRightDrawerState();
 }
 
 class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
@@ -20,12 +21,16 @@ class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
         children: [
           Stack(
             children: [
-              SizedBox(width: PlatformConfig.width(context) * 0.25,
+              SizedBox(
+                width: PlatformConfig.width(context) * 0.25,
                 child: Text('Copenhagen Now', style: Styles.boldText),
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text("91002", style: Styles.basicText.copyWith(color: owlPurple),),
+                child: Text(
+                  "91002",
+                  style: Styles.basicText.copyWith(color: owlPurple),
+                ),
               )
             ],
           ),
@@ -81,7 +86,8 @@ class _ItemTileState extends State<_ItemTile> {
       margin: const EdgeInsets.only(bottom: verticalSpacerMedium),
       child: ListTile(
         title: Text('Item #${widget.index + 1}'),
-        subtitle: Text('This is a simple vertically scrolling list.', style: Styles.smallText),
+        subtitle: Text('This is a simple vertically scrolling list.',
+            style: Styles.smallText),
         onTap: () {},
       ),
     );

@@ -12,34 +12,35 @@ class OwlSnack {
   /// Show a floating bottom snackbar with title + optional message.
   /// Requires a [ScaffoldMessenger] in the widget tree.
   static void show(
-      BuildContext context, { // TODO bool to push forward on screen z value.
-        required String title,
-        String? message,
-        OwlSnackVariant variant = OwlSnackVariant.neutral,
-        SnackBarBehavior = SnackBarBehavior.floating,
-        // Visuals
-        Widget? icon,                          // override default logo
-        bool showIcon = true,                  // hide/show icon
-        double iconSize = 22,
-        bool showDivider = true,
-        Duration duration = const Duration(seconds: 3),
-        EdgeInsetsGeometry? margin,
-        EdgeInsetsGeometry? padding,
-        double borderRadius = borderRadiusDefault,
+    BuildContext context, {
+    // TODO bool to push forward on screen z value.
+    required String title,
+    String? message,
+    OwlSnackVariant variant = OwlSnackVariant.neutral,
+    SnackBarBehavior = SnackBarBehavior.floating,
+    // Visuals
+    Widget? icon, // override default logo
+    bool showIcon = true, // hide/show icon
+    double iconSize = 22,
+    bool showDivider = true,
+    Duration duration = const Duration(seconds: 3),
+    EdgeInsetsGeometry? margin,
+    EdgeInsetsGeometry? padding,
+    double borderRadius = borderRadiusDefault,
 
-        // Colors (override per-call)
-        Color? backgroundColor,
-        Color? textColor,
-        Color? borderColor,
+    // Colors (override per-call)
+    Color? backgroundColor,
+    Color? textColor,
+    Color? borderColor,
 
-        // Optional action
-        String? actionLabel,
-        VoidCallback? onAction,
-      }) {
+    // Optional action
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
     final palette = _paletteFor(variant);
-    final bg  = backgroundColor ?? palette.$1;
-    final fg  = textColor       ?? palette.$2;
-    final brd = borderColor     ?? palette.$3;
+    final bg = backgroundColor ?? palette.$1;
+    final fg = textColor ?? palette.$2;
+    final brd = borderColor ?? palette.$3;
 
     // Default icon → NightOwl logo
     final Widget defaultIcon = Image.asset(
@@ -66,15 +67,15 @@ class OwlSnack {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (showIcon) Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: iconWidget,
-              ),
+              if (showIcon)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: iconWidget,
+                ),
             ],
           ),
 
-          if (showDivider)
-            const Divider(color: owlPurple),
+          if (showDivider) const Divider(color: owlPurple),
 
 // SizedBox(height: PlatformConfig.height(context)*0.005,),
 
@@ -82,7 +83,8 @@ class OwlSnack {
           if ((message ?? '').trim().isNotEmpty)
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(message!, style: Styles.popupText.copyWith(color: fg)),
+              child:
+                  Text(message!, style: Styles.popupText.copyWith(color: fg)),
             ),
 
           // Action button
@@ -93,7 +95,8 @@ class OwlSnack {
               child: TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: fg,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -130,13 +133,29 @@ class OwlSnack {
   static (Color, Color, Color) _paletteFor(OwlSnackVariant v) {
     switch (v) {
       case OwlSnackVariant.success:
-        return (const Color(0xFF0F3E2C), const Color(0xFFB6F6D6), const Color(0xFF2DD389));
+        return (
+          const Color(0xFF0F3E2C),
+          const Color(0xFFB6F6D6),
+          const Color(0xFF2DD389)
+        );
       case OwlSnackVariant.warning:
-        return (const Color(0xFF3E2F0F), const Color(0xFFFFE6B3), const Color(0xFFFFC14A));
+        return (
+          const Color(0xFF3E2F0F),
+          const Color(0xFFFFE6B3),
+          const Color(0xFFFFC14A)
+        );
       case OwlSnackVariant.error:
-        return (const Color(0xFF3E1414), const Color(0xFFFFC7C7), const Color(0xFFFF6B6B));
+        return (
+          const Color(0xFF3E1414),
+          const Color(0xFFFFC7C7),
+          const Color(0xFFFF6B6B)
+        );
       case OwlSnackVariant.info:
-        return (const Color(0xFF14253E), const Color(0xFFBFD9FF), const Color(0xFF5AA8FF));
+        return (
+          const Color(0xFF14253E),
+          const Color(0xFFBFD9FF),
+          const Color(0xFF5AA8FF)
+        );
       case OwlSnackVariant.neutral:
       default:
         return (black, white, grey);

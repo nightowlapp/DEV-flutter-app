@@ -9,7 +9,8 @@ import '../../../models/users/friend.dart';
 import '../map/map_repository.dart';
 
 class FriendRepository implements AbstractFriendRepository {
-  FriendRepository({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  FriendRepository({FirebaseFirestore? db})
+      : _db = db ?? FirebaseFirestore.instance;
   final FirebaseFirestore _db;
 
   @override
@@ -17,7 +18,8 @@ class FriendRepository implements AbstractFriendRepository {
     final fiveMinAgo = DateTime.now().millisecondsSinceEpoch - 5 * 60 * 1000;
     return _db
         .collection('friends_locations') // TODO Call from path.
-        .where('updated_at', isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
+        .where('updated_at',
+            isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
         .snapshots()
         .map((snap) {
       final out = <Friend>[];

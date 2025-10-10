@@ -22,7 +22,8 @@ class VerifiedBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(checkCircleIcon, color: green, size: iconSizeMedium),
-          Text('Verified', style: Styles.smallText.copyWith(fontWeight: FontWeight.w600)),
+          Text('Verified',
+              style: Styles.smallText.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );

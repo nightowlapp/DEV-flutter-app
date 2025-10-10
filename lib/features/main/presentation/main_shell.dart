@@ -30,7 +30,6 @@ class _MainShellState extends State<MainShell> {
   String? _token;
   List<String> _appliedTopics = [];
 
-
   @override
   void initState() {
     super.initState();
@@ -91,17 +90,21 @@ class _MainShellState extends State<MainShell> {
     final MainScreenName activeGlobal = kBranchOrder[widget.nav.currentIndex];
 
     // map to visible index for the bottom bar (no values[]!)
-    final currentVisibleIndex = tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
+    final currentVisibleIndex =
+        tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
 
     return MainScaffold(
-      appBar: MainAppBar( screen: activeGlobal,      ),
+      appBar: MainAppBar(
+        screen: activeGlobal,
+      ),
       body: widget.nav,
       bottomNavigationBar: MainBottomNavigationBar(
         tabs: tabs,
         currentIndex: currentVisibleIndex,
         onTap: (i) {
           final target = tabs[i];
-          final branchIndex = kBranchOrder.indexOf(target); // <- map enum → branch
+          final branchIndex =
+              kBranchOrder.indexOf(target); // <- map enum → branch
           widget.nav.goBranch(
             branchIndex,
             initialLocation: branchIndex == widget.nav.currentIndex,

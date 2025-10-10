@@ -12,22 +12,22 @@ import '../../../../shared/constants/enums.dart';
 
 extension GenderX on Gender {
   String get code => switch (this) {
-    Gender.female => 'F',
-    Gender.male => 'M',
-    Gender.other => 'O',
-  };
+        Gender.female => 'F',
+        Gender.male => 'M',
+        Gender.other => 'O',
+      };
 
   String get label => switch (this) {
-    Gender.female => 'Female',
-    Gender.male => 'Male',
-    Gender.other => 'Other',
-  };
+        Gender.female => 'Female',
+        Gender.male => 'Male',
+        Gender.other => 'Other',
+      };
 
   IconData get icon => switch (this) {
-    Gender.female => femaleIcon,
-    Gender.male => maleIcon,
-    Gender.other => otherGenderIcon,
-  };
+        Gender.female => femaleIcon,
+        Gender.male => maleIcon,
+        Gender.other => otherGenderIcon,
+      };
 }
 
 /// Hybrid UI:
@@ -57,7 +57,7 @@ class GenderSelector extends StatefulWidget {
     this.contentPadding = const EdgeInsets.fromLTRB(0, 5, 0, 5),
     // Layout
     this.gap = 10.0,
-    this.boxSize = iconSizeMedium*1.5,
+    this.boxSize = iconSizeMedium * 1.5,
     // Box look (delegated to OwlButton for bg/border)
     this.activeBgColor = owlPurple,
     this.inactiveBgColor = transparent,
@@ -67,10 +67,10 @@ class GenderSelector extends StatefulWidget {
     // Icon/Text
     this.iconColor = white,
     this.iconSize = iconSizeMedium,
-    this.labelStyle =
-    const TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w200),
-    this.titleStyle =
-    const TextStyle(color: white, fontSize: fontSizeMedium, fontWeight: FontWeight.w600),
+    this.labelStyle = const TextStyle(
+        color: white, fontSize: 12, fontWeight: FontWeight.w200),
+    this.titleStyle = const TextStyle(
+        color: white, fontSize: fontSizeMedium, fontWeight: FontWeight.w600),
   });
 
   final ValueChanged<Gender> onChanged;
@@ -138,7 +138,8 @@ class _GenderSelectorState extends State<GenderSelector> {
         color: widget.cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),
-          side: BorderSide(color: widget.strokeColor, width: widget.strokeWidth),
+          side:
+              BorderSide(color: widget.strokeColor, width: widget.strokeWidth),
         ),
       ),
       padding: widget.contentPadding,
@@ -147,7 +148,8 @@ class _GenderSelectorState extends State<GenderSelector> {
         children: [
           // Centered title (no icon)
           Center(
-            child: Text(widget.title, style: widget.titleStyle, textAlign: TextAlign.center),
+            child: Text(widget.title,
+                style: widget.titleStyle, textAlign: TextAlign.center),
           ),
           const SizedBox(height: 16),
 
@@ -185,11 +187,13 @@ class _GenderSelectorState extends State<GenderSelector> {
                   fullWidth: true,
                   padding: EdgeInsets.zero,
                   borderRadius: widget.boxBorderRadius,
-                  backgroundColor:
-                  isSelected ? widget.activeBgColor : widget.inactiveBgColor,
+                  backgroundColor: isSelected
+                      ? widget.activeBgColor
+                      : widget.inactiveBgColor,
                   textColor: widget.iconColor, // not used (no label), OK
-                  borderColor:
-                  isSelected ? widget.activeBorderColor : widget.inactiveBorderColor,
+                  borderColor: isSelected
+                      ? widget.activeBorderColor
+                      : widget.inactiveBorderColor,
                   onPressed: () {
                     if (!_isControlled) setState(() => _internal = option);
                     widget.onChanged(option);
@@ -199,13 +203,15 @@ class _GenderSelectorState extends State<GenderSelector> {
               // Centered icon (visual content)
               IgnorePointer(
                 ignoring: true,
-                child: Icon(option.icon, size: widget.iconSize, color: widget.iconColor),
+                child: Icon(option.icon,
+                    size: widget.iconSize, color: widget.iconColor),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        Text(option.label, style: widget.labelStyle, textAlign: TextAlign.center),
+        Text(option.label,
+            style: widget.labelStyle, textAlign: TextAlign.center),
       ],
     );
   }

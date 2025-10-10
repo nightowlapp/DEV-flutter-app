@@ -10,8 +10,10 @@ class FriendRequestsRepository {
   final FirebaseAuth auth;
   FriendRequestsRepository(this.db, this.auth);
 
-  CollectionReference<Map<String, dynamic>> _incomingCol(String uid) =>
-      db.collection(DocumentPaths.friendRequests).doc(uid).collection(DocumentPaths.incoming);
+  CollectionReference<Map<String, dynamic>> _incomingCol(String uid) => db
+      .collection(DocumentPaths.friendRequests)
+      .doc(uid)
+      .collection(DocumentPaths.incoming);
 
   Stream<List<FriendRequest>> incomingForMe() {
     final uid = auth.currentUser?.uid;

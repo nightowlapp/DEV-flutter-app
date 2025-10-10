@@ -3,9 +3,9 @@ import 'device_context.dart';
 class SegmentRule {
   final String name;
   final List<String> topics;
-  final String? ifPlatform;       // 'ios' | 'android' | null
-  final String? ifLocalePrefix;   // e.g. 'en'
-  final String? ifVersionGte;     // e.g. '1.2.0'
+  final String? ifPlatform; // 'ios' | 'android' | null
+  final String? ifLocalePrefix; // e.g. 'en'
+  final String? ifVersionGte; // e.g. '1.2.0'
 
   SegmentRule({
     required this.name,
@@ -27,8 +27,11 @@ class SegmentRule {
 
   bool matches(DeviceContext ctx) {
     if (ifPlatform != null && ifPlatform != ctx.platform) return false;
-    if (ifLocalePrefix != null && !ctx.locale.toLowerCase().startsWith(ifLocalePrefix!.toLowerCase())) return false;
-    if (ifVersionGte != null && _compareVersions(ctx.version, ifVersionGte!) < 0) return false;
+    if (ifLocalePrefix != null &&
+        !ctx.locale.toLowerCase().startsWith(ifLocalePrefix!.toLowerCase()))
+      return false;
+    if (ifVersionGte != null &&
+        _compareVersions(ctx.version, ifVersionGte!) < 0) return false;
     return true;
   }
 

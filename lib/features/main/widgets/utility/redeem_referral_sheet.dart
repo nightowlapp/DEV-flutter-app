@@ -5,14 +5,14 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/owl_snack.dart';
 
-
 import '../../../../data/repositories/users/referral_repository.dart';
 
 class RedeemReferralSheet extends ConsumerStatefulWidget {
   const RedeemReferralSheet({super.key});
 
   @override
-  ConsumerState<RedeemReferralSheet> createState() => _RedeemReferralSheetState();
+  ConsumerState<RedeemReferralSheet> createState() =>
+      _RedeemReferralSheetState();
 }
 
 class _RedeemReferralSheetState extends ConsumerState<RedeemReferralSheet> {
@@ -48,43 +48,48 @@ class _RedeemReferralSheetState extends ConsumerState<RedeemReferralSheet> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _busy ? null : () async {
-                final code = _ctrl.text.trim();
-                if (code.isEmpty) {
-                  OwlSnack.show(context, title: 'Missing code', message: 'Please enter a referral code.');
-                  return;
-                }
-                setState(() => _busy = true);
-                try {
-                  final res = await repo.redeemCode(code);
-                  if (mounted) {
-                    OwlSnack.show(
-                      context,
-                      title: 'Referral applied!',
-                      message:
-                      'You earned +${res.awardedInvitee} EXP. Your friend earned +${res.awardedInviter} EXP.',
-                      variant: OwlSnackVariant.success,
-                    );
-                    Navigator.of(context).maybePop();
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    OwlSnack.show(
-                      context,
-                      title: 'Could not redeem',
-                      message: '$e',
-                      variant: OwlSnackVariant.error,
-                    );
-                  }
-                } finally {
-                  if (mounted) setState(() => _busy = false);
-                }
-              },
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final code = _ctrl.text.trim();
+                      if (code.isEmpty) {
+                        OwlSnack.show(context,
+                            title: 'Missing code',
+                            message: 'Please enter a referral code.');
+                        return;
+                      }
+                      setState(() => _busy = true);
+                      try {
+                        final res = await repo.redeemCode(code);
+                        if (mounted) {
+                          OwlSnack.show(
+                            context,
+                            title: 'Referral applied!',
+                            message:
+                                'You earned +${res.awardedInvitee} EXP. Your friend earned +${res.awardedInviter} EXP.',
+                            variant: OwlSnackVariant.success,
+                          );
+                          Navigator.of(context).maybePop();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          OwlSnack.show(
+                            context,
+                            title: 'Could not redeem',
+                            message: '$e',
+                            variant: OwlSnackVariant.error,
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
               child: _busy
                   ? const SizedBox(
-                width: 18, height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Redeem'),
             ),
           ),
@@ -100,9 +105,9 @@ class ExpBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final exp = ref.watch(myXpProvider).maybeWhen(
-      data: (v) => v,
-      orElse: () => 0,
-    );
+          data: (v) => v,
+          orElse: () => 0,
+        );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(

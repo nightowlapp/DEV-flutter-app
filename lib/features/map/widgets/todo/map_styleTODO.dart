@@ -40,7 +40,8 @@ class MapStyle {
 
     // Helper function to create an empty GeoJSON FeatureCollection string.
     // This is used as initial data for sources (empty map features).
-    String _emptyFC() => jsonEncode({'type':'FeatureCollection','features':[]});
+    String _emptyFC() =>
+        jsonEncode({'type': 'FeatureCollection', 'features': []});
 
     // Venues: clusterable - Add source for clusterable venues if missing.
     // GeoJsonSource: A source type for point data in GeoJSON format.
@@ -49,19 +50,24 @@ class MapStyle {
     // clusterMaxZoom: 15 - Clustering stops beyond this zoom level.
     if (!await style.styleSourceExists(srcVenuesClusterable)) {
       await style.addSource(GeoJsonSource(
-        id: srcVenuesClusterable, data: _emptyFC(),
-        cluster: true, clusterRadius: 64, clusterMaxZoom: 15,
+        id: srcVenuesClusterable,
+        data: _emptyFC(),
+        cluster: true,
+        clusterRadius: 64,
+        clusterMaxZoom: 15,
       ));
     }
     // Venues: VIP - Add source for non-clusterable VIP venues if missing.
     // cluster: false - These points never cluster.
     if (!await style.styleSourceExists(srcVenuesVip)) {
-      await style.addSource(GeoJsonSource(id: srcVenuesVip, data: _emptyFC(), cluster: false));
+      await style.addSource(
+          GeoJsonSource(id: srcVenuesVip, data: _emptyFC(), cluster: false));
     }
 
     // Friends - Add source for friend points if missing (no clustering by default).
     if (!await style.styleSourceExists(srcFriends)) {
-      await style.addSource(GeoJsonSource(id: srcFriends, data: _emptyFC(), cluster: false));
+      await style.addSource(
+          GeoJsonSource(id: srcFriends, data: _emptyFC(), cluster: false));
     }
 
     // Cluster circles - Add layer for drawing clusters as circles if missing.
@@ -75,18 +81,45 @@ class MapStyle {
     // circle-stroke-width: 2.0px - Border thickness.
     // circle-opacity: 0.9 - 90% opaque.
     if (!await style.styleLayerExists(lyrClusters)) {
-
       final int minSizeCluser = 350;
       final int maxSizeCluser = 350;
 
-      await style.addLayer(CircleLayer(id: lyrClusters, sourceId: srcVenuesClusterable));
-      await style.setStyleLayerProperty(lyrClusters, 'filter', jsonEncode(['has','point_count']));
-      await style.setStyleLayerProperty(lyrClusters, 'circle-color',
-          jsonEncode(['step', ['get','point_count'], purpleAccent.toHex(), 25, purple.toHex(), 100, deepPurple.toHex(), maxSizeCluser, blue.toHex()]));
-      await style.setStyleLayerProperty(lyrClusters, 'circle-radius',
-          jsonEncode(['step', ['get','point_count'], 16, 25, 20, 100, 26, maxSizeCluser, 34]));
-      await style.setStyleLayerProperty(lyrClusters, 'circle-stroke-color', white.toHex());
-      await style.setStyleLayerProperty(lyrClusters, 'circle-stroke-width', 0.0);
+      await style.addLayer(
+          CircleLayer(id: lyrClusters, sourceId: srcVenuesClusterable));
+      await style.setStyleLayerProperty(
+          lyrClusters, 'filter', jsonEncode(['has', 'point_count']));
+      await style.setStyleLayerProperty(
+          lyrClusters,
+          'circle-color',
+          jsonEncode([
+            'step',
+            ['get', 'point_count'],
+            purpleAccent.toHex(),
+            25,
+            purple.toHex(),
+            100,
+            deepPurple.toHex(),
+            maxSizeCluser,
+            blue.toHex()
+          ]));
+      await style.setStyleLayerProperty(
+          lyrClusters,
+          'circle-radius',
+          jsonEncode([
+            'step',
+            ['get', 'point_count'],
+            16,
+            25,
+            20,
+            100,
+            26,
+            maxSizeCluser,
+            34
+          ]));
+      await style.setStyleLayerProperty(
+          lyrClusters, 'circle-stroke-color', white.toHex());
+      await style.setStyleLayerProperty(
+          lyrClusters, 'circle-stroke-width', 0.0);
       await style.setStyleLayerProperty(lyrClusters, 'circle-opacity', 1.0);
     }
 
@@ -99,13 +132,19 @@ class MapStyle {
     // text-halo-color: #000000 - Black outline around text.
     // text-halo-width: 1.2px - Outline thickness.
     if (!await style.styleLayerExists(lyrClusterCount)) {
-      await style.addLayer(SymbolLayer(id: lyrClusterCount, sourceId: srcVenuesClusterable));
-      await style.setStyleLayerProperty(lyrClusterCount, 'filter', jsonEncode(['has','point_count']));
-      await style.setStyleLayerProperty(lyrClusterCount, 'text-field', jsonEncode(['get','point_count_abbreviated']));
+      await style.addLayer(
+          SymbolLayer(id: lyrClusterCount, sourceId: srcVenuesClusterable));
+      await style.setStyleLayerProperty(
+          lyrClusterCount, 'filter', jsonEncode(['has', 'point_count']));
+      await style.setStyleLayerProperty(lyrClusterCount, 'text-field',
+          jsonEncode(['get', 'point_count_abbreviated']));
       await style.setStyleLayerProperty(lyrClusterCount, 'text-size', 12.0);
-      await style.setStyleLayerProperty(lyrClusterCount, 'text-color', white.toHex());
-      await style.setStyleLayerProperty(lyrClusterCount, 'text-halo-color', '#000000');
-      await style.setStyleLayerProperty(lyrClusterCount, 'text-halo-width', 1.2);
+      await style.setStyleLayerProperty(
+          lyrClusterCount, 'text-color', white.toHex());
+      await style.setStyleLayerProperty(
+          lyrClusterCount, 'text-halo-color', '#000000');
+      await style.setStyleLayerProperty(
+          lyrClusterCount, 'text-halo-width', 1.2);
     }
 
     // Unclustered venue dots - Add layer for individual venue circles if missing.
@@ -115,13 +154,33 @@ class MapStyle {
     // circle-stroke-width: 3.0px - Border thickness.
     // circle-stroke-color: Case expression - Green (#2ECC71) if 'isOpenNow' is true, else red (#E74C3C).
     if (!await style.styleLayerExists(lyrUnclustered)) {
-      await style.addLayer(CircleLayer(id: lyrUnclustered, sourceId: srcVenuesClusterable));
-      await style.setStyleLayerProperty(lyrUnclustered, 'filter', jsonEncode(['!', ['has','point_count']]));
+      await style.addLayer(
+          CircleLayer(id: lyrUnclustered, sourceId: srcVenuesClusterable));
+      await style.setStyleLayerProperty(
+          lyrUnclustered,
+          'filter',
+          jsonEncode([
+            '!',
+            ['has', 'point_count']
+          ]));
       await style.setStyleLayerProperty(lyrUnclustered, 'circle-radius', 9.0);
-      await style.setStyleLayerProperty(lyrUnclustered, 'circle-color', purple.toHex());
-      await style.setStyleLayerProperty(lyrUnclustered, 'circle-stroke-width', 2.0);
-      await style.setStyleLayerProperty(lyrUnclustered, 'circle-stroke-color',
-          jsonEncode(['case', ['==',['get','isOpenNow'], true], green.toHex(), red.toHex()]));
+      await style.setStyleLayerProperty(
+          lyrUnclustered, 'circle-color', purple.toHex());
+      await style.setStyleLayerProperty(
+          lyrUnclustered, 'circle-stroke-width', 2.0);
+      await style.setStyleLayerProperty(
+          lyrUnclustered,
+          'circle-stroke-color',
+          jsonEncode([
+            'case',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            green.toHex(),
+            red.toHex()
+          ]));
     }
 
     // Labels above markers - Add layer for venue text labels if missing.
@@ -134,21 +193,41 @@ class MapStyle {
     // text-allow-overlap: true - Allows labels to overlap other symbols.
     // text-ignore-placement: true - Ignores collision detection for placement.
     if (!await style.styleLayerExists(lyrLabels)) {
-      await style.addLayer(SymbolLayer(id: lyrLabels, sourceId: srcVenuesClusterable));
-      await style.setStyleLayerProperty(lyrLabels, 'filter', jsonEncode(['!', ['has','point_count']]));
-      await style.setStyleLayerProperty(lyrLabels, 'text-field',
-          jsonEncode(['format',
-            ['get','name'], {'text-color':white.toHex()},
-            ' ', {},
-            '★', {'text-color':'#FFC107'},
-            ['to-string',['get','rating']], {'text-color':blue.toHex()},
+      await style
+          .addLayer(SymbolLayer(id: lyrLabels, sourceId: srcVenuesClusterable));
+      await style.setStyleLayerProperty(
+          lyrLabels,
+          'filter',
+          jsonEncode([
+            '!',
+            ['has', 'point_count']
+          ]));
+      await style.setStyleLayerProperty(
+          lyrLabels,
+          'text-field',
+          jsonEncode([
+            'format',
+            ['get', 'name'],
+            {'text-color': white.toHex()},
+            ' ',
+            {},
+            '★',
+            {'text-color': '#FFC107'},
+            [
+              'to-string',
+              ['get', 'rating']
+            ],
+            {'text-color': blue.toHex()},
           ]));
       await style.setStyleLayerProperty(lyrLabels, 'text-size', 12.0);
-      await style.setStyleLayerProperty(lyrLabels, 'text-halo-color', '#FFFFFF');
+      await style.setStyleLayerProperty(
+          lyrLabels, 'text-halo-color', '#FFFFFF');
       await style.setStyleLayerProperty(lyrLabels, 'text-halo-width', 1.0);
-      await style.setStyleLayerProperty(lyrLabels, 'text-offset', const [0.0, -1.6]);
+      await style
+          .setStyleLayerProperty(lyrLabels, 'text-offset', const [0.0, -1.6]);
       await style.setStyleLayerProperty(lyrLabels, 'text-allow-overlap', false);
-      await style.setStyleLayerProperty(lyrLabels, 'text-ignore-placement', true);
+      await style.setStyleLayerProperty(
+          lyrLabels, 'text-ignore-placement', true);
     }
 
     // VIP - Add layer for VIP venue circles if missing (1.5x larger than regular).
@@ -159,26 +238,52 @@ class MapStyle {
       await style.setStyleLayerProperty(lyrVip, 'circle-radius', 18.0);
       await style.setStyleLayerProperty(lyrVip, 'circle-color', '#FFFFFF');
       await style.setStyleLayerProperty(lyrVip, 'circle-stroke-width', 3.0);
-      await style.setStyleLayerProperty(lyrVip, 'circle-stroke-color',
-          jsonEncode(['case', ['==',['get','isOpenNow'], true], green.toHex(), red.toHex()]));
+      await style.setStyleLayerProperty(
+          lyrVip,
+          'circle-stroke-color',
+          jsonEncode([
+            'case',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            green.toHex(),
+            red.toHex()
+          ]));
     }
     // VIP labels - Similar to regular labels, but with adjusted offset for larger dots.
     // text-offset: [0.0, -1.8] - Slightly further up.
     if (!await style.styleLayerExists(lyrVipLabels)) {
-      await style.addLayer(SymbolLayer(id: lyrVipLabels, sourceId: srcVenuesVip));
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-field',
-          jsonEncode(['format',
-            ['get','name'], {'text-color':white.toHex()},
-            ' ', {},
-            '★', {'text-color':'#FFC107'},
-            ['to-string',['get','rating']], {'text-color':blue.toHex()},
+      await style
+          .addLayer(SymbolLayer(id: lyrVipLabels, sourceId: srcVenuesVip));
+      await style.setStyleLayerProperty(
+          lyrVipLabels,
+          'text-field',
+          jsonEncode([
+            'format',
+            ['get', 'name'],
+            {'text-color': white.toHex()},
+            ' ',
+            {},
+            '★',
+            {'text-color': '#FFC107'},
+            [
+              'to-string',
+              ['get', 'rating']
+            ],
+            {'text-color': blue.toHex()},
           ]));
       await style.setStyleLayerProperty(lyrVipLabels, 'text-size', 14.0);
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-halo-color', white.toHex());
+      await style.setStyleLayerProperty(
+          lyrVipLabels, 'text-halo-color', white.toHex());
       await style.setStyleLayerProperty(lyrVipLabels, 'text-halo-width', 0.8);
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-offset', const [0.0, -1.8]);
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-allow-overlap', true);
-      await style.setStyleLayerProperty(lyrVipLabels, 'text-ignore-placement', true);
+      await style.setStyleLayerProperty(
+          lyrVipLabels, 'text-offset', const [0.0, -1.8]);
+      await style.setStyleLayerProperty(
+          lyrVipLabels, 'text-allow-overlap', true);
+      await style.setStyleLayerProperty(
+          lyrVipLabels, 'text-ignore-placement', true);
     }
 
     // Friends dots - Add layer for friend circles if missing.
@@ -188,12 +293,16 @@ class MapStyle {
     // circle-stroke-color: #000000 - Black border.
     // circle-stroke-width: 1.5px.
     if (!await style.styleLayerExists(lyrFriendDots)) {
-      await style.addLayer(CircleLayer(id: lyrFriendDots, sourceId: srcFriends));
-      await style.setStyleLayerProperty(lyrFriendDots, 'circle-color', blue.toHex());
+      await style
+          .addLayer(CircleLayer(id: lyrFriendDots, sourceId: srcFriends));
+      await style.setStyleLayerProperty(
+          lyrFriendDots, 'circle-color', blue.toHex());
       await style.setStyleLayerProperty(lyrFriendDots, 'circle-radius', 10.0);
       await style.setStyleLayerProperty(lyrFriendDots, 'circle-opacity', 1.0);
-      await style.setStyleLayerProperty(lyrFriendDots, 'circle-stroke-color', black.toHex());
-      await style.setStyleLayerProperty(lyrFriendDots, 'circle-stroke-width', 1.5);
+      await style.setStyleLayerProperty(
+          lyrFriendDots, 'circle-stroke-color', black.toHex());
+      await style.setStyleLayerProperty(
+          lyrFriendDots, 'circle-stroke-width', 1.5);
     }
     // Friend labels - Add layer for friend text if missing.
     // text-field: ['coalesce', ['get', 'name'], 'Friend'] - Uses 'name' property if available, else 'Friend'.
@@ -204,24 +313,39 @@ class MapStyle {
     // text-offset: [0.0, -1.2] - Above the dot.
     // text-allow-overlap: false - Prevents overlapping other labels.
     if (!await style.styleLayerExists(lyrFriendLabels)) {
-      await style.addLayer(SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends));
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-field', jsonEncode(['coalesce',['get','name'],'Friend']));
+      await style
+          .addLayer(SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends));
+      await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-field',
+          jsonEncode([
+            'coalesce',
+            ['get', 'name'],
+            'Friend'
+          ]));
       await style.setStyleLayerProperty(lyrFriendLabels, 'text-size', 12.0);
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-color', white.toHex());
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-halo-color', black.toHex());
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-halo-width', 1.2);
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-offset', const [0.0, -1.2]);
-      await style.setStyleLayerProperty(lyrFriendLabels, 'text-allow-overlap', false);
+      await style.setStyleLayerProperty(
+          lyrFriendLabels, 'text-color', white.toHex());
+      await style.setStyleLayerProperty(
+          lyrFriendLabels, 'text-halo-color', black.toHex());
+      await style.setStyleLayerProperty(
+          lyrFriendLabels, 'text-halo-width', 1.2);
+      await style.setStyleLayerProperty(
+          lyrFriendLabels, 'text-offset', const [0.0, -1.2]);
+      await style.setStyleLayerProperty(
+          lyrFriendLabels, 'text-allow-overlap', false);
     }
   }
 
   // setVenueData: Updates the data in venue sources.
   // clusterableFc: GeoJSON string for clusterable venues.
   // vipFc: GeoJSON string for VIP venues.
-  Future<void> setVenueData(MapboxMap map, {required String clusterableFc, required String vipFc}) async {
+  Future<void> setVenueData(MapboxMap map,
+      {required String clusterableFc, required String vipFc}) async {
     final style = map.style;
     if (await style.styleSourceExists(srcVenuesClusterable)) {
-      await style.setStyleSourceProperty(srcVenuesClusterable, 'data', clusterableFc);
+      await style.setStyleSourceProperty(
+          srcVenuesClusterable, 'data', clusterableFc);
     }
     if (await style.styleSourceExists(srcVenuesVip)) {
       await style.setStyleSourceProperty(srcVenuesVip, 'data', vipFc);
@@ -244,31 +368,40 @@ class MapStyle {
   // combined: Applies type filter, and open filter if !showClosed.
   // Updates filters on unclustered, labels, VIP, and VIP labels layers.
   Future<void> applyFilters(
-      MapboxMap map, {
-        required bool showClosed,
-        required Set<String> allowedTypes,
-      }) async {
+    MapboxMap map, {
+    required bool showClosed,
+    required Set<String> allowedTypes,
+  }) async {
     final style = map.style;
 
     // keep it clean & deterministic
     // Converts set to sorted list for consistent filtering.
-    final typesList = allowedTypes
-        .where((e) => e.isNotEmpty)
-        .toList()
-      ..sort();
+    final typesList = allowedTypes.where((e) => e.isNotEmpty).toList()..sort();
 
     // ✅ correct: `in` takes the value and ONE array (use ['literal', list])
     // typeExpr: Expression to match venueType against allowedTypes.
     // If no types, defaults to ['has', 'venueType'] (show all with a type).
     final typeExpr = typesList.isEmpty
         ? ['has', 'venueType']
-        : ['in', ['get', 'venueType'], ['literal', typesList]];
+        : [
+            'in',
+            ['get', 'venueType'],
+            ['literal', typesList]
+          ];
 
     // openPredicate: 'any' - True if either isOpenNow or opensLaterToday is true.
     final openPredicate = [
       'any',
-      ['==', ['get', 'isOpenNow'], true],
-      ['==', ['get', 'opensLaterToday'], true],
+      [
+        '==',
+        ['get', 'isOpenNow'],
+        true
+      ],
+      [
+        '==',
+        ['get', 'opensLaterToday'],
+        true
+      ],
     ];
 
     // combined: If showClosed, just type filter; else both type and open.
@@ -279,12 +412,26 @@ class MapStyle {
       style.setStyleLayerProperty(
         MapStyle.lyrUnclustered,
         'filter',
-        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+        jsonEncode([
+          'all',
+          [
+            '!',
+            ['has', 'point_count']
+          ],
+          combined
+        ]),
       ),
       style.setStyleLayerProperty(
         MapStyle.lyrLabels,
         'filter',
-        jsonEncode(['all', ['!', ['has', 'point_count']], combined]),
+        jsonEncode([
+          'all',
+          [
+            '!',
+            ['has', 'point_count']
+          ],
+          combined
+        ]),
       ),
       style.setStyleLayerProperty(
         MapStyle.lyrVip,
@@ -298,5 +445,4 @@ class MapStyle {
       ),
     ]);
   }
-
 }

@@ -11,15 +11,14 @@ import '../../../../models/venues/venue.dart';
 import '../../../shared/constants/enums.dart';
 import '../../../shared/utility/distance.dart';
 
-
 class Viewport {
   final double lat, lng, zoom;
   const Viewport(this.lat, this.lng, this.zoom);
 }
 
 class VenueFilters {
-  final Set<VenueType>? types;     // null => all types
-  final String? city;              // already store lowercase
+  final Set<VenueType>? types; // null => all types
+  final String? city; // already store lowercase
   const VenueFilters({this.types, this.city});
 
   bool get hasType => (types?.isNotEmpty ?? false);
@@ -33,7 +32,7 @@ abstract class AbstractFriendRepository {
   Stream<List<Friend>> watchFriends(Viewport vp);
 }
 
-class MapRepository{
+class MapRepository {
   // implements AbstractVenueRepository, AbstractFriendRepository { //TODO
   MapRepository({
     required this.onVenuesChanged,
@@ -50,15 +49,16 @@ class MapRepository{
 
   FirebaseFirestore get _fs => FirebaseFirestore.instance;
 
-
   @override
   Stream<List<Venue>> watchViewport(Viewport vp, {VenueFilters? filters}) {
     final out = StreamController<List<Venue>>.broadcast();
     // ... (your existing body, including subs setup and emit())
     out.onCancel = () async {
-      for (final s in _venueSubs) { await s.cancel(); }
+      for (final s in _venueSubs) {
+        await s.cancel();
+      }
     };
-    return out.stream;  // Add this line
+    return out.stream; // Add this line
   }
 
   // @override
@@ -69,22 +69,28 @@ class MapRepository{
 
   final Map<String, Map<String, dynamic>> _venueById = {};
   final Map<String, Map<String, dynamic>> _friendById = {};
-  final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>> _venueSubs = [];
+  final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>
+      _venueSubs = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _friendsSub;
 
   String? _lastCenterHash;
   double _lastRadiusKm = 8;
   static const _minMoveMeters = 750.0;
 
-  Future<void> queryVenuesForCamera(double lat, double lng, double zoom, {bool force = false}) async {
+  Future<void> queryVenuesForCamera(double lat, double lng, double zoom,
+      {bool force = false}) async {
     final position = await Geolocator.getCurrentPosition();
-    if (!force && Geolocator.distanceBetween(position.latitude, position.longitude, lat, lng) < 750) return;
+    if (!force &&
+        Geolocator.distanceBetween(
+                position.latitude, position.longitude, lat, lng) <
+            750) return;
     final rKm = _radiusForZoom(zoom);
     final precision = _precisionForRadius(rKm);
     final centerHash = Geohash.encode(lat, lng, precision);
     final movedEnough = (_lastCenterHash == null)
         ? true
-        : Geohash.centerDistanceMeters(centerHash, _lastCenterHash!) > _minMoveMeters;
+        : Geohash.centerDistanceMeters(centerHash, _lastCenterHash!) >
+            _minMoveMeters;
     final radiusChanged = (rKm - _lastRadiusKm).abs() >= 2;
     if (!force && !movedEnough && !radiusChanged) return;
     _lastCenterHash = centerHash;
@@ -104,7 +110,8 @@ class MapRepository{
     final fiveMinAgo = DateTime.now().millisecondsSinceEpoch - 5 * 60 * 1000;
     _friendsSub = _fs
         .collection('friends_locations')
-        .where('updated_at', isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
+        .where('updated_at',
+            isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(fiveMinAgo))
         .snapshots()
         .listen((snap) {
       bool changed = false;
@@ -152,13 +159,15 @@ class MapRepository{
 
   // -------- Firestore (prefix streams)
   Future<void> _startVenuePrefixStreams(
-      double lat,
-      double lng,
-      double radiusKm,
-      int precision,
-      Set<String> cover,
-      ) async {
-    for (final s in _venueSubs) { await s.cancel(); }
+    double lat,
+    double lng,
+    double radiusKm,
+    int precision,
+    Set<String> cover,
+  ) async {
+    for (final s in _venueSubs) {
+      await s.cancel();
+    }
     _venueSubs.clear();
 
     final venuesRef = _fs.collection('venues').orderBy('geohash');
@@ -168,32 +177,35 @@ class MapRepository{
           .endAt(['$prefix~'])
           .snapshots()
           .listen((snap) async {
-        bool changed = false;
-        final perPrefix = <Map<String, dynamic>>[];
+            bool changed = false;
+            final perPrefix = <Map<String, dynamic>>[];
 
-        for (final doc in snap.docs) {
-          final data = doc.data();
-          final gp = data['entry'];
-          if (gp is! GeoPoint) continue;
+            for (final doc in snap.docs) {
+              final data = doc.data();
+              final gp = data['entry'];
+              if (gp is! GeoPoint) continue;
 
-          final distM = Distance.meters(lat, lng, gp.latitude, gp.longitude);
-          if (distM > (radiusKm * 1000 + 200)) continue;
+              final distM =
+                  Distance.meters(lat, lng, gp.latitude, gp.longitude);
+              if (distM > (radiusKm * 1000 + 200)) continue;
 
-          final name = (data['display_name'] ?? data['name'] ?? '').toString();
-          final feat = _pointFeature(doc.id, gp.latitude, gp.longitude, {'id': doc.id, 'name': name});
+              final name =
+                  (data['display_name'] ?? data['name'] ?? '').toString();
+              final feat = _pointFeature(doc.id, gp.latitude, gp.longitude,
+                  {'id': doc.id, 'name': name});
 
-          _venueById[doc.id] = feat;
-          perPrefix.add(feat);
-          changed = true;
-        }
+              _venueById[doc.id] = feat;
+              perPrefix.add(feat);
+              changed = true;
+            }
 
-        await _cache.write(_cacheKey(precision, prefix), {
-          'type': 'FeatureCollection',
-          'features': perPrefix,
-        });
+            await _cache.write(_cacheKey(precision, prefix), {
+              'type': 'FeatureCollection',
+              'features': perPrefix,
+            });
 
-        if (changed) _emitVenues();
-      });
+            if (changed) _emitVenues();
+          });
 
       _venueSubs.add(sub);
     }
@@ -201,22 +213,32 @@ class MapRepository{
 
   // -------- Emit + utils
   void _emitVenues() {
-    final fc = jsonEncode({'type': 'FeatureCollection', 'features': _venueById.values.toList()});
+    final fc = jsonEncode(
+        {'type': 'FeatureCollection', 'features': _venueById.values.toList()});
     onVenuesChanged(fc);
   }
 
   void _emitFriends() {
-    final fc = jsonEncode({'type': 'FeatureCollection', 'features': _friendById.values.toList()});
+    final fc = jsonEncode(
+        {'type': 'FeatureCollection', 'features': _friendById.values.toList()});
     onFriendsChanged(fc);
   }
 
-  Map<String, dynamic> _pointFeature(String id, double lat, double lng, Map<String, dynamic> props) => {
-    'type': 'Feature', 'id': id, 'properties': props,
-    'geometry': {'type': 'Point', 'coordinates': [lng, lat]},
-  };
+  Map<String, dynamic> _pointFeature(
+          String id, double lat, double lng, Map<String, dynamic> props) =>
+      {
+        'type': 'Feature',
+        'id': id,
+        'properties': props,
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [lng, lat]
+        },
+      };
 
   String _stableIdFromFeature(Map<String, dynamic> f) {
-    final c = (f['geometry']?['coordinates'] as List?)?.cast<num>() ?? const [0, 0];
+    final c =
+        (f['geometry']?['coordinates'] as List?)?.cast<num>() ?? const [0, 0];
     final n = (f['properties']?['name'] ?? '').toString();
     return '${c[0]}_${c[1]}_$n';
   }
@@ -236,6 +258,4 @@ class MapRepository{
     if (rKm <= 8) return 5;
     return 4;
   }
-
-
 }

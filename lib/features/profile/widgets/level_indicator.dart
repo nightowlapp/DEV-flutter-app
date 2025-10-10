@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // TODO implement a question mark or whatever far right with popup that informs on how to get exp.
 
 class LevelIndicator extends StatelessWidget {
-  final String levelLabel;           // e.g. 'Level 7'
+  final String levelLabel; // e.g. 'Level 7'
   final int current;
   final int total;
   final double height;
@@ -76,7 +76,8 @@ class LevelIndicator extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, // each side of middle
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceEvenly, // each side of middle
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
