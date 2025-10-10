@@ -86,6 +86,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void initState() {
     super.initState();
     _tts.init(); // default en-US
+    _tts.muted.addListener(() { if (mounted) setState(() {}); });
   }
 
   @override
@@ -98,8 +99,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void dispose() {
     _posSub?.cancel();
+    _tts.dispose(); // fire-and-forget is fine here
     super.dispose();
   }
+
 
   @override
   bool get wantKeepAlive => true;
@@ -641,7 +644,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return clock; // today
     }
     else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
-      return 'tomorrow $clock';
+      return clock;
     }
     else {
       // e.g. 3/12 19:24 (keep it compact)
@@ -695,7 +698,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
                           // --- Mute/unmute TTS
                           InkWell(
-                            // onTap: _toggleMute,
+                            onTap: _toggleMute,
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
                               padding: const EdgeInsets.all(6),
@@ -703,8 +706,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 color: grey, borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
-                                // _ttsMuted ? Icons.volume_off_rounded :
-                                Icons.volume_up_rounded,
+                                _tts.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
                                 color: white,
                                 size: iconSizeDefault,
                               ),
@@ -766,6 +768,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
+  Future<void> _toggleMute() async {
+    await _tts.toggleMuted();
+    if (mounted) setState(() {}); // refresh icon
+  }
 
 
 }
