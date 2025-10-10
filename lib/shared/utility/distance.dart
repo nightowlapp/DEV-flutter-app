@@ -6,7 +6,7 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 class Distance {
   static const double _earthR = 6371000.0; // meters
 
-  /// Typical walking speed ~1.0 m/s (~3.6 km/h).
+  /// Typical walking speed ~1.0 m/s (~3.4 km/h).
   static const double kDefaultWalkMps = 1.0;
 
   /// Real detour factor for non-straight paths.
@@ -129,7 +129,7 @@ class Distance {
   /// Venue-style walking time from KM (helper if you already have km).
   static String walkingTimeTextVenueKm(
     double km, {
-    double speedKmh = 3.6,
+    double speedKmh = 3.4,
   }) {
     if (km.isNaN || km.isInfinite || km <= 0 || speedKmh <= 0) return '—';
     final mins = (km / speedKmh * 60).ceil();
@@ -138,7 +138,7 @@ class Distance {
 
   /// Walking time to a venue.
   static String walkingTimeToVenue(LatLng? userLoc, Venue venue,
-      {double speedKmh = 3.6}) {
+      {double speedKmh = 3.4}) {
     if (userLoc == null) return '';
     final dKm = kmLatLng(userLoc, venue.entry);
     final mins = (dKm / speedKmh * 60).ceil();

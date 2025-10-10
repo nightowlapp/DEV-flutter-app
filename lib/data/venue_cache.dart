@@ -1,0 +1,62 @@
+// lib/features/venues/data/venue_cache.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/data/providers/other_providers.dart';
+import 'package:nightowlcode/models/venues/venue.dart';
+import 'package:nightowlcode/shared/utility/lat_lng.dart';
+import 'package:nightowlcode/shared/utility/distance.dart';
+import 'package:nightowlcode/core/storage/venues_sso.dart'; // venuesListProvider
+
+class VenueCache {
+  final List<Venue> _all;
+  final Map<String, Venue> _byId;
+
+  VenueCache._(this._all, this._byId);
+
+  factory VenueCache.fromList(List<Venue> list) =>
+      VenueCache._(List.unmodifiable(list),
+          Map<String, Venue>.unmodifiable({for (final v in list) v.id: v}));
+
+  // ---- lookups ----
+  List<Venue> get all => _all;
+  int get size => _all.length;
+  Venue? get(String id) => _byId[id];
+  bool contains(String id) => _byId.containsKey(id);
+
+  /// Fast linear nearest (good up to a few 10k venues). Swap with grid later.
+  String? nearest(LatLng p, {double maxMeters = 60}) {
+    String? bestId;
+    double best = maxMeters;
+    for (final v in _all) {
+      final d = Distance.metersLatLng(p, v.entry);
+      if (d < best) { best = d; bestId = v.id; }
+    }
+    return bestId;
+  }
+
+  /// Simple viewport filtering (optional helper)
+  Iterable<Venue> withinBounds({
+    required double minLat, required double minLng,
+    required double maxLat, required double maxLng,
+  }) sync* {
+    for (final v in _all) {
+      final lat = v.entry.lat, lng = v.entry.lng;
+      if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+        yield v;
+      }
+    }
+  }
+}
+
+/// Live cache: rebuilds whenever the SSO list changes.
+/// Keep-alive so you can read it from multiple screens without GC churn.
+final venueCacheProvider = Provider<VenueCache>((ref) {
+  ref.keepAlive();
+  final list = ref.watch(venuesListProvider); // ← your SSO (always fresh)
+  return VenueCache.fromList(list);
+});
+
+/// If you often need a single venue reactively:
+final venueByIdProvider = Provider.family<Venue?, String>((ref, id) {
+  final cache = ref.watch(venueCacheProvider);
+  return cache.get(id);
+});
