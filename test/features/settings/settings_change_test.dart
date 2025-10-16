@@ -22,20 +22,10 @@ class MockPersonalSettingsRepository extends Mock implements PersonalSettingsRep
 class MockUserRepository extends Mock implements UserRepository {}
 class MockAppUser extends Mock implements app_user.User {}
 
-// Robust text finder (unchanged)
+// Simplified text finder
 Finder findTextLoose(String needle) {
-  final target = needle.trim().toLowerCase();
-  return find.byWidgetPredicate((w) {
-    if (w is Text) {
-      final data = (w.data ?? '').trim().toLowerCase();
-      return data == target || data.contains(target);
-    }
-    if (w is RichText) {
-      final data = w.text.toPlainText().trim().toLowerCase();
-      return data == target || data.contains(target);
-    }
-    return false;
-  }, description: 'text("$needle") loosely');
+  final target = needle.trim();
+  return find.text(target, findRichText: false);
 }
 
 void main() {
@@ -71,7 +61,7 @@ void main() {
 
   group('SettingsScreen -> fetch + upsert', () {
     testWidgets('Preferred venue types -> repo + SharedPreferences', (tester) async {
-      // Setup (unchanged)
+      // Setup
       final prefsRepo = MockPreferencesRepository();
       final personalRepo = MockPersonalSettingsRepository();
       final userRepo = MockUserRepository();
@@ -129,6 +119,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.pump(Duration(milliseconds: 500)); // Extra pump for async stability
+
+      // Debug: Dump widget tree
+      debugDumpApp();
+      print('All text widgets: ${tester.widgetList(find.byType(Text)).map((w) => (w as Text).data).toList()}');
 
       // Debug: Verify appUser is not null
       final appUserState = container.read(authUserProvider).valueOrNull;
@@ -167,7 +162,7 @@ void main() {
     });
 
     testWidgets('Max venue distance -> repo + SharedPreferences', (tester) async {
-      // Setup (unchanged)
+      // Setup
       final prefsRepo = MockPreferencesRepository();
       final personalRepo = MockPersonalSettingsRepository();
       final userRepo = MockUserRepository();
@@ -220,6 +215,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.pump(Duration(milliseconds: 500)); // Extra pump for async stability
+
+      // Debug: Dump widget tree
+      debugDumpApp();
+      print('All text widgets: ${tester.widgetList(find.byType(Text)).map((w) => (w as Text).data).toList()}');
 
       // Debug: Verify appUser is not null
       final appUserState = container.read(authUserProvider).valueOrNull;

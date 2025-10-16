@@ -58,71 +58,69 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                SizedBox(
-                  height: PlatformConfig.height(context) * 0.12,
-                  child: Row(
-                    children: [
-                      ProfilePictureAvatar(
-                        size: PlatformConfig.width(context) * 0.25,
-                        disablePrompt: false,
-                      ),
-                      const SizedBox(width: horizontalSpacerMedium),
-                      // Full name and username
-                      Column(
+              Row(
+                children: [
+                  // LEFT: avatar + names -> takes all remaining width
+                  Expanded(
+                    child: SizedBox(
+                      height: PlatformConfig.height(context) * 0.12,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          FittedBox(
-                            fit: BoxFit.fitWidth,
-                            alignment: Alignment.centerLeft,
+                          ProfilePictureAvatar(
+                            size: PlatformConfig.width(context) * 0.25,
+                            disablePrompt: false,
+                          ),
+                          const SizedBox(width: horizontalSpacerMedium),
+
+                          // names expand inside the left side
+                          Expanded(
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(u.displayFullName,
-                                    style: Styles.fullNameDisplay),
+                                // Full name: show naturally, wrap/ellipsis instead of squeezing
+                                Text(
+                                  u.displayFullName,
+                                  style: Styles.fullNameDisplay,
+                                  maxLines: 1,            // allow 2 lines (or 1 if you prefer)
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 const SizedBox(height: verticalSpacerVerySmall),
-                                Text(u.userName, style: Styles.usernameDisplay),
+                                Text(
+                                  u.userName,
+                                  style: Styles.usernameDisplay,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const Spacer(),
-                // Right side
-                SizedBox(
-                  height: PlatformConfig.height(context) * 0.12,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      SizedBox(height: PlatformConfig.height(context) * 0.01),
-                      SizedBox(
-                        height: PlatformConfig.height(context) * 0.03,
-                        width: PlatformConfig.width(context) * 0.25,
-                        child: 1 > 2
-                            ? OwlButton(
-                                label: 'My Stats',
-                                onPressed: _openStats,
-                                fullWidth: false,
-                                textColor: owlPurple,
-                                borderColor: transparent,
-                                backgroundColor: black,
-                                textStyle: Styles.basicText,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      SizedBox(height: PlatformConfig.height(context) * 0.02),
-                      SizedBox(
-                        height: PlatformConfig.height(context) * 0.03,
-                        width: PlatformConfig.width(context) * 0.25,
-                        child: const PartyStatusIndicator(),
-                      ),
-                      SizedBox(height: PlatformConfig.height(context) * 0.01),
-                    ],
+
+                  // RIGHT: keep a fixed (or small) width
+                  SizedBox(
+                    width: PlatformConfig.width(context) * 0.25, // fixed space for the right column
+                    height: PlatformConfig.height(context) * 0.12,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+                        const SizedBox.shrink(), // your optional button area
+                        SizedBox(
+                          height: PlatformConfig.height(context) * 0.03,
+                          child: const PartyStatusIndicator(),
+                        ),
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+                      ],
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
               const SizedBox(height: verticalSpacerDefault),
 
               // Level indicator
