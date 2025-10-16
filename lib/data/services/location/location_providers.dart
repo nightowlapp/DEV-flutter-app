@@ -18,34 +18,27 @@ final currentLatLngProvider = FutureProvider<LatLng?>((ref) async {
   try {
     await ref.watch(locationServiceProvider).initialize();
   } catch (_) {}
-  return ref.watch(locationServiceProvider).currentLatLngOrNull();
+  // prefer lastKnownOrCurrent so it can be instant
+  return ref.watch(locationServiceProvider).lastKnownOrCurrent();
 });
 
-/// Raw stream (kept for UI that wants to handle errors itself)
+/// Raw stream
 final latLngStreamProvider = StreamProvider<LatLng>((ref) {
   return ref.watch(locationServiceProvider).latLngStream();
 });
 
-/// ✅ Safe stream for background logic (geofencing):
-/// - waits for initialize()
-/// - emits nothing if not ready (no errors)
-/// - dedups small jitter to reduce churn
+/// Safe stream for background logic
 final latLngSafeStreamProvider = StreamProvider<LatLng>((ref) async* {
   final svc = ref.watch(locationServiceProvider);
   try {
     await svc.initialize();
   } catch (_) {
-    // Not ready → keep the engine idle
     yield* const Stream<LatLng>.empty();
     return;
   }
 
   yield* svc
       .latLngStream(distanceFilterMeters: 5)
-      .distinct(
-        (a, b) => Distance.meters(a.lat, a.lng, b.lat, b.lng) < 1.5,
-      )
-      .handleError((_) {
-    // swallow errors for engine use
-  });
+      .distinct((a, b) => Distance.meters(a.lat, a.lng, b.lat, b.lng) < 1.5)
+      .handleError((_) {});
 });

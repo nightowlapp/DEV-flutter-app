@@ -174,6 +174,8 @@ enum CountryCode {
   nu,
   nz,
   om,
+  uk,
+  ic,
   pa,
   pe,
   pf,

@@ -34,6 +34,7 @@ final startDecisionProvider = Provider<StartDecision>((ref) {
 });
 
 class LoginOrCreateAccountScreen extends ConsumerWidget {
+
   const LoginOrCreateAccountScreen({super.key});
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
+import 'package:nightowlcode/shared/constants/styles.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../shared/constants/colors.dart';
@@ -66,6 +67,7 @@ class _ThirdCreateNightowlProfileScreenState
               hint: 'Password (min 6 chars)',
               controller: _password,
               obscureText: true,
+              // hintStyle:Styles.smallText, // smaller hint
             ),
             const SizedBox(height: 8),
             const Text('Tip: longer is stronger'),

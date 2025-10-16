@@ -86,7 +86,7 @@ class VenueCard extends ConsumerWidget {
             onLongPress!();
             return;
           }
-          await context.goToMapAndFocusVenue(ref, venue, zoom: longPressZoom);
+          await context.goToMapFocusAndOpenVenue(ref, venue, zoom: longPressZoom);
         },
         borderRadius: BorderRadius.circular(borderRadiusMedium),
         child: LayoutBuilder(
@@ -97,7 +97,7 @@ class VenueCard extends ConsumerWidget {
 
             return Container(
               decoration: BoxDecoration(
-                // border: Border.all(color: isVerified ? green : grey, width: 0.7),
+                border: Border.all(color: isVerified ? green : transparent),
                 borderRadius: BorderRadius.circular(borderRadiusMedium),
               ),
               clipBehavior: Clip.antiAlias,

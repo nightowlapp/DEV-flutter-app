@@ -136,6 +136,38 @@ enum FriendRequestStatus {
 
 enum Gender { male, female, other }
 
+extension GenderX on Gender {
+  String get code => switch (this) {
+    Gender.female => 'F',
+    Gender.male => 'M',
+    Gender.other => 'O',
+  };
+
+  String get label => switch (this) {
+    Gender.female => 'Female',
+    Gender.male => 'Male',
+    Gender.other => 'Other',
+  };
+
+  IconData get icon => switch (this) {
+    Gender.female => femaleIcon,
+    Gender.male => maleIcon,
+    Gender.other => otherGenderIcon,
+  };
+}
+
+extension GenderFromCodeX on String? {
+  Gender get asGender {
+    switch ((this ?? '').toLowerCase()) {
+      case 'm': return Gender.male;
+      case 'f': return Gender.female;
+      case 'o': return Gender.other;
+      default:  return Gender.other;
+    }
+  }
+}
+
+
 //TODO dispaly partystatus with a "wheel" and turn to select the mood. Maybe find more?
 enum PartyStatusTypes {
   out_tonight,

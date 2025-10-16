@@ -23,7 +23,7 @@ final favoriteLimitProvider = Provider<int>((ref) {
   return async.maybeWhen(
     data: (model.User? u) {
       if (u == null) return fallback;
-      if (u.isAdmin) return 9999;
+      if (u.isAdmin) return 99999;
       return ref.read(planFavoriteLimitProvider(u.subscriptionType));
     },
     orElse: () => fallback,

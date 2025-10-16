@@ -5,6 +5,9 @@ import 'lat_lng.dart';
 
 class Utility {
   static String formatString(String input) {
+
+    //TODO if
+
     // Replace underscores, hyphens with space
     input = input.replaceAll(RegExp(r'[_\-]+'), ' ');
     // Insert space before capital letters (for camelCase or PascalCase)

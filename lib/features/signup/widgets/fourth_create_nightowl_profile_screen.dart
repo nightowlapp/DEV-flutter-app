@@ -1,4 +1,6 @@
 // lib/features/signup/screens/fourth_create_nightowl_profile_screen.dart
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +37,12 @@ class _FourthCreateNightowlProfileScreenState
   bool _busy = false;
   Gender? _gender;
 
+  // --- Username validation state ---
+  bool _checkingUname = false; // in-flight check
+  bool? _unameOk;              // null = unknown, true = ok, false = bad
+  String? _unameMsg;           // message for bad/other states
+  Timer? _unameDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -47,20 +55,119 @@ class _FourthCreateNightowlProfileScreenState
     }
     _gender = draft.gender;
 
+    // Listen + debounce validate
     _username.addListener(() {
-      setState(() {}); // update button
       ref.read(signUpDraftProvider.notifier).setUsername(_username.text);
+      _queueUsernameCheck();
+      setState(() {}); // update button state
     });
+
+    // Run initial check if prefilled
+    if (_username.text.trim().isNotEmpty) {
+      _queueUsernameCheck();
+    }
   }
 
   @override
   void dispose() {
+    _unameDebounce?.cancel();
     if (_ownsController) _username.dispose();
     super.dispose();
   }
 
   bool get _canContinue =>
-      !_busy && _username.text.trim().isNotEmpty && _gender != null;
+      !_busy && _gender != null && (_unameOk ?? false);
+
+  void _queueUsernameCheck() {
+    final name = _username.text.trim();
+    _unameDebounce?.cancel();
+
+    if (name.isEmpty) {
+      setState(() {
+        _checkingUname = false;
+        _unameOk = null;
+        _unameMsg = null;
+      });
+      return;
+    }
+
+    _unameDebounce = Timer(const Duration(milliseconds: 250), () async {
+      setState(() {
+        _checkingUname = true;
+        _unameOk = null;
+        _unameMsg = null;
+      });
+
+      try {
+        final repo = ref.read(userRepositoryProvider);
+
+        // Disallow names resembling "nightowl" (requires admin to claim)
+        if (repo.resemblesNightOwl(name)) {
+          setState(() {
+            _checkingUname = false;
+            _unameOk = false;
+            _unameMsg = 'This username is reserved';
+          });
+          return;
+        }
+
+        // Fast availability (case-insensitive via /usernames/<lowercase>) with fallback
+        bool ok;
+
+          ok = await repo.usernameAvailableFast(name);
+
+        setState(() {
+          _checkingUname = false;
+          _unameOk = ok;
+          _unameMsg = ok ? null : 'Username already taken';
+        });
+      } catch (_) {
+        setState(() {
+          _checkingUname = false;
+          _unameOk = false;
+          _unameMsg = 'Could not validate username';
+        });
+      }
+    });
+  }
+
+  // Small status row under the username field with green check / red error
+  Widget _usernameStatus() {
+    final hasText = _username.text.trim().isNotEmpty;
+    if (!hasText) return const SizedBox.shrink();
+
+    if (_checkingUname) {
+      return const Row(
+        children: [
+          SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(width: 8),
+          Text('Checking Username…'),
+        ],
+      );
+    }
+
+    if (_unameOk == true) {
+      return const Row(
+        children: [
+          Icon(Icons.check_circle, color: Colors.green, size: 16),
+          SizedBox(width: 8),
+          Text('Unique Username!'),
+        ],
+      );
+    }
+
+    if (_unameOk == false) {
+      return Row(
+        children: [
+          const Icon(Icons.error, color: Colors.red, size: 16),
+          const SizedBox(width: 8),
+          Text(_unameMsg ?? 'Not available'),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
 
   Future<void> _createProfile() async {
     if (!_canContinue) return;
@@ -69,18 +176,19 @@ class _FourthCreateNightowlProfileScreenState
     try {
       final draft = ref.read(signUpDraftProvider);
       final authRepo = ref.read(authRepositoryProvider);
-      final userRepo =
-          ref.read(userRepositoryProvider); // Add this to access UserRepository
+      final userRepo = ref.read(userRepositoryProvider);
       final finalize = ref.read(userFinalizeServiceProvider);
 
-      // 1.0) Check username availability
-      final userName = (draft.username!);
-      final usernameAvail = await userRepo.usernameAvailable(userName);
-      if (!usernameAvail) {
-        throw Exception('Username already taken.');
+      // Guard again on reserved names and availability (defensive)
+      final userName = (draft.username ?? '').trim();
+      if (userName.isEmpty) throw StateError('Username required.');
+      if (userRepo.resemblesNightOwl(userName)) {
+        throw Exception('This username is reserved.');
       }
+      final usernameAvail = await userRepo.usernameAvailableFast(userName);
+      if (!usernameAvail) throw Exception('Username already taken.');
 
-      // 1.1) Create auth user (fails if email exists)
+      // Create auth user (fails if email exists)
       final email = (draft.email ?? '').trim().toLowerCase();
       final pwd = ref.read(passwordProvider);
 
@@ -91,26 +199,24 @@ class _FourthCreateNightowlProfileScreenState
       final au = await authRepo.signUpWithEmailPassword(email, pwd);
       if (au == null) throw StateError('Auth failed.');
 
-      // 2) Create Firestore user doc (new only)
+      // Create Firestore user doc (new only)
       final appV = await ref.read(appVersionProvider.future);
       await finalize.createFromDraft(
-        // Note: we'll add this method below
         draft: draft,
         appVersion: appV.label,
       );
 
-      // 3) Clear local draft
+      // Clear local draft
       ref.read(signUpDraftProvider.notifier).clear();
 
       if (!mounted) return;
       context.pushNamedPage('chooseFavoriteVenues');
     } on fb.FirebaseAuthException catch (e) {
-      //TODO remove firebase from here.
       final msg = e.code == 'email-already-in-use'
           ? 'Email already in use. Please sign in or use a different email.'
           : (e.code == 'weak-password'
-              ? 'Please choose a stronger password.'
-              : 'Auth error: ${e.message}');
+          ? 'Please choose a stronger password.'
+          : 'Auth error: ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
@@ -145,6 +251,8 @@ class _FourthCreateNightowlProfileScreenState
           formFields: [
             SizedBox(height: PlatformConfig.height(context) * 0.02),
             SimpleTextField(hint: 'Username', controller: _username),
+            const SizedBox(height: 6),
+            _usernameStatus(), // green check / red error / spinner
             SizedBox(height: PlatformConfig.height(context) * 0.01),
             GenderSelector(
               value: _gender,

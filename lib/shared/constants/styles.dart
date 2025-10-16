@@ -33,7 +33,7 @@ class Styles {
       );
 
   static TextStyle get smallText => baseFont.copyWith(
-        fontSize: 8,
+        fontSize: fontSizeSmallest,
         color: white,
         // fontWeight: FontWeight.w600,
       );
@@ -82,7 +82,7 @@ class Styles {
         foreground: Paint()
           ..shader = const LinearGradient(
             colors: [owlPurple, white, white],
-          ).createShader(const Rect.fromLTWH(26, 50, 80, 33)),
+          ).createShader(const Rect.fromLTWH(20, 100, 230, 77)),
       );
 
   static Widget nameOrange() {

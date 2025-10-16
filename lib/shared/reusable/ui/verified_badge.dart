@@ -23,7 +23,7 @@ class VerifiedBadge extends StatelessWidget {
         children: [
           Icon(checkCircleIcon, color: green, size: iconSizeMedium),
           Text('Verified',
-              style: Styles.smallText.copyWith(fontWeight: FontWeight.w600)),
+              style: Styles.smallText.copyWith(fontWeight: FontWeight.w600, fontSize: 6)),
         ],
       ),
     );
@@ -39,7 +39,7 @@ class CornerBadgeOverlay extends StatelessWidget {
     required this.show,
     required this.badge,
     this.corner = Corner.topRight,
-    this.padding = const EdgeInsets.only(top: 4, right: 4),
+    this.padding = const EdgeInsets.only(top: 0, right: 0),
     this.ignorePointer = true,
   });
 

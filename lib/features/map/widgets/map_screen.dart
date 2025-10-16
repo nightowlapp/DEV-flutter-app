@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb; // <-- alias
+
+// NEW: this exports showVenuePopupSheet + your draggable popup content
 import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
 
 import 'package:nightowlcode/models/venues/venue.dart';
@@ -33,7 +35,6 @@ import '../presentation/map_logo_registry.dart';
 import '../presentation/map_style.dart';
 import '../presentation/initial_camera_provider.dart';
 
-
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
   @override
@@ -41,7 +42,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-  with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin {
   mb.MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
@@ -67,7 +68,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   final NavTts _tts = NavTts();
 
   String _logoImageIdFor(Venue v) =>
-  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
+      'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   final bool _showClosed = true;
   final Set<VenueType> _allowedTypes = const {
@@ -86,7 +87,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void initState() {
     super.initState();
     _tts.init(); // default en-US
-    _tts.muted.addListener(() { if (mounted) setState(() {}); });
+    _tts.muted.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -102,7 +105,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _tts.dispose(); // fire-and-forget is fine here
     super.dispose();
   }
-
 
   @override
   bool get wantKeepAlive => true;
@@ -146,25 +148,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
     map.easeTo(cam, mb.MapAnimationOptions(duration: 500));
   }
 
+  // (kept for completeness) – now uses the pullable sheet
   Future<void> _showVenuePopupById(String id) async {
     final v = _venuesById[id];
     if (v == null || !mounted) return;
 
     final rootContext = Navigator.of(context, rootNavigator: true).context;
-    await showModalBottomSheet(
-      context: rootContext,
-      useRootNavigator: true,
-      backgroundColor: black,
-      isScrollControlled: false,
-      builder: (_) => VenuePopup(
-        venue: v,
-        onClose: () => Navigator.of(rootContext, rootNavigator: true).pop(),
-        onOpenDetails: () {},
-        onGo: () async {
-          Navigator.of(rootContext, rootNavigator: true).pop();
-          await _buildRouteTo(v);
-        },
-      ),
+    await showVenuePopupSheet(
+      rootContext,
+      venue: v,
+      onClose: () => Navigator.of(rootContext, rootNavigator: true).pop(),
+      onGo: () async {
+        Navigator.of(rootContext, rootNavigator: true).pop();
+        await _buildRouteTo(v);
+      },
+      body: _venueDetails(v), // scrollable area content
     );
   }
 
@@ -178,8 +176,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   Future<void> _onMapTap(mb.MapContentGestureContext ctx) async {
-    debugPrint('🟣 map tap at screen=(${ctx.touchPosition.x}, ${ctx.touchPosition.y})');
-
     final map = _map;
     if (map == null) return;
 
@@ -210,11 +206,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final sym = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrVip,
-          MapStyle.lyrUnclustered,
-          MapStyle.lyrVipLabels,
-          MapStyle.lyrLabels,
-        ]),
+        MapStyle.lyrVip,
+        MapStyle.lyrUnclustered,
+        MapStyle.lyrVipLabels,
+        MapStyle.lyrLabels,
+      ]),
     );
     debugPrint('tap: symbol/labels hits = ${sym.length}');
     final symId = _firstId(sym);
@@ -264,19 +260,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    // 4) last resort: find nearest venue to the tap coordinate (useful if feature lacks id)
+    // 4) last resort: nearest venue to the tap coordinate
     try {
       final worldPt = await map.coordinateForPixel(ctx.touchPosition);
       final pos = worldPt.coordinates as mb.Position; // (lon, lat)
       final tapLatLng = LatLng(pos.lat.toDouble(), pos.lng.toDouble());
-      final nearestId = _nearestVenueId(tapLatLng, maxMeters: 60); // small radius
+      final nearestId = _nearestVenueId(tapLatLng, maxMeters: 60);
       if (nearestId != null) {
         debugPrint('tap -> nearest fallback id: $nearestId');
         _openVenueByIdOrExplain(nearestId);
         return;
       }
-    }
-    catch (_) {}
+    } catch (_) {}
 
     debugPrint('tap: nothing hit');
   }
@@ -291,63 +286,60 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.build(context);
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
-        final map = _map;
-        if (next == null || next.id <= _lastNavId) return;
-        _lastNavId = next.id;
+      final map = _map;
+      if (next == null || next.id <= _lastNavId) return;
+      _lastNavId = next.id;
 
-        if (map == null || !_styleReady) {
-          _pendingNav = next;
-          return;
-        }
-        map.easeTo(
-          mb.CameraOptions(
-            center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
-            zoom: next.zoom,
-          ),
-          mb.MapAnimationOptions(duration: 500),
-        );
+      if (map == null || !_styleReady) {
+        _pendingNav = next;
+        return;
       }
-    );
+      map.easeTo(
+        mb.CameraOptions(
+          center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
+          zoom: next.zoom,
+        ),
+        mb.MapAnimationOptions(duration: 500),
+      );
+    });
 
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
-        final map = _map;
-        if (map == null || !_styleReady) return;
-        await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
 
-        final venues = ref.read(venuesListProvider);
-        final idToPath2 = <String, String>{};
-        for (final v in venues) {
-          if (v.isVerified) {
-            final id = _logoImageIdFor(v);
-            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
-          }
+      final venues = ref.read(venuesListProvider);
+      final idToPath2 = <String, String>{};
+      for (final v in venues) {
+        if (v.isVerified) {
+          final id = _logoImageIdFor(v);
+          idToPath2[id] = 'venue_images/${v.id}/logo.webp';
         }
-        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
       }
-    );
+      await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
+    });
 
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
-      (prev, next) async {
+          (prev, next) async {
         final map = _map;
         if (map == null || !_styleReady) return;
         next.whenData((m) async {
-            final fc = friendsToFeatureCollection(m);
-            await _style.setFriendsData(map, fc);
-          }
-        );
+          final fc = friendsToFeatureCollection(m);
+          await _style.setFriendsData(map, fc);
+        });
       },
     );
 
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-        _venuesById..clear()..addAll(next);
-      }
-    );
+      _venuesById
+        ..clear()
+        ..addAll(next);
+    });
 
     ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider, (prev, next) {
-        next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
-      }
-    );
+      next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
+    });
 
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
@@ -366,12 +358,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
           _navBanner(),
           if (_loading)
-          const Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black54,
-              child: Center(child: LoadingIndicator()),
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black54,
+                child: Center(child: LoadingIndicator()),
+              ),
             ),
-          ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -475,12 +467,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           distanceFilter: 5, // meters between ticks
         ),
       ).listen(_onLocationTick);
-
-    }
-    catch (e) {
+    } catch (e) {
       _toast('Routing failed: $e');
-    }
-    finally {
+    } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -493,8 +482,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _navDest = null;
     _lastRerouteAt = null;
     await _renderer?.clear();
-    if (mounted) setState(() {}
-      );
+    if (mounted) setState(() {});
   }
 
   Future<void> _onLocationTick(geo.Position p) async {
@@ -503,9 +491,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // simple throttle to reduce API spam
     final now = DateTime.now();
     if (_lastRerouteAt != null &&
-      now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
-      if (mounted) setState(() {}
-        ); // still refresh banner counters
+        now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
+      if (mounted) setState(() {}); // still refresh banner counters
       return;
     }
     _lastRerouteAt = now;
@@ -528,10 +515,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         width: 6,
       );
 
-      if (mounted) setState(() {}
-        );
-    }
-    catch (_) {
+      if (mounted) setState(() {});
+    } catch (_) {
       // ignore transient failures
     }
   }
@@ -564,19 +549,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _showVenuePopup(Venue v) async {
     final root = Navigator.of(context, rootNavigator: true).context;
-    await showModalBottomSheet(
-      context: root,
-      useRootNavigator: true,
-      backgroundColor: black,
-      builder: (_) => VenuePopup(
-        venue: v,
-        onClose: () => Navigator.of(root, rootNavigator: true).pop(),
-        onOpenDetails: () {},
-        onGo: () async {
-          Navigator.of(root, rootNavigator: true).pop();
-          await _buildRouteTo(v);
-        },
-      ),
+    await showVenuePopupSheet(
+      root,
+      venue: v,
+      onGo: () async {
+        Navigator.of(root, rootNavigator: true).pop();
+        await _buildRouteTo(v);
+      },
+      onClose: () => Navigator.of(root, rootNavigator: true).pop(),
+      body: _venueDetails(v),
     );
   }
 
@@ -585,32 +566,38 @@ class _MapScreenState extends ConsumerState<MapScreen>
     String? bestId;
     double best = maxMeters;
     venues.forEach((id, v) {
-        final d = Distance.metersLatLng(tap, v.entry);
-        if (d < best) { best = d;
-          bestId = id;
-        }
+      final d = Distance.metersLatLng(tap, v.entry);
+      if (d < best) {
+        best = d;
+        bestId = id;
       }
-    );
+    });
     return bestId;
   }
 
   // TODO need to click the walking icon to be able to change to car/cycling.
   Color _routeColorFor(NavProfile p) {
     switch (p) {
-      case NavProfile.walking:  return orange;
-      case NavProfile.cycling:  return orange;
-      case NavProfile.driving:  return orange;
+      case NavProfile.walking:
+        return orange;
+      case NavProfile.cycling:
+        return orange;
+      case NavProfile.driving:
+        return orange;
     }
   }
 
   RouteStyle _routeStyleFor(NavProfile p) =>
-  p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
+      p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
 
   IconData _modeIcon(NavProfile p) {
     switch (p) {
-      case NavProfile.walking:  return Icons.directions_walk_rounded;
-      case NavProfile.cycling:  return Icons.directions_bike_rounded;
-      case NavProfile.driving:  return Icons.directions_car_rounded;
+      case NavProfile.walking:
+        return Icons.directions_walk_rounded;
+      case NavProfile.cycling:
+        return Icons.directions_bike_rounded;
+      case NavProfile.driving:
+        return Icons.directions_car_rounded;
     }
   }
 
@@ -620,6 +607,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final km = meters / 1000.0;
     return '${km.toStringAsFixed(km >= 10 ? 0 : 1)} km';
   }
+
   String _fmtEta(double seconds) {
     if (seconds <= 0) return '—';
     final mins = (seconds / 60).round();
@@ -642,11 +630,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final now = DateTime.now();
     if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
       return clock; // today
-    }
-    else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
+    } else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
       return clock;
-    }
-    else {
+    } else {
       // e.g. 3/12 19:24 (keep it compact)
       return '${dt.month}/${dt.day} $clock';
     }
@@ -654,12 +640,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Widget _navBanner() {
     final r = _activeRoute;
+    final dest = _navDest;
     if (!_navigating || r == null) return const SizedBox.shrink();
 
     final dist = _fmtMeters(r.distanceMeters);
     final travelTime = _fmtEta(r.durationSeconds);
     final eta = _fmtArrivalClock(context, r.durationSeconds);
-    final step = r.steps.isNotEmpty ? r.steps.first.instruction : '—';
+    final step = r.steps.isNotEmpty ? r.steps.first.instruction : '';
+    final destName = dest?.displayName ?? '';
 
     return SafeArea(
       child: Align(
@@ -677,42 +665,46 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-
                       Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // --- Mode toggle (walk/bike/car)
-                          InkWell(
-                            // onTap: _cycleProfile,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: grey, borderRadius: BorderRadius.circular(8),
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // --- Mode toggle (walk/bike/car)
+                            InkWell(
+                              // onTap: _cycleProfile,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: grey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(_modeIcon(_navProfile),
+                                    color: white, size: iconSizeDefault),
                               ),
-                              child: Icon(_modeIcon(_navProfile), color: white, size: iconSizeDefault),
                             ),
-                          ),
-                          const SizedBox(height: 8),
+                            const SizedBox(height: 8),
 
-                          // --- Mute/unmute TTS
-                          InkWell(
-                            onTap: _toggleMute,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: grey, borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                _tts.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                                color: white,
-                                size: iconSizeDefault,
+                            // --- Mute/unmute TTS
+                            InkWell(
+                              onTap: _toggleMute,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: grey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  _tts.isMuted
+                                      ? Icons.volume_off_rounded
+                                      : Icons.volume_up_rounded,
+                                  color: white,
+                                  size: iconSizeDefault,
+                                ),
                               ),
                             ),
-                          ),
-                        ]),
+                          ]),
                       const SizedBox(width: 8),
 
                       // ETA (top) over Distance (bottom)
@@ -722,23 +714,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         children: [
                           Text(travelTime, style: Styles.basicText),
                           const SizedBox(height: 6),
-                          Text(dist, style: Styles.smallText.copyWith(fontSize: fontSizeSmaller)),
+                          Text(dist,
+                              style: Styles.smallText.copyWith(
+                                  fontSize: fontSizeSmaller)),
                           const SizedBox(height: 6),
-                          Text(eta, style: Styles.smallText.copyWith(fontSize: fontSizeSmaller)),
+                          Text(eta,
+                              style: Styles.smallText.copyWith(
+                                  fontSize: fontSizeSmaller)),
                         ],
                       ),
 
                       const SizedBox(width: 8),
-// const VerticalDivider(width: 16,),
                       const SizedBox(width: 8),
 
                       // Step on the right
                       Flexible(
                         child: Text(
                           step,
-                          // "ales awjeahe aghe agwehae jaej ae aje jae jaej aej ea jwae eehawehwae",
                           style: Styles.basicText,
-                          textAlign: TextAlign.center,
+                          textAlign: TextAlign.left,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -748,17 +742,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ),
 
+              Positioned(
+                bottom: 10,
+                right: 10,
+                child: Row(
+                  children: [
+                    Text('To ', style: Styles.basicText),
+                    Text(
+                      destName,
+                      style: Styles.basicText.copyWith(color: owlPurple),
+                    ),
+                  ],
+                ),
+              ),
+
               // Small 'X' overlay to stop navigation
               Positioned(
-                top: 6,
-                right: 6,
+                top: 10,
+                right: 10,
                 child: InkWell(
                   onTap: _stopNavigation,
                   borderRadius: BorderRadius.circular(8),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close_rounded, color: greyLighter, size: iconSizeDefault),
-                  ),
+                  child: Icon(Icons.close_rounded,
+                      color: greyLighter, size: iconSizeDefault),
                 ),
               ),
             ],
@@ -773,7 +779,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (mounted) setState(() {}); // refresh icon
   }
 
-
+  // ===== Your scrollable content below the rating/header (replace with your UI) =====
+  Widget _venueDetails(Venue v) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            height: 220,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            alignment: Alignment.center,
+            child: Text('Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
+                style: Styles.basicText),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
 }
-
-

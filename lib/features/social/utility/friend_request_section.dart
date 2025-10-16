@@ -89,7 +89,7 @@ class _RequestRow extends ConsumerWidget {
           const SizedBox(width: 8),
           IconButton(
             tooltip: 'Reject',
-            icon: const Icon(Icons.close, color: red),
+            icon: const Icon(Icons.close, color: red), //TODO all icons
             onPressed: () => repo.reject(req),
           ),
           const SizedBox(width: 6),

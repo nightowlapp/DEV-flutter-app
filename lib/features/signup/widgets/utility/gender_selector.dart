@@ -10,25 +10,7 @@ import '../../../../shared/constants/enums.dart';
 /// Keep this enum consistent with your existing one.
 /// If you already declared GenderOption elsewhere, remove one to avoid conflicts.
 
-extension GenderX on Gender {
-  String get code => switch (this) {
-        Gender.female => 'F',
-        Gender.male => 'M',
-        Gender.other => 'O',
-      };
 
-  String get label => switch (this) {
-        Gender.female => 'Female',
-        Gender.male => 'Male',
-        Gender.other => 'Other',
-      };
-
-  IconData get icon => switch (this) {
-        Gender.female => femaleIcon,
-        Gender.male => maleIcon,
-        Gender.other => otherGenderIcon,
-      };
-}
 
 /// Hybrid UI:
 /// - Outer bordered card (black bg, white stroke).

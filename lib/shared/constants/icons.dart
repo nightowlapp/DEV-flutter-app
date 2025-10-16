@@ -63,6 +63,7 @@ final shieldIcon = Icons.shield_moon;
 final infoIcon = Icons.info_outline;
 final IconData distanceIcon = Icons.near_me;
 final closeIcon = Icons.close_sharp;
+final editIcon = Icons.edit_outlined;
 
 final settingsIcon = Icons.settings;
 final errorIcon = Icons.error_outline;

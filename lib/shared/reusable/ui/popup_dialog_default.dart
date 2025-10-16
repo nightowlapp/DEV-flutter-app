@@ -19,10 +19,14 @@ class PopupDialogDefault extends StatelessWidget {
     bool showDivider = true,
     Border? border,
 
-    // NEW: alignment knobs
+    // alignment knobs
     TextAlign defaultTextAlign = TextAlign.start,
     CrossAxisAlignment bodyCrossAxisAlignment = CrossAxisAlignment.start,
-    TextDirection? forceTextDirection, // pass TextDirection.ltr to force LTR
+    TextDirection? forceTextDirection,
+
+    // NEW: size knobs
+    double maxHeightFraction = 0.85, // cap dialog height to 85% of screen
+    double maxWidth = 560,           // optional desktop/tablet nicety
   }) {
     return PopupDialogDefault._internal(
       key: key,
@@ -32,16 +36,18 @@ class PopupDialogDefault extends StatelessWidget {
       headerStyle: headerStyle ?? Styles.popupHeader,
       textStyle: textStyle ?? Styles.popupText,
       backgroundColor: backgroundColor ?? black,
-      icon: icon ??
-          Image.asset('assets/nightowl/logo.png', width: 22, height: 22),
+      icon: icon ?? Image.asset('assets/nightowl/logo.png', width: 22, height: 22),
       showDivider: showDivider,
       divider: divider ?? const Divider(thickness: 0.3, color: owlPurple),
       border: border ?? Border.all(color: grey, width: 0.7),
 
-      // pass-through
       defaultTextAlign: defaultTextAlign,
       bodyCrossAxisAlignment: bodyCrossAxisAlignment,
       forceTextDirection: forceTextDirection,
+
+      // size
+      maxHeightFraction: maxHeightFraction,
+      maxWidth: maxWidth,
       children: children,
     );
   }
@@ -60,10 +66,12 @@ class PopupDialogDefault extends StatelessWidget {
     this.showDivider = true,
     this.border,
 
-    // NEW:
     this.defaultTextAlign = TextAlign.start,
     this.bodyCrossAxisAlignment = CrossAxisAlignment.start,
     this.forceTextDirection,
+
+    this.maxHeightFraction = 0.85,
+    this.maxWidth = 560,
   });
 
   final String title;
@@ -78,31 +86,31 @@ class PopupDialogDefault extends StatelessWidget {
   final bool showDivider;
   final Border? border;
 
-  // NEW
   final TextAlign defaultTextAlign;
   final CrossAxisAlignment bodyCrossAxisAlignment;
   final TextDirection? forceTextDirection;
 
+  final double maxHeightFraction;
+  final double maxWidth;
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size;
+    final viewInsets = MediaQuery.of(context).viewInsets; // keyboard
+    final maxH = (size.height * maxHeightFraction).clamp(240.0, size.height);
 
     Widget body = DefaultTextStyle(
       style: textStyle,
-      textAlign: defaultTextAlign, // ⬅️ make all inherited Text left-aligned
+      textAlign: defaultTextAlign,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: bodyCrossAxisAlignment, // ⬅️ left-edge alignment
+        crossAxisAlignment: bodyCrossAxisAlignment,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(
-                  title,
-                  style: headerStyle,
-                  textAlign: TextAlign.left, // explicit for header
-                ),
+                child: Text(title, style: headerStyle, textAlign: TextAlign.left),
               ),
               if (icon != null) icon!,
             ],
@@ -113,22 +121,33 @@ class PopupDialogDefault extends StatelessWidget {
       ),
     );
 
-    // Optional: force LTR regardless of locale
     if (forceTextDirection != null) {
       body = Directionality(textDirection: forceTextDirection!, child: body);
     }
 
     return AlertDialog(
       backgroundColor: backgroundColor,
-      insetPadding: EdgeInsets.only(bottom: screenHeight / 3),
+      clipBehavior: Clip.antiAlias,
+      // keep nice margins, but also respect keyboard
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24) + viewInsets,
       contentPadding: EdgeInsets.zero,
-      content: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: border,
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: maxH,          // <- hard cap height
         ),
-        padding: contentPadding ?? const EdgeInsets.fromLTRB(20, 30, 20, 30),
-        child: body,
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.zero,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: border,
+            ),
+            padding: contentPadding ?? const EdgeInsets.fromLTRB(20, 30, 20, 30),
+            child: body,
+          ),
+        ),
       ),
     );
   }
