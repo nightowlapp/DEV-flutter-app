@@ -120,7 +120,7 @@ class User {
   String get displayFullName {
     final parts = <String>[
       if ((firstName ?? '').trim().isNotEmpty) firstName!.trim(),
-      // if ((middleName ?? '').trim().isNotEmpty) middleName!.trim(),
+      if ((middleName ?? '').trim().isNotEmpty) middleName!.trim(),
       if ((lastName ?? '').trim().isNotEmpty) lastName!.trim(),
     ];
     return parts.isEmpty ? '' : parts.join(' ');

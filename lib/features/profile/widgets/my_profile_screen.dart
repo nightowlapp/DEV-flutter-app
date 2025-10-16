@@ -6,6 +6,7 @@ import 'package:nightowlcode/features/profile/widgets/visits_section.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/utility/level_logic.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../data/providers/other_providers.dart';
@@ -80,11 +81,10 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Full name: show naturally, wrap/ellipsis instead of squeezing
-                                Text(
+                                AutoSizeText(
                                   u.displayFullName,
                                   style: Styles.fullNameDisplay,
-                                  maxLines: 1,            // allow 2 lines (or 1 if you prefer)
-                                  softWrap: true,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: verticalSpacerVerySmall),

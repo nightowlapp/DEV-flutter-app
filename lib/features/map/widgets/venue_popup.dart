@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
@@ -176,7 +177,7 @@ class _VenuePopupContent extends ConsumerWidget {
                       ),
                       const SizedBox(width: 4),
                       Expanded(
-                        child: Text(
+                        child: AutoSizeText(
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
