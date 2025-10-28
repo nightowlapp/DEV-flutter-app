@@ -62,6 +62,7 @@ final copyIcon = Icons.copy;
 final shieldIcon = Icons.shield_moon;
 final infoIcon = Icons.info_outline;
 final IconData distanceIcon = Icons.near_me;
+final IconData distanceDisabledIcon = Icons.near_me_disabled_outlined;
 final closeIcon = Icons.close_sharp;
 final editIcon = Icons.edit_outlined;
 

@@ -5,6 +5,7 @@ class DocumentPaths {
   static const users = 'users';
   static const String emblems = 'emblems';
   static const String partyStatusDays = 'party_status_days';
+  static const friends = 'friends';
   static const String locations = 'locations';
   static const String friendRequests = 'friend_requests';
   static const String incoming = 'incoming';
@@ -28,6 +29,11 @@ class DocumentPaths {
   static const userNameLower = 'user_name_lc';
   static const isVerified = 'is_verified';
   static const roles = 'roles';
+  static const timestamp = 'timestamp';
+
+  // Friend requests fields
+  static const frFromUid = 'from_uid';
+  static const frToUid = 'to_uid';
 
   // Location
   static String locationDoc(String uid) => '$locations/$uid';

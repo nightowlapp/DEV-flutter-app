@@ -301,8 +301,8 @@ class MapStyle {
         'text-field',
         jsonEncode([
           'format',
-          //   ['get', 'display_name'], {'text-color': white.toHex()},
-          //             '  ', {},
+            ['get', 'name '], {'text-color': white.toHex()},
+                      '  ', {},
           [
             'number-format',
             [
@@ -318,7 +318,7 @@ class MapStyle {
           {'text-color': white.toHex()},
         ]),
       );
-      await style.setStyleLayerProperty(lyrLabels, 'text-size', 12.0);
+      await style.setStyleLayerProperty(lyrLabels, 'text-size', 10.0);
       await style.setStyleLayerProperty(lyrLabels, 'text-color', white.toHex());
       await style.setStyleLayerProperty(
           lyrLabels, 'text-halo-color', black.toHex());

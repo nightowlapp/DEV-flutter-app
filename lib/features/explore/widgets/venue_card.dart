@@ -1,4 +1,5 @@
 // lib/shared/reusable/venues/venue_card.dart
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +47,8 @@ class VenueCard extends ConsumerWidget {
 
   /// Whether to provide light haptic feedback on long-press.
   final bool hapticOnLongPress;
+
+  static final AutoSizeGroup _titleGroup = AutoSizeGroup();
 
   TextStyle get _pillStyle =>
       Styles.smallText.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600);
@@ -131,30 +134,37 @@ class VenueCard extends ConsumerWidget {
                       left: 5,
                       right: 5,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                         decoration: BoxDecoration(
                           color: black.withOpacity(0.7),
-                          borderRadius:
-                              BorderRadius.circular(borderRadiusDefault),
+                          borderRadius: BorderRadius.circular(borderRadiusDefault),
                         ),
                         child: Center(
-                          child: Text(
-                            title,
+                          child: AutoSizeText(
+                            title, // use your computed title
+                            group: isVerified ? null: _titleGroup,                    // keep all cards aligned (optional)
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isVerified ? green : white,
-                              fontWeight: isVerified
-                                  ? FontWeight.w600
-                                  : FontWeight.w100,
-                              fontSize: isVerified
-                                  ? fontSizeSmall * 1.2
-                                  : fontSizeSmall,
+                            // overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            // Either use preset steps (faster)...
+                            presetFontSizes: const [18, 16, 14, 12], // tries in order
+                            // ...or min/max with a step (slightly more work per layout):
+                            // minFontSize: 12,
+                            // maxFontSize: 18,
+                            stepGranularity: 1,
+                            style: Styles.basicText.copyWith(
+                              // color: isVerified ? green : white,
+                              fontWeight: isVerified ? FontWeight.w700 : FontWeight.w100,
+                              // letterSpacing: isVerified ? 1.5:1,
+                              // Base size here is the "max" when using presetFontSizes
+                              fontSize: 18,
                             ),
                           ),
                         ),
                       ),
                     ),
+
+
                     // Bottom pills
                     Positioned(
                       bottom: 2,

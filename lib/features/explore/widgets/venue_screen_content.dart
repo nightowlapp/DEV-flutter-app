@@ -26,6 +26,7 @@ import '../../../data/providers/real_time_database_providers.dart';
 import '../../../data/providers/venues/venue_media_providers.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
+import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 import '../utility/bar_card_screen.dart';
 import '../utility/mood_images_section.dart';
@@ -116,7 +117,7 @@ class VenueScreenContent extends ConsumerWidget {
                   const SizedBox(width: allSidePaddingDefault),
                   LikeVenueButton(store: likeStore, venue: venue),
                   const SizedBox(width: allSidePaddingDefault),
-                  if (venue.isVerified) const VerifiedBadge(),
+                  venue.isVerified ? const VerifiedBadge() : const EditBadge(),
                   const Spacer(),
                   Column(
                     children: [

@@ -2,10 +2,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FriendRequest {
-  final String id; // doc id
-  final String fromUid; // sender
-  final String toUid; // receiver (current user for incoming)
-  final DateTime timestamp; // Firestore Timestamp
+  final String id;       // doc id: "${fromUid}_${toUid}"
+  final String fromUid;  // sender
+  final String toUid;    // receiver
+  final DateTime timestamp;
 
   const FriendRequest({
     required this.id,
@@ -15,13 +15,13 @@ class FriendRequest {
   });
 
   Map<String, dynamic> toJson() => {
-        'from_uid': fromUid,
-        'to_uid': toUid,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
+    'from_uid': fromUid,
+    'to_uid': toUid,
+    'timestamp': FieldValue.serverTimestamp(),
+  };
 
   static FriendRequest fromDoc(DocumentSnapshot<Map<String, dynamic>> d) {
-    final m = d.data()!;
+    final m = d.data() ?? const <String, dynamic>{};
     return FriendRequest(
       id: d.id,
       fromUid: (m['from_uid'] as String?) ?? '',

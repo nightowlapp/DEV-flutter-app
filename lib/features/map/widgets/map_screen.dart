@@ -1,6 +1,7 @@
 // lib/features/map/widgets/map_screen.dart
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -165,16 +166,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       body: _venueDetails(v), // scrollable area content
     );
   }
-
-  void _openVenueById(String id) async {
-    final v = _venuesById[id];
-    if (v == null) return;
-    _navigateTo(v.entry);
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    await _showVenuePopupById(id);
-  }
-
   Future<void> _onMapTap(mb.MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
@@ -344,6 +335,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
 
+    final bottomOffset = _navigating ? 100.0 : 16.0; // avoids nav banner
+    final sharingPosition = false; //TODO
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Stack(
@@ -364,17 +358,43 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 child: Center(child: LoadingIndicator()),
               ),
             ),
+
+          Positioned(
+            right: 16,
+            bottom: bottomOffset,
+            child: FloatingActionButton(
+              heroTag: 'fab_center_user',
+              mini: true,
+              tooltip: 'Center on user',
+              onPressed: _centerOnUser,
+              child: Icon(locationIcon),
+            ),
+          ),
+
+          Positioned(
+            right: 64,
+            bottom: bottomOffset,
+            child: FloatingActionButton(
+              // heroTag: 'fab_reset_north',
+              mini: true,
+              // tooltip: 'Reset north',
+              onPressed: _centerOnUser, //TODO
+              child: Icon(chevronUpIcon, color: white,),
+            ),
+          ),
+
+          Positioned(
+            left: 12,
+            top: 12,
+            child: FloatingActionButton(
+              // heroTag: 'fab_reset_north',
+              mini: true,
+              // tooltip: 'Reset north',
+              onPressed: _centerOnUser, //TODO
+              child: Icon(sharingPosition ? distanceIcon : distanceDisabledIcon, color: sharingPosition ? blue : red),
+            ),
+          ),
         ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: _navigating ? 84 : 16, right: 0),
-        child: FloatingActionButton(
-          mini: true,
-          tooltip: 'Center on user',
-          onPressed: _centerOnUser,
-          child: Icon(locationIcon),
-        ),
       ),
     );
   }

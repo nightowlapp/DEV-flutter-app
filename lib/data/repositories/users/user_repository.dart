@@ -87,6 +87,29 @@ class UserRepository {
     return s;
   }
 
+  /// Live search by lowercased username prefix ('' = just first N users).
+  /// Requires the `user_name_lc` field to be stored (you already do that).
+  Stream<List<model.User>> searchUsersByUsernameLc({
+    required String query,
+    int limit = 40,
+  }) {
+    final q = query.trim().toLowerCase();
+
+    Query<model.User> base =
+    _users.orderBy(DocumentPaths.userNameLower).limit(limit);
+
+    // Prefix search: [startAt(q), endAt(q + '\uf8ff')]
+    if (q.isNotEmpty) {
+      base = _users
+          .orderBy(DocumentPaths.userNameLower)
+          .startAt([q])
+          .endAt([q + '\uf8ff'])
+          .limit(limit);
+    }
+
+    return base.snapshots().map((snap) => snap.docs.map((d) => d.data()).toList());
+  }
+
   String _collapseRuns(String s) {
     if (s.isEmpty) return s;
     final b = StringBuffer()..write(s[0]);
@@ -427,6 +450,8 @@ Stream<int> favoriteCount(FirebaseFirestore db, String venueId) {
 
 
 }
+
+
 
 // Users with the most achievements: // TODO
 

@@ -1,65 +1,43 @@
+// lib/features/social/widgets/social_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/core/platform_config.dart';
-import 'package:nightowlcode/features/social/utility/find_friends_section.dart';
-import 'package:nightowlcode/features/social/utility/friend_request_section.dart';
-import 'package:nightowlcode/shared/constants/styles.dart';
-import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
-
-import '../../../data/providers/party_status/party_status_provider.dart';
-import '../../../data/providers/users/sorted_friends_provider.dart';
-import '../../../shared/constants/colors.dart';
+import 'package:nightowlcode/shared/constants/colors.dart';
+import '../../../data/providers/users/friends_provider.dart';
+import '../utility/friend_request_section.dart';
+import '../utility/friend_requests_section.dart';
 import '../utility/my_friends_section.dart';
 
-class SocialScreen extends ConsumerStatefulWidget {
+class SocialScreen extends ConsumerWidget {
   const SocialScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _SocialScreen();
-}
-
-class _SocialScreen extends ConsumerState<SocialScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final friends = ref.watch(sortedFriendsProvider);
-    // final partyStatusColor = ref.watch(partyStatusColorForProvider);
-    final h = PlatformConfig.height(context);
-    final w = PlatformConfig.width(context);
-    final bool newRequests = false;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final friends = ref.watch(friendsProvider).maybeWhen(
+      data: (v) => v,
+      orElse: () => const [],
+    );
 
     return Scaffold(
-      body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+      backgroundColor: black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: h * 0.01),
+              if (friends.isNotEmpty) ...[
+                const MyFriendsSection(),
+                const SizedBox(height: 16),
+              ],
+              const FriendRequestsSection(),
 
-// const FriendRequestsSection(),
-
-              // ✅ New reusable section
-              MyFriendsSection(
-                onTapFriend: (f) {
-                  // TODO: open profile
-                },
-                onLongPressFriend: (f) {
-                  // TODO: open map and focus on friend
-                },
-              ),
-
-              // IF no friends:
-              //           FIND FRIENDS SECTION instead of freinds. otherwise just find firends.
-              const Divider(
-                color: white,
-              ),
-
-              SizedBox(
-                height: h * 0.02,
-              ),
+              const SizedBox(height: 16),
 
               const FindFriendsSection(),
             ],
-          )),
+          ),
+        ),
+      ),
     );
   }
 }

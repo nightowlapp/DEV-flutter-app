@@ -1,10 +1,12 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/features/main/widgets/main_bottom_navigation_bar.dart';
 import 'package:nightowlcode/features/main/widgets/main_app_bar.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+import '../../../data/providers/users/friend_request_provider.dart';
 import '../../../data/services/notifications/segment_service.dart';
 import '../../../navigation/router.dart';
 import 'main_scaffold.dart';
@@ -41,9 +43,10 @@ class _MainShellState extends State<MainShell> {
     final token = await FirebaseMessaging.instance.getToken();
     final topics = await SegmentService().applySubscriptions();
     setState(() {
-      _token = token;
-      _appliedTopics = topics;
-    });
+        _token = token;
+        _appliedTopics = topics;
+      }
+    );
   }
 
   // Future<void> _prewarmMapBranchSafely() async { // TODO Make map start without going there.
@@ -75,11 +78,12 @@ class _MainShellState extends State<MainShell> {
   List<MainScreenName> _visibleTabs() {
     // start from canonical order, then filter
     return kBranchOrder.where((s) {
-      if (!s.showNav) return false;
-      if (s == MainScreenName.admin && !widget.isAdmin) return false;
-      if (s == MainScreenName.venues && !widget.isOwner) return false;
-      return true;
-    }).toList(growable: false);
+        if (!s.showNav) return false;
+        if (s == MainScreenName.admin && !widget.isAdmin) return false;
+        if (s == MainScreenName.venues && !widget.isOwner) return false;
+        return true;
+      }
+    ).toList(growable: false);
   }
 
   @override
@@ -91,30 +95,36 @@ class _MainShellState extends State<MainShell> {
 
     // map to visible index for the bottom bar (no values[]!)
     final currentVisibleIndex =
-        tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
+      tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
 
     return MainScaffold(
       appBar: MainAppBar(
         screen: activeGlobal,
       ),
       body: widget.nav,
-      bottomNavigationBar: MainBottomNavigationBar(
-        tabs: tabs,
-        currentIndex: currentVisibleIndex,
-        onTap: (i) {
-          final target = tabs[i];
-          final branchIndex =
-              kBranchOrder.indexOf(target); // <- map enum → branch
-          widget.nav.goBranch(
-            branchIndex,
-            initialLocation: branchIndex == widget.nav.currentIndex,
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, _) {
+          final hasBadge = ref.watch(hasPendingRequestsProvider);
+          return MainBottomNavigationBar(
+            tabs: tabs,
+            currentIndex: currentVisibleIndex,
+            onTap: (i) {
+              final target = tabs[i];
+              final branchIndex =
+                kBranchOrder.indexOf(target); // <- map enum → branch
+              widget.nav.goBranch(
+                branchIndex,
+                initialLocation: branchIndex == widget.nav.currentIndex,
+              );
+            },
+            socialHasBadge: hasBadge, // NEW
           );
-        },
+        }
       ),
     );
   }
 
-// Also fix the prewarm to use kBranchOrder
+  // Also fix the prewarm to use kBranchOrder
   Future<void> _prewarmMapBranchSafely() async {
     if (_prewarmed) return;
     _prewarmed = true;
@@ -134,11 +144,13 @@ class _MainShellState extends State<MainShell> {
     try {
       widget.nav.goBranch(mapIndexGlobal, initialLocation: true);
       await SchedulerBinding.instance.endOfFrame;
-    } catch (_) {}
+    }
+    catch (_) {}
 
     if (!mounted) return;
     try {
       widget.nav.goBranch(original, initialLocation: false);
-    } catch (_) {}
+    }
+    catch (_) {}
   }
 }

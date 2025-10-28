@@ -15,6 +15,7 @@ import '../../../shared/constants/icons.dart';
 import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
+import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 import '../../explore/utility/mood_images_section.dart';
 import '../../explore/utility/venue_tags_grid.dart';
@@ -187,11 +188,11 @@ class _VenuePopupContent extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _tinyIconButton(
-                            icon: editIcon,
-                            color: grey,
-                            onPressed: onClose, // or your onEdit
-                          ),
+                          // _tinyIconButton(
+                          //   icon: editIcon,
+                          //   color: grey,
+                          //   onPressed: onClose, // or your onEdit TODO
+                          // ),
                           _tinyIconButton(
                             icon: closeIcon,
                             color: grey,
@@ -217,7 +218,7 @@ class _VenuePopupContent extends ConsumerWidget {
                       const SizedBox(width: allSidePaddingDefault),
                       LikeVenueButton(store: likeStore, venue: venue),
                       const SizedBox(width: allSidePaddingDefault),
-                      if (venue.isVerified) const VerifiedBadge(),
+                      venue.isVerified ? const VerifiedBadge() : const EditBadge(),
                       const Spacer(),
                       OwlButton(
                         padding:
@@ -319,6 +320,7 @@ class _VenuePopupContent extends ConsumerWidget {
     );
   }
 }
+
 
 Widget _tinyIconButton({
   required IconData icon,

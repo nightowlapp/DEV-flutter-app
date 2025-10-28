@@ -31,7 +31,7 @@ import 'package:nightowlcode/models/users/user.dart' as model;
 import '../../../shared/utility/european_location_mapper.dart';
 import '../../../shared/utility/phone_country_code.dart';
 import '../../../shared/utility/utility.dart';
-import '../../social/utility/favorite_venues_section.dart';
+import '../../signup/widgets/favorite_venues_section.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});

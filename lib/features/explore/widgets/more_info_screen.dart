@@ -20,6 +20,7 @@ import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../shared/constants/icons.dart';
 import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
+import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
@@ -109,7 +110,8 @@ class MoreInfoScreen extends ConsumerWidget {
                       venue: venue,
                     ),
                     const SizedBox(width: allSidePaddingDefault),
-                    if (venue.isVerified) const VerifiedBadge(),
+                    venue.isVerified ? const VerifiedBadge() : const EditBadge(),
+
 
                     const Spacer(),
                     RatingCard(venue: venue), // will be replaced below

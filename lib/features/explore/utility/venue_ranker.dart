@@ -428,35 +428,30 @@ class VenueRanker {
     return best;
   }
 
-  int _pointsForDistance(double meters, double? userMaxKm,
-      {required bool strict}) {
-    // Inside user max distance → award nearest matching band points
-    // Beyond → penalty (or drop) so anything inside outranks anything outside.
-    final maxMeters = (userMaxKm != null && userMaxKm > 0) ? 50 : null;
+  // lib/shared/utility/venue_ranker.dart
 
-    // Beyond max distance handling
+  int _pointsForDistance(double meters, double? userMaxKm, {required bool strict}) {
+    // ✅ use kilometers properly
+    final int? maxMeters = (userMaxKm != null && userMaxKm > 0)
+        ? (userMaxKm * 1000).round()
+        : null;
+
     if (maxMeters != null && meters > maxMeters) {
-      if (rules.hardCutBeyondMaxDistance) {
-        return _DROP; // force to bottom
-      }
-      // softer: a penalty (harsher if strict)
-      return strict
-          ? rules.strictBeyondMaxDistancePenalty
+      if (rules.hardCutBeyondMaxDistance) return _DROP;
+      return strict ? rules.strictBeyondMaxDistancePenalty
           : rules.beyondMaxDistancePenalty;
     }
 
-    // Award the first band matched
     for (final band in rules.distanceBands) {
       if (meters <= band.maxMeters) {
-        if (strict) {
-          // boost nearby when strict (ceil to keep it integer)
-          return (band.points * rules.strictDistanceMultiplier).ceil();
-        }
-        return band.points;
+        return strict
+            ? (band.points * rules.strictDistanceMultiplier).ceil()
+            : band.points;
       }
     }
-    return 0; // farther than last band (but still within user's max)
+    return 0;
   }
+
 
   int _popularityPoints(int likes, int favs) {
     final r = rules;

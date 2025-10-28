@@ -9,12 +9,14 @@ class MainBottomNavigationBar extends StatelessWidget {
   final List<MainScreenName> tabs;
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool socialHasBadge;
 
   const MainBottomNavigationBar({
     super.key,
     required this.tabs,
     required this.currentIndex,
     required this.onTap,
+    this.socialHasBadge = false,
   });
 
   @override
