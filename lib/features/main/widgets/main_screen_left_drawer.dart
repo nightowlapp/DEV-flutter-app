@@ -55,10 +55,13 @@ class MainScreenLeftDrawer extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  SizedBox(
+                  GestureDetector(
+                    child: SizedBox(
                       width: PlatformConfig.width(context) * 0.4,
-                      child: Text('Owlnight.com',
-                          style: Styles.linkText(context))),
+                      child: Text('NightOwl.now',
+                        style: Styles.linkText(context))),
+                    // onTap: Uri.https(), //TODO Go website.
+                  ),
                 ],
               ),
               const Divider(color: owlPurple),
