@@ -14,6 +14,7 @@ import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../main/widgets/main_app_bar.dart';
 import '../presentation/sign_up_draft_notifier.dart'; // <-- signUpDraftProvider + selectors
+import 'package:nightowlcode/assets.dart';
 
 class FirstCreateNightowlProfileScreen extends ConsumerWidget {
   const FirstCreateNightowlProfileScreen({super.key});
@@ -90,7 +91,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
         showBack: true,
         titleText: 'Birthdate',
         actions: [
-          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo))
         ],
       ),
       body: Padding(

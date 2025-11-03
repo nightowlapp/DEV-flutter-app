@@ -13,6 +13,7 @@ import '../../../shared/reusable/sign_up_or_login/sign_up.dart';
 import '../../../shared/reusable/sign_up_or_login/simple_text_field.dart';
 import '../../main/widgets/main_app_bar.dart';
 import '../presentation/sign_up_draft_notifier.dart';
+import 'package:nightowlcode/assets.dart';
 
 class SecondCreateNightowlProfileScreen extends ConsumerStatefulWidget {
   const SecondCreateNightowlProfileScreen({super.key, this.emailController});
@@ -130,7 +131,7 @@ class _SecondCreateNightowlProfileScreenState
         showBack: true,
         titleText: 'Email',
         actions: [
-          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png'))
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo))
         ],
       ),
       body: Padding(

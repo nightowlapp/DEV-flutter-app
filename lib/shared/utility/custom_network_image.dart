@@ -2,6 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nightowlcode/assets.dart';
 
 import '../../core/storage/storage_url.dart';
 
@@ -26,7 +27,7 @@ class CustomNetworkImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.cacheKey,
     this.httpHeaders,
-    this.fallbackAsset = 'assets/nightowl/logo.png',
+    this.fallbackAsset = ImagePaths.logo,
     this.fallBackEnabled = true,
     this.normalizeStorage = true,
   });

@@ -5,6 +5,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
+import 'package:nightowlcode/assets.dart';
 
 enum OwlSnackVariant { info, success, warning, error, neutral }
 
@@ -44,7 +45,7 @@ class OwlSnack {
 
     // Default icon → NightOwl logo
     final Widget defaultIcon = Image.asset(
-      'assets/nightowl/logo.png',
+      ImagePaths.logo,
       width: iconSize,
       height: iconSize,
     );

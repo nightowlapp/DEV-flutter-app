@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
+import 'package:nightowlcode/assets.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../shared/constants/colors.dart';
@@ -52,7 +53,7 @@ class _ThirdCreateNightowlProfileScreenState
     final canContinue = _minOk;
     return Scaffold(
       appBar: const MainAppBar(showBack: true, titleText: 'Password', actions: [
-        CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png')),
+        CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo)),
       ]),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontal),

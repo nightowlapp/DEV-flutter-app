@@ -40,7 +40,13 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _load() async {
-    final token = await FirebaseMessaging.instance.getToken();
+    String? token;
+    try {
+      token = await FirebaseMessaging.instance.getToken();
+    } catch (_) {
+      // Swallow APNS token errors so app can run on iOS sim
+      token = null;
+    }
     final topics = await SegmentService().applySubscriptions();
     setState(() {
         _token = token;

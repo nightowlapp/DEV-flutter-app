@@ -1,16 +1,17 @@
 // bottom_logo_spinner.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nightowlcode/assets.dart';
 
 /// Bottom-aligned spinner that uses your logo as the rotating circle.
 /// Place it anywhere; it overlays and pins itself to the bottom.
 ///
 /// Example:
-/// BottomLogoSpinner(logoAsset: 'assets/nightowl/logo.png')
+/// BottomLogoSpinner(logoAsset: ImagePaths.logo)
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     super.key,
-    this.logoAsset = 'assets/nightowl/logo.png',
+    this.logoAsset = ImagePaths.logo,
     this.size = 50.0,
     this.duration = const Duration(milliseconds: 1000),
     this.bottomPadding = 0,
