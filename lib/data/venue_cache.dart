@@ -23,7 +23,7 @@ class VenueCache {
   bool contains(String id) => _byId.containsKey(id);
 
   /// Fast linear nearest (good up to a few 10k venues). Swap with grid later.
-  String? nearest(LatLng p, {double maxMeters = 60}) {
+  String? nearest(LatLng p, {double maxMeters = 50}) {
     String? bestId;
     double best = maxMeters;
     for (final v in _all) {

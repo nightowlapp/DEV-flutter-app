@@ -88,7 +88,7 @@ class MapTapHandler {
       final worldPt = await map.coordinateForPixel(ctx.touchPosition);
       final pos = worldPt.coordinates as mb.Position;
       final tap = LatLng(pos.lat.toDouble(), pos.lng.toDouble());
-      final nearestId = cache.nearest(tap, maxMeters: 60);
+      final nearestId = cache.nearest(tap);
       if (nearestId != null) return openVenue(nearestId);
     } catch (_) {}
 

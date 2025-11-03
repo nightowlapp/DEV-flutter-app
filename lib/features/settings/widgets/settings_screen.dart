@@ -53,7 +53,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   phone.PhoneNumber? _phoneObj;
   String? _gender; // 'm' | 'f' | 'o'
 
-  bool _shareLocation = true;
+  // bool _shareLocation = true;
   bool _hydrated = false;
 
   static const double _minKm = 5;
@@ -249,10 +249,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               Text('Personal', style: Styles.basicTextHeader),
               const Spacer(),
-              LocationIndicator(
-                enabledByUser: _shareLocation,
-                onToggleRequested: () => setState(() => _shareLocation = !_shareLocation),
-              ),
+              // LocationIndicator(
+              //   enabledByUser: _shareLocation,
+              //   onToggleRequested: () => setState(() => _shareLocation = !_shareLocation),
+              // ),
             ],
           ),
 
@@ -359,15 +359,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ---------------- PREFERENCES ----------------
           _sectionHeader("Preferences"),
-          SwitchListTile(
-            value: _shareLocation,
-            onChanged: (v) => setState(() => _shareLocation = v),
-            title: Text("Share location with friends", style: Styles.basicText),
-            activeColor: owlPurple,
-            inactiveThumbColor: grey,
-            inactiveTrackColor: grey.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-          ),
+          // SwitchListTile(
+          //   value: _shareLocation,
+          //   onChanged: (v) => setState(() => _shareLocation = v),
+          //   title: Text("Share location with friends", style: Styles.basicText),
+          //   activeColor: owlPurple,
+          //   inactiveThumbColor: grey,
+          //   inactiveTrackColor: grey.withOpacity(0.3),
+          //   contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+          // ),
           // Show a few preference fields from model
           if (appUser != null) ...[
             _kvClickable(
