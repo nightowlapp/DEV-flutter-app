@@ -150,13 +150,13 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: assets/nightowl/logo.png
+  image_path: assets/nightowl/logo_left.png
   adaptive_icon_background: "#000000"
 #  adaptive_icon_foreground: "assets/nightowl/slogan.png"
 
 flutter_native_splash:
   color: "#000000"
-  image: assets/nightowl/logo.png
+  image: assets/nightowl/logo_left.png
 
 #dependency_overrides:
 

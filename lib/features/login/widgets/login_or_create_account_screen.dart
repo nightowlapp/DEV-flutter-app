@@ -8,6 +8,7 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:nightowlcode/shared/reusable/users/language_switcher.dart';
+import 'package:nightowlcode/assets.dart';
 
 import '../../../core/storage/app_storage.dart';
 import '../../main/widgets/main_app_bar.dart';
@@ -68,7 +69,7 @@ class _LoadingScaffold extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/nightowl/logo.png',
+                ImagePaths.logo,
                 height: PlatformConfig.height(context) * 0.18,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
@@ -102,7 +103,7 @@ class _LoginBody extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          'assets/nightowl/logo.png',
+                          ImagePaths.logo,
                           height: PlatformConfig.height(context) * 0.3,
                           errorBuilder: (context, _, __) =>
                               const SizedBox.shrink(),

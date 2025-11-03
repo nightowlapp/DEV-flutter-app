@@ -6,6 +6,7 @@ import 'package:nightowlcode/features/main/widgets/utility/saftey_mode_toggle_se
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/assets.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
 
 class MainScreenLeftDrawer extends StatelessWidget {
@@ -44,7 +45,7 @@ class MainScreenLeftDrawer extends StatelessWidget {
                     // onTap: () => context.goScreen(MainScreenName.profile), // TODO Go to website.
                     child: CircleAvatar(
                       radius: PlatformConfig.width(context) * 0.09,
-                      child: Image.asset('assets/nightowl/logo.png'),
+                      child: Image.asset(ImagePaths.logo),
                     ),
                   ),
                 ],

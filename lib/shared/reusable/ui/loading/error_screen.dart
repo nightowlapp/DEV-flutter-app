@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/assets.dart';
 
 class ErrorScreen extends StatelessWidget {
   const ErrorScreen({
     super.key,
-    this.imagePath = 'assets/nightowl/logo.png',
+    this.imagePath = ImagePaths.logo,
     this.borderColor = owlPurple,
     this.borderWidth = 1.5,
     this.backgroundColor = black,

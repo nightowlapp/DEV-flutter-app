@@ -10,6 +10,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/sign_up_or_login/sign_up.dart';
 import 'package:nightowlcode/shared/reusable/sign_up_or_login/simple_text_field.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
+import 'package:nightowlcode/assets.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../core/storage/app_storage.dart';
@@ -85,7 +86,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
         showBack: true,
         titleText: 'Login',
         actions: [
-          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png')),
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo)),
         ],
       ),
       body: Padding(

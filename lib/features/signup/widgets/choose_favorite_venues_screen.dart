@@ -8,6 +8,7 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
+import 'package:nightowlcode/assets.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../data/providers/other_providers.dart';
@@ -130,7 +131,7 @@ class _ChooseFavoriteVenuesScreenState
         centerTitle: true,
         leading: SizedBox.shrink(),
         actions: [
-          CircleAvatar(backgroundImage: AssetImage('assets/nightowl/logo.png')),
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo)),
         ],
       ),
       body: SafeArea(
