@@ -30,7 +30,7 @@ import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 import '../utility/bar_card_screen.dart';
 import '../utility/mood_images_section.dart';
-import '../utility/venue_tags_grid.dart';
+import '../../../shared/reusable/venues/venue_tags_grid.dart';
 import 'more_info_screen.dart';
 
 // -------------------- LIVE COUNT PROVIDERS --------------------

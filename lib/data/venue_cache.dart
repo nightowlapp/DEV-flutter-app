@@ -46,17 +46,3 @@ class VenueCache {
     }
   }
 }
-
-/// Live cache: rebuilds whenever the SSO list changes.
-/// Keep-alive so you can read it from multiple screens without GC churn.
-final venueCacheProvider = Provider<VenueCache>((ref) {
-  ref.keepAlive();
-  final list = ref.watch(venuesListProvider); // ← your SSO (always fresh)
-  return VenueCache.fromList(list);
-});
-
-/// If you often need a single venue reactively:
-final venueByIdProvider = Provider.family<Venue?, String>((ref, id) {
-  final cache = ref.watch(venueCacheProvider);
-  return cache.get(id);
-});

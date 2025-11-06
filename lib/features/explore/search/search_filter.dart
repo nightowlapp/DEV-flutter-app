@@ -4,7 +4,6 @@ import 'package:nightowlcode/features/explore/search/search_controller.dart';
 import 'package:nightowlcode/features/explore/search/search_query.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/utility.dart'; // if you have title formatting; optional
-import '../presentation/ranked_venues_controller.dart';
 
 /// Pure function — can be reused in tests.
 List<Venue> filterVenues(List<Venue> input, SearchQuery q) {

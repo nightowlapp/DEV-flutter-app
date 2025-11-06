@@ -23,6 +23,8 @@ import 'core/storage/app_storage.dart';
 import 'core/storage/venues_sso.dart';
 import 'data/providers/geofence/geofencing_orchestrator_provider.dart';
 import 'data/providers/party_status/party_status_provider.dart';
+import 'data/providers/users/user_providers.dart';
+import 'data/services/location/location_providers.dart';
 import 'data/services/notifications/notification_service.dart';
 import 'dev_firebase_options.dart';
 // import 'firebase_options.dart';
@@ -30,11 +32,9 @@ import 'dev_firebase_options.dart';
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Firestore.instance.enablePersistence(); // What is this?
 
   // ref.read(locationServiceProvider.notifier).initialize(context); // TODO Sort out location first.
 
-  // Fetch cache
   await initLocalStores();
 
   // Notifications
@@ -57,27 +57,9 @@ Future<void> _preBoot() async {
   // final notificationService = NotificationService();
   // await notificationService.init();
 
-  // TODO Figure out where to put and make work
-  // venues$ can be your VenuesRepository.watchViewport(...) stream, or a broader subscription around user
-  // final orchestrator = GeofencingOrchestrator(
-  //   location$: LocationService.location$,
-  //   venues$: VenueRepository.,
-  //   presenceRepo: GeofencingRepository("currentUserId"),
-  // );
-
-  // ✅ Use AppConfig (has default + dart-define override)
   final cfg = AppConfig.current;
-  final token = cfg.accessToken;
+  MapboxOptions.setAccessToken(cfg.accessToken);
 
-  // Basic validation to catch mistakes early
-  if (token.isEmpty || !token.startsWith('pk.')) {
-    // You can throw or log; throwing fails fast in dev.
-    throw StateError(
-      'Mapbox ACCESS_TOKEN is missing or invalid (must start with "pk.").',
-    );
-  }
-
-  MapboxOptions.setAccessToken(token);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -144,38 +126,29 @@ class _InitTasksState extends ConsumerState<InitTasks> {
   @override
   void initState() {
     super.initState();
-    // database sync
-    Future.microtask(() => ref.read(venuesSsoProvider.future));
+    Future.microtask(() => ref.read(meSsoProvider));
 
+    Future.microtask(() {
+      ref.read(venuesSsoProvider); // starts build; no await
+    });
+
+    // Other background boot tasks (non-blocking):
     Future.microtask(() => ref.read(partyStatusBootstrapProvider.future));
-    Future.microtask(() => ref
-        .read(partyStatusAutoResetProvider)); // Resets partyStatus at 08:00 e/d
+    Future.microtask(() => ref.read(partyStatusAutoResetProvider));
   }
 
   @override
   Widget build(BuildContext context) {
     ref.watch(geofencingOrchestratorProvider);
+    ref.listen(latLngSafeStreamProvider, (prev, next) {
+      final p = next.maybeWhen(data: (v) => v, orElse: () => null);
+      if (p != null) {
+        final prefs = ref.read(sharedPrefsProvider);
+        prefs.setDouble('last_lat', p.lat);
+        prefs.setDouble('last_lng', p.lng);
+      }
+    });
     return widget.child;
   }
 }
 
-class VenuesBoot extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final venues = ref.watch(venuesSsoProvider);
-    return venues.when(
-      data: (list) => Scaffold(
-        appBar: AppBar(title: const Text('Venues')),
-        body: ListView.builder(
-          itemCount: list.length,
-          itemBuilder: (_, i) => ListTile(
-            title: Text(list[i].displayName ?? list[i].name),
-            subtitle: Text(list[i].id),
-          ),
-        ),
-      ),
-      loading: () => const Scaffold(body: Center(child: LoadingScreen())),
-      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
-    );
-  }
-}

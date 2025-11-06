@@ -9,6 +9,7 @@ import '../../../data/providers/other_providers.dart';
 import '../../../data/repositories/users/auth/auth_profile_mapper.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/icons.dart';
+import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/sign_up_or_login/sign_up.dart';
 import '../../../shared/reusable/sign_up_or_login/simple_text_field.dart';
 import '../../main/widgets/main_app_bar.dart';
@@ -131,7 +132,7 @@ class _SecondCreateNightowlProfileScreenState
         showBack: true,
         titleText: 'Email',
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo))
+          CircleAvatar(backgroundImage: AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
         ],
       ),
       body: Padding(

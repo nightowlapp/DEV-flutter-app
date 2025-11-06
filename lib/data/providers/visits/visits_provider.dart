@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/users/visit_session.dart';
 import '../../../models/venues/venue.dart';
-import '../other_providers.dart';
+import '../venues/venue_providers.dart';
 import 'my_visits_session_provider.dart';
 
 class VisitUi {
@@ -16,7 +16,7 @@ final myVisitsWithVenuesProvider = Provider<List<VisitUi>>((ref) {
         data: (v) => v,
         orElse: () => const <VisitSession>[],
       );
-  final venues = ref.watch(venuesListProvider);
+  final venues = ref.watch(allVenuesListProvider);
   final byId = {for (final v in venues) v.id: v};
 
   // Count sessions per venue_id

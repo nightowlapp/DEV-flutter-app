@@ -57,6 +57,7 @@ final mailIcon = Icons.mail_outline;
 final passwordIcon = Icons.lock_outline;
 final globeIcon = Icons.public;
 final qrCodeIcon = Icons.qr_code_2;
+final feedback = Icons.feedback_outlined;
 final fullScreenIcon = Icons.fullscreen;
 final copyIcon = Icons.copy;
 final shieldIcon = Icons.shield_moon;

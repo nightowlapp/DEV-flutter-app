@@ -1,9 +1,9 @@
 // lib/shared/utility/venue_ranker.dart
+import 'package:nightowlcode/features/explore/ranking/venue_ranker_prefs.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-import 'package:nightowlcode/features/explore/utility/venue_ranker_prefs.dart';
 
 import '../../../data/services/media_existence.dart';
 
@@ -308,7 +308,7 @@ class VenueRanker {
 
     // 2) Preferred type first (if configured)
     if (prefs != null && rules.preferPreferredTypesFirst) {
-      final isPreferred = prefs!.preferredTypes.contains(v.type);
+      final isPreferred = prefs!.preferredVenueTypes.contains(v.type);
       if (!isPreferred) {
         total += rules.nonPreferredTypePenalty;
         items.add(ScoreItem(

@@ -7,11 +7,11 @@ import 'package:nightowlcode/assets.dart';
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({
     super.key,
-    this.imagePath = ImagePaths.logo,
+    this.imagePath = ImagePaths.logoDown,
     this.borderColor = owlPurple,
-    this.borderWidth = 1.5,
-    this.backgroundColor = black,
-    this.imageSize = 120,
+    this.borderWidth = 1,
+    this.backgroundColor = transparent,
+    this.imageSize = 150,
     this.borderRadius = borderRadiusDefault,
     this.slogan = 'Claim the night',
     this.sloganStyle,
@@ -54,7 +54,7 @@ class LoadingScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Claim the night',
-              style: Styles.gradientLogo,
+              style: Styles.sloganStyle,
               // Styles.logoCrazy('Claim the night'),
               textAlign: TextAlign.center,
             )

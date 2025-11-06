@@ -3,14 +3,14 @@ import 'package:nightowlcode/models/users/user.dart' as model;
 import 'package:nightowlcode/shared/constants/enums.dart';
 
 class UserPrefs {
-  final Set<VenueType> preferredTypes;
+  final Set<VenueType> preferredVenueTypes;
   final double maxDistanceKm;
   final int age;
   final PartyStatusTypes partyStatus;
   final Gender gender;
 
   const UserPrefs({
-    required this.preferredTypes,
+    required this.preferredVenueTypes,
     required this.maxDistanceKm,
     required this.age,
     required this.partyStatus,
@@ -18,7 +18,7 @@ class UserPrefs {
   });
 
   factory UserPrefs.fromUser(model.User u) => UserPrefs(
-      preferredTypes: u.preferredVenueTypes,
+      preferredVenueTypes: u.preferredVenueTypes,
       maxDistanceKm: u.maxDistanceKm,
       age: u.age,
       partyStatus: u.currentPartyStatus,

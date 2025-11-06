@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 enum MainScreenName {
   explore(showNav: true),
@@ -19,16 +20,7 @@ enum MainScreenName {
 }
 
 extension ScreenNameX on MainScreenName {
-  String get label => switch (this) {
-        MainScreenName.explore => 'Explore',
-        MainScreenName.map => 'Map',
-        MainScreenName.calender => 'Calender',
-        MainScreenName.social => 'Social',
-        MainScreenName.profile => 'Profile',
-        // MainScreenName.cupons => 'Cupons', //TODO
-        MainScreenName.venues => 'Venues',
-        MainScreenName.admin => 'Admin',
-      };
+  String get label => Utility.formatString(name);
 
   IconData get icon => switch (this) {
         MainScreenName.explore => exploreIcon,
@@ -120,12 +112,11 @@ enum SubscriptionTypesVenue {
 
 enum PlatformType { android, ios, web }
 
-enum UserRole { admin, user, tester, reviewer }
+enum UserRole { admin, owner, user, tester, reviewer }
 
 enum SubscriptionTypesUser {
   free,
   premium,
-  // admin,
 }
 
 enum FriendRequestStatus {
@@ -138,9 +129,9 @@ enum Gender { male, female, other }
 
 extension GenderX on Gender {
   String get code => switch (this) {
-    Gender.female => 'F',
-    Gender.male => 'M',
-    Gender.other => 'O',
+    Gender.female => 'f',
+    Gender.male => 'm',
+    Gender.other => 'o',
   };
 
   String get label => switch (this) {

@@ -98,6 +98,7 @@ class MainScreenRightDrawer extends StatelessWidget {
               const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
+              // const SocialMedias(), // TODO Discord server. Other?
               // const CityNowSectionRightDrawer(), TODO after events are made.
             ],
           ),

@@ -26,6 +26,7 @@ import 'package:nightowlcode/navigation/route_args.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
+import '../features/admin/widgets/admin_screen.dart';
 import '../features/explore/utility/bar_card_screen.dart';
 import '../features/explore/widgets/more_info_screen.dart';
 import '../features/main/presentation/main_screen_wrapper.dart';
@@ -46,7 +47,7 @@ final Map<MainScreenName, ScreenBuilderWithKey> _rootBuilders = {
 
   // Placeholders to keep API stable
   MainScreenName.venues: (key) => const Center(child: Text('Venues')),
-  MainScreenName.admin: (key) => const Center(child: Text('Admin')),
+  MainScreenName.admin: (key) => const AdminScreen(),
 };
 
 Widget _buildRoot(MainScreenName s, Key key) {
@@ -81,7 +82,7 @@ final GoRouter router = GoRouter(
       path: '/first-create-nightowl-profile',
       name: 'firstCreateNightowlProfile',
       pageBuilder: (context, state) =>
-          const NoTransitionPage(child: FirstCreateNightowlProfileScreen()),
+          const NoTransitionPage(child: FirstCreateNightowlProfileScreen()), //TODO
     ),
     GoRoute(
       path: '/second-create-nightowl-profile',

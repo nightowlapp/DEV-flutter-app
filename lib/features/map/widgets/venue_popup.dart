@@ -18,7 +18,7 @@ import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
 import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 import '../../explore/utility/mood_images_section.dart';
-import '../../explore/utility/venue_tags_grid.dart';
+import '../../../shared/reusable/venues/venue_tags_grid.dart';
 import '../utility/rating_display.dart';
 
 // NEW: for chained navigation Explore → Venue → More Info

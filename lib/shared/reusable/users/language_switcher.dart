@@ -3,6 +3,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 
+import '../../../assets.dart';
 import '../ui/popup_dialog_default.dart';
 
 class LanguageSwitcher extends StatelessWidget {
@@ -21,8 +22,7 @@ class LanguageSwitcher extends StatelessWidget {
       child: CircleAvatar(
         backgroundColor: transparent,
         radius: iconSizeDefault,
-        child: Image.asset(
-          'assets/flags/uk.png',
+        child: Image.asset(ImagePaths.ukFlag,
           width: radius * 1.3,
           height: radius,
           fit: BoxFit.cover,

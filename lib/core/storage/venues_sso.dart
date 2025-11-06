@@ -8,12 +8,86 @@ import 'package:hive/hive.dart';
 
 import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/data/providers/other_providers.dart'; // firestoreProvider
-import 'package:nightowlcode/data/firestore_paths.dart'; // DocumentPaths.venues
+import 'package:nightowlcode/data/providers/other_providers.dart';
+import 'package:nightowlcode/data/firestore_paths.dart';
+
+import '../../data/services/location/location_providers.dart';
+import '../../shared/utility/distance.dart';
+import '../../shared/utility/lat_lng.dart';
+import 'app_storage.dart';
 
 // ----------------------------------------------------
 // Local persistent store (Hive, one JSON blob per venue)
 // ----------------------------------------------------
+
+extension VenuesLocalStoreStreaming on VenuesLocalStore {
+  /// Streams the local cache progressively, sorted by:
+  ///   1) open now first, 2) distance ascending (if origin != null)
+  /// Emits after each [batchSize] decodes (and for the first few early items).
+  Stream<List<Venue>> streamAllIncremental({
+    LatLng? origin,
+    int batchSize = 24,
+  }) async* {
+    final now = DateTime.now();
+    final keys = _box.keys
+      .where((k) => k is String && k != VenuesLocalStore._kLastSync)
+      .cast<String>()
+      .toList(growable: false);
+
+    // Local helpers
+    double _dist(Venue v) =>
+    origin == null ? double.infinity : Distance.metersLatLng(origin, v.entry);
+
+    int _cmp(Venue a, Venue b) {
+      final oa = a.isOpenNow(now) ? 0 : 1;
+      final ob = b.isOpenNow(now) ? 0 : 1;
+      if (oa != ob) return oa - ob;
+      final da = _dist(a), db = _dist(b);
+      if (da != db) return da.compareTo(db);
+      // tie-breakers (optional): rating desc, name asc
+      final ra = a.rating ?? 0, rb = b.rating ?? 0;
+      final r = rb.compareTo(ra);
+      if (r != 0) return r;
+      return a.displayName.compareTo(b.displayName);
+    }
+
+    final acc = <Venue>[];
+    var i = 0;
+
+    for (final key in keys) {
+      final raw = _box.get(key);
+      try {
+        Map<String, dynamic>? map;
+        if (raw is String) {
+          map = jsonDecode(raw) as Map<String, dynamic>;
+        }
+        else if (raw is Map) {
+          map = raw.cast<String, dynamic>(); // tolerate legacy writes
+        }
+        if (map == null) continue;
+        final id = (map['id'] as String?) ?? key;
+        final v = Venue.fromJson(map, id);
+        acc.add(v);
+      }
+      catch (_) {
+        // skip broken entry
+      }
+
+      i++;
+      final shouldEmit = i <= 4 || (i % batchSize == 0);
+      if (shouldEmit) {
+        final list = List<Venue>.from(acc)..sort(_cmp);
+        yield list;
+        // Yield to UI; avoids long jank on large caches.
+        await Future.delayed(Duration.zero);
+      }
+    }
+
+    // Final emit
+    final list = List<Venue>.from(acc)..sort(_cmp);
+    yield list;
+  }
+}
 
 class VenuesLocalStore {
   static const _boxName = 'venues_box';
@@ -70,13 +144,15 @@ class VenuesLocalStore {
         Map<String, dynamic>? map;
         if (raw is String) {
           map = jsonDecode(raw) as Map<String, dynamic>;
-        } else if (raw is Map) {
+        }
+        else if (raw is Map) {
           map = raw.cast<String, dynamic>(); // tolerate legacy writes
         }
         if (map == null) continue;
         final id = (map['id'] as String?) ?? key as String;
         result.add(Venue.fromJson(map, id));
-      } catch (_) {
+      }
+      catch (_) {
         // skip broken entry
       }
     }
@@ -100,148 +176,210 @@ dynamic _jsonSafe(dynamic v) {
 // --------------------------------------
 // Riverpod: provider + live sync engine
 // --------------------------------------
+final venuesLocalBootDoneProvider = StateProvider<bool>((_) => false); // When finished fetching all from hive
 
 final venuesLocalStoreProvider = FutureProvider<VenuesLocalStore>((ref) async {
-  return VenuesLocalStore.open();
-});
-
+    return VenuesLocalStore.open();
+  }
+);
+///True provider with all venues from local.
 final venuesSsoProvider =
-    AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
+  AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 class VenuesSso extends AsyncNotifier<List<Venue>> {
-  StreamSubscription<QuerySnapshot<Venue>>? _subDelta; // add/modify
-  StreamSubscription<QuerySnapshot<Venue>>? _subRemovals; // delete-only
+  StreamSubscription<List<Venue>>? _subLocal;
+  StreamSubscription<QuerySnapshot<Venue>>? _subDelta;
+  StreamSubscription<QuerySnapshot<Venue>>? _subRemovals;
   KeepAliveLink? _keepAlive;
+
+  LatLng? _origin;
 
   @override
   Future<List<Venue>> build() async {
+    ref.read(venuesLocalBootDoneProvider.notifier).state = false;
     _keepAlive ??= ref.keepAlive();
     final store = await ref.watch(venuesLocalStoreProvider.future);
     final db = ref.watch(firestoreProvider);
 
-    // 1) Instant UI from local cache
-    final local = await store.getAll();
-    state = AsyncData(local);
+    // Start empty
+    state = const AsyncData(<Venue>[]);
 
-    // 2) First run → full bootstrap from server and cache
+    // Seed origin from prefs (non-blocking)
+    try {
+      final prefs = ref.read(sharedPrefsProvider);
+      final lat = prefs.getDouble('last_lat');
+      final lng = prefs.getDouble('last_lng');
+      if (lat != null && lng != null) _origin = LatLng(lat, lng);
+    }
+    catch (_) {}
+
+    // Re-sort when a new location arrives (don’t rebuild the whole world)
+    ref.listen(latLngSafeStreamProvider, (prev, next) {
+      final p = next.maybeWhen(data: (v) => v, orElse: () => null);
+      if (p == null) return;
+
+      // Only persist if we moved > ~25m (or use time-based throttle)
+      final prefs = ref.read(sharedPrefsProvider);
+      final prevLat = prefs.getDouble('last_lat');
+      final prevLng = prefs.getDouble('last_lng');
+      if (prevLat != null && prevLng != null) {
+        final moved = Distance.metersLatLng(LatLng(prevLat,prevLng), p);
+        if (moved < 50) return;
+      }
+      prefs.setDouble('last_lat', p.lat);
+      prefs.setDouble('last_lng', p.lng);
+    });
+
+// 1) Progressive local boot
+    await _subLocal?.cancel();
+    _subLocal = store
+        .streamAllIncremental(origin: _origin, batchSize: 24)
+        .listen((partial) {
+      state = AsyncData(_sorted(partial));
+    }, onError: (e, st) {
+      state = AsyncError(e, st);
+    }, onDone: () {
+      // ✅ local cache fully scanned (final emit already happened)
+      ref.read(venuesLocalBootDoneProvider.notifier).state = true;
+    });
+
+    // 2) First-ever run
     if (await store.isEmpty) {
       final all = await _fetchAllOnce(db);
       await store.upsertMany(all);
       await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-      state = AsyncData(all);
+      state = AsyncData(_sorted(all));
     }
 
-    // 3) Start live sync (delta + removals)
+    // 3) Live sync
     await _startLiveSync(db, store);
 
     ref.onDispose(() async {
-      await _subDelta?.cancel();
-      await _subRemovals?.cancel();
-      _keepAlive?.close();
-    });
+        await _subLocal?.cancel();
+        await _subDelta?.cancel();
+        await _subRemovals?.cancel();
+        _keepAlive?.close();
+      }
+    );
 
     return state.value ?? <Venue>[];
   }
 
-  Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
-    final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
-          fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-          toFirestore: (v, _) => VenueFirestore.toMap(v),
-        );
-    final snap = await col.get(const GetOptions(source: Source.server));
-    return snap.docs.map((d) => d.data()).toList(growable: false);
+  // Sort helper: open now first, then distance (if _origin), then rating desc, name asc.
+  List<Venue> _sorted(List<Venue> input) {
+    final now = DateTime.now();
+    int cmp(Venue a, Venue b) {
+      final oa = a.isOpenNow(now) ? 0 : 1;
+      final ob = b.isOpenNow(now) ? 0 : 1;
+      if (oa != ob) return oa - ob;
+
+      if (_origin != null) {
+        final da = Distance.metersLatLng(_origin!, a.entry);
+        final db = Distance.metersLatLng(_origin!, b.entry);
+        if (da != db) return da.compareTo(db);
+      }
+
+      final ra = a.rating ?? 0, rb = b.rating ?? 0;
+      final r = rb.compareTo(ra);
+      if (r != 0) return r;
+      return a.displayName.compareTo(b.displayName);
+    }
+
+    final out = List<Venue>.from(input);
+    out.sort(cmp);
+    return out;
   }
 
-  Future<void> _startLiveSync(
-      FirebaseFirestore db, VenuesLocalStore store) async {
+  bool _shouldUpdateOrigin(LatLng? p) {
+    if (p == null) return false;
+    if (_origin == null) return true;
+    final delta = Distance.metersLatLng(_origin!, p);
+    return delta > 50; // re-sort only if moved >50m
+  }
+
+  // In _startLiveSync, sort before publishing:
+  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
     final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
-          fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-          toFirestore: (v, _) => VenueFirestore.toMap(v),
-        );
+      fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+      toFirestore: (v, _) => VenueFirestore.toMap(v),
+    );
 
     final lastSync = await store.getLastSync();
 
-    // --- DELTA stream: only added/modified since lastSync -------------------
     Stream<QuerySnapshot<Venue>> deltaStream;
     Query<Venue> deltaQ = col;
     try {
       if (lastSync != null) {
-        deltaQ = deltaQ.where('updated_at',
-            isGreaterThan: Timestamp.fromDate(lastSync));
+        deltaQ = deltaQ.where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync));
       }
       deltaStream = deltaQ.snapshots();
-    } catch (_) {
+    }
+    catch (_) {
       deltaStream = col.snapshots();
     }
 
     await _subDelta?.cancel();
     _subDelta = deltaStream.listen((qs) async {
-      final current = Map<String, Venue>.fromEntries(
-        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
-      );
+        final current = Map<String, Venue>.fromEntries(
+          (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+        );
+        DateTime? maxSeenUpdatedAt;
 
-      DateTime? maxSeenUpdatedAt;
+        if (qs.docChanges.isEmpty && lastSync == null) {
+          final all = qs.docs.map((d) => d.data()).toList(growable: false);
+          await store.upsertMany(all);
+          state = AsyncData(_sorted(all));
+          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+          return;
+        }
 
-      // If docChanges is empty (some edge cases), rebuild from docs snapshot
-      if (qs.docChanges.isEmpty && lastSync == null) {
-        final all = qs.docs.map((d) => d.data()).toList(growable: false);
-        await store.upsertMany(all);
-        state = AsyncData(all);
-        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-        return;
-      }
-
-      for (final change in qs.docChanges) {
-        if (change.type == DocumentChangeType.added ||
+        for (final change in qs.docChanges) {
+          if (change.type == DocumentChangeType.added ||
             change.type == DocumentChangeType.modified) {
-          final v = change.doc.data();
-          if (v != null) {
-            await store.upsert(v);
-            current[v.id] = v;
-            maxSeenUpdatedAt = _maxDate(maxSeenUpdatedAt, _extractUpdatedAt(v));
+            final v = change.doc.data();
+            if (v != null) {
+              await store.upsert(v);
+              current[v.id] = v;
+              maxSeenUpdatedAt = _maxDate(maxSeenUpdatedAt, _extractUpdatedAt(v));
+            }
           }
         }
-        // DO NOT process removals here; deletions are handled by the second stream.
-      }
 
-      final list = current.values.toList(growable: false);
-      state = AsyncData(list);
+        final list = current.values.toList(growable: false);
+        state = AsyncData(_sorted(list));
+        await store.setLastSync(maxSeenUpdatedAt ?? DateTime.now());
+      }, onError: (e, st) async {
+        state = AsyncError(e, st);
+        try {
+          final all = await _fetchAllOnce(db);
+          await store.upsertMany(all);
+          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+          state = AsyncData(_sorted(all));
+        }
+        catch (_) {}
+      }, cancelOnError: false);
 
-      // Advance checkpoint using the newest updated_at we actually saw,
-      // or use "now" conservatively.
-      await store.setLastSync(maxSeenUpdatedAt ?? DateTime.now());
-    }, onError: (e, st) async {
-      state = AsyncError(e, st);
-      try {
-        final all = await _fetchAllOnce(db);
-        await store.upsertMany(all);
-        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-        state = AsyncData(all);
-      } catch (_) {}
-    }, cancelOnError: false);
-
-    // --- REMOVALS stream: full collection, but only react to removed --------
     await _subRemovals?.cancel();
     _subRemovals = col.snapshots().listen((qs) async {
-      if (qs.docChanges.isEmpty) return;
+        if (qs.docChanges.isEmpty) return;
+        var changed = false;
+        final current = Map<String, Venue>.fromEntries(
+          (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+        );
 
-      var changed = false;
-      final current = Map<String, Venue>.fromEntries(
-        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
-      );
+        for (final change in qs.docChanges) {
+          if (change.type == DocumentChangeType.removed) {
+            final id = change.doc.id;
+            await store.remove(id);
+            if (current.remove(id) != null) changed = true;
+          }
+        }
 
-      for (final change in qs.docChanges) {
-        if (change.type == DocumentChangeType.removed) {
-          final id = change.doc.id;
-          await store.remove(id);
-          if (current.remove(id) != null) changed = true;
+        if (changed) {
+          state = AsyncData(_sorted(current.values.toList(growable: false)));
         }
       }
-
-      if (changed) {
-        state = AsyncData(current.values.toList(growable: false));
-      }
-    });
+    );
   }
 
   // ---------- helpers ----------
@@ -278,6 +416,15 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     final all = await _fetchAllOnce(db);
     await store.upsertMany(all);
     await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-    state = AsyncData(all);
+    state = AsyncData(_sorted(all)); // ← sorted here
   }
 }
+
+Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
+  final col = db.collection(DocumentPaths.venues).withConverter<Venue>
+    (fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+    toFirestore: (v, _) => VenueFirestore.toMap(v), );
+  final snap = await col.get(const GetOptions(source: Source.server));
+  return snap.docs.map((d) => d.data()).toList(growable: false);
+}
+

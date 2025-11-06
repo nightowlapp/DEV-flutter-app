@@ -12,6 +12,9 @@ class Distance {
   /// Real detour factor for non-straight paths.
   static const double kDefaultDetourFactor = 1.15;
 
+  final walkingSpeedKmh = 4.8*0.7;
+  final bikingSpeedKmh = 15*0.7;
+
   // -------------------- core distance --------------------
 
   /// Haversine distance in meters.

@@ -69,7 +69,7 @@ class _LoadingScaffold extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                ImagePaths.logo,
+                ImagePaths.logoDown,
                 height: PlatformConfig.height(context) * 0.18,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
@@ -97,18 +97,17 @@ class _LoginBody extends StatelessWidget {
             Column(
               children: [
                 SizedBox(
-                  height: PlatformConfig.height(context) * 0.35,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
                           ImagePaths.logo,
-                          height: PlatformConfig.height(context) * 0.3,
+                          height: PlatformConfig.height(context) * 0.25,
                           errorBuilder: (context, _, __) =>
                               const SizedBox.shrink(),
                         ),
-                        Styles.logoCrazy('Claim the Night'),
+                        Styles.logoCrazy('Claim the Night'), //TODO
                       ],
                     ),
                   ),

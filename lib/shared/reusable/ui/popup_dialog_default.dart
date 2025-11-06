@@ -126,30 +126,39 @@ class PopupDialogDefault extends StatelessWidget {
       body = Directionality(textDirection: forceTextDirection!, child: body);
     }
 
-    return AlertDialog(
-      backgroundColor: backgroundColor,
-      clipBehavior: Clip.antiAlias,
-      // keep nice margins, but also respect keyboard
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24) + viewInsets,
-      contentPadding: EdgeInsets.zero,
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: maxH,          // <- hard cap height
-        ),
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.zero,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: border,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.decelerate,
+          padding: MediaQuery.of(context).viewInsets + const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: AlertDialog(
+            backgroundColor: backgroundColor,
+            clipBehavior: Clip.antiAlias,
+            contentPadding: EdgeInsets.zero,
+            insetPadding: EdgeInsets.zero, // already handled by AnimatedPadding
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                maxHeight: maxH,
+              ),
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.zero,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    border: border,
+                  ),
+                  padding: contentPadding ?? const EdgeInsets.fromLTRB(20, 30, 20, 30),
+                  child: body,
+                ),
+              ),
             ),
-            padding: contentPadding ?? const EdgeInsets.fromLTRB(20, 30, 20, 30),
-            child: body,
           ),
-        ),
-      ),
+        );
+      },
     );
+
   }
 }

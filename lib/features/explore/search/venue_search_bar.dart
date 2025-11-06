@@ -5,8 +5,8 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import '../../../shared/constants/styles.dart';
-import '../presentation/nearby_venue_count_provider.dart';
-import '../search/search_match_provider.dart';
+import 'nearby_venue_count_provider.dart';
+import 'search_match_provider.dart';
 
 class VenueSearchBar extends ConsumerStatefulWidget {
   //TODO make dynamic switches when not written anything - "Try: club 21+ 4*+"

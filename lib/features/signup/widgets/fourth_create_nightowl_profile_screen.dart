@@ -13,6 +13,7 @@ import '../../../core/platform_config.dart';
 import '../../../data/providers/other_providers.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/enums.dart';
+import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/sign_up_or_login/simple_text_field.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../main/widgets/main_app_bar.dart';
@@ -241,7 +242,8 @@ class _FourthCreateNightowlProfileScreenState
         showBack: true,
         titleText: 'Final Details',
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo))
+          CircleAvatar(backgroundImage: AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+
         ],
       ),
       body: Padding(

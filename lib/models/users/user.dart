@@ -64,6 +64,7 @@ class User {
   final PartyStatusTypes currentPartyStatus;
   // final Set<Emblem> earnedEmblems; //TODO maybe just int?
 
+
   final Set<VenueType> preferredVenueTypes;
   final double maxDistanceKm;
 

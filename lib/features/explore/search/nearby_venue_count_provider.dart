@@ -1,19 +1,20 @@
 // lib/features/explore/presentation/nearby_venue_count_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/features/explore/ranking/explore_ranked_providers.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
 import '../../../data/providers/other_providers.dart';
+import '../../../data/providers/users/user_providers.dart';
 import '../../../data/services/location/location_controller.dart';
-import 'ranked_venues_controller.dart'; // rankedVenuesProvider + userPrefsProvider
 
 // Fallback if prefs are not set yet.
-const double _kDefaultMaxDistanceKm = 50;
+const double _kDefaultMaxDistanceKm = 25;
 
 final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
   // Ranked venues (already sorted and reactive)
-  final ranked = ref.watch(rankedVenuesProvider);
+  final ranked = ref.watch(exploreRankedVenuesProvider);
   final state = ranked.asData?.value;
 
   // Prefer the controller's userLoc; if it's null, peek at raw location (optional).

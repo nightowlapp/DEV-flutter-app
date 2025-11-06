@@ -1,21 +1,26 @@
-// lib/features/explore/search/search_match_count_provider.dart
+// lib/features/explore/search/search_match_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/features/explore/search/search_engine.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
-
 import '../../../data/providers/other_providers.dart';
-import '../presentation/ranked_venues_controller.dart';
+import '../ranking/explore_ranked_providers.dart';
 import 'search_controller.dart';
+import 'search_engine.dart';
+import '../filters/filter_controller.dart';
+import '../filters/filter_predicate.dart';
 
-/// Returns `null` when no active search (so the UI can show "nearby" instead).
 final searchMatchCountProvider = Provider.autoDispose<int?>((ref) {
-  final ranked = ref.watch(rankedVenuesProvider).asData?.value;
+  final ranked = ref.watch(exploreRankedVenuesProvider).asData?.value;
   if (ranked == null) return null;
 
   final q = ref.watch(searchQueryProvider);
-  if (q.isEmpty) return null;
+  if (q.isEmpty) return null; // only show "matches" when searching
 
   final engine = ref.watch(venueSearchEngineProvider);
-  final List<Venue> matches = engine.filter(ranked.venues, q);
-  return matches.length;
-});
+  final filters = ref.watch(filtersProvider);
+
+  List<Venue> xs = engine.filter(ranked.venues, q);
+  xs = xs
+      .where((v) => venuePassesFilters(v, filters, userLoc: ranked.userLoc))
+      .toList();
+  return xs.length;
+}, name: 'searchMatchCountProvider');

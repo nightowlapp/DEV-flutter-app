@@ -25,13 +25,12 @@ class VenueMainScreen extends StatelessWidget {
   final VenueMediaHealth? media;
   final LatLng? userLoc;
 
-  String get _title =>
-      venue.displayName.isNotEmpty ? venue.displayName : venue.name;
+  String get _title => venue.displayName;
 
   @override
   Widget build(BuildContext context) {
     final logo = VenueLogo(venue: venue, showInitialFallback: false);
-    //TODO below.
+    //TODO below. Delayed
     final primaryColor = venue.primaryColorHex ?? owlPurple.toHex();
     final secondaryColor = venue.secondaryColorHex ?? owlPurple.toHex();
     final venueFont = venue.fontFamily ?? Styles.baseFont;

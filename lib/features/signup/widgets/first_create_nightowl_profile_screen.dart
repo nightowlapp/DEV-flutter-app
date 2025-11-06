@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/features/signup/widgets/utility/date_picker.dart';
-import 'package:nightowlcode/features/signup/widgets/utility/terms_of_service.dart';
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/reusable/sign_up_or_login/sign_up.dart';
 
@@ -11,6 +10,7 @@ import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/icons.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/constants/values.dart';
+import '../../../shared/legal/terms_of_service.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../main/widgets/main_app_bar.dart';
 import '../presentation/sign_up_draft_notifier.dart'; // <-- signUpDraftProvider + selectors
@@ -91,7 +91,8 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
         showBack: true,
         titleText: 'Birthdate',
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo))
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+
         ],
       ),
       body: Padding(

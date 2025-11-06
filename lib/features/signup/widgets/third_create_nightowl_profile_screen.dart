@@ -7,6 +7,7 @@ import 'package:nightowlcode/assets.dart';
 import '../../../core/platform_config.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/icons.dart';
+import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/sign_up_or_login/sign_up.dart';
 import '../../../shared/reusable/sign_up_or_login/simple_text_field.dart';
 import '../../../shared/reusable/ui/buttons.dart';
@@ -53,7 +54,8 @@ class _ThirdCreateNightowlProfileScreenState
     final canContinue = _minOk;
     return Scaffold(
       appBar: const MainAppBar(showBack: true, titleText: 'Password', actions: [
-        CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo)),
+        CircleAvatar(backgroundImage: AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+
       ]),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontal),

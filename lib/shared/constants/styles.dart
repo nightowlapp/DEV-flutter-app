@@ -137,7 +137,7 @@ class Styles {
         ],
       );
 
-  static TextStyle get gradientLogo => TextStyle(
+  static TextStyle get sloganStyle => TextStyle(
         fontSize: 33.0,
         fontWeight: FontWeight.w800,
         foreground: Paint()

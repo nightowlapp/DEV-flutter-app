@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/providers/users/user_providers.dart';
 import 'advanced_search_filter.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-import '../presentation/ranked_venues_controller.dart'; // for userPrefsProvider
 
 /// Build defaults once from user prefs.
 /// - openNowOnly = true

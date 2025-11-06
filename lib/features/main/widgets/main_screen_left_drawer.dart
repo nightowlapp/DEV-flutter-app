@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
+import 'package:nightowlcode/features/main/widgets/utility/feedback_button.dart';
 import 'package:nightowlcode/features/main/widgets/utility/owls_online_section_left_drawer.dart';
 import 'package:nightowlcode/features/main/widgets/utility/refer_a_friend_section_left_drawer.dart';
 import 'package:nightowlcode/features/main/widgets/utility/saftey_mode_toggle_section_left_drawer.dart';
@@ -7,16 +9,25 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/assets.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../data/repositories/users/role_repository.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
 
-class MainScreenLeftDrawer extends StatelessWidget {
+class MainScreenLeftDrawer extends ConsumerWidget {
   const MainScreenLeftDrawer({super.key});
 
-  //TODO feedback button
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = PlatformConfig.width(context) * 0.5;
+    final roles = ref.watch(userRolesProvider).maybeWhen(
+      data: (data) => data,
+      orElse: () => const UserRoles(
+        isAdmin: false,
+        isOwner: false,
+        isTester: false,
+        isReviewer: false,
+      ),
+    );
 
     return Drawer(
       surfaceTintColor: owlPurple.withOpacity(0.01),
@@ -42,10 +53,15 @@ class MainScreenLeftDrawer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   GestureDetector(
-                    // onTap: () => context.goScreen(MainScreenName.profile), // TODO Go to website.
+                    onTap: () {
+                      const url = WebsitePaths.website; // test with a known working URL
+                      final uri = Uri.parse(url);
+                      launchUrl(uri, mode: LaunchMode.externalApplication);
+                    },
                     child: CircleAvatar(
                       radius: PlatformConfig.width(context) * 0.09,
-                      child: Image.asset(ImagePaths.logo),
+                      backgroundColor: transparent,
+                      child: Image.asset(ImagePaths.logoDown),
                     ),
                   ),
                 ],
@@ -57,16 +73,27 @@ class MainScreenLeftDrawer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   GestureDetector(
+                    onTap: () {
+                      const url = WebsitePaths.website; // test with a known working URL
+                      final uri = Uri.parse(url);
+                        launchUrl(uri, mode: LaunchMode.externalApplication);
+                    },
                     child: SizedBox(
                       width: PlatformConfig.width(context) * 0.4,
-                      child: Text('NightOwl.now',
-                        style: Styles.linkText(context))),
-                    // onTap: Uri.https(), //TODO Go website.
+                      child: Text(
+                        'NightOwl.now',
+                        style: Styles.linkText(context),
+                      ),
+                    ),
                   ),
                 ],
               ),
+
               const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
+
+              if(roles.isReviewer || roles.isTester || roles.isAdmin)
+                 const FeedbackButton(),
 
               // const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,),  //TODO Does this even make sense? Owls nearby?
 
@@ -109,3 +136,5 @@ class MainScreenLeftDrawer extends StatelessWidget {
     );
   }
 }
+
+

@@ -13,6 +13,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
+import '../../../assets.dart';
 import '../../../data/providers/other_providers.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
 
@@ -67,16 +68,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(_kHeight);
 
-  TextStyle get _resolvedTitleStyle {
-    // default = gradient
-    if (titleColor == null) return Styles.logoTextGradient;
-    // when a solid color is requested, remove the gradient foreground first
-    return Styles.logoTextGradient.copyWith(
-      //TODO not working.
-      color: titleColor,
-    );
-  }
-
   void _defaultBack(BuildContext context) {
     final router = GoRouter.of(context);
     if (router.canPop()) {
@@ -100,10 +91,10 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
         icon: logoImage != null
             ? CircleAvatar(
-                radius: borderRadiusDefault,
-                backgroundImage: logoImage,
-                backgroundColor: Colors.transparent,
-              )
+          radius: borderRadiusDefault,
+          backgroundImage: logoImage,
+          backgroundColor: Colors.transparent,
+        )
             : Icon(burgerMenu),
       ),
     );
@@ -111,9 +102,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final Widget? resolvedLeading = leading ??
         (showBack && canPop
             ? IconButton(
-                icon: Icon(chevronLeftIcon),
-                onPressed: onBack ?? () => _defaultBack(context),
-              )
+          icon: Icon(chevronLeftIcon),
+          onPressed: onBack ?? () => _defaultBack(context),
+        )
             : defaultLeading);
 
     // Build default trailing (settings? + end-drawer avatar)
@@ -140,13 +131,26 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final List<Widget> resolvedActions =
         actions ?? (action != null ? <Widget>[action!] : defaultActions);
+    final bool hasTitleText = (titleText?.trim().isNotEmpty ?? false);
+
     final Widget resolvedTitle = title ??
-        Text(
-          titleText ?? 'NightOwl',
-          maxLines: 1,
+        (hasTitleText
+            ? Text(
+          titleText!,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(color: titleColor),
           overflow: TextOverflow.ellipsis,
-          style: _resolvedTitleStyle,
-        );
+        )
+            : Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(ImagePaths.logoRight, height: 30),
+            Image.asset(ImagePaths.logoTextWide, height: 70),
+          ],
+        ));
 
     return AppBar(
       elevation: 0,

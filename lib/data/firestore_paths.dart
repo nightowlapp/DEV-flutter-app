@@ -2,15 +2,20 @@
 class DocumentPaths {
   //Users
   //collections
-  static const users = 'users';
+  static const String users = 'users';
   static const String emblems = 'emblems';
   static const String partyStatusDays = 'party_status_days';
-  static const friends = 'friends';
+  static const String friends = 'friends';
   static const String locations = 'locations';
   static const String friendRequests = 'friend_requests';
   static const String incoming = 'incoming';
   static const String visits = 'visits';
-  static const usernames = 'usernames';
+  static const String usernames = 'usernames';
+
+  //feedback
+  static const String feedback = 'feedback';
+  static const String appFeedback = 'app_feedback';
+  static const String venueFeedback = 'venue_feedback';
 
   static String usernameDoc(String unameLower) => '$usernames/$unameLower'; //TODO usernames should be typed how the user wants. NightOwl of all forms should be reseved and only could be made if admin or in database itself.
 

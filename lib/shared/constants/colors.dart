@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 const owlPurple = Colors.deepPurpleAccent;
 const deepPurpleAccent = Color.fromRGBO(124, 77, 255, 1.0);
 // const owlOrange = Color.fromRGBO(110, 28, 198, 1.0);
-const adminColor = Colors.pinkAccent ?? Color(0xFF0137E8);
+const adminColor = Colors.deepOrange ?? Color(0xFF0137E8);
 
 const black = Colors.black;
 const white = Colors.white;

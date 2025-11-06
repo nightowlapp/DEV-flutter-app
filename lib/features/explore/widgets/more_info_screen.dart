@@ -112,7 +112,6 @@ class MoreInfoScreen extends ConsumerWidget {
                     const SizedBox(width: allSidePaddingDefault),
                     venue.isVerified ? const VerifiedBadge() : const EditBadge(),
 
-
                     const Spacer(),
                     RatingCard(venue: venue), // will be replaced below
                   ],

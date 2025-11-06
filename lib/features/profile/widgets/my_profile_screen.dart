@@ -5,6 +5,7 @@ import 'package:nightowlcode/features/profile/widgets/timeline_section.dart';
 import 'package:nightowlcode/features/profile/widgets/visits_section.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/utility/level_logic.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -34,7 +35,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
       return const Scaffold(
         backgroundColor: black,
         body: SafeArea(
-          child: Center(child: CircularProgressIndicator(color: owlPurple)),
+          child: Center(child: LoadingIndicator()),
         ),
       );
     }

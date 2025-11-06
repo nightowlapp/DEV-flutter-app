@@ -299,7 +299,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       if (map == null || !_styleReady) return;
       await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
 
-      final venues = ref.read(venuesListProvider);
+      final venues = ref.read(allVenuesListProvider);
       final idToPath2 = <String, String>{};
       for (final v in venues) {
         if (v.isVerified) {
@@ -416,7 +416,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final fcNow = ref.read(venuesGeoJsonProvider);
     await _style.setVenueData(map, clusterableFc: fcNow.clusterable, vipFc: fcNow.vip);
 
-    final venues = ref.read(venuesListProvider);
+    final venues = ref.read(allVenuesListProvider);
     final idToPath = <String, String>{};
     for (final v in venues) {
       if (!v.isVerified) continue;

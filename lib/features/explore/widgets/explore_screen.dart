@@ -1,17 +1,22 @@
 // lib/features/explore/presentation/explore_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/data/providers/venues/venue_providers.dart';
+import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
 import '../../../core/storage/venues_sso.dart';
-import '../../../data/providers/other_providers.dart';
+import '../../../data/providers/venues/venue_media_providers.dart';
+import '../../../data/services/location/location_providers.dart';
 import '../../../data/services/media_existence.dart';
 import '../filters/filters_popup.dart';
+import '../ranking/explore_ranked_providers.dart';
 import '../search/search_wiring.dart';
 import '../utility/animated_venue_grid.dart';
-import '../utility/venue_search_bar.dart';
+import '../search/venue_search_bar.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
@@ -38,19 +43,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use the SSO’s async to show loading/error once, globally.
-    final asyncSso = ref.watch(venuesSsoProvider);
-    // Your computed lists still come via providers that read the SSO list.
-    final visible = ref.watch(visibleVenuesProvider);
-    final ranked = ref.watch(rankedVenuesProvider);
-    final Map<String, VenueMediaHealth> mediaById = ranked.maybeWhen(
-      data: (s) => s.media,
-      orElse: () => const <String, VenueMediaHealth>{},
-    );
-    final userLoc = ranked.maybeWhen(
-      data: (s) => s.userLoc,
-      orElse: () => null,
-    );
+    final rankedVenues = ref.watch(exploreRankedVenuesProvider);
+
+    // Latest user location (nullable is fine for distance labels)
+    final userLoc =
+    ref.watch(latLngSafeStreamProvider).maybeWhen(data: (p) => p, orElse: () => null);
 
     return Scaffold(
       body: Column(
@@ -61,25 +58,30 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           ),
           const SizedBox(height: verticalSpacerSmall),
           Expanded(
-            child: asyncSso.when(
-              loading: () => const LoadingIndicator(),
-              error: (e, _) => Center(
-                child: Text('Error: $e', style: const TextStyle(color: red)),
-              ),
-              data: (_) {
-                if (visible.isEmpty) {
+            child: rankedVenues.when(
+              loading: () => const LoadingIndicator(), // ⬅️ either loading
+              error: (e, _) {
+                return const LoadingIndicator();
+              },
+              data: (venues) {
+                final mediaById = <String, VenueMediaHealth>{};
+                final Iterable<Venue> top = venues.take(64);
+                for (final v in top) {
+                  final av = ref.watch(venueMediaProvider(v.id));
+                  final m = av.maybeWhen(data: (h) => h, orElse: () => null);
+                  if (m != null) mediaById[v.id] = m;
+                }
+
+                if (venues.isEmpty) {
                   return const Center(
-                    child:
-                        Text('No venues found', style: TextStyle(color: red)),
+                    child: Text('No venues nearby', style: TextStyle(color: red)),
                   );
                 }
                 return AnimatedVenuesGrid(
-                  venues: visible,
-                  mediaById: mediaById,
+                  venues: venues,          // ⬅️ already ranked
+                  mediaById: mediaById,    // ⬅️ fills progressively
                   userLoc: userLoc,
-                  // If your grid needs media/userLoc, keep your existing providers for those,
-                  // or create dedicated providers. For now omit or pass null/empty if optional.
-                );
+                ); // ⬅️ or your own grid/list
               },
             ),
           ),

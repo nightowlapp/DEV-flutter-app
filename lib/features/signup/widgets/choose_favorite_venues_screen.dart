@@ -14,8 +14,10 @@ import '../../../core/platform_config.dart';
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../data/providers/favorite_venues/favorite_venues_provider.dart';
+import '../../../data/providers/venues/venue_providers.dart';
 import '../../../models/venues/venue.dart';
 import '../../../shared/constants/styles.dart';
+import '../../../shared/constants/values.dart';
 
 class ChooseFavoriteVenuesScreen extends ConsumerStatefulWidget {
   const ChooseFavoriteVenuesScreen({super.key});
@@ -89,7 +91,7 @@ class _ChooseFavoriteVenuesScreenState
   @override
   Widget build(BuildContext context) {
     // All venues from your SSO (reactive + fast)
-    final allVenues = ref.watch(venuesListProvider);
+    final allVenues = ref.watch(allVenuesListProvider);
 
     // Favorite IDs (reactive)
     final favIdsAsync = ref.watch(favoriteVenueIdsProvider);
@@ -131,7 +133,7 @@ class _ChooseFavoriteVenuesScreenState
         centerTitle: true,
         leading: SizedBox.shrink(),
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo)),
+          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
         ],
       ),
       body: SafeArea(

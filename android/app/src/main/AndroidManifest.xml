@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!--Location-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -33,6 +36,7 @@
         android:label="NightOwl"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
