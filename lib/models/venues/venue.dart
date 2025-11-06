@@ -900,6 +900,86 @@ class Venue {
     );
   }
 
+  DateTime closeTimeToday() {
+    DateTime now = DateTime.now(); // must be venue-local if you use time zones
+    final today = DateTime(now.year, now.month, now.day);
+    final status = openingHours.statusAt(now);
+
+    DaySchedule _scheduleForDate(DateTime dateLocal) {
+      final d = DateTime(dateLocal.year, dateLocal.month, dateLocal.day);
+
+      // exceptions take precedence
+      for (final e in openingHours.exceptions) {
+        final ed = DateTime(e.date.year, e.date.month, e.date.day);
+        if (ed.year == d.year && ed.month == d.month && ed.day == d.day) {
+          return DaySchedule(
+            isClosed: e.isClosed,
+            openMinutes: e.openMinutes,
+            closeMinutes: e.closeMinutes,
+            ageRestriction: e.ageRestriction,
+            dressCode: e.dressCode,
+            entryPrice: e.entryPrice,
+          );
+        }
+      }
+
+      final idx = (d.weekday + 6) % 7; // Mon=1 -> 0
+      if (openingHours.week.isEmpty || idx >= openingHours.week.length) {
+        return const DaySchedule(); // closed
+      }
+      return openingHours.week[idx];
+    }
+
+    bool _overnight(DaySchedule s) =>
+        !s.isClosed &&
+            s.openMinutes != null &&
+            s.closeMinutes != null &&
+            s.closeMinutes! <= s.openMinutes!;
+
+    DateTime _compose(DateTime base, int minutes) =>
+        DateTime(base.year, base.month, base.day, minutes ~/ 60, minutes % 60);
+
+    // 1) If open now → return end of the current open window
+    if (status.phase == OpeningPhase.open && status.closeMinutes != null) {
+      final closeM = status.closeMinutes!;
+      final nowM = _toMinutes(now.hour, now.minute);
+      var base = today;
+
+      // If this is today's overnight window (e.g., 21:00–03:00) and it's past midnight point
+      // then close time is tomorrow. For "fromYesterday" (e.g., 01:00 from a 21:00–03:00 yesterday)
+      // close is still today.
+      if (!status.fromYesterday && closeM <= nowM) {
+        base = base.add(const Duration(days: 1));
+      }
+      return _compose(base, closeM);
+    }
+
+    // 2) If closed now but opens later today → return today's closing time
+    if (status.phase == OpeningPhase.opensLaterToday) {
+      final s = _scheduleForDate(today);
+      if (!s.isClosed && s.closeMinutes != null) {
+        var base = today;
+        if (_overnight(s)) base = base.add(const Duration(days: 1));
+        return _compose(base, s.closeMinutes!);
+      }
+    }
+
+    // 3) Otherwise, find the next open day (within a week) and return its closing time
+    for (int i = 1; i <= 7; i++) {
+      final d = today.add(Duration(days: i));
+      final s = _scheduleForDate(d);
+      if (!s.isClosed && s.closeMinutes != null) {
+        var base = d;
+        if (_overnight(s)) base = base.add(const Duration(days: 1));
+        return _compose(base, s.closeMinutes!);
+      }
+    }
+
+    // Fallback (no schedule at all) – return now to avoid nulls
+    return now;
+  }
+
+
   bool isOpenNow(DateTime venueLocalNow) =>
       openingHours.isOpenAt(venueLocalNow);
   bool isOpenToday(DateTime venueLocalNow) =>
@@ -912,4 +992,37 @@ class Venue {
 
   double effectiveEntryPrice(DateTime venueLocalNow) =>
       openingHours.activeEntryPrice(venueLocalNow) ?? defaultEntryPrice;
+
+// ⬇️ Put these INSIDE class Venue (replace your empty `openingHoursToday()`)
+
+// Returns the range to display for *today*, but if the venue is currently open
+// due to yesterday’s overnight window, it returns yesterday’s range instead.
+  ({String open, String close, bool nextDay, bool isClosed})
+  openingHoursToday({DateTime? venueLocalNow}) {
+    final now = (venueLocalNow ?? DateTime.now()).toLocal();
+    final status = openingHours.statusAt(now);
+
+    // If open now from a YESTERDAY overnight span, compute for yesterday.
+    final base = (status.phase == OpeningPhase.open && status.fromYesterday)
+        ? now.subtract(const Duration(days: 1))
+        : now;
+
+    return openingHours.todayRangeParts24h(localNow: base);
+  }
+
+// Label helper: "HH:mm - HH:mm" (+1 if overnight) or "Closed today".
+  String openingHoursTodayLabel({DateTime? venueLocalNow}) {
+    final r = openingHoursToday(venueLocalNow: venueLocalNow);
+    if (r.isClosed) return 'Closed today';
+    return '${r.open} - ${r.close}${r.nextDay ? ' +1' : ''}';
+  }
+
+// --- Backward-compat/alias with your requested name ---
+  ({String open, String close, bool nextDay, bool isClosed})
+  openinghhourtoday({DateTime? venueLocalNow}) =>
+      openingHoursToday(venueLocalNow: venueLocalNow);
+
+  String openinghhourtodayLabel({DateTime? venueLocalNow}) =>
+      openingHoursTodayLabel(venueLocalNow: venueLocalNow);
+
 }

@@ -282,10 +282,19 @@ class VenueScreenContent extends ConsumerWidget {
     );
   }
 
+  // Replace your _displayOpeningHours(Venue v) with this version.
+  // It shows yesterday's range if the venue is currently open due to yesterday's overnight window.
   Widget _displayOpeningHours(Venue v) {
-    final r = v.todayRangeParts24h();
+    final now = DateTime.now(); // make sure this is venue-local if you use TZs
+    final status = v.openingHours.statusAt(now);
+
+    final r = venue.openingHoursToday();
+
     final baseStyle = Styles.boldText.copyWith(letterSpacing: 1.2);
     final supStyle = Styles.smallText.copyWith(fontWeight: FontWeight.w600);
+
+    final isOpenNow = status.phase == OpeningPhase.open;
+    final isClosedForDisplay = !isOpenNow && r.isClosed;
 
     return SizedBox(
       width: 130,
@@ -300,8 +309,7 @@ class VenueScreenContent extends ConsumerWidget {
               borderRadius: BorderRadius.circular(borderRadiusSmall),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            // ✅ fix: show "Closed today" when it's actually closed
-            child: r.isClosed || !v.isOpenNow(DateTime.now())
+            child: isClosedForDisplay
               ? Text('Closed today', style: baseStyle.copyWith(color: red))
               : RichText(
                 text: TextSpan(
@@ -325,4 +333,5 @@ class VenueScreenContent extends ConsumerWidget {
       ),
     );
   }
+
 }

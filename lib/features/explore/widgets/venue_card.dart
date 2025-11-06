@@ -50,22 +50,21 @@ class VenueCard extends ConsumerWidget {
 
   static final AutoSizeGroup _titleGroup = AutoSizeGroup();
 
-  TextStyle get _pillStyle =>
-      Styles.smallText.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600);
 
-  Widget _pill(String text) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-        decoration: BoxDecoration(
-          color: text.isNotEmpty ? black : transparent,
-          borderRadius: BorderRadius.circular(borderRadiusDefault),
-        ),
-        child: Text(
-          text,
-          style: _pillStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
+
+  Widget _pill(String text, {Color? bg, Color? fg}) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+    decoration: BoxDecoration(
+      color: bg ?? (text.isNotEmpty ? black : transparent),
+      borderRadius: BorderRadius.circular(borderRadiusDefault),
+    ),
+    child: AutoSizeText(
+      text,
+      style: Styles.smallText.copyWith(color: fg),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    ),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,23 +110,22 @@ class VenueCard extends ConsumerWidget {
                     // ✅ Use the shared CoverImage
                     Positioned.fill(
                       child: overrideFallbackAsset == null
-                          ? CoverImage.fromMedia(
-                              media: media,
-                              city: venue.city,
-                              height: height,
-                              fit: BoxFit.cover,
-                            )
-                          : CoverImage(
-                              imageUrl: (media?.coverExists == true &&
-                                      (media?.coverUrl?.isNotEmpty ?? false))
-                                  ? media!.coverUrl
-                                  : null,
-                              fallbackAsset: overrideFallbackAsset,
-                              height: height,
-                              fit: BoxFit.cover,
-                            ),
+                        ? CoverImage.fromMedia(
+                          media: media,
+                          city: venue.city,
+                          height: height,
+                          fit: BoxFit.cover,
+                        )
+                        : CoverImage(
+                          imageUrl: (media?.coverExists == true &&
+                            (media?.coverUrl?.isNotEmpty ?? false))
+                            ? media!.coverUrl
+                            : null,
+                          fallbackAsset: overrideFallbackAsset,
+                          height: height,
+                          fit: BoxFit.cover,
+                        ),
                     ),
-
                     // Title pill (top)
                     Positioned(
                       top: 2,
@@ -142,12 +140,12 @@ class VenueCard extends ConsumerWidget {
                         child: Center(
                           child: AutoSizeText(
                             title, // use your computed title
-                            group: isVerified ? null: _titleGroup,                    // keep all cards aligned (optional)
+                            group: isVerified ? null : _titleGroup,                    // keep all cards aligned (optional)
                             maxLines: 1,
                             // overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
                             // Either use preset steps (faster)...
-                            presetFontSizes: const [18, 16, 14, 12], // tries in order
+                            presetFontSizes: const[18, 16, 14, 12], // tries in order
                             // ...or min/max with a step (slightly more work per layout):
                             // minFontSize: 12,
                             // maxFontSize: 18,
@@ -166,17 +164,39 @@ class VenueCard extends ConsumerWidget {
 
 
                     // Bottom pills
+                    // Bottom pills
+                    // 2) Replace the bottom pills block in build() with this:
                     Positioned(
                       bottom: 2,
                       left: 2,
                       right: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _pill(walkText),
-                          _pill('$age+'),
-                        ],
-                      ),
+                      child: Builder(builder: (context) {
+                        final now = DateTime.now(); // use venue-local time if you convert elsewhere
+                        final isOpen = venue.isOpenNow(now);
+
+                        int minutesLeft = -1;
+                        if (isOpen) {
+                          minutesLeft = venue.closeTimeToday().difference(now).inMinutes;
+                          if (minutesLeft < 0) minutesLeft = 0; // guard against clock drift
+                        }
+                        final closingSoon = isOpen && minutesLeft <= 60;
+
+                        final left = closingSoon
+                            ? _pill('Closing soon', fg: orange)
+                            : (isOpen
+                            ? _pill(walkText) // show distance when open
+                            : _pill('Closed', fg: red));
+
+                        final right = _pill('$age+');
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            left,
+                            right,
+                          ],
+                        );
+                      }),
                     ),
                   ],
                 ),
