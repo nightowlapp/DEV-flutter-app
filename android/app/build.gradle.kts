@@ -7,20 +7,28 @@ plugins {
 //    id("com.google.firebase.crashlytics")//TODO
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystoreProperties = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) load(FileInputStream(f))
+}
+
 android {
     namespace = "com.nightowl.nightowlcode"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         // 🔑 Required for flutter_local_notifications
         isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -36,14 +44,14 @@ android {
 
     signingConfigs {
         create("release") {
-            // Use forward slashes on Windows with Kotlin DSL, or escape backslashes
-            storeFile = file("C:/Users/Magno/Desktop/NightOwl/env/release-key.jks")
-            storePassword = "nightowlprod"
-            keyAlias = "release_key"          // <-- must match the alias you created
-            keyPassword = "nightowlprod"
+            if (keystoreProperties.isNotEmpty()) {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
         }
     }
-
 
     buildTypes {
         getByName("debug") {

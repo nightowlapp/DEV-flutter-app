@@ -28,7 +28,13 @@ class NotificationService {
     );
 
     // Get token (for debugging and optional storage)
-    final token = await _fcm.getToken();
+    String? token;
+    try {
+      token = await _fcm.getToken();
+    } catch (_) {
+      // Ignore APNS not set or similar errors so app can run
+      token = null;
+    }
     await TokenSyncService().syncCurrentToken();
 
     // Subscribe to a simple topic we’ll use in the function
@@ -116,6 +122,10 @@ class NotificationService {
       if (!s.isGranted) await Permission.notification.request();
     }
     // iOS already handled in NotificationService.init()
-    final token = await FirebaseMessaging.instance.getToken();
+    try {
+      await FirebaseMessaging.instance.getToken();
+    } catch (_) {
+      // Ignore during bootstrap if APNS token is not yet available
+    }
   }
 }

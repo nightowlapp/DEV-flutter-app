@@ -40,9 +40,9 @@ Future<void> _preBoot() async {
   // Notifications
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  final notif = NotificationService();
-  await notif.initLocalNotifications();
-  await notif.init();
+  // final notif = NotificationService();
+  // await notif.initLocalNotifications();
+  // await notif.init();
 
   //Timezone
   TzUtils.ensureInitialized();

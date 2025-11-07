@@ -13,7 +13,13 @@ class TokenSyncService {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    final token = await FirebaseMessaging.instance.getToken();
+    String? token;
+    try {
+      token = await FirebaseMessaging.instance.getToken();
+    } catch (_) {
+      // Allow app to continue without FCM token (e.g., iOS sim)
+      token = null;
+    }
     if (token == null) return;
 
     final userSnap = await _db.collection(DocumentPaths.users).doc(uid).get();
