@@ -255,11 +255,11 @@ class VenueScreenContent extends ConsumerWidget {
                   ),
                 ],
 
-                // if (asyncMedia.hasValue) ...[
+                if (asyncMedia.hasValue) ...[
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
-                  OfferTodaySection(venueId: venue.id),
+                OfferTodaySection(venueId: venue.id),
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
-                // ] ,
+                ] ,
               ],
             ),
           ),
