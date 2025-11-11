@@ -117,7 +117,7 @@ class VenueScreenContent extends ConsumerWidget {
                   const SizedBox(width: allSidePaddingDefault),
                   LikeVenueButton(store: likeStore, venue: venue),
                   const SizedBox(width: allSidePaddingDefault),
-                  venue.isVerified ? const VerifiedBadge() : const EditBadge(),
+                  venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
                   const Spacer(),
                   Column(
                     children: [
@@ -255,11 +255,11 @@ class VenueScreenContent extends ConsumerWidget {
                   ),
                 ],
 
-                if (asyncMedia.hasValue) ...[
+                // if (asyncMedia.hasValue) ...[
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
                   OfferTodaySection(venueId: venue.id),
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
-                ],
+                // ] ,
               ],
             ),
           ),

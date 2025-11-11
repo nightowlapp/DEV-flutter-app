@@ -218,7 +218,7 @@ class _VenuePopupContent extends ConsumerWidget {
                       const SizedBox(width: allSidePaddingDefault),
                       LikeVenueButton(store: likeStore, venue: venue),
                       const SizedBox(width: allSidePaddingDefault),
-                      venue.isVerified ? const VerifiedBadge() : const EditBadge(),
+                      venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
                       const Spacer(),
                       OwlButton(
                         padding:

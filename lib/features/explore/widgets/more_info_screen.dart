@@ -110,7 +110,7 @@ class MoreInfoScreen extends ConsumerWidget {
                       venue: venue,
                     ),
                     const SizedBox(width: allSidePaddingDefault),
-                    venue.isVerified ? const VerifiedBadge() : const EditBadge(),
+                    venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
 
                     const Spacer(),
                     RatingCard(venue: venue), // will be replaced below
@@ -290,6 +290,8 @@ class MoreInfoScreen extends ConsumerWidget {
                   ),
 
                 // SizedBox(height: PlatformConfig.height(context) * 0.05,),
+
+                // Container(child: Text(Venue.links),)
 
                 // Description (optional)
                 if (venue.description.trim().isNotEmpty && venue.isVerified)
