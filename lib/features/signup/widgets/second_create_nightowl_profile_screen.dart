@@ -141,22 +141,23 @@ class _SecondCreateNightowlProfileScreenState
           useScaffold: false,
           showProgressBar: false,
           formFields: [
-            SizedBox(height: PlatformConfig.height(context) * 0.02),
-            PlatformConfig.isAndroid
-                ? OwlButton(
-                    icon: googleIcon,
-                    label: _busy ? 'Signing in...' : 'Continue with Google',
-                    backgroundColor: owlPurple,
-                    onPressed: _busy ? null : _doGoogle,
-                  )
-                : OwlButton(
-                    icon: appleIcon,
-                    label: _busy ? 'Signing in...' : 'Continue with Apple',
-                    backgroundColor: owlPurple,
-                    onPressed: _busy ? null : _doApple,
-                  ),
-            SizedBox(height: PlatformConfig.height(context) * 0.01),
-            const Divider(color: grey),
+            //TODO Cut out until working.
+            // SizedBox(height: PlatformConfig.height(context) * 0.02),
+            // PlatformConfig.isAndroid
+            //     ? OwlButton(
+            //         icon: googleIcon,
+            //         label: _busy ? 'Signing in...' : 'Continue with Google',
+            //         backgroundColor: owlPurple,
+            //         onPressed: _busy ? null : _doGoogle,
+            //       )
+            //     : OwlButton(
+            //         icon: appleIcon,
+            //         label: _busy ? 'Signing in...' : 'Continue with Apple',
+            //         backgroundColor: owlPurple,
+            //         onPressed: _busy ? null : _doApple,
+            //       ),
+            // SizedBox(height: PlatformConfig.height(context) * 0.01),
+            // const Divider(color: grey),
             SizedBox(height: PlatformConfig.height(context) * 0.01),
             SimpleTextField(
               hint: 'Email',
