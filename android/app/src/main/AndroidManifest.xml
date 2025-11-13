@@ -36,7 +36,9 @@
         android:label="NightOwl"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:extractNativeLibs="false"
+        >
 
         <activity
             android:name=".MainActivity"

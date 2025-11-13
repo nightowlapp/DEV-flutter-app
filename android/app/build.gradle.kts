@@ -19,6 +19,13 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
+    packagingOptions {
+        jniLibs {
+            // REQUIRED for 16 KB page support
+            useLegacyPackaging false
+        }
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
