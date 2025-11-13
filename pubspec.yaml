@@ -173,7 +173,7 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/nightowl/logo_down.png   # used for iOS and legacy Android
+  image_path: assets/nightowl/assets/logo_down_background.png   # used for iOS and legacy Android
 
   # Adaptive icons (Android)
   adaptive_icon_foreground: assets/nightowl/logo_down.png
