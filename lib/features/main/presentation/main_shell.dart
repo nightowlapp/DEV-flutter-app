@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nightowlcode/features/main/widgets/main_bottom_navigation_bar.dart';
 import 'package:nightowlcode/features/main/widgets/main_app_bar.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-import '../../../data/providers/users/friend_request_provider.dart';
+import '../../../data/providers/users/friends/friend_request_provider.dart';
 import '../../../data/repositories/users/role_repository.dart';
 import '../../../data/services/notifications/segment_service.dart';
 import '../../../navigation/router.dart';
@@ -108,18 +108,18 @@ class _MainShellState extends State<MainShell> {
               body: widget.nav,
               bottomNavigationBar: Consumer(
                 builder: (context, ref, _) {
-                  final hasBadge = ref.watch(hasPendingRequestsProvider);
+                  final pendingCount = ref.watch(pendingRequestsCountProvider);
                   return MainBottomNavigationBar(
                     tabs: tabs,
                     currentIndex: currentVisibleIndex,
                     onTap: (i) {
                       final target = tabs[i];
                       final branchIndex = kBranchOrder.indexOf(target);
-                      widget.nav.goBranch(
+                      widget.nav.goBranch(  
                           branchIndex, initialLocation: branchIndex ==
                           widget.nav.currentIndex);
                     },
-                    socialHasBadge: hasBadge,
+                    socialBadgeCount: pendingCount,
                   );
                 },
               ),

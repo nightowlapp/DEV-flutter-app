@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../models/users/friend_request.dart';
-import '../../repositories/users/friend_requests_repository.dart';
+import '../../../../models/users/friend_request.dart';
+import '../../../repositories/users/friend_requests_repository.dart';
 
 final friendRequestsRepositoryProvider = Provider<FriendRequestsRepository>((ref) {
   return FriendRequestsRepository(FirebaseFirestore.instance, FirebaseAuth.instance);
@@ -17,11 +17,10 @@ final outgoingFriendRequestsProvider = StreamProvider<List<FriendRequest>>(
       (ref) => ref.watch(friendRequestsRepositoryProvider).outgoingFromMe(),
 );
 
-// Simple badge flag
-final hasPendingRequestsProvider = Provider<bool>((ref) {
+final pendingRequestsCountProvider = Provider<int>((ref) {
   final list = ref.watch(incomingFriendRequestsProvider).maybeWhen(
     data: (v) => v,
     orElse: () => const <FriendRequest>[],
   );
-  return list.isNotEmpty;
+  return list.length;
 });

@@ -10,7 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+
 import 'package:nightowlcode/core/error_handler.dart';
+import 'package:nightowlcode/core/tracking_consent.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
@@ -97,7 +99,6 @@ void bootstrap(Widget Function() builder) {
     };
 
     await _preBoot();
-    // authStateChanges() TODO to stay signed in when login!.
 
     final prefs = await SharedPreferences.getInstance();
     runApp(ProviderScope(
@@ -130,6 +131,9 @@ class _InitTasksState extends ConsumerState<InitTasks> {
 
     Future.microtask(() {
       ref.read(venuesSsoProvider); // starts build; no await
+    });
+     Future.microtask(() {
+      ref.read(trackingInitProvider.future);
     });
 
     // Other background boot tasks (non-blocking):

@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
-import '../../../data/providers/users/friends_provider.dart';
-import '../utility/friend_request_section.dart';
+import '../../../data/providers/users/friends/friends_provider.dart';
+import '../utility/find_friends_section.dart';
 import '../utility/friend_requests_section.dart';
 import '../utility/my_friends_section.dart';
 
@@ -27,7 +27,6 @@ class SocialScreen extends ConsumerWidget {
             children: [
               if (friends.isNotEmpty) ...[
                 const MyFriendsSection(),
-                const SizedBox(height: 16),
               ],
               const FriendRequestsSection(),
 

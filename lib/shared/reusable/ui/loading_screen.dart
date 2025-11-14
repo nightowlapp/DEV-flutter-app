@@ -7,7 +7,7 @@ import 'package:nightowlcode/assets.dart';
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({
     super.key,
-    this.imagePath = ImagePaths.logoDown,
+    this.imagePath = ImagePaths.logoDownBackground,
     this.borderColor = owlPurple,
     this.borderWidth = 1,
     this.backgroundColor = transparent,

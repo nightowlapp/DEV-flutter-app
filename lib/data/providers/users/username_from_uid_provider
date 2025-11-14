@@ -1,0 +1,36 @@
+// lib/data/providers/users/username_from_uid_provider.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Given a Firebase Auth UID, returns the user's `user_name` from `users/<uid>`.
+final usernameFromUidProvider =
+    FutureProvider.family<String, String>((ref, String uid) async {
+  if (uid.isEmpty) return 'Anonymous';
+
+  final doc =
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+  if (!doc.exists) return 'Anonymous';
+
+  final data = doc.data();
+  final raw = data?['user_name'] as String?;
+  final username = raw?.trim();
+
+  if (username == null || username.isEmpty) return 'Anonymous';
+
+  return username;
+});
+
+
+/// Streams the full User document for a given uid.
+/// Returns `null` if the doc does not exist (defensive).
+final userByUidProvider =
+    StreamProvider.family<model.User?, String>((ref, uid) {
+  final col = FirebaseFirestore.instance.collection(DocumentPaths.users);
+  return col.doc(uid).snapshots().map((snap) {
+    if (!snap.exists) return null;
+    final data = snap.data()!;
+    return model.User.fromJson({'id': snap.id, ...data});
+  });
+});
+

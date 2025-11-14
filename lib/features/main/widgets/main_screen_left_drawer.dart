@@ -61,7 +61,7 @@ class MainScreenLeftDrawer extends ConsumerWidget {
                     child: CircleAvatar(
                       radius: PlatformConfig.width(context) * 0.09,
                       backgroundColor: transparent,
-                      child: Image.asset(ImagePaths.logoDown),
+                      child: Image.asset(ImagePaths.logoDownBackground),
                     ),
                   ),
                 ],

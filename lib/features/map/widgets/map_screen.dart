@@ -22,7 +22,7 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/map_nav_providers.dart';
-import '../../../data/providers/users/friends_locations_provider.dart';
+import '../../../data/providers/users/friends/friends_locations_provider.dart';
 import '../../../data/services/location/location_controller.dart';
 import '../../../data/providers/venues/venue_providers.dart';
 import '../../../data/services/navigation/nav_tts.dart';

@@ -43,6 +43,33 @@ class Utility {
     'Dec'
   ];
 
+static String formatTimeAgo(DateTime dateTime) {
+  if (dateTime.millisecondsSinceEpoch == 0) return '';
+
+  final now = DateTime.now();
+  final local = dateTime.toLocal();
+  final diff = now.difference(local);
+
+  if (diff.inSeconds < 60) {
+    return 'just now';
+  } else if (diff.inMinutes < 60) {
+    final m = diff.inMinutes;
+    return '$m min${m == 1 ? '' : 's'} ago';
+  } else if (diff.inHours < 24) {
+    final h = diff.inHours;
+    return '$h hour${h == 1 ? '' : 's'} ago';
+  } else if (diff.inDays == 1) {
+    return 'yesterday';
+  } else if (diff.inDays < 7) {
+    final d = diff.inDays;
+    return '$d day${d == 1 ? '' : 's'} ago';
+  } else {
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+    return '$day/$month/$year';
+  }
+}
   static String dayShort(DateTime d) => days[(d.weekday - 1) % 7];
   static String monthShort(DateTime d) => months[d.month - 1];
   static String _two(int n) => n < 10 ? '0$n' : '$n';

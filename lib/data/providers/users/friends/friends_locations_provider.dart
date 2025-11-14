@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/data/firestore_paths.dart';
 
-import '../../../models/users/live_location.dart';
+import '../../../../models/users/live_location.dart';
 
 final friendsIdsProvider = Provider<List<String>>((ref) => <String>[]);
 

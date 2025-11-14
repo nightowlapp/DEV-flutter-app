@@ -1,4 +1,3 @@
-// lib/data/providers/users/user_providers.dart
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/app_storage.dart';
@@ -9,9 +8,17 @@ import '../other_providers.dart'; // authStateProvider, userRepositoryProvider
 
 final userPrefsProvider = StateProvider<UserPrefs?>((_) => null);
 
+/// 🔎 Find any user by uid (stream).
+/// Returns `null` if the document does not exist.
+final userByUidProvider =
+    StreamProvider.family<model.User?, String>((ref, uid) {
+  final repo = ref.watch(userRepositoryProvider);
+  return repo.watchById(uid); // Stream<model.User?>
+});
+
 /// Require a non-null user (widgets/providers can wait on loading)
 final meRequiredAvProvider = Provider<AsyncValue<model.User>>((ref) {
-  final av = ref.watch(meSsoProvider); // AsyncValue<User?>
+  final av = ref.watch(meSsoProvider); // AsyncValue<model.User?>
   return av.when(
     data: (u) => u == null
         ? const AsyncError('signed out', StackTrace.empty)
@@ -22,9 +29,8 @@ final meRequiredAvProvider = Provider<AsyncValue<model.User>>((ref) {
 });
 
 /// Synchronous “give me the best you have now or null”
-final meOptionalProvider = Provider<model.User?>(
-      (ref) => ref.watch(meSsoProvider).valueOrNull,
-);
+final meOptionalProvider =
+    Provider<model.User?>((ref) => ref.watch(meSsoProvider).valueOrNull);
 
 /// Preferences derived from the real user (async)
 final mePrefsAvProvider = Provider<AsyncValue<UserPrefs>>((ref) {
@@ -37,11 +43,11 @@ final mePrefsAvProvider = Provider<AsyncValue<UserPrefs>>((ref) {
 });
 
 /// Optional: just the uid when you need to tag writes quickly
-final meUidProvider = Provider<String?>((ref) => ref.watch(meOptionalProvider)?.id);
+final meUidProvider =
+    Provider<String?>((ref) => ref.watch(meOptionalProvider)?.id);
 
-final meLocalStoreProvider = Provider<MeLocalStore>(
-      (ref) => MeLocalStore(ref.watch(sharedPrefsProvider)),
-);
+final meLocalStoreProvider =
+    Provider<MeLocalStore>((ref) => MeLocalStore(ref.watch(sharedPrefsProvider)));
 
 final meSsoProvider = AsyncNotifierProvider<MeSso, model.User?>(MeSso.new);
 
@@ -53,7 +59,7 @@ class MeSso extends AsyncNotifier<model.User?> {
   Future<model.User?> build() async {
     ref.keepAlive();
     final cache = ref.watch(meLocalStoreProvider);
-    final repo  = ref.watch(userRepositoryProvider);
+    final repo = ref.watch(userRepositoryProvider);
 
     // 🔁 Rebuild when auth state changes
     final authAv = ref.watch(authStateProvider); // StreamProvider<fb.User?>
@@ -83,7 +89,7 @@ class MeSso extends AsyncNotifier<model.User?> {
       _boundUid = fbUser.uid;
 
       _sub = repo.watchById(fbUser.uid).listen(
-            (u) async {
+        (u) async {
           state = AsyncData(u);
           if (u != null) await cache.write(u); // keep prefs cache warm
         },

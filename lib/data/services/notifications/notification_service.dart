@@ -17,22 +17,34 @@ class NotificationService {
   Future<void> init() async {
     await ensureNotifReady();
 
-    // Ask permission (iOS, Android 13+)
+    // Request permission
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
 
-    // iOS: show heads-up while foreground
+    // Foreground presentation (iOS)
     await _fcm.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+      alert: true, badge: true, sound: true,
     );
 
-    // Get token (for debugging and optional storage)
-    final token = await _fcm.getToken();
-    await TokenSyncService().syncCurrentToken();
+    // Wait for APNs token on iOS before using FCM features that require it
+    if (Platform.isIOS) {
+      String? apns;
+      for (int i = 0; i < 20; i++) {            // ~6s total
+        apns = await _fcm.getAPNSToken();
+        if (apns != null) break;
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+      if (apns == null) {
+        debugPrint('APNs token still null (no permission? simulator?)');
+        // You can return early, or continue but skip topic subscription
+      }
+    }
 
-    // Subscribe to a simple topic we’ll use in the function
-    await _fcm.subscribeToTopic('all');
+    // Get token (for debugging and optional storage)
+       final fcmToken = await _fcm.getToken();
+    if (fcmToken != null) {
+      await _fcm.subscribeToTopic('all');       // Temp all for now.
+      await TokenSyncService().syncCurrentToken();
+    }
 
     final initial = await FirebaseMessaging.instance.getInitialMessage();
     if (initial != null) {
@@ -42,14 +54,14 @@ class NotificationService {
     // Optional: keep a copy under the user for targeted sends later
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null && token != null) {
+      if (uid != null && fcmToken != null) {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
             .collection('fcm_tokens')
-            .doc(token)
+            .doc(fcmToken)
             .set({
-          'token': token,
+          'token': fcmToken,
           'platform': Platform.isIOS
               ? 'ios'
               : (Platform.isAndroid ? 'android' : 'other'),

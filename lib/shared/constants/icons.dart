@@ -81,7 +81,7 @@ final chevronRightIcon = CupertinoIcons.chevron_right;
 // const defaultAppStoreIcon = FontAwesomeIcons.appStore;
 // // REDDIT YT ....
 
-// Location
+// Venue
 final wineBarIcon = Icons.wine_bar;
 final cocktailBarIcon = Icons.local_bar;
 final beerBarIcon = Icons.sports_bar;

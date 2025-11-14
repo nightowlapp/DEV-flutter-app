@@ -22,7 +22,7 @@ class ProfilePictureAvatar extends StatelessWidget {
     this.imageProvider,
     this.size = 44,
     this.borderColor,
-    this.borderWidth = 2,
+    this.borderWidth = 1,
     this.backgroundColor,
     this.onTap,
     this.onLongPress,
@@ -110,7 +110,7 @@ class ProfilePictureAvatar extends StatelessWidget {
             padding: EdgeInsets.all(borderWidth),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: backgroundColor ?? Colors.transparent,
+              color: backgroundColor,
               border:
                   Border.all(color: effectiveBorderColor, width: borderWidth),
             ),

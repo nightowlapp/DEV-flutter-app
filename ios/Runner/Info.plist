@@ -36,7 +36,9 @@
 	<string>NightOwl saves photos to your library at your request.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>NightOwl uses your photo library so you can choose a profile picture.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<key>NSUserTrackingUsageDescription</key>
+<string>We use your anonymous data to provide personalized offers and share insights with our business partners.</string>
+<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
@@ -63,5 +65,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	
 </dict>
 </plist>

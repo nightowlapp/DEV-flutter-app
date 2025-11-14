@@ -93,7 +93,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
             ? CircleAvatar(
           radius: borderRadiusDefault,
           backgroundImage: logoImage,
-          backgroundColor: Colors.transparent,
+          backgroundColor: transparent,
         )
             : Icon(burgerMenu),
       ),
@@ -147,7 +147,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(ImagePaths.logoRight, height: 30),
+
             Image.asset(ImagePaths.logoTextWide, height: 70),
           ],
         ));
