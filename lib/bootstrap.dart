@@ -28,8 +28,8 @@ import 'data/providers/party_status/party_status_provider.dart';
 import 'data/providers/users/user_providers.dart';
 import 'data/services/location/location_providers.dart';
 import 'data/services/notifications/notification_service.dart';
-import 'dev_firebase_options.dart';
-// import 'firebase_options.dart';
+// import 'dev_firebase_options.dart';
+import 'firebase_options.dart';
 
 Future<void> _preBoot() async {
   WidgetsFlutterBinding.ensureInitialized();
