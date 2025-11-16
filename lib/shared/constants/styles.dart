@@ -37,6 +37,12 @@ class Styles {
         color: white,
         // fontWeight: FontWeight.w600,
       );
+    
+    static TextStyle get mediumSmallText => baseFont.copyWith(
+        fontSize: fontSizeSmaller,
+        color: white,
+        // fontWeight: FontWeight.w600,
+      );
 
   static TextStyle get popupHeader => baseFont.copyWith(
       fontWeight: FontWeight.w600,

@@ -1,3 +1,4 @@
+// lib/data/services/users/user_finalize_service.dart (or your actual path)
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:nightowlcode/data/repositories/users/user_repository.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
@@ -25,6 +26,7 @@ class UserFinalizeService {
 
     final userName = draft.username!.trim();
 
+    // Base user doc
     final user = model.User(
       id: au.uid,
       email: email,
@@ -36,6 +38,13 @@ class UserFinalizeService {
       isVerified: false,
     );
 
-    await _users.create(user); // Create-only (no update/merge)
+    // 1) Create user document
+    await _users.create(user); // create-only
+
+    // 2) Apply the same username logic as Settings:
+    //    - set user_name_lc on the user doc
+    //    - create /usernames/<lowercase> -> { uid: ... }
+    //    - handle any old mapping if needed (here it's a new user so no old one)
+    await _users.renameUsername(uid: au.uid, newUserName: userName);
   }
 }

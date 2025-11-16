@@ -71,7 +71,7 @@ class MainBottomNavigationBar extends StatelessWidget {
             child: Text(
               text,
               textAlign: TextAlign.center,
-              style: Styles.smallText.copyWith(color: red, fontWeight: FontWeight.w900)
+              style: Styles.mediumSmallText.copyWith(color: red, fontWeight: FontWeight.w900)
             ),
           ),
         ),

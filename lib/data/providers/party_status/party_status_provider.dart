@@ -76,7 +76,7 @@ final partyStatusAutoResetProvider = Provider<void>((ref) {
     await store.saveStatus(
       PartyStatusTypes.still_planning,
       change: PartyStatusChange.automatic,
-      writeToCloud: false,
+      writeToCloud: true,
     );
 
     // 3) re-arm for the next day

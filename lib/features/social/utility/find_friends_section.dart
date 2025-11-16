@@ -164,13 +164,11 @@ class _UserRowState extends ConsumerState<_UserRow> {
       child: Row(
         children: [
           widget.user.profilePictureUrl == null
-              ? const SizedBox.shrink()
+              ? ProfilePictureAvatar()
               : ProfilePictureAvatar( borderColor: borderColor,
                   imageUrl: widget.user.profilePictureUrl!,
                 ),
-          widget.user.profilePictureUrl == null
-              ? const SizedBox.shrink()
-              : const SizedBox(width: 6),
+ const SizedBox(width: 6),
           Expanded(
             child: 
             Column(
@@ -237,7 +235,7 @@ class _SearchField extends StatefulWidget {
   const _SearchField({required this.initial, required this.onChanged});
   final String initial;
   final ValueChanged<String> onChanged;
-  
+
   @override
   State<_SearchField> createState() => _SearchFieldState();
 }
@@ -267,16 +265,52 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   Widget build(BuildContext context) {
+    final hasText = _c.text.trim().isNotEmpty;
+
     return TextField(
       controller: _c,
       style: const TextStyle(color: white),
       cursorColor: white,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: 'Search username',
-        hintStyle: TextStyle(color: greyLighter),
-        border: OutlineInputBorder(),
+        hintStyle: Styles.greyedOutPopupText,
+        isDense: true,
+        filled: true,
+        fillColor: owlPurple.withOpacity(0.03),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadiusDefault),
+          borderSide: const BorderSide(color: white, width: 0.7),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadiusDefault),
+          borderSide: const BorderSide(color: white, width: 0.7),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadiusDefault),
+          borderSide: const BorderSide(color: owlPurple, width: 0.9),
+        ),
+        prefixIcon: const Icon(Icons.search, color: white),
+        suffixIconConstraints:
+            const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIcon: hasText //TODO suffix. Matches
+            ? IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 0),
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.clear, color: white),
+                onPressed: () {
+                  _c.clear();
+                  widget.onChanged('');
+                  setState(() {});
+                },
+              )
+            : null, // Todo   users nearby
+        contentPadding: const EdgeInsets.symmetric(vertical: 0),
       ),
-      onChanged: widget.onChanged,
+      onChanged: (v) {
+        widget.onChanged(v);
+        setState(() {}); // update suffixIcon state
+      },
     );
   }
 }
