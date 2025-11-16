@@ -7,12 +7,14 @@ import '../../../shared/constants/colors.dart';
 class EmblemsSection extends StatelessWidget {
   const EmblemsSection({
     super.key,
+    required this.title,
     required this.achieved,
     required this.total,
   });
 
   final int achieved;
   final int total;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class EmblemsSection extends StatelessWidget {
       children: [
         Stack(
           children: [
-            Center(child: Text('My Emblems', style: Styles.basicText)),
+            Center(child: Text(title, style: Styles.basicText)),
             // Align(
             //   alignment: Alignment.centerRight,
             //   child: Text('See All', style: Styles.basicText),

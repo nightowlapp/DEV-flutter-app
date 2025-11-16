@@ -53,3 +53,18 @@ final favoriteVenuesProvider = FutureProvider<List<Venue>>((ref) async {
   final db = ref.watch(firestoreProvider);
   return _fetchVenuesByIds(db, ids);
 });
+
+/// Stream of venue IDs for *any* user, by uid
+final favoriteVenueIdsForUserProvider =
+    StreamProvider.family<List<String>, String>((ref, uid) {
+  final repo = ref.watch(favoritesRepositoryProvider);
+  return repo.watchFavoriteVenueIds(userId: uid);
+});
+
+/// Favorite venues (Venue objects) for *any* user, by uid
+final favoriteVenuesForUserProvider =
+    FutureProvider.family<List<Venue>, String>((ref, uid) async {
+  final ids = await ref.watch(favoriteVenueIdsForUserProvider(uid).future);
+  final db = ref.watch(firestoreProvider);
+  return _fetchVenuesByIds(db, ids);
+});

@@ -139,7 +139,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
               const SizedBox(height: verticalSpacerDefault),
 
-              const EmblemsSection(achieved: 37, total: 113),
+              const EmblemsSection(achieved: 37, total: 113,title:  'My Emblems'),
 
               const SizedBox(height: verticalSpacerDefault),
 

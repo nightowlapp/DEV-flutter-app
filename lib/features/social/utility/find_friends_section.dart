@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
+import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
@@ -150,44 +151,56 @@ class _UserRowState extends ConsumerState<_UserRow> {
       ),
     };
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: black,
-        borderRadius: BorderRadius.circular(borderRadiusDefault),
-        border: Border.all(
-          color: borderColor, // ← correct party status color
-          width: 0.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          widget.user.profilePictureUrl == null
-              ? ProfilePictureAvatar()
-              : ProfilePictureAvatar( borderColor: borderColor,
-                  imageUrl: widget.user.profilePictureUrl!,
-                ),
- const SizedBox(width: 6),
-          Expanded(
-            child: 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AutoSizeText(Utility.formatString(widget.user.userName),
-           maxLines: 1,
-            ),
-            !widget.user.displayFullName.isEmpty ?
-            Text(Utility.formatString(widget.user.displayFullName), 
-                  style: Styles.smallText)
-                  : SizedBox.shrink(),
-            ],)
-          
-          ),
-          trailing,
-        ],
-      ),
+return InkWell(
+  borderRadius: BorderRadius.circular(borderRadiusDefault),
+  onTap: () {
+    context.pushNamedPage(
+      'otherProfile',
+      extra: widget.user.id,
     );
+  },
+  child: Container(
+    margin: const EdgeInsets.symmetric(vertical: 6),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: black,
+      borderRadius: BorderRadius.circular(borderRadiusDefault),
+      border: Border.all(
+        color: borderColor, // status color
+        width: 0.5,
+      ),
+    ),
+    child: Row(
+      children: [
+        widget.user.profilePictureUrl == null
+            ? ProfilePictureAvatar()
+            : ProfilePictureAvatar(
+                borderColor: borderColor,
+                imageUrl: widget.user.profilePictureUrl!,
+              ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AutoSizeText(
+                Utility.formatString(widget.user.userName),
+                maxLines: 1,
+              ),
+              widget.user.displayFullName.isNotEmpty
+                  ? Text(
+                      Utility.formatString(widget.user.displayFullName),
+                      style: Styles.smallText,
+                    )
+                  : const SizedBox.shrink(),
+            ],
+          ),
+        ),
+        trailing,
+      ],
+    ),
+  ),
+);
   }
 
   (String, bool) _msgForResult(FriendRequestSendResult r, String name) {

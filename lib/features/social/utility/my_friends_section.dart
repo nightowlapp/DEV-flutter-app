@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nightowlcode/data/providers/users/friends/active_friends_count_provider.dart';
+import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
@@ -45,9 +46,7 @@ class MyFriendsSection extends ConsumerWidget {
         SizedBox(height: h * 0.01),
         Stack(
           children: [
-            Center(
-              child: Text('My Friends', style: Styles.basicTextHeader),
-            ),
+               Text('My Friends', style: Styles.basicTextHeader),
             Positioned(
               right: 0,
               child: RichText(
@@ -77,7 +76,7 @@ class MyFriendsSection extends ConsumerWidget {
             ),
           ],
         ),
-        SizedBox(height: h * 0.02),
+        SizedBox(height: h * 0.01),
         SizedBox(
           height: h * 0.1,
           child: ListView.separated(
@@ -165,7 +164,13 @@ class _FriendAvatar extends ConsumerWidget {
         );
 
         return GestureDetector(
-          onTap: onTap == null ? null : () => onTap!(uid),
+           onTap: () {
+                // 2) default: push otherProfile
+                context.pushNamedPage(
+                  'otherProfile',
+                  extra: uid,
+                );
+            },
           onLongPress: onLongPress == null ? null : () => onLongPress!(uid),
           child: Semantics(
             label: u.displayFullName?.isNotEmpty == true

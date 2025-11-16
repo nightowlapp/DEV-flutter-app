@@ -17,6 +17,7 @@ class VisitsSection extends ConsumerWidget {
     this.maxHeight, // ← nullable: if null, fills as much as parent allows
     this.title = 'My Visits',
     this.rightCaption = 'See All',
+    this.seeAllEnabled = true,
     this.onRightTap,
     this.avatarRadius = iconSizeDefault,
     this.badgeColor = purpleAccent,
@@ -29,6 +30,7 @@ class VisitsSection extends ConsumerWidget {
   final VoidCallback? onRightTap;
   final double avatarRadius;
   final Color badgeColor;
+  final bool seeAllEnabled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,6 +80,7 @@ class VisitsSection extends ConsumerWidget {
                     alignment: Alignment.center,
                     child: Text(title, style: Styles.basicText),
                   ),
+                  if(seeAllEnabled)
                   Align(
                     alignment: Alignment.centerRight,
                     child: InkWell(
@@ -95,7 +98,7 @@ class VisitsSection extends ConsumerWidget {
                 height: listHeight,
                 child: Center(
                   child: Text(
-                    'Visit venues to track your visits.',
+                    'No visits',
                     style: Styles.basicText.copyWith(color: red),
                   ),
                 ),
