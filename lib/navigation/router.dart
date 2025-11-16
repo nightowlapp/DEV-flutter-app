@@ -6,6 +6,7 @@ import 'package:nightowlcode/features/explore/widgets/venue_main_screen.dart';
 // Auth/onboarding
 import 'package:nightowlcode/features/login/widgets/login_nightowl_screen.dart';
 import 'package:nightowlcode/features/login/widgets/login_or_create_account_screen.dart';
+import 'package:nightowlcode/features/profile/widgets/other_profile_screen.dart';
 import 'package:nightowlcode/features/signup/widgets/choose_favorite_venues_screen.dart';
 import 'package:nightowlcode/features/signup/widgets/first_create_nightowl_profile_screen.dart';
 
@@ -166,6 +167,23 @@ final GoRouter router = GoRouter(
           );
         }
         return NoTransitionPage(child: BarCardScreen(args: args));
+      },
+    ),
+    GoRoute(
+      path: '/other-profile',
+      name: 'otherProfile',
+      pageBuilder: (context, state) {
+        final uid = state.extra as String?;
+        if (uid == null) {
+          return const NoTransitionPage(
+            child: Scaffold(
+              body: Center(child: Text('Missing user')),
+            ),
+          );
+        }
+        return NoTransitionPage(
+          child: OtherProfileScreen(uid: uid),
+        );
       },
     ),
 
