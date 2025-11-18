@@ -171,12 +171,12 @@ return InkWell(
       ),
     ),
     child: Row(
-      children: [
+      children: [ 
         widget.user.profilePictureUrl == null
             ? ProfilePictureAvatar()
             : ProfilePictureAvatar(
                 borderColor: borderColor,
-                imageUrl: widget.user.profilePictureUrl!,
+                imageUrl: widget.user.profilePictureUrl,
               ),
         const SizedBox(width: 6),
         Expanded(

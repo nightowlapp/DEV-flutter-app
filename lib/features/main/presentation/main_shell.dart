@@ -1,33 +1,37 @@
+// lib/features/main/presentation/main_shell.dart
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:nightowlcode/data/providers/favorite_venues/favorites_providers.dart';
 import 'package:nightowlcode/features/main/widgets/main_bottom_navigation_bar.dart';
 import 'package:nightowlcode/features/main/widgets/main_app_bar.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+
 import '../../../data/providers/users/friends/friend_request_provider.dart';
 import '../../../data/repositories/users/role_repository.dart';
+import '../../../data/services/notifications/notification_service.dart';
 import '../../../data/services/notifications/segment_service.dart';
 import '../../../navigation/router.dart';
 import 'main_scaffold.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell nav;
 
-  const MainShell({
-    super.key,
-    required this.nav,
-  });
+  const MainShell({super.key, required this.nav});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   bool _prewarmed = false;
   String? _token;
   List<String> _appliedTopics = [];
+  bool _notifInitStarted = false;
 
   @override
   void initState() {
@@ -37,98 +41,119 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _load() async {
     String? token;
+    List<String> topics = const [];
+
     try {
       token = await FirebaseMessaging.instance.getToken();
     } catch (_) {
       // Swallow APNS token errors so app can run on iOS sim
       token = null;
     }
-    final topics = await SegmentService().applySubscriptions();
+
+    try {
+      if (!Platform.isIOS) {
+        // Android/web: go ahead
+        topics = await SegmentService().applySubscriptions();
+      } else {
+        // iOS: wait for APNs token before touching topics
+        String? apns;
+        for (int i = 0; i < 20; i++) {
+          apns = await FirebaseMessaging.instance.getAPNSToken();
+          if (apns != null) break;
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+
+        if (apns != null) {
+          topics = await SegmentService().applySubscriptions();
+        } else {
+          // Simulator or permission denied – skip topics instead of crashing
+          debugPrint('APNs token still null; skipping SegmentService topics');
+        }
+      }
+    } catch (e) {
+      debugPrint('SegmentService.applySubscriptions failed: $e');
+      topics = const [];
+    }
+
+    if (!mounted) return;
     setState(() {
       _token = token;
       _appliedTopics = topics;
-    }
-    );
+    });
   }
 
-  // Future<void> _prewarmMapBranchSafely() async { // TODO Make map start without going there.
-  //   if (_prewarmed) return;
-  //   _prewarmed = true;
-  //
-  //   await SchedulerBinding.instance.endOfFrame;
-  //   await Future.delayed(const Duration(milliseconds: 1));
-  //   if (!mounted) return;
-  //
-  //   final tabs = _visibleTabs();
-  //   if (!tabs.contains(MainScreenName.map)) return;
-  //
-  //   final original = widget.nav.currentIndex;
-  //
-  //   if (mapIndexGlobal == -1 || mapIndexGlobal == original) return;
-  //
-  //   try {
-  //     widget.nav.goBranch(mapIndexGlobal, initialLocation: true);
-  //     await SchedulerBinding.instance.endOfFrame;
-  //   } catch (_) {}
-  //
-  //   if (!mounted) return;
-  //   try {
-  //     widget.nav.goBranch(original, initialLocation: false);
-  //   } catch (_) {}
-  // }
+  void _initNotificationsOnce() {
+    if (_notifInitStarted) return;
+    _notifInitStarted = true;
 
+    // fire & forget, no blocking in build
+    Future(() async {
+      final notif = NotificationService();
+      await notif.initLocalNotifications();
+      await notif.init();
+    });
+  }
 
   List<MainScreenName> _visibleTabs(UserRoles roles) {
     return kBranchOrder.where((s) {
       if (!s.showNav) return false;
       if (s == MainScreenName.admin && !roles.isAdmin) return false;
-      if (s == MainScreenName.venues && !(roles.isOwner || roles.isAdmin)) return false;
+      if (s == MainScreenName.venues && !(roles.isOwner || roles.isAdmin)) {
+        return false;
+      }
       return true;
     }).toList(growable: false);
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final rolesAsync = ref.watch(userRolesProvider);
+    // ✅ This is the correct place for ref.listen in a ConsumerStatefulWidget
+    ref.listen<AsyncValue<int>>(
+      favoritesCountProvider,
+      (prev, next) {
+        final prevValue = prev?.value ?? 0;
+        final nextValue = next.value ?? 0;
 
-        return rolesAsync.when(
-          data: (roles) {
-            final tabs = _visibleTabs(roles);
+        // Only when user goes from 0 -> >0 favorites
+        if (nextValue > 0 && prevValue == 0) {
+          _initNotificationsOnce();
+        }
+      },
+    );
 
-            final MainScreenName activeGlobal = kBranchOrder[widget.nav
-                .currentIndex];
-            final currentVisibleIndex = tabs.indexOf(activeGlobal).clamp(
-                0, tabs.length - 1);
+    final rolesAsync = ref.watch(userRolesProvider);
 
-            return MainScaffold(
-              appBar: MainAppBar(screen: activeGlobal),
-              body: widget.nav,
-              bottomNavigationBar: Consumer(
-                builder: (context, ref, _) {
-                  final pendingCount = ref.watch(pendingRequestsCountProvider);
-                  return MainBottomNavigationBar(
-                    tabs: tabs,
-                    currentIndex: currentVisibleIndex,
-                    onTap: (i) {
-                      final target = tabs[i];
-                      final branchIndex = kBranchOrder.indexOf(target);
-                      widget.nav.goBranch(  
-                          branchIndex, initialLocation: branchIndex ==
-                          widget.nav.currentIndex);
-                    },
-                    socialBadgeCount: pendingCount,
-                  );
-                },
-              ),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Center(child: Text('Failed to load roles')),
+    return rolesAsync.when(
+      data: (roles) {
+        final tabs = _visibleTabs(roles);
+
+        final MainScreenName activeGlobal =
+            kBranchOrder[widget.nav.currentIndex];
+        final currentVisibleIndex =
+            tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
+
+        final pendingCount = ref.watch(pendingRequestsCountProvider);
+
+        return MainScaffold(
+          appBar: MainAppBar(screen: activeGlobal),
+          body: widget.nav,
+          bottomNavigationBar: MainBottomNavigationBar(
+            tabs: tabs,
+            currentIndex: currentVisibleIndex,
+            onTap: (i) {
+              final target = tabs[i];
+              final branchIndex = kBranchOrder.indexOf(target);
+              widget.nav.goBranch(
+                branchIndex,
+                initialLocation: branchIndex == widget.nav.currentIndex,
+              );
+            },
+            socialBadgeCount: pendingCount,
+          ),
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Failed to load roles')),
     );
   }
 }

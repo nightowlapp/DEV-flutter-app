@@ -1,3 +1,4 @@
+// lib/data/services/notifications/notification_service.dart
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,47 +12,56 @@ class NotificationService {
   NotificationService._();
   static final instance = NotificationService._();
   factory NotificationService() => instance;
+
   final _fcm = FirebaseMessaging.instance;
   final _fln = FlutterLocalNotificationsPlugin();
 
+  bool _initialized = false;
+
   Future<void> init() async {
+    if (_initialized) return;
+
     await ensureNotifReady();
 
     // Request permission
-    await _fcm.requestPermission(alert: true, badge: true, sound: true);
+    final settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     // Foreground presentation (iOS)
     await _fcm.setForegroundNotificationPresentationOptions(
-      alert: true, badge: true, sound: true,
+      alert: true,
+      badge: true,
+      sound: true,
     );
 
     // Wait for APNs token on iOS before using FCM features that require it
     if (Platform.isIOS) {
       String? apns;
-      for (int i = 0; i < 20; i++) {            // ~6s total
+      for (int i = 0; i < 20; i++) {
         apns = await _fcm.getAPNSToken();
         if (apns != null) break;
         await Future.delayed(const Duration(milliseconds: 300));
       }
       if (apns == null) {
         debugPrint('APNs token still null (no permission? simulator?)');
-        // You can return early, or continue but skip topic subscription
       }
     }
 
     // Get token (for debugging and optional storage)
-       final fcmToken = await _fcm.getToken();
+    final fcmToken = await _fcm.getToken();
     if (fcmToken != null) {
-      await _fcm.subscribeToTopic('all');       // Temp all for now.
+      await _fcm.subscribeToTopic('all'); // Temp all for now.
       await TokenSyncService().syncCurrentToken();
     }
 
     final initial = await FirebaseMessaging.instance.getInitialMessage();
     if (initial != null) {
-      // navigate using initial.data
+      // navigate using initial.data if you want
     }
 
-    // Optional: keep a copy under the user for targeted sends later
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null && fcmToken != null) {
@@ -93,14 +103,16 @@ class NotificationService {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((m) {
-      // debugPrint('onMessageOpenedApp: data=${m.data}');
+      // handle deep-link if needed
     });
 
     // Re-subscribe on token refresh
     _fcm.onTokenRefresh.listen((_) async {
-      await _fcm.subscribeToTopic('all'); // keep if you like a global topic
+      await _fcm.subscribeToTopic('all');
       await TokenSyncService().syncCurrentToken();
     });
+
+    _initialized = true;
   }
 
   Future<void> initLocalNotifications() async {
@@ -111,7 +123,7 @@ class NotificationService {
 
     if (Platform.isAndroid) {
       const channel = AndroidNotificationChannel(
-        'nightowl_default', // MUST match strings.xml value
+        'nightowl_default',
         'General',
         description: 'Default notifications for NightOwl',
         importance: Importance.high,
@@ -125,9 +137,12 @@ class NotificationService {
   Future<void> ensureNotifReady() async {
     if (Platform.isAndroid) {
       final s = await Permission.notification.status;
-      if (!s.isGranted) await Permission.notification.request();
+      if (!s.isGranted) {
+        await Permission.notification.request();
+      }
     }
     // iOS already handled in NotificationService.init()
     final token = await FirebaseMessaging.instance.getToken();
+    // token may be null; that's fine
   }
 }

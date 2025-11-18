@@ -93,7 +93,6 @@ class ProfilePictureAvatar extends StatelessWidget {
               if (onAddImage != null) {
                 onAddImage!();
               } else {
-                // Start the change-profile-picture flow immediately
                 await changeProfilePicture(context, ref);
               }
             },
@@ -138,6 +137,7 @@ class ProfilePictureAvatar extends StatelessWidget {
   }) {
     final bg = backgroundColor ?? transparent;
 
+    // 1) Explicit ImageProvider wins
     if (imageProvider != null) {
       return DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
@@ -153,22 +153,26 @@ class ProfilePictureAvatar extends StatelessWidget {
       );
     }
 
+    // 2) Otherwise, use the effective URL if present
     if (_hasCandidateImage(effectiveImageUrl)) {
+      final url = effectiveImageUrl!.trim();
       return DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
         child: ClipOval(
           child: SizedBox(
             width: size,
             height: size,
-            child:
-                CustomNetworkImage(effectiveImageUrl!, // supports http(s)/gs://
-                    fit: BoxFit.cover,
-                    fallBackEnabled: false),
+            child: CustomNetworkImage(
+              url, // supports http(s)/gs://
+              fit: BoxFit.cover,
+              fallBackEnabled: false,
+            ),
           ),
         ),
       );
     }
 
+    // 3) Fallback: placeholder (icon or initials)
     return DecoratedBox(
       decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
       child: _placeholder(radius),
@@ -189,6 +193,11 @@ class ProfilePictureAvatar extends StatelessWidget {
             .join()
             .toUpperCase();
     return Center(
-        child: Text(safe, style: Styles.boldText, textAlign: TextAlign.center));
+      child: Text(
+        safe,
+        style: Styles.boldText,
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 }
