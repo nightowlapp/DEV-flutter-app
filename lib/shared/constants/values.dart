@@ -34,7 +34,6 @@ const fontSizeSmall = 12.0;
 const fontSizeMedium = 15.0;
 const fontSizeMediumPlus = 18.0;
 const fontSizeLarge = 22.0;
-const fontSizeSlogan = 33.0;
 
 // Padding
 const allSidePaddingDefault = 8.0;

@@ -107,7 +107,12 @@ class _LoginBody extends StatelessWidget {
                           errorBuilder: (context, _, __) =>
                               const SizedBox.shrink(),
                         ),
-                        Styles.logoCrazy('Claim the Night'), //TODO
+                        Text(
+                          'Claim The Night',
+                          style: Styles.sloganStyle,
+                          textAlign: TextAlign.center,
+                        )
+                        // Styles.logoCrazy('Claim the Night'), //TODO
                       ],
                     ),
                   ),

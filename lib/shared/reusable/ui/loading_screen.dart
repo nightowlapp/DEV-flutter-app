@@ -1,63 +1,132 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:nightowlcode/assets.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/assets.dart';
 
-class LoadingScreen extends StatelessWidget {
+class LoadingScreen extends StatefulWidget {
   const LoadingScreen({
     super.key,
     this.imagePath = ImagePaths.logoDownBackground,
-    this.borderColor = owlPurple,
-    this.borderWidth = 1,
     this.backgroundColor = transparent,
     this.imageSize = 150,
-    this.borderRadius = borderRadiusDefault,
     this.slogan = 'Claim the night',
-    this.sloganStyle,
+    this.switchDuration = const Duration(seconds: 2),
+    this.transitionDuration = const Duration(seconds: 1),
   });
 
   final String imagePath;
-  final Color borderColor;
-  final double borderWidth;
   final Color backgroundColor;
   final double imageSize;
-  final double borderRadius;
   final String slogan;
-  final TextStyle? sloganStyle;
+  final Duration switchDuration;
+  final Duration transitionDuration;
+
+  @override
+  State<LoadingScreen> createState() => _LoadingScreenState();
+}
+
+class _LoadingScreenState extends State<LoadingScreen> {
+  late final List<String> _logoPaths;
+  final _random = Random();
+  int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _logoPaths = <String>[
+      ImagePaths.logoLeftBackground,
+      ImagePaths.logoUpBackground,
+      ImagePaths.logoRightBackground,
+      ImagePaths.logoDownBackground,
+    ];
+
+    // Start from the provided imagePath if it matches one of the logos
+    final initialIndex = _logoPaths.indexOf(widget.imagePath);
+    _currentIndex = initialIndex == -1 ? 0 : initialIndex;
+
+    _timer = Timer.periodic(widget.switchDuration, (_) => _nextLogo());
+  }
+
+  void _nextLogo() {
+    if (!mounted) return;
+
+    int nextIndex = _currentIndex;
+    if (_logoPaths.length > 1) {
+      while (nextIndex == _currentIndex) {
+        nextIndex = _random.nextInt(_logoPaths.length);
+      }
+    }
+
+    setState(() {
+      _currentIndex = nextIndex;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: Center(
+      backgroundColor: widget.backgroundColor,
+      body: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: imageSize + borderWidth * 2,
-              height: imageSize + borderWidth * 2,
-              decoration: BoxDecoration(
-                border: Border.all(color: borderColor, width: borderWidth),
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(borderRadius),
-                child: Image.asset(
-                  imagePath,
-                  width: imageSize,
-                  height: imageSize,
-                  fit: BoxFit.cover,
+            // Top 3/4 of the screen
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: widget.transitionDuration,
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: Tween<double>(
+                              begin: 1.0,
+                              end: 1.0,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: SizedBox(
+                        key: ValueKey<String>(_logoPaths[_currentIndex]),
+                        width: widget.imageSize,
+                        height: widget.imageSize,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(borderRadiusSmall),
+                          child: Image.asset(
+                            _logoPaths[_currentIndex],
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      widget.slogan,
+                      style: Styles.sloganStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Claim the night',
-              style: Styles.sloganStyle,
-              // Styles.logoCrazy('Claim the night'),
-              textAlign: TextAlign.center,
-            )
+            const Spacer(flex: 1),
           ],
         ),
       ),

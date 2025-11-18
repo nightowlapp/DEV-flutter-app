@@ -149,42 +149,30 @@ dev_dependencies:
 
   fake_async: ^1.3.3
 
-flutter_icons:
+# --- Launcher icons (Android & iOS) ---
+flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/nightowl/logo_down_background.png
-  adaptive_icon_background: "#000000"
-#  adaptive_icon_foreground: "assets/nightowl/slogan.png"
+
+  # Base icons (required by the tool)
+  # Android (pre-Oreo) uses this flat square PNG. You can temporarily reuse fg.png if needed.
+  image_path_android: assets/nightowl/logo_down_background.png
+
+  # iOS needs a 1024×1024 OPAQUE PNG (no transparency). iOS will round it automatically.
+  image_path_ios: assets/nightowl/logo_down_background.png
+  remove_alpha_ios: true
+
+  # Adaptive icons (Android 8+) → gives you rounded/squircle shapes per launcher
+  adaptive_icon_foreground: assets/nightowl/logo_down_background.png  # 432×432 transparent glyph with padding
+  adaptive_icon_background: "#000000"                # or assets/app_icon/bg.png (1080×1080)
+#  adaptive_icon_monochrome: assets/nightowl/logo_down_background.png # optional, pure white glyph for Android 13 themed icon
 
 flutter_native_splash:
   color: "#000000"
   color_dark: "#000000"
-  image: assets/nightowl/logo_down.png
-  image_dark: assets/nightowl/logo_down.png
-
   android_12:
     color: "#000000"
     color_dark: "#000000"
-    image: assets/nightowl/logo_down.png
-
-    # Optional brand bar at bottom # TODO Claim The Night gradiant
-#    branding: assets/branding.png
-#    branding_dark: assets/branding.png
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: assets/nightowl/assets/logo_down_background.png   # used for iOS and legacy Android
-
-  # Adaptive icons (Android)
-  adaptive_icon_foreground: assets/nightowl/logo_down.png
-  adaptive_icon_background: assets/nightowl/logo_down.png
-
-  # Android 13 themed icon (monochrome)
-  adaptive_icon_monochrome: assets/nightowl/logo_down.png
-
-  # iOS: remove alpha automatically to avoid App Store rejection
-  remove_alpha_ios: true
 
 #dependency_overrides:
 

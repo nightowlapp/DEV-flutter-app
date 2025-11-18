@@ -5,6 +5,7 @@ import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
 import '../../../data/providers/venues/venue_media_providers.dart';
 import '../../../data/services/location/location_providers.dart';
@@ -43,6 +44,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     final rankedVenuesAv = ref.watch(exploreRankedVenuesProvider);
 
     // Latest user location (nullable is fine for distance labels)

@@ -4,7 +4,7 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/assets.dart';
 
-class ErrorScreen extends StatelessWidget {
+class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
   const ErrorScreen({
     super.key,
     this.imagePath = ImagePaths.logo,
@@ -54,7 +54,7 @@ class ErrorScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Claim the night',
-              style: Styles.sloganTextGradient,
+              style: Styles.sloganStyle,
               textAlign: TextAlign.center,
             )
           ],
