@@ -124,10 +124,7 @@ class _UserRowState extends ConsumerState<_UserRow> {
       (false, true) => const SizedBox(
         width: 24,
         height: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: owlPurple,
-        ),
+        child: LoadingIndicator(),
       ),
       (false, false) => IconButton(
         tooltip: 'Add friend',

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb; // <-- alias
+import 'package:nightowlcode/features/map/widgets/share_location_popup.dart';
 
 // NEW: this exports showVenuePopupSheet + your draggable popup content
 import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
@@ -387,11 +388,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
             left: 12,
             top: 12,
             child: FloatingActionButton(
-              // heroTag: 'fab_reset_north',
               mini: true,
-              // tooltip: 'Reset north',
-              onPressed: _centerOnUser, //TODO
-              child: Icon(sharingPosition ? distanceIcon : distanceDisabledIcon, color: sharingPosition ? blue : red),
+              onPressed: () async {
+                // show the visual popup; ignore the result for now
+                await showShareLocationPopup(
+                  context,
+                  initial: ShareAudience.friends,
+                  friendsCount: 123,
+                  closeFriendsCount: 21,
+                );
+              },
+              child: Icon(
+                sharingPosition ? distanceIcon : distanceDisabledIcon,
+                color: sharingPosition ? blue : red,
+              ),
             ),
           ),
         ],
