@@ -770,7 +770,7 @@ class Venue {
       'rating_count': ratingCount,
       'like_count': likeCount,
       'favorite_count': favoriteCount,
-      'visit_count': visitCount,
+      'visit_count': visitCount, // TOtal NightOwl visits
 
       // opening hours
       'opening_hours': openingHours.toJson(),

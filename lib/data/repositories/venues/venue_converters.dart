@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 LatLng _readLatLng(dynamic v) {
   if (v is GeoPoint) return LatLng(v.latitude, v.longitude);
@@ -41,7 +41,7 @@ class VenueFirestore {
       'rating_count': v.ratingCount,
       'like_count': v.likeCount,
       'favorite_count': v.favoriteCount,
-      'visit_count': v.visitCount,
+      'visit_count': v.visitCount, // TOtal NightOwl visits
 
       // hours (domain serializer already OK)
       'opening_hours': v.openingHours.toJson(),
@@ -154,7 +154,7 @@ class VenueCollections {
   final FirebaseFirestore db;
 
   CollectionReference<Venue> get venues =>
-      db.collection(DocumentPaths.venues).withConverter<Venue>(
+      db.collection(FirestoreCollections.venues).withConverter<Venue>(
             fromFirestore: VenueFirestore.fromFirestore,
             toFirestore: VenueFirestore.toFirestore,
           );

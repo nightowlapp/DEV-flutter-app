@@ -1,23 +1,54 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
-final rtdb = FirebaseDatabase.instance.ref(DocumentPaths.liveCounts);
+final DatabaseReference _liveCountsRoot =
+FirebaseDatabase.instance.ref(LiveCountDocumentPaths.collection);
 
-// stream all counts (map<venueId, {count, updatedAt}>)
+// Stream all counts (Map<venueId, count>)
 Stream<Map<String, int>> liveAllVenueCounts() {
-  return rtdb.onValue.map((event) {
-    final data = (event.snapshot.value as Map?) ?? {};
+  return _liveCountsRoot.onValue.map((event) {
+    final value = event.snapshot.value;
+    if (value is! Map) return <String, int>{};
+
     final out = <String, int>{};
-    data.forEach((k, v) {
-      final m = (v as Map?) ?? {};
-      out[k as String] = (m[DocumentPaths.count] as int?) ?? 0;
+
+    value.forEach((key, v) {
+      if (key is! String) return;
+      if (v is! Map) return;
+
+      final m = v as Map;
+      final raw = m[LiveCountDocumentPaths.count];
+
+      // RTDB may store num, int, or even string; be defensive
+      int parsed;
+      if (raw is int) {
+        parsed = raw;
+      } else if (raw is num) {
+        parsed = raw.toInt();
+      } else if (raw is String) {
+        parsed = int.tryParse(raw) ?? 0;
+      } else {
+        parsed = 0;
+      }
+
+      out[key] = parsed;
     });
+
     return out;
   });
 }
 
-// or per venue
-Stream<int> liveVenueCount(String venueId) => FirebaseDatabase.instance
-    .ref('${DocumentPaths.liveCounts}/$venueId/${DocumentPaths.count}')
-    .onValue
-    .map((e) => (e.snapshot.value as int?) ?? 0);
+// Per-venue count stream
+Stream<int> liveVenueCount(String venueId) {
+  final ref = FirebaseDatabase.instance.ref(
+    '${LiveCountDocumentPaths.collection}/$venueId/${LiveCountDocumentPaths.count}',
+  );
+
+  return ref.onValue.map((event) {
+    final v = event.snapshot.value;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? 0;
+    return 0;
+  });
+}

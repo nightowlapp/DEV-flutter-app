@@ -1,8 +1,9 @@
 // lib/data/repositories/users/friend_requests_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nightowlcode/shared/constants/enums.dart';
 import '../../../models/users/friend_request.dart';
-import '../../firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart';
 
 enum FriendRequestSendResult {
   sent,
@@ -24,9 +25,9 @@ class FriendRequestsRepository {
     final uid = _me;
     if (uid == null) return const Stream.empty();
     return _db
-        .collection(DocumentPaths.friendRequests)
-        .where(DocumentPaths.frToUid, isEqualTo: uid)
-        .orderBy(DocumentPaths.timestamp, descending: true)
+        .collection(FriendRequestDocumentPaths.collection)
+        .where(FriendRequestDocumentPaths.toUid, isEqualTo: uid)
+        .orderBy(FriendRequestDocumentPaths.timestamp, descending: true)
         .snapshots()
         .map((q) => q.docs.map(FriendRequest.fromDoc).toList());
   }
@@ -35,9 +36,9 @@ class FriendRequestsRepository {
     final uid = _me;
     if (uid == null) return const Stream.empty();
     return _db
-        .collection(DocumentPaths.friendRequests)
-        .where(DocumentPaths.frFromUid, isEqualTo: uid)
-        .orderBy(DocumentPaths.timestamp, descending: true)
+        .collection(FriendRequestDocumentPaths.collection)
+        .where(FriendRequestDocumentPaths.fromUid, isEqualTo: uid)
+        .orderBy(FriendRequestDocumentPaths.timestamp, descending: true)
         .snapshots()
         .map((q) => q.docs.map(FriendRequest.fromDoc).toList());
   }
@@ -49,23 +50,30 @@ class FriendRequestsRepository {
       if (me == toUid) return FriendRequestSendResult.selfRequest;
 
       // Already friends?
-      final meFriendDoc =
-      _db.doc(DocumentPaths.user(me)).collection(DocumentPaths.friends).doc(toUid);
+      final meFriendDoc = _db
+          .doc(UserDocumentPaths.doc(me))
+          .collection(UserDocumentPaths.friends)
+          .doc(toUid);
       if ((await meFriendDoc.get()).exists) {
         return FriendRequestSendResult.alreadyFriends;
       }
 
       // Prevent duplicates both directions
-      final a = _db.collection(DocumentPaths.friendRequests).doc('${me}_$toUid');
-      final b = _db.collection(DocumentPaths.friendRequests).doc('${toUid}_$me');
+      final a = _db
+          .collection(FriendRequestDocumentPaths.collection)
+          .doc('${me}_$toUid');
+      final b = _db
+          .collection(FriendRequestDocumentPaths.collection)
+          .doc('${toUid}_$me');
       if ((await a.get()).exists || (await b.get()).exists) {
         return FriendRequestSendResult.alreadyPending;
       }
 
       await a.set({
-        DocumentPaths.frFromUid: me,
-        DocumentPaths.frToUid: toUid,
-        DocumentPaths.timestamp: FieldValue.serverTimestamp(),
+        FriendRequestDocumentPaths.fromUid: me,
+        FriendRequestDocumentPaths.toUid: toUid,
+        FriendRequestDocumentPaths.timestamp: FieldValue.serverTimestamp(),
+        FriendRequestDocumentPaths.status: FriendRequestStatus.pending.name,
       });
 
       return FriendRequestSendResult.sent;
@@ -78,20 +86,27 @@ class FriendRequestsRepository {
     final batch = _db.batch();
 
     final a = _db
-        .doc(DocumentPaths.user(req.toUid))
-        .collection(DocumentPaths.friends)
+        .doc(UserDocumentPaths.doc(req.toUid))
+        .collection(UserDocumentPaths.friends)
         .doc(req.fromUid);
     final b = _db
-        .doc(DocumentPaths.user(req.fromUid))
-        .collection(DocumentPaths.friends)
+        .doc(UserDocumentPaths.doc(req.fromUid))
+        .collection(UserDocumentPaths.friends)
         .doc(req.toUid);
 
-    final r1 = _db.collection(DocumentPaths.friendRequests).doc(req.id);
-    final r2 =
-    _db.collection(DocumentPaths.friendRequests).doc('${req.toUid}_${req.fromUid}');
+    final r1 = _db
+        .collection(FriendRequestDocumentPaths.collection)
+        .doc(req.id);
+    final r2 = _db
+        .collection(FriendRequestDocumentPaths.collection)
+        .doc('${req.toUid}_${req.fromUid}');
 
-    batch.set(a, {DocumentPaths.updatedAt: FieldValue.serverTimestamp()});
-    batch.set(b, {DocumentPaths.updatedAt: FieldValue.serverTimestamp()});
+    batch.set(a, {
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+    });
+    batch.set(b, {
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+    });
     batch.delete(r1);
     batch.delete(r2);
 
@@ -99,6 +114,9 @@ class FriendRequestsRepository {
   }
 
   Future<void> reject(FriendRequest req) async {
-    await _db.collection(DocumentPaths.friendRequests).doc(req.id).delete();
+    await _db
+        .collection(FriendRequestDocumentPaths.collection)
+        .doc(req.id)
+        .delete();
   }
 }

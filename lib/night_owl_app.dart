@@ -1,41 +1,36 @@
+// lib/night_owl_app.dart
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/core/app_config.dart';
-import 'package:nightowlcode/core/error_handler.dart';
 import 'package:nightowlcode/core/theme.dart';
 
+import 'bootstrap.dart'; // for StartDest
+import 'core/error_handler.dart';
 import 'navigation/router.dart';
 
+// lib/night_owl_app.dart
 class NightOwlApp extends StatelessWidget {
-  const NightOwlApp({super.key});
+  const NightOwlApp({
+    super.key,
+    this.initial = StartDest.login,
+  });
+
+  final StartDest initial;
 
   @override
   Widget build(BuildContext context) {
-    // TODO look into setting up start correct.
     final config = AppConfig.current;
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      // debugPaintSizeEnabled = false,
-      // showPerformanceOverlay: true,
-      // debugShowMaterialGrid = true,
-      // showPerformanceOverlay = true,
-      // checkerboardRasterCacheImages = true,
-      // checkerboardOffscreenLayers = true,
-      // showSemanticsDebugger = true,
       title: config.appTitle,
-      routerConfig: router,
-      scaffoldMessengerKey: scaffoldMessengerKey,
       theme: AppTheme().defaultAppTheme,
-
-// navigatorKey:
-
-      // locale: const Locale('en'),
-      // supportedLocales: const [Locale('en')],
-
-      // localizationsDelegates: const [
-      // GlobalMaterialLocalizations.delegate,
-      // GlobalWidgetsLocalizations.delegate,
-      // GlobalCupertinoLocalizations.delegate,
-      // ],
+      routerConfig: createRouter(
+        initialLocation: initial == StartDest.explore
+            ? '/explore'
+            : '/login-or-create',
+      ),
+      scaffoldMessengerKey: scaffoldMessengerKey,
     );
   }
 }
+

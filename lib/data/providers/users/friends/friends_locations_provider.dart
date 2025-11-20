@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../../../models/users/live_location.dart';
 
@@ -28,7 +28,7 @@ final friendsLocationsProvider =
 
   for (final chunk in chunks(10)) {
     final sub = db
-        .collection(DocumentPaths.locations)
+        .collection(FirestoreCollections.locations)
         .where(FieldPath.documentId, whereIn: chunk)
         .snapshots()
         .listen((snap) {

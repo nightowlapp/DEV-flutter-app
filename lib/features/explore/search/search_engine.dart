@@ -11,7 +11,7 @@ import 'search_query.dart';
 typedef NowInTz = DateTime Function(String? tzid);
 
 final venueSearchEngineProvider =
-    Provider.autoDispose<VenueSearchEngine>((ref) {
+Provider.autoDispose<VenueSearchEngine>((ref) {
   //TODO go in depth at some point.
   // If you have a real tz resolver, inject it here. Fallback: device time.
   final nowInTz = (String? _) => DateTime.now();
@@ -136,12 +136,12 @@ class VenueSearchEngine {
     // TEXT: name/alt name/desc/city + some numeric fields formatted
     if (s.textTerms.isNotEmpty) {
       final blob =
-          _normalize('${v.displayName.isNotEmpty ? v.displayName : v.name} '
-              '${v.description} ${v.city} '
-              '${v.countryCode} '
-              '${v.defaultAgeRestriction}+ '
-              '${v.rating?.toStringAsFixed(1) ?? ''} '
-              '${describeEnum(v.type)}');
+      _normalize('${v.displayName.isNotEmpty ? v.displayName : v.name} '
+          '${v.description} ${v.city} '
+          '${v.countryCode} '
+          '${v.defaultAgeRestriction}+ '
+          '${v.rating?.toStringAsFixed(1) ?? ''} '
+          '${describeEnum(v.type)}');
       for (final term in s.textTerms) {
         if (!blob.contains(term)) return false;
       }
@@ -193,7 +193,7 @@ class VenueSearchEngine {
   double? _parseDistanceKm(String t) {
     // within:5km / <=5km / 5km
     final rx =
-        RegExp(r'^(?:within|dist|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$');
+    RegExp(r'^(?:within|dist|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$');
     final m = rx.firstMatch(t);
     return m == null ? null : double.tryParse(m.group(1)!);
   }

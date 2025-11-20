@@ -1,7 +1,7 @@
 // lib/data/providers/friends/friends_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
-import '../../../firestore_paths.dart';
+import '../../../firestore_paths/firestore_paths.dart';
 import '../../../repositories/users/user_repository.dart';
 import '../../other_providers.dart' hide userRepositoryProvider;
 
@@ -11,8 +11,8 @@ final friendUidsProvider = StreamProvider.autoDispose<List<String>>((ref) {
   if (me == null) return const Stream.empty();
 
   return fs
-      .doc(DocumentPaths.user(me))
-      .collection(DocumentPaths.friends)
+      .doc(UserDocumentPaths.doc(me))
+      .collection(UserDocumentPaths.friends)
       .snapshots()
       .map((q) => q.docs.map((d) => d.id).toList());
 });

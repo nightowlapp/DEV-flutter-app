@@ -2,8 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart' as model;
 
-import '../../../firestore_paths.dart';
-
+import '../../../firestore_paths/firestore_paths.dart';
 
 class PreferencesRepository {
   PreferencesRepository(this._db);
@@ -14,14 +13,14 @@ class PreferencesRepository {
     required Set<model.VenueType> types,
   }) async {
     final list = types
-      .where((e) => e != model.VenueType.unknown)
-      .map((e) => e.name)
-      .toList();
+        .where((e) => e != model.VenueType.unknown)
+        .map((e) => e.name)
+        .toList();
 
-    final docRef = _db.doc(DocumentPaths.user(uid));
+    final docRef = _db.doc(UserDocumentPaths.doc(uid));
     await docRef.set({
-      DocumentPaths.preferredVenueTypes: list,
-      DocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+      UserDocumentPaths.preferredVenueTypes: list,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)); // safe even if doc doesn’t exist
   }
 
@@ -29,16 +28,14 @@ class PreferencesRepository {
     required String uid,
     required double km,
   }) async {
-    final docRef = _db.doc(DocumentPaths.user(uid));
+    final docRef = _db.doc(UserDocumentPaths.doc(uid));
     await docRef.set({
-      DocumentPaths.maxDistanceKm: km,
-      DocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+      UserDocumentPaths.maxDistanceKm: km,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 }
 
 final preferencesRepositoryProvider = Provider<PreferencesRepository>((ref) {
-    return PreferencesRepository(FirebaseFirestore.instance);
-  }
-);
-
+  return PreferencesRepository(FirebaseFirestore.instance);
+});

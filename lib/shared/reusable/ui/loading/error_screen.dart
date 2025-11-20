@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/src/misc/errors.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/assets.dart';
 
 class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
-  const ErrorScreen({
+  const ErrorScreen(GoException? error, {
     super.key,
     this.imagePath = ImagePaths.logo,
     this.borderColor = owlPurple,
@@ -13,7 +14,7 @@ class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
     this.backgroundColor = black,
     this.imageSize = 120,
     this.borderRadius = borderRadiusDefault,
-    this.slogan = 'Woops',
+    this.slogan = 'Woops something went wrong',
     this.sloganStyle,
   });
 
@@ -35,8 +36,6 @@ class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: imageSize + borderWidth * 2,
-              height: imageSize + borderWidth * 2,
               decoration: BoxDecoration(
                 border: Border.all(color: borderColor, width: borderWidth),
                 borderRadius: BorderRadius.circular(borderRadius),

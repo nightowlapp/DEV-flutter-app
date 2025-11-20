@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 class TokenSyncService {
   final _auth = FirebaseAuth.instance;
@@ -16,7 +16,7 @@ class TokenSyncService {
     final token = await FirebaseMessaging.instance.getToken();
     if (token == null) return;
 
-    final userSnap = await _db.collection(DocumentPaths.users).doc(uid).get();
+    final userSnap = await _db.collection(FirestoreCollections.users).doc(uid).get();
     final user = userSnap.data() ?? {};
 
     final gender = ((user['gender'] as String?) ?? 'other').toLowerCase();
@@ -28,9 +28,9 @@ class TokenSyncService {
     final ageBucket = _computeAgeBucket(birth); // "18".."34", "35+", "all"
 
     final ref = _db
-        .collection(DocumentPaths.users)
+        .collection(FirestoreCollections.users)
         .doc(uid)
-        .collection(DocumentPaths.fcmToken)
+        .collection(UserDocumentPaths.fcmTokens)
         .doc(token);
 
     await ref.set({

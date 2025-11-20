@@ -81,7 +81,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top 3/4 of the screen
             Expanded(
               flex: 1,
               child: Center(

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:geolocator/geolocator.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
 import '../../../models/users/party_status.dart';
@@ -29,13 +29,15 @@ class PartyStatusRepository {
   }
 
   CollectionReference<Map<String, dynamic>> _dayEntriesCol(
-      String uid, String dayId) {
+      String uid,
+      String dayId,
+      ) {
     return _db
-        .collection(DocumentPaths.users)
+        .collection(UserDocumentPaths.collection)
         .doc(uid)
-        .collection(DocumentPaths.partyStatusDays)
+        .collection(UserDocumentPaths.partyStatusDays)
         .doc(dayId)
-        .collection(DocumentPaths.entries);
+        .collection('entries'); // day sub-subcollection
   }
 
   /// Record a change (history) and mirror the latest into the user root doc.
@@ -63,14 +65,13 @@ class PartyStatusRepository {
 
     // Create per-day entry
     final entryRef = _dayEntriesCol(uid, day).doc(); // autoId
-
     batch.set(entryRef, entry.toJson());
 
     // Update user mirror (fast read for "currentPartyStatus")
-    final userRef = _db.collection(DocumentPaths.users).doc(uid);
+    final userRef = _db.doc(UserDocumentPaths.doc(uid));
     batch.update(userRef, {
-      'current_party_status': status.name,
-      'updated_at': FieldValue.serverTimestamp(),
+      UserDocumentPaths.currentPartyStatus: status.name,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     });
 
     await batch.commit();
@@ -79,15 +80,16 @@ class PartyStatusRepository {
   /// Read the mirrored latest status + timestamp from user root.
   Future<CurrentPartyStatus> loadCurrent() async {
     final uid = _uid();
-    final doc = await _db.collection(DocumentPaths.users).doc(uid).get();
-    final raw = doc.data()?['current_party_status'] as String?;
+    final doc = await _db.doc(UserDocumentPaths.doc(uid)).get();
+    final raw =
+    doc.data()?[UserDocumentPaths.currentPartyStatus] as String?;
 
     final status = (raw == null || raw.isEmpty)
         ? null
         : PartyStatusTypes.values.firstWhere(
-            (e) => e.name == raw,
-            orElse: () => PartyStatusTypes.still_planning,
-          );
+          (e) => e.name == raw,
+      orElse: () => PartyStatusTypes.still_planning,
+    );
 
     return CurrentPartyStatus(status!);
   }
@@ -97,7 +99,7 @@ class PartyStatusRepository {
     final uid = _uid();
     final day = dayId(DateTime.now().toLocal());
     return _dayEntriesCol(uid, day)
-        .orderBy('created_at', descending: true)
+        .orderBy(FirestoreFields.createdAt, descending: true)
         .snapshots()
         .map((q) => q.docs.map(PartyStatusEntry.fromSnapshot).toList());
   }

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
 Future<bool> _hasRole(UserRole role) async {
@@ -9,11 +9,11 @@ Future<bool> _hasRole(UserRole role) async {
   if (user == null) return false;
 
   final doc = await FirebaseFirestore.instance
-      .collection(DocumentPaths.users)
+      .collection(UserDocumentPaths.collection)
       .doc(user.uid)
       .get();
 
-  final roles = doc.data()?[DocumentPaths.roles];
+  final roles = doc.data()?[UserDocumentPaths.roles];
 
   if (roles is List) {
     return roles.contains(role.name);
@@ -54,5 +54,5 @@ final userRolesProvider = FutureProvider<UserRoles>((ref) async {
   );
 });
 
-
-Future<bool> checkIfOwner() => _hasRole(UserRole.owner); //TODO owner should be own array field - returns venueids.
+Future<bool> checkIfOwner() =>
+    _hasRole(UserRole.owner); // TODO owner should be own array field - returns venueIds.

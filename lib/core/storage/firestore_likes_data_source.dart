@@ -1,6 +1,6 @@
 // lib/data/repositories/venues/firestore_likes_data_source.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../data/repositories/venues/like_repository.dart';
 
@@ -9,9 +9,7 @@ class FirestoreLikesDataSource implements LikesDataSource {
   final FirebaseFirestore db;
 
   CollectionReference<Map<String, dynamic>> _likesCol(String userId) => db
-      .collection(DocumentPaths.users)
-      .doc(userId)
-      .collection(DocumentPaths.likes);
+      .collection(UserDocumentPaths.likesCollection(userId));
 
   @override
   Future<bool> isLiked({
@@ -28,7 +26,7 @@ class FirestoreLikesDataSource implements LikesDataSource {
     required String entityId,
   }) async {
     await _likesCol(userId).doc(entityId).set({
-      'created_at': FieldValue.serverTimestamp(),
+      FirestoreFields.createdAt: FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 

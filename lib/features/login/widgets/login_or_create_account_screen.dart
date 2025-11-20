@@ -34,24 +34,12 @@ final startDecisionProvider = Provider<StartDecision>((ref) {
   return StartDecision.showLogin;
 });
 
-class LoginOrCreateAccountScreen extends ConsumerWidget {
-
+class LoginOrCreateAccountScreen extends StatelessWidget {
   const LoginOrCreateAccountScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<StartDecision>(startDecisionProvider, (prev, next) {
-      if (next == StartDecision.goExplore) {
-        context.goScreen(MainScreenName.explore);
-      }
-    });
-
-    final decision = ref.watch(startDecisionProvider);
-
-    if (decision == StartDecision.loading ||
-        decision == StartDecision.goExplore) {
-      return const _LoadingScaffold();
-    }
+  Widget build(BuildContext context) {
+    // Just the UI, no StartDecision logic here.
     return const _LoginBody();
   }
 }

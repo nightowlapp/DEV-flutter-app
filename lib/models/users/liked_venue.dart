@@ -1,6 +1,8 @@
 // models/users/liked_venue.dart
 import 'package:flutter/foundation.dart';
 
+import '../../data/firestore_paths/firestore_collections .dart';
+
 @immutable
 class LikedVenue {
   /// The document id == venueId
@@ -13,11 +15,11 @@ class LikedVenue {
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
-        'created_at': createdAt.toIso8601String(),
+    FirestoreFields.createdAt: createdAt.toIso8601String(),
       };
 
   static LikedVenue fromJson(Map<String, dynamic> json, String id) {
-    final v = json['created_at'];
+    final v = json[FirestoreFields.createdAt];
     DateTime asDate(dynamic x) {
       if (x == null) return DateTime.now();
       if (x is DateTime) return x;

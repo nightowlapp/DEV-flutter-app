@@ -16,7 +16,7 @@ class VenueTagsGrid extends ConsumerWidget {
     required this.viewportHeight,
     this.rows = 2,
   });
-
+//TODO Add tag button - espicailly if few tags. Also if many?
   final List<String> tagIds;
   final double viewportWidth;
   final double viewportHeight;

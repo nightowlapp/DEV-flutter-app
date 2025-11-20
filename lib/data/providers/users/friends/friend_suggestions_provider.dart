@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart'; // PartyStatusTypes
 import '../../../../models/users/user.dart' as model;
-import '../../../firestore_paths.dart';
+import '../../../firestore_paths/firestore_paths.dart';
 import 'find_friends_providers.dart';
 import 'friends_provider.dart';
 import '../sorted_friends_provider.dart';
@@ -25,10 +25,10 @@ class _RankKey implements Comparable<_RankKey> {
     required this.missingFields, // completeness: fewer missing = better
   });
 
-  final double distanceM;        // ascending
-  final int noImageFirst;        // 0 if has image, 1 otherwise
-  final int partyRank;           // lower = better (see mapping below)
-  final int missingFields;       // lower = better
+  final double distanceM; // ascending
+  final int noImageFirst; // 0 if has image, 1 otherwise
+  final int partyRank; // lower = better (see mapping below)
+  final int missingFields; // lower = better
 
   @override
   int compareTo(_RankKey other) {
@@ -73,8 +73,10 @@ double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
   if (data['location'] is GeoPoint) {
     gp = data['location'] as GeoPoint;
   } else {
-    final lat = (data['last_known_lat'] as num?)?.toDouble();
-    final lon = (data['last_known_lon'] as num?)?.toDouble();
+    final lat =
+    (data[LocationDocumentPaths.lastKnownLat] as num?)?.toDouble();
+    final lon =
+    (data[LocationDocumentPaths.lastKnownLon] as num?)?.toDouble();
     if (lat != null && lon != null) {
       gp = GeoPoint(lat, lon);
     }
@@ -125,18 +127,18 @@ int _partyRank(dynamic raw) {
 
 /// How “complete” the public profile looks: count how many important fields are
 /// missing or empty. Fewer missing → better.
-int _missingProfileFields(Map<String, dynamic> data) { //TODO
+int _missingProfileFields(Map<String, dynamic> data) {
   // Curate this list to what you actually show in profile UI.
   const fields = <String>[
     'display_full_name',
-    'user_name',
+    UserDocumentPaths.userName,
     'bio',
     'gender',
     'birthday',
-    'profile_picture_url',
+    UserDocumentPaths.profilePictureUrl,
     'home_city',
-    'interests',            // List or map
-    'favorite_venue_ids',   // List
+    'interests', // List or map
+    'favorite_venue_ids', // List
     'instagram',
     'tiktok',
     'snapchat',
@@ -155,7 +157,9 @@ int _missingProfileFields(Map<String, dynamic> data) { //TODO
 }
 
 bool _hasImage(Map<String, dynamic> data) {
-  return ((data['profile_picture_url'] as String?)?.isNotEmpty ?? false) ||
+  return ((data[UserDocumentPaths.profilePictureUrl] as String?)
+      ?.isNotEmpty ??
+      false) ||
       ((data['profilePictureUrl'] as String?)?.isNotEmpty ?? false);
 }
 
@@ -183,17 +187,19 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
 
   if (me == null) return const Stream.empty();
 
-  Query<Map<String, dynamic>> base = db.collection(DocumentPaths.users);
+  Query<Map<String, dynamic>> base =
+  db.collection(UserDocumentPaths.collection);
 
   if (q.trim().length >= 2) {
     final s = q.trim().toLowerCase();
     base = base
-        .orderBy(DocumentPaths.userNameLower) // 'user_name_lc'
+        .orderBy(UserDocumentPaths.userNameLower) // 'user_name_lc'
         .startAt([s])
         .endAt(['$s\uf8ff'])
         .limit(25);
   } else {
-    base = base.orderBy('created_at', descending: true).limit(25);
+    base =
+        base.orderBy(UserDocumentPaths.createdAt, descending: true).limit(25);
   }
 
   return base.snapshots().map((snap) {
@@ -211,7 +217,9 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
       final rank = _RankKey(
         distanceM: _distanceForUser(data, myOrigin),
         noImageFirst: _hasImage(data) ? 0 : 1,
-        partyRank: _partyRank(data['current_party_status']),
+        partyRank: _partyRank(
+          data[UserDocumentPaths.currentPartyStatus],
+        ),
         missingFields: _missingProfileFields(data),
       );
 

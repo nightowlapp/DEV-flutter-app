@@ -144,14 +144,14 @@ class VenueScreenContent extends ConsumerWidget {
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
                 MoodImagesSection(venueId: venue.id),
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
-                if (venue.tagids.length > 4)
+                if (venue.tagids.isNotEmpty)
                 VenueTagsGrid(
                   tagIds: venue.tagids,
                   viewportWidth: PlatformConfig.width(context),
                   viewportHeight: PlatformConfig.height(context),
                 ),
-                if (venue.tagids.length > 4)
-                SizedBox(height: PlatformConfig.height(context) * 0.05),
+                if (venue.tagids.isNotEmpty)
+                  SizedBox(height: PlatformConfig.height(context) * 0.05),
 
                 // SizedBox(height: 1000,),
 

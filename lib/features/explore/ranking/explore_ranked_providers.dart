@@ -1,4 +1,4 @@
-// lib/features/explore/presentation/explore_ranked_providers.dart
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
@@ -20,50 +20,48 @@ final _rankerAvProvider = Provider<AsyncValue<VenueRanker>>((ref) {
   );
 });
 
-/// Emits only once everything needed for a *stable* ranked list is ready:
-/// - local boot done
-/// - user prefs loaded
-/// - ranker built
-/// - first non-null user location received (prevents the “pre-location” flash)
-final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
-  // 1) Wait local cache boot
-  final bootDone = ref.watch(venuesLocalBootDoneProvider);
-  if (!bootDone) return const AsyncLoading();
+/// First non-null location in ≤2s, else null.
+final firstFixOrNullProvider = FutureProvider<dynamic>((ref) async {
+  final stream = ref.watch(latLngSafeStreamProvider.stream);
+  try {
+    return await stream.firstWhere((p) => p != null).timeout(const Duration(seconds: 2));
+  } on TimeoutException {
+    return null;
+  }
+});
 
-  // 2) Ranker ready (depends on prefs)
+/// Prefs with timeout → fall back to a minimal “defaults” object so we never block.
+/// Replace `PointRules()`/prefs default with whatever makes sense in your app.
+final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
+  final bootDone = ref.watch(venuesLocalBootDoneProvider);
+  final all = bootDone ? ref.watch(allVenuesListProvider) : const <Venue>[];
+
   final rankerAv = ref.watch(_rankerAvProvider);
-  if (rankerAv.isLoading) return const AsyncLoading();
+  if (rankerAv.isLoading) return AsyncData(all.take(24).toList());
   if (rankerAv.hasError)  return AsyncError(rankerAv.error!, rankerAv.stackTrace!);
   final ranker = rankerAv.requireValue;
 
-  // 3) Require a *first* location value to avoid the early, ungated paint
-  final userLocAv = ref.watch(latLngSafeStreamProvider);
-  if (userLocAv.isLoading) return const AsyncLoading();
-  if (userLocAv.hasError)  return AsyncError(userLocAv.error!, userLocAv.stackTrace!);
-  final userLoc = userLocAv.value;
-  if (userLoc == null) {
-    // Keep loading until we actually have a location
-    return const AsyncLoading();
-  }
+  final firstFixAv = ref.watch(firstFixOrNullProvider);
+  final userLoc = firstFixAv.maybeWhen(data: (v) => v, orElse: () => null);
 
-  // 4) Inputs
-  final all   = ref.watch(allVenuesListProvider);
   final prefsAv = ref.watch(mePrefsAvProvider);
-  if (prefsAv.isLoading) return const AsyncLoading();
-  if (prefsAv.hasError)  return AsyncError(prefsAv.error!, prefsAv.stackTrace!);
+  if (prefsAv.isLoading) {
+    final warm = ranker.sort(all.take(24).toList(), userLocation: userLoc, media: null);
+    return AsyncData(warm);
+  }
+  if (prefsAv.hasError) return AsyncError(prefsAv.error!, prefsAv.stackTrace!);
   final prefs = prefsAv.requireValue;
 
-  // Gate first render to min(5km, user.maxDistanceKm)
   const firstKm = 5.0;
-  final gateKm  = prefs.maxDistanceKm > 0
+  final gateKm = prefs.maxDistanceKm > 0
       ? (prefs.maxDistanceKm < firstKm ? prefs.maxDistanceKm : firstKm)
       : firstKm;
   final gateMeters = gateKm * 1000.0;
 
-  final filtered = all.where(
-        (v) => Distance.metersLatLng(userLoc, v.entry) <= gateMeters,
-  ).toList();
+  final Iterable<Venue> pool = (userLoc == null)
+      ? all
+      : all.where((v) => Distance.metersLatLng(userLoc, v.entry) <= gateMeters);
 
-  final ranked = ranker.sort(filtered, userLocation: userLoc, media: null);
+  final ranked = ranker.sort(pool.toList(), userLocation: userLoc, media: null);
   return AsyncData(ranked);
 });

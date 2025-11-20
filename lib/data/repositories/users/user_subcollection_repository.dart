@@ -1,9 +1,9 @@
-// data/user_social_repository.dart
+// data/user_subcollection_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nightowlcode/models/users/favorite_venue.dart';
 import 'package:nightowlcode/models/users/liked_venue.dart';
 import '../../../models/users/emblem.dart';
-import '../../firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart';
 
 class UserSocialRepository {
   final FirebaseFirestore _db;
@@ -11,12 +11,12 @@ class UserSocialRepository {
 
   // -------- Favorites --------
   CollectionReference<FavoriteVenue> _favoritesCol(String uid) => _db
-      .collection(DocumentPaths.userSub(uid, DocumentPaths.favorites))
+      .collection(UserDocumentPaths.favoritesCollection(uid))
       .withConverter<FavoriteVenue>(
-        fromFirestore: (snap, _) =>
-            FavoriteVenue.fromJson(snap.data()!, snap.id),
-        toFirestore: (f, _) => f.toJson(),
-      );
+    fromFirestore: (snap, _) =>
+        FavoriteVenue.fromJson(snap.data()!, snap.id),
+    toFirestore: (f, _) => f.toJson(),
+  );
 
   Future<void> addFavorite(String uid, String venueId) async {
     // created_at is set by the model; use merge:false to avoid re-writing created_at later
@@ -28,7 +28,7 @@ class UserSocialRepository {
       _favoritesCol(uid).doc(venueId).delete();
 
   Stream<List<String>> watchFavoriteVenueIds(String uid) => _favoritesCol(uid)
-      .orderBy('created_at', descending: true)
+      .orderBy(FirestoreFields.createdAt, descending: true)
       .snapshots()
       .map((q) => q.docs.map((d) => d.id).toList());
 
@@ -37,11 +37,12 @@ class UserSocialRepository {
 
   // -------- Likes --------
   CollectionReference<LikedVenue> _likesCol(String uid) => _db
-      .collection(DocumentPaths.userSub(uid, DocumentPaths.likes))
+      .collection(UserDocumentPaths.likesCollection(uid))
       .withConverter<LikedVenue>(
-        fromFirestore: (snap, _) => LikedVenue.fromJson(snap.data()!, snap.id),
-        toFirestore: (l, _) => l.toJson(),
-      );
+    fromFirestore: (snap, _) =>
+        LikedVenue.fromJson(snap.data()!, snap.id),
+    toFirestore: (l, _) => l.toJson(),
+  );
 
   Future<void> likeVenue(String uid, String venueId) async {
     final ref = _likesCol(uid).doc(venueId);
@@ -52,7 +53,7 @@ class UserSocialRepository {
       _likesCol(uid).doc(venueId).delete();
 
   Stream<List<String>> watchLikedVenueIds(String uid) => _likesCol(uid)
-      .orderBy('created_at', descending: true)
+      .orderBy(FirestoreFields.createdAt, descending: true)
       .snapshots()
       .map((q) => q.docs.map((d) => d.id).toList());
 
@@ -61,14 +62,16 @@ class UserSocialRepository {
 
   // -------- Emblems --------
   CollectionReference<Emblem> _emblemsCol(String uid) => _db
-      .collection(DocumentPaths.userSub(uid, DocumentPaths.emblems))
+      .collection(
+    UserDocumentPaths.subcollection(uid, EmblemDocumentPaths.collection),
+  )
       .withConverter<Emblem>(
-        fromFirestore: (snap, _) => Emblem.fromJson({
-          'id': snap.id, // inject id from doc id
-          ...?snap.data(),
-        }),
-        toFirestore: (a, _) => a.toJson()..remove('id'),
-      );
+    fromFirestore: (snap, _) => Emblem.fromJson({
+      'id': snap.id, // inject id from doc id
+      ...?snap.data(),
+    }),
+    toFirestore: (a, _) => a.toJson()..remove('id'),
+  );
 
   Future<void> upsertEmblem(String uid, Emblem a) async {
     final ref = _emblemsCol(uid).doc(a.id);
@@ -88,21 +91,23 @@ class UserSocialRepository {
 
 /// Users who liked a venue (returns userIds).
 Stream<List<String>> userIdsWhoLikedVenue(
-    FirebaseFirestore db, String venueId) {
+    FirebaseFirestore db,
+    String venueId,
+    ) {
   return db
-      .collectionGroup(DocumentPaths.likes)
+      .collectionGroup(UserDocumentPaths.likes)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.docs
-          .map((d) => d.reference.parent.parent?.id)
-          .whereType<String>()
-          .toList());
+      .map((d) => d.reference.parent.parent?.id)
+      .whereType<String>()
+      .toList());
 }
 
 /// Real-time count of favorites for a venue (downloads matching docs).
 Stream<int> favoriteCount(FirebaseFirestore db, String venueId) {
   return db
-      .collectionGroup(DocumentPaths.favorites)
+      .collectionGroup(UserDocumentPaths.favorites)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.size);

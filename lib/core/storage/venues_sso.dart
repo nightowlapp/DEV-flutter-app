@@ -9,11 +9,12 @@ import 'package:hive/hive.dart';
 import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/data/providers/other_providers.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../data/services/location/location_providers.dart';
 import '../../shared/utility/distance.dart';
 import '../../shared/utility/lat_lng.dart';
+import '../app_config.dart';
 import 'app_storage.dart';
 
 // ----------------------------------------------------
@@ -21,22 +22,18 @@ import 'app_storage.dart';
 // ----------------------------------------------------
 
 extension VenuesLocalStoreStreaming on VenuesLocalStore {
-  /// Streams the local cache progressively, sorted by:
-  ///   1) open now first, 2) distance ascending (if origin != null)
-  /// Emits after each [batchSize] decodes (and for the first few early items).
   Stream<List<Venue>> streamAllIncremental({
     LatLng? origin,
     int batchSize = 24,
   }) async* {
     final now = DateTime.now();
     final keys = _box.keys
-      .where((k) => k is String && k != VenuesLocalStore._kLastSync)
-      .cast<String>()
-      .toList(growable: false);
+        .where((k) => k is String && k != VenuesLocalStore.kLastSyncKey)
+        .cast<String>()
+        .toList(growable: false);
 
-    // Local helpers
     double _dist(Venue v) =>
-    origin == null ? double.infinity : Distance.metersLatLng(origin, v.entry);
+        origin == null ? double.infinity : Distance.metersLatLng(origin, v.entry);
 
     int _cmp(Venue a, Venue b) {
       final oa = a.isOpenNow(now) ? 0 : 1;
@@ -44,7 +41,6 @@ extension VenuesLocalStoreStreaming on VenuesLocalStore {
       if (oa != ob) return oa - ob;
       final da = _dist(a), db = _dist(b);
       if (da != db) return da.compareTo(db);
-      // tie-breakers (optional): rating desc, name asc
       final ra = a.rating ?? 0, rb = b.rating ?? 0;
       final r = rb.compareTo(ra);
       if (r != 0) return r;
@@ -60,16 +56,14 @@ extension VenuesLocalStoreStreaming on VenuesLocalStore {
         Map<String, dynamic>? map;
         if (raw is String) {
           map = jsonDecode(raw) as Map<String, dynamic>;
-        }
-        else if (raw is Map) {
+        } else if (raw is Map) {
           map = raw.cast<String, dynamic>(); // tolerate legacy writes
         }
         if (map == null) continue;
         final id = (map['id'] as String?) ?? key;
         final v = Venue.fromJson(map, id);
         acc.add(v);
-      }
-      catch (_) {
+      } catch (_) {
         // skip broken entry
       }
 
@@ -78,20 +72,21 @@ extension VenuesLocalStoreStreaming on VenuesLocalStore {
       if (shouldEmit) {
         final list = List<Venue>.from(acc)..sort(_cmp);
         yield list;
-        // Yield to UI; avoids long jank on large caches.
         await Future.delayed(Duration.zero);
       }
     }
 
-    // Final emit
     final list = List<Venue>.from(acc)..sort(_cmp);
     yield list;
   }
 }
 
 class VenuesLocalStore {
-  static const _boxName = 'venues_box';
-  static const _kLastSync = '__lastSyncIso';
+  /// Box name is scoped per APP_ENV so dev/prod never share venue cache.
+  static String get _boxName => EnvStorage.hiveBoxName('venues_box');
+
+  /// Exposed for streaming extension.
+  static const String kLastSyncKey = '__lastSyncIso';
 
   VenuesLocalStore._(this._box);
   final Box _box;
@@ -102,17 +97,17 @@ class VenuesLocalStore {
   }
 
   Future<bool> get isEmpty async {
-    return _box.keys.where((k) => k is String && k != _kLastSync).isEmpty;
+    return _box.keys.where((k) => k is String && k != kLastSyncKey).isEmpty;
   }
 
   Future<DateTime?> getLastSync() async {
-    final iso = _box.get(_kLastSync) as String?;
+    final iso = _box.get(kLastSyncKey) as String?;
     if (iso == null || iso.isEmpty) return null;
     return DateTime.tryParse(iso);
   }
 
   Future<void> setLastSync(DateTime value) async {
-    await _box.put(_kLastSync, value.toUtc().toIso8601String());
+    await _box.put(kLastSyncKey, value.toUtc().toIso8601String());
   }
 
   Future<void> upsert(Venue v) async {
@@ -138,21 +133,19 @@ class VenuesLocalStore {
   Future<List<Venue>> getAll() async {
     final result = <Venue>[];
     for (final key in _box.keys) {
-      if (key == _kLastSync) continue;
+      if (key == kLastSyncKey) continue;
       final raw = _box.get(key);
       try {
         Map<String, dynamic>? map;
         if (raw is String) {
           map = jsonDecode(raw) as Map<String, dynamic>;
-        }
-        else if (raw is Map) {
+        } else if (raw is Map) {
           map = raw.cast<String, dynamic>(); // tolerate legacy writes
         }
         if (map == null) continue;
         final id = (map['id'] as String?) ?? key as String;
         result.add(Venue.fromJson(map, id));
-      }
-      catch (_) {
+      } catch (_) {
         // skip broken entry
       }
     }
@@ -299,7 +292,7 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
 
   // In _startLiveSync, sort before publishing:
   Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
-    final col = db.collection(DocumentPaths.venues).withConverter<Venue>(
+    final col = db.collection(FirestoreCollections.venues).withConverter<Venue>(
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
     );
@@ -420,8 +413,8 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
   }
 }
 
-Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
-  final col = db.collection(DocumentPaths.venues).withConverter<Venue>
+Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async { // TODO should not be called loosely
+  final col = db.collection(FirestoreCollections.venues).withConverter<Venue>
     (fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
     toFirestore: (v, _) => VenueFirestore.toMap(v), );
   final snap = await col.get(const GetOptions(source: Source.server));

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 class LiveLocationPublisher {
   final _db = FirebaseFirestore.instance;
@@ -33,7 +33,7 @@ class LiveLocationPublisher {
       if (!_shouldSend(pos)) return;
       _lastSent = pos;
 
-      await _db.collection(DocumentPaths.locations).doc(uid).set({
+      await _db.collection(FirestoreCollections.locations).doc(uid).set({
         'lat': pos.latitude,
         'lng': pos.longitude,
         'accuracy': pos.accuracy,

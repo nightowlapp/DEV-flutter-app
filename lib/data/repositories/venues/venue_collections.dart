@@ -1,6 +1,6 @@
 // lib/data/repositories/venues/venue_collections.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nightowlcode/data/firestore_paths.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 
@@ -10,7 +10,7 @@ class VenueCollections {
   final FirebaseFirestore db;
 
   CollectionReference<Venue> get venues =>
-      db.collection(DocumentPaths.venues).withConverter<Venue>(
+      db.collection(FirestoreCollections.venues).withConverter<Venue>(
             fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
             toFirestore: (v, _) => VenueFirestore.toMap(v),
           );

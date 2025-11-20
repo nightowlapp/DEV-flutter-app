@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../../models/venues/tag.dart';
 
@@ -8,9 +9,12 @@ class TagRepository {
   TagRepository({FirebaseFirestore? db})
       : _db = db ?? FirebaseFirestore.instance;
 
-  CollectionReference<Tag> get _tags =>
-      _db.collection('tags').withConverter<Tag>(
-          fromFirestore: Tag.fromFirestore, toFirestore: Tag.toFirestore);
+  CollectionReference<Tag> get _tags => _db
+      .collection(TagDocumentPaths.collection)
+      .withConverter<Tag>(
+    fromFirestore: Tag.fromFirestore,
+    toFirestore: Tag.toFirestore,
+  );
 
   /// Watch a single tag
   Stream<Tag?> watchById(String id) =>
@@ -22,7 +26,7 @@ class TagRepository {
     final seen = <String>{};
     final clean = <String>[];
     for (final raw in ids) {
-      final id = (raw).trim();
+      final id = raw.trim();
       if (id.isEmpty || id.contains('/')) continue;
       if (seen.add(id)) clean.add(id);
     }
@@ -44,7 +48,7 @@ class TagRepository {
 
     for (final id in clean) {
       final sub = _tags.doc(id).snapshots().listen(
-        (snap) {
+            (snap) {
           map[id] = snap.data(); // can be null if doc doesn't exist
           emitIfReady();
         },
@@ -76,7 +80,9 @@ class TagRepository {
     for (var i = 0; i < clean.length; i += maxChunk) {
       final end = (i + maxChunk > clean.length) ? clean.length : i + maxChunk;
       final chunk = clean.sublist(i, end);
-      futures.add(_tags.where(FieldPath.documentId, whereIn: chunk).get());
+      futures.add(
+        _tags.where(FieldPath.documentId, whereIn: chunk).get(),
+      );
     }
     final snaps = await Future.wait(futures);
     final map = <String, Tag>{};
@@ -95,12 +101,14 @@ class TagRepository {
       final snap = await tx.get(ref);
       if (snap.exists) {
         tx.set(ref, tag, SetOptions(merge: true));
-        tx.update(ref, {'updated_at': FieldValue.serverTimestamp()});
+        tx.update(ref, {
+          FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+        });
       } else {
         tx.set(ref, tag);
         tx.update(ref, {
-          'created_at': FieldValue.serverTimestamp(),
-          'updated_at': FieldValue.serverTimestamp(),
+          FirestoreFields.createdAt: FieldValue.serverTimestamp(),
+          FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
         });
       }
     });

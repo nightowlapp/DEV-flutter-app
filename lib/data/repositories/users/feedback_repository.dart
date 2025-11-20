@@ -1,54 +1,92 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart';
 
 class FeedbackRepository {
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth get _auth => FirebaseAuth.instance;
+
+  static User get _requireUser {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+    return user;
+  }
+
+  static DocumentReference<Map<String, dynamic>> _userFeedbackRoot(String uid) {
+    return _db.doc(FeedbackDocumentPaths.doc(uid));
+  }
+
+  // ---------------------------------------------------------------------------
+  // App feedback: feedback/{uid}/app_feedback/{category}/{category}/{autoId}
+  // ---------------------------------------------------------------------------
   static Future<void> submitAppFeedback({
     required String text,
     required String category,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception("User not logged in");
+    final user = _requireUser;
 
-    final feedbackDoc = FirebaseFirestore.instance
-        .collection(DocumentPaths.feedback)
-        .doc(user.uid)
-        .collection(DocumentPaths.appFeedback)
-        .doc(category) //TODO smarter.
+    final feedbackDoc = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.appFeedback)
+        .doc(category) // TODO smarter
         .collection(category) // collection named after category
         .doc(); // auto-id
 
     await feedbackDoc.set({
-      'message': text,
-      'created_at': FieldValue.serverTimestamp(),
+      FeedbackDocumentPaths.message: text,
+      FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
     });
   }
 
-  /// New: venue feedback at:
-  /// feedback/{uid}/venue_feedback/{venueId}/{category}/{autoId}
+  // ---------------------------------------------------------------------------
+  // Venue feedback: feedback/{uid}/venue_feedback/{venueId}/{category}/{autoId}
+  // ---------------------------------------------------------------------------
   static Future<void> submitVenueFeedback({
     required String venueId,
     required String category, // e.g. "wrong_name"
     String message = '',
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception("User not logged in");
+    final user = _requireUser;
 
-    final doc = FirebaseFirestore.instance
-        .collection(DocumentPaths.feedback)
-        .doc(user.uid)
-        .collection(DocumentPaths.venueFeedback)
+    final doc = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.venueFeedback)
         .doc(venueId)
         .collection(category)
         .doc();
 
     await doc.set({
-      'message': message,
-      'created_at': FieldValue.serverTimestamp(),
-      'venue_id': venueId,
-      'category': category,
-      // 'roles': ,
+      FeedbackDocumentPaths.message: message,
+      FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+      FeedbackDocumentPaths.venueId: venueId,
+      FeedbackDocumentPaths.category: category,
+      // roles / user meta can also be centralized later
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Crash reports:
+  // feedback/{uid}/crashes/{venueId}/{errorString}/{autoId}
+  // ---------------------------------------------------------------------------
+  static Future<void> submitCrashReport({
+    required String venueId,
+    required Error error,
+    String message = '',
+  }) async {
+    final user = _requireUser;
+
+    final errorKey = error.toString(); // you may want to normalize this later
+
+    final doc = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.crashes)
+        .doc(venueId)
+        .collection(errorKey)
+        .doc();
+
+    await doc.set({
+      FeedbackDocumentPaths.message: message,
+      FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+      FeedbackDocumentPaths.error: error.toString(),      // avoid raw Error
+      FeedbackDocumentPaths.errorString: error.toString(),
     });
   }
 }

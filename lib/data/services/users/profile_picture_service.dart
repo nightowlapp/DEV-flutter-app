@@ -6,7 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-import '../../firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart';
 import '../media_existence.dart';
 
 class ProfilePictureUploadResult {

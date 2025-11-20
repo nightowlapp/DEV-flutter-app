@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
 @immutable
@@ -24,31 +25,41 @@ class PartyStatusEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'party_status': partyStatus.name,
-        'change': partyStatusChange.name,
-        'created_at': Timestamp.fromDate(createdAt),
-        if (location != null) 'location': location,
-        if (accuracy != null) 'accuracy': accuracy,
-      };
+    PartyStatusEntryDocumentPaths.partyStatus: partyStatus.name,
+    PartyStatusEntryDocumentPaths.change: partyStatusChange.name,
+    PartyStatusEntryDocumentPaths.createdAt:
+    Timestamp.fromDate(createdAt),
+    if (location != null)
+      PartyStatusEntryDocumentPaths.location: location,
+    if (accuracy != null)
+      PartyStatusEntryDocumentPaths.accuracy: accuracy,
+  };
 
   static PartyStatusEntry fromSnapshot(
-      DocumentSnapshot<Map<String, dynamic>> snap) {
+      DocumentSnapshot<Map<String, dynamic>> snap,
+      ) {
     final d = snap.data()!;
-    final ts = d['created_at'];
+    final ts = d[PartyStatusEntryDocumentPaths.createdAt];
     final dt = ts is Timestamp ? ts.toDate() : DateTime.now();
+
     return PartyStatusEntry(
       id: snap.id,
       partyStatus: PartyStatusTypes.values.firstWhere(
-        (e) => e.name == (d['party_status'] as String? ?? ''),
+            (e) => e.name ==
+            (d[PartyStatusEntryDocumentPaths.partyStatus] as String? ?? ''),
         orElse: () => PartyStatusTypes.still_planning,
       ),
       partyStatusChange: PartyStatusChange.values.firstWhere(
-        (e) => e.name == (d['change'] as String? ?? ''),
+            (e) => e.name ==
+            (d[PartyStatusEntryDocumentPaths.change] as String? ?? ''),
         orElse: () => PartyStatusChange.manual,
       ),
       createdAt: dt,
-      location: d['location'] as GeoPoint?,
-      accuracy: (d['accuracy'] as num?)?.toDouble(),
+      location:
+      d[PartyStatusEntryDocumentPaths.location] as GeoPoint?,
+      accuracy:
+      (d[PartyStatusEntryDocumentPaths.accuracy] as num?)
+          ?.toDouble(),
     );
   }
 

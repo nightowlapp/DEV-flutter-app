@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/venues/venue.dart';
-import '../../firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart';
 import '../other_providers.dart';
 import 'favorites_providers.dart';
 
@@ -31,7 +31,7 @@ Future<List<Venue>> _fetchVenuesByIds(
   final results = <Venue>[];
   for (final chunk in chunks) {
     final qs = await db
-        .collection(DocumentPaths.venues)
+        .collection(FirestoreCollections.venues)
         .where(FieldPath.documentId, whereIn: chunk)
         .get();
 
