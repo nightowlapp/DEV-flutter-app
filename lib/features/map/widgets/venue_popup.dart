@@ -243,7 +243,7 @@ class _VenuePopupContent extends ConsumerWidget {
               children: [
                 MoodImagesSection(venueId: venue.id),
 
-                (venue.tagids.length > 4) ? Padding(
+                (venue.tagids.isNotEmpty) ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [

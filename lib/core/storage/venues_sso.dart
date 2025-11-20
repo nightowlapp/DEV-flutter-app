@@ -283,15 +283,8 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     return out;
   }
 
-  bool _shouldUpdateOrigin(LatLng? p) {
-    if (p == null) return false;
-    if (_origin == null) return true;
-    final delta = Distance.metersLatLng(_origin!, p);
-    return delta > 50; // re-sort only if moved >50m
-  }
-
   // In _startLiveSync, sort before publishing:
-  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
+  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async { // TODO deleting from firestore reflects instantly in app. adding in firestore does not reflect instantly.
     final col = db.collection(FirestoreCollections.venues).withConverter<Venue>(
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
@@ -303,7 +296,7 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     Query<Venue> deltaQ = col;
     try {
       if (lastSync != null) {
-        deltaQ = deltaQ.where('updated_at', isGreaterThan: Timestamp.fromDate(lastSync));
+        deltaQ = deltaQ.where(FirestoreFields.updatedAt, isGreaterThan: Timestamp.fromDate(lastSync));
       }
       deltaStream = deltaQ.snapshots();
     }

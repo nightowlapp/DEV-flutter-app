@@ -14,7 +14,7 @@ class VenueSearchBar extends ConsumerStatefulWidget {
   const VenueSearchBar({
     super.key,
     required this.controller,
-    this.hint = 'Search name, type, age, rating or other...',
+    this.hint = 'Search name, tag, type, age, rating or other...',
     this.onTapTune,
   });
 
@@ -61,7 +61,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
         style: const TextStyle(color: white),
         decoration: InputDecoration(
           hintText: widget.hint,
-          hintStyle: Styles.greyedOutPopupText,
+          hintStyle: Styles.greyedOutPopupText.copyWith(fontSize: fontSizeSmallest),
           isDense: true,
           filled: true,
           fillColor: owlPurple.withOpacity(0.03),
@@ -144,7 +144,8 @@ class _CountText extends StatelessWidget {
           children: [
             TextSpan(
               text: '${count ?? ''}',
-              style: TextStyle(
+              style:
+              TextStyle(
                 color: numColor,
                 fontWeight: FontWeight.w700,
                 fontSize: fontSizeSmall,
@@ -152,11 +153,7 @@ class _CountText extends StatelessWidget {
             ),
             TextSpan(
               text: plural,
-              style: const TextStyle(
-                color: white,
-                fontWeight: FontWeight.w300,
-                fontSize: fontSizeSmall,
-              ),
+              style: Styles.basicText
             ),
           ],
         ),
