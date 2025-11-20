@@ -45,6 +45,7 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
   final bootDone = ref.watch(venuesLocalBootDoneProvider);
   final all = bootDone ? ref.watch(allVenuesListProvider) : const <Venue>[];
 
+
   final rankerAv = ref.watch(_rankerAvProvider);
   if (rankerAv.isLoading) return AsyncData(all.take(24).toList());
   if (rankerAv.hasError) {
@@ -86,7 +87,7 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
 /// What the Explore grid should actually show:
 /// 1. Rank venues
 /// 2. Apply text search
-/// 3. Apply filters
+/// 3. Apply filters **only when not searching**
 final exploreVisibleVenuesProvider =
 Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
   final rankedAv = ref.watch(exploreRankedVenuesProvider);
@@ -103,13 +104,19 @@ Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
       var xs = ranked;
 
       final query = q.trim();
-      if (query.isNotEmpty) {
+      final isSearching = query.isNotEmpty;
+
+      // 2) Text search (always against ranked list)
+      if (isSearching) {
         xs = engine.filter(xs, query, userLoc: userLoc);
       }
 
-      xs = xs
-          .where((v) => venuePassesFilters(v, filters, userLoc: userLoc))
-          .toList(growable: false);
+      // 3) Filters only when NOT searching
+      if (!isSearching) {
+        xs = xs
+            .where((v) => venuePassesFilters(v, filters, userLoc: userLoc))
+            .toList(growable: false);
+      }
 
       return AsyncData(xs);
     },

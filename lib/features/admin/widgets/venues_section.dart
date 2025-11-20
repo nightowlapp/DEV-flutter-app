@@ -172,33 +172,36 @@ class _TypeStatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = Utility.formatString(type.name);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CircleAvatar(
-          radius: 22,
-          backgroundColor: owlPurple.withOpacity(0.12),
-          child: Icon(
-            type.icon, // from VenueTypeIconX
-            size: 22,
-            color: owlPurple,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: owlPurple.withOpacity(0.12),
+            child: Icon(
+              type.icon, // from VenueTypeIconX
+              size: 22,
+              color: adminColor,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: Styles.basicText.copyWith(fontSize: 11),
-          overflow: TextOverflow.ellipsis,
-        ),
-        Text(
-          '$count',
-          style: Styles.basicText.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: Styles.basicText.copyWith(fontSize: 11),
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+          Text(
+            '$count',
+            style: Styles.basicText.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -216,36 +219,34 @@ class _CountryStatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final code = countryCode.toUpperCase();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CircleAvatar(
-          radius: 22,
-          backgroundColor: owlPurple.withOpacity(0.12),
-          child: Text(
-            code.length > 3 ? code.substring(0, 3) : code,
-            style: Styles.basicText.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: owlPurple,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: owlPurple.withOpacity(0.12),
+            child: Text(
+              code.length > 3 ? code.substring(0, 3) : code,
+              style: Styles.basicText.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: adminColor,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          code,
-          style: Styles.basicText.copyWith(fontSize: 11),
-          overflow: TextOverflow.ellipsis,
-        ),
-        Text(
-          '$count',
-          style: Styles.basicText.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
+
+          Text(
+            '$count',
+            style: Styles.basicText.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
