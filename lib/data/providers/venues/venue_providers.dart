@@ -24,6 +24,7 @@ final allVenuesListProvider = Provider<List<Venue>>((ref) {
 /// Grab a single venue by id (updates reactively when SSO changes)
 final venueByIdProvider = Provider.family<Venue?, String>((ref, id) {
   final all = ref.watch(allVenuesListProvider);
+  //TODO build in safety? Not sure.
   return all.firstWhere((v) => v.id == id);
 });
 

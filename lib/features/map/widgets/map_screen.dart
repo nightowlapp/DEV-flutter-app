@@ -355,8 +355,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           if (_loading)
             const Positioned.fill(
               child: ColoredBox(
-                color: Colors.black54,
-                child: Center(child: LoadingIndicator()),
+                color: transparent,
               ),
             ),
 

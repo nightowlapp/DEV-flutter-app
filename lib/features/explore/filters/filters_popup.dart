@@ -119,13 +119,13 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Distance',
                         trailing: Text(
                           () {
-                            final v = filters.maxDistanceKm;
+                            final v = filters.maxDistanceKm; //TODO should be default to user pref - then default amount (15km?)
                             if (v == null || v == 0) return 'off';
                             if (v >= 60) return '60+ km';
                             return '${v.round()} km';
                           }(),
                           style: Styles.basicText
-                              .copyWith(fontWeight: FontWeight.w600),
+                              .copyWith(fontWeight: FontWeight.w600, color: owlPurple),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class _FiltersCard extends ConsumerWidget {
                                 min: 0,
                                 max: 60,
                                 divisions: 60,
-                                value: (filters.maxDistanceKm ?? 0),
+                                value: (filters.maxDistanceKm ?? 15),
                                 onChanged: (v) =>
                                     ctrl.setMaxDistanceKm(v == 0 ? null : v),
                               ),
@@ -162,7 +162,7 @@ class _FiltersCard extends ConsumerWidget {
                               ? 'any'
                               : '${filters.minRating!.toStringAsFixed(1)}+',
                           style: Styles.basicText
-                              .copyWith(fontWeight: FontWeight.w600),
+                              .copyWith(fontWeight: FontWeight.w600, color: owlPurple),
                         ),
                         child: Row(
                           children: [

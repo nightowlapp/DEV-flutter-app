@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading/error_screen.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../data/services/location/location_providers.dart';
@@ -38,7 +40,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final venuesAv = ref.watch(exploreRankedVenuesProvider);
     final locAv = ref.watch(latLngSafeStreamProvider);
     final hasLoc = locAv.maybeWhen(data: (_) => true, orElse: () => false);
-
+//TODO need location in here.
     return Scaffold(
       body: Column(
         children: [
@@ -54,65 +56,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 mediaById: const {},
                 userLoc: locAv.maybeWhen(data: (p) => p, orElse: () => null),
               ),
-              loading: () => _ExploreSkeleton(showLocationHint: !hasLoc),
-              error: (e, _) => _ExploreSkeleton(
-                showLocationHint: !hasLoc,
-                errorText: 'Couldn’t load venues.',
-              ),
+              loading: () => const LoadingScreen(),
+              error: (e, _) => const ErrorScreen(),
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class _ExploreSkeleton extends StatelessWidget {
-  const _ExploreSkeleton({this.showLocationHint = false, this.errorText});
-  final bool showLocationHint;
-  final String? errorText;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        if (errorText != null) ...[
-          Text(errorText!, style: const TextStyle(color: red)),
-          const SizedBox(height: 12),
-        ],
-        const SizedBox(height: 8),
-        // simple shimmer-ish placeholders; replace with your own
-        Wrap(
-          spacing: 12, runSpacing: 12,
-          children: List.generate(6, (_) => _box()),
-        ),
-        if (showLocationHint) ...[
-          const SizedBox(height: 18),
-          Text('Waiting for location…', style: const TextStyle(color: grey)),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () async {
-              final s = await Permission.location.request();
-              if (s.isGranted) {
-                // nudge location/venue providers to recompute
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Location enabled')),
-                );
-              }
-            },
-            child: const Text('Enable location'),
-          ),
-        ],
-      ]),
-    );
-  }
-
-  Widget _box() => Container(
-    width: 110, height: 90,
-    decoration: BoxDecoration(
-      color: const Color(0xFF1E1E1E),
-      borderRadius: BorderRadius.circular(12),
-    ),
-  );
 }

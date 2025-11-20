@@ -367,9 +367,11 @@ class VenueRanker {
     }
 // else: no probe result → no points, by design
 
-    if (v.corners.isNotEmpty) {
-      items.add(ScoreItem('hasCorners', rules.hasCornersPoints));
-    }
+    // if (v.corners.isNotEmpty) { // All venues have corners. This is useless for now.
+    //   total += rules.hasCornersPoints;
+    //   items.add(ScoreItem('hasCorners', rules.hasCornersPoints));
+    // }
+
 
     // 7) Popularity (likes & favs only, clamped, bucketed)
     final popPts = _popularityPoints(v.likeCount, v.favoriteCount);

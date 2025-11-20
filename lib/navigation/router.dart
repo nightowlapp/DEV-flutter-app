@@ -209,7 +209,9 @@ GoRouter createRouter({required String initialLocation}) {
       ),
     ],
     errorPageBuilder: (context, state) =>
-     MaterialPage(child: ErrorScreen(state.error))
+     MaterialPage(child: ErrorScreen(
+         // state.error
+     ))
   );
 }
 

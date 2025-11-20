@@ -10,6 +10,8 @@ import 'package:nightowlcode/data/providers/favorite_venues/favorites_providers.
 import 'package:nightowlcode/features/main/widgets/main_bottom_navigation_bar.dart';
 import 'package:nightowlcode/features/main/widgets/main_app_bar.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading/error_screen.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
 import '../../../data/providers/users/friends/friend_request_provider.dart';
 import '../../../data/repositories/users/role_repository.dart';
@@ -152,8 +154,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Failed to load roles')),
+      loading: () => const LoadingScreen(),
+      error: (_, __) => const ErrorScreen(),
     );
   }
 }

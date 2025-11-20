@@ -104,8 +104,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 padding: const EdgeInsets.symmetric(horizontal: 0),
                 constraints: const BoxConstraints(),
                 icon: Icon(tuneIcon,
-                    color:
-                        white), //TODO Turn orange if not default settings. SAVE settings.
+                    color: white), //TODO Turn orange if not default settings. SAVE settings.
                 onPressed: widget.onTapTune,
                 tooltip: 'Filters',
               ),

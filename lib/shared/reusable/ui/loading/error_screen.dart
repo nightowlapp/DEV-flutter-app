@@ -6,7 +6,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/assets.dart';
 
 class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
-  const ErrorScreen(GoException? error, {
+  const ErrorScreen({
     super.key,
     this.imagePath = ImagePaths.logo,
     this.borderColor = owlPurple,
@@ -16,6 +16,7 @@ class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
     this.borderRadius = borderRadiusDefault,
     this.slogan = 'Woops something went wrong',
     this.sloganStyle,
+    this.error
   });
 
   final String imagePath;
@@ -26,6 +27,7 @@ class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
   final double borderRadius;
   final String slogan;
   final TextStyle? sloganStyle;
+  final Error? error;
 
   @override
   Widget build(BuildContext context) {
