@@ -881,7 +881,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return await showDialog<bool>(
       context: context,
       barrierDismissible: true, // tap outside == cancel
-      builder: (ctx) => PopupDialogDefault(
+      builder: (ctx) => PopupDialogDefault( //TODO when loggin out it needs to delete all cached stuff.
         title: 'Log out?',
         children: [
           Text('You will be returned to the start screen.', style: Styles.popupText),

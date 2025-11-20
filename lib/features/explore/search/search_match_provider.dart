@@ -10,13 +10,13 @@ import '../ranking/explore_ranked_providers.dart';
 import 'search_controller.dart';
 
 final searchMatchCountProvider = Provider.autoDispose<int?>((ref) {
-  // Ranked venues list
+  // Ranked venues list (no search applied yet)
   final rankedAv = ref.watch(exploreRankedVenuesProvider);
   final List<Venue>? ranked = rankedAv.asData?.value;
   if (ranked == null) return null;
 
   // Only show matches counter when user is actually typing
-  final q = ref.watch(searchQueryProvider);
+  final q = ref.watch(searchQueryProvider).trim();
   if (q.isEmpty) return null;
 
   // Search + basic filters
@@ -26,7 +26,7 @@ final searchMatchCountProvider = Provider.autoDispose<int?>((ref) {
       .watch(latLngSafeStreamProvider)
       .maybeWhen(data: (p) => p, orElse: () => null);
 
-  var xs = engine.filter(ranked, q);
+  var xs = engine.filter(ranked, q, userLoc: userLoc);
   xs = xs
       .where((v) => venuePassesFilters(v, filters, userLoc: userLoc))
       .toList(growable: false);

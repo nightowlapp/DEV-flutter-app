@@ -32,6 +32,10 @@ class FirestoreFields {
   static const updatedAt = 'updated_at';
   static const timestamp = 'timestamp';
 
+  static const male = 'male';
+  static const female = 'female';
+  static const other = 'other';
+
   static const isVerified = 'is_verified';
 }
 

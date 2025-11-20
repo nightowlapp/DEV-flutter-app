@@ -1,10 +1,7 @@
-// lib/features/explore/presentation/explore_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading/error_screen.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../data/services/location/location_providers.dart';
 import '../filters/filters_popup.dart';
@@ -14,6 +11,7 @@ import '../search/venue_search_bar.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
+
   @override
   ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
@@ -25,8 +23,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void initState() {
     super.initState();
     _searchCtrl = TextEditingController();
-    // if you need to wire search:
-    // WidgetsBinding.instance.addPostFrameCallback((_) => wireSearchController(ref, _searchCtrl));
   }
 
   @override
@@ -37,10 +33,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final venuesAv = ref.watch(exploreRankedVenuesProvider);
+    // ranked → search → filters
+    final venuesAv = ref.watch(exploreVisibleVenuesProvider);
     final locAv = ref.watch(latLngSafeStreamProvider);
-    final hasLoc = locAv.maybeWhen(data: (_) => true, orElse: () => false);
-//TODO need location in here.
+
     return Scaffold(
       body: Column(
         children: [

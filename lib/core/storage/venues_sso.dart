@@ -284,7 +284,8 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
   }
 
   // In _startLiveSync, sort before publishing:
-  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async { // TODO deleting from firestore reflects instantly in app. adding in firestore does not reflect instantly.
+  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
+    // Important that this only runs on updated_at. If that field is wrong, gone or otherwise fucked shit wont work.
     final col = db.collection(FirestoreCollections.venues).withConverter<Venue>(
       fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
       toFirestore: (v, _) => VenueFirestore.toMap(v),
