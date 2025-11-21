@@ -690,7 +690,6 @@ class _AllTypesFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = selected ? owlPurple : grey.withOpacity(.25);
-    final fg = selected ? black : white;
 
     return InkWell(
       borderRadius: BorderRadius.circular(999),
@@ -704,7 +703,7 @@ class _AllTypesFilterChip extends StatelessWidget {
             child: Icon(
               Icons.all_inclusive,
               size: 22,
-              color: fg,
+              color: white,
             ),
           ),
           const SizedBox(height: 4),
@@ -712,7 +711,7 @@ class _AllTypesFilterChip extends StatelessWidget {
             'All',
             style: Styles.basicText.copyWith(
               fontSize: 11,
-              color: fg,
+              color: white,
             ),
           ),
         ],
@@ -735,9 +734,8 @@ class _TypeFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = Utility.formatString(type.name);
-    final bg = selected ? owlPurple : owlPurple.withOpacity(0.12);
-    final iconColor = selected ? black : owlPurple;
-    final textColor = selected ? black : white;
+    final bg = selected ? owlPurple : black;
+    final iconColor = selected ? white : owlPurple;
 
     return InkWell(
       borderRadius: BorderRadius.circular(999),
@@ -759,7 +757,7 @@ class _TypeFilterChip extends StatelessWidget {
             label,
             style: Styles.basicText.copyWith(
               fontSize: 11,
-              color: textColor,
+              color: white,
             ),
             overflow: TextOverflow.ellipsis,
           ),
