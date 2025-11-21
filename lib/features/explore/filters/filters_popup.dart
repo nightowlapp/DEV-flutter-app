@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
@@ -7,6 +8,7 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../shared/constants/styles.dart';
+import '../../../shared/reusable/ui/popup_dialog_default.dart';
 import 'filter_controller.dart';
 
 Future<void> showFiltersPopup(BuildContext context, WidgetRef ref) async {
@@ -44,6 +46,9 @@ Future<void> showFiltersPopup(BuildContext context, WidgetRef ref) async {
     },
   );
 }
+const double _kVenueChipWidth = 74.0; // tweak to taste
+const Duration _kVenueChipAnimDuration = Duration(milliseconds: 420);
+
 
 class _FiltersCard extends ConsumerWidget {
   const _FiltersCard({super.key});
@@ -136,7 +141,7 @@ class _FiltersCard extends ConsumerWidget {
                     children: [
                       // ---- Distance ----
                       _CardSection(
-                        title: 'Distance',
+                        title: 'Max Distance',
                         trailing: _DistanceLabel(
                           currentKm: filters.maxDistanceKm,
                           defaultKm: defaults.maxDistanceKm,
@@ -144,7 +149,7 @@ class _FiltersCard extends ConsumerWidget {
                             final initial = uiDistanceKm;
                             final result = await _promptForNumber(
                               context: context,
-                              title: 'Max distance (km)',
+                              title: 'Set Max distance',
                               initial: initial,
                               min: 1,
                               max: 60,
@@ -243,7 +248,7 @@ class _FiltersCard extends ConsumerWidget {
 
                       // ---- Age restriction (18–25) ----
                       _CardSection(
-                        title: 'Age restriction',
+                        title: 'Age Restriction',
                         trailing: Text(
                           filters.minAgeRestriction == null
                               ? '18+'
@@ -253,33 +258,43 @@ class _FiltersCard extends ConsumerWidget {
                             color: owlPurple,
                           ),
                         ),
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: owlPurple,
-                            inactiveTrackColor: grey.withOpacity(.3),
-                            thumbColor: owlPurple,
-                          ),
-                          child: Slider(
-                            min: 18,
-                            max: 25,
-                            divisions: 7,
-                            value:
-                            (filters.minAgeRestriction ?? 18).toDouble(),
-                            onChanged: (v) {
-                              final age = v.round();
-                              ctrl.setMinAgeRestriction(age);
-                            },
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: owlPurple,
+                                inactiveTrackColor: grey.withOpacity(.3),
+                                thumbColor: owlPurple,
+                              ),
+                              child: Slider(
+                                min: 18,
+                                max: 25,
+                                divisions: 7,
+                                value:
+                                (filters.minAgeRestriction ?? 18).toDouble(),
+                                onChanged: (v) {
+                                  final age =
+                                  v.round().clamp(18, 25);
+                                  ctrl.setMinAgeRestriction(age);
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _AgeEmojiScale(
+                              minAge: filters.minAgeRestriction ?? 18,
+                              onSelected: (age) =>
+                                  ctrl.setMinAgeRestriction(age),
+                            ),
+                          ],
                         ),
                       ),
 
                       // ---- Venue type (sideways scroll with icons) ----
                       _CardSection(
-                        title: 'Venue type',
+                        title: 'Venue Type',
                         trailing: Text(
-                          filters.types.isEmpty
-                              ? 'All'
-                              : '${filters.types.length}',
+                          filters.types.isEmpty ? 'All' : '${filters.types.length}',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -289,37 +304,98 @@ class _FiltersCard extends ConsumerWidget {
                           height: 100,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 8),
-                                _AllTypesFilterChip(
-                                  selected: filters.types.isEmpty,
-                                  onTap: () {
-                                    if (filters.types.isNotEmpty) {
-                                      for (final t
-                                      in filters.types.toList()) {
-                                        ctrl.toggleType(t);
-                                      }
+                            child: AnimatedSwitcher(
+                              duration: _kVenueChipAnimDuration,
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              child: Row(
+                                key: ValueKey(filters.types.hashCode),
+                                children: () {
+                                  // stable base order from enum
+                                  final allTypes = VenueType.values
+                                      .where((t) => t != VenueType.unknown)
+                                      .toList();
+
+                                  final selectedTypes = <VenueType>[];
+                                  final unselectedTypes = <VenueType>[];
+
+                                  for (final t in allTypes) {
+                                    if (filters.types.contains(t)) {
+                                      selectedTypes.add(t);
+                                    } else {
+                                      unselectedTypes.add(t);
                                     }
-                                  },
-                                ),
-                                const SizedBox(width: 12),
-                                for (final type in VenueType.values
-                                    .where(
-                                        (t) => t != VenueType.unknown)) ...[
-                                  _TypeFilterChip(
-                                    type: type,
-                                    selected: filters.types.contains(type),
-                                    onTap: () => ctrl.toggleType(type),
-                                  ),
-                                  const SizedBox(width: 12),
-                                ],
-                                const SizedBox(width: 8),
-                              ],
+                                  }
+
+                                  final children = <Widget>[];
+
+                                  children.add(const SizedBox(width: 8));
+
+                                  // "All" – always leftmost, fixed width
+                                  children.add(
+                                    SizedBox(
+                                      width: _kVenueChipWidth,
+                                      child: _AllTypesFilterChip(
+                                        selected: filters.types.isEmpty,
+                                        onTap: () {
+                                          if (filters.types.isNotEmpty) {
+                                            for (final t in filters.types.toList()) {
+                                              ctrl.toggleType(t);
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  );
+
+                                  children.add(const SizedBox(width: 6));
+
+                                  // Selected types (jump left, next to All)
+                                  for (final type in selectedTypes) {
+                                    children.add(
+                                      SizedBox(
+                                        width: _kVenueChipWidth,
+                                        child: _TypeFilterChip(
+                                          key: ValueKey(type),
+                                          type: type,
+                                          selected: true,
+                                          onTap: () => ctrl.toggleType(type),
+                                        ),
+                                      ),
+                                    );
+                                    children.add(const SizedBox(width: 6));
+                                  }
+
+                                  // Gap between selected and unselected groups
+                                  if (selectedTypes.isNotEmpty && unselectedTypes.isNotEmpty) {
+                                    children.add(const SizedBox(width: 6));
+                                  }
+
+                                  // Unselected types (to the right)
+                                  for (final type in unselectedTypes) {
+                                    children.add(
+                                      SizedBox(
+                                        width: _kVenueChipWidth,
+                                        child: _TypeFilterChip(
+                                          key: ValueKey(type),
+                                          type: type,
+                                          selected: false,
+                                          onTap: () => ctrl.toggleType(type),
+                                        ),
+                                      ),
+                                    );
+                                    children.add(const SizedBox(width: 6));
+                                  }
+
+                                  children.add(const SizedBox(width: 8));
+                                  return children;
+                                }(),
+                              ),
                             ),
                           ),
                         ),
                       ),
+
                     ],
                   ),
                 ),
@@ -335,15 +411,9 @@ class _FiltersCard extends ConsumerWidget {
                 horizontalSpacerSmall,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: ctrl.reset,
-                    child: Text(
-                      'Reset Filters',
-                      style: Styles.smallText.copyWith(color: red),
-                    ),
-                  ),  TextButton(
                     onPressed: ctrl.reset,
                     child: Text(
                       'Reset Filters',
@@ -359,6 +429,7 @@ class _FiltersCard extends ConsumerWidget {
     );
   }
 }
+
 
 // Tighter section layout: title + content + small gap + divider
 class _CardSection extends StatelessWidget {
@@ -437,11 +508,11 @@ class _DistanceEmojiScale extends StatelessWidget {
 
   // Single source of truth for emojis + their corresponding km values
   static const List<_DistanceEmojiOption> _options = [
-    _DistanceEmojiOption('🚶', 1.5),   // very close
-    _DistanceEmojiOption('🚲', 5.0),   // nearby
-    _DistanceEmojiOption('🚌', 20.0),  // in the city
-    _DistanceEmojiOption('🚄', 40.0),  // out of town
-    _DistanceEmojiOption('✈️', 60.0),  // far away / max
+    _DistanceEmojiOption('🚶', 1.5), // very close
+    _DistanceEmojiOption('🚲', 5.0), // nearby
+    _DistanceEmojiOption('🚌', 20.0), // in the city
+    _DistanceEmojiOption('🚄', 40.0), // out of town
+    _DistanceEmojiOption('✈️', 60.0), // far away / max
   ];
 
   int _selectedIndexForDistance(double value) {
@@ -457,7 +528,7 @@ class _DistanceEmojiScale extends StatelessWidget {
     int bestIndex = 0;
     double bestDiff = (d - _options[0].km).abs();
 
-    for (var i = 1; i < _options.length - 1; i++) { // <-- note -1 here
+    for (var i = 1; i < _options.length - 1; i++) {
       final diff = (d - _options[i].km).abs();
       if (diff < bestDiff) {
         bestDiff = diff;
@@ -467,7 +538,6 @@ class _DistanceEmojiScale extends StatelessWidget {
 
     return bestIndex;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -629,6 +699,91 @@ class _RatingEmojiOption {
   const _RatingEmojiOption(this.emoji, this.value);
 }
 
+/// Age emoji scale – same behavior as distance/rating:
+/// - One emoji always active (nearest to minAge)
+/// - Clicking emoji sets minAge (and moves the slider)
+class _AgeEmojiScale extends StatelessWidget {
+  final int? minAge;
+  final ValueChanged<int> onSelected;
+
+  const _AgeEmojiScale({
+    required this.minAge,
+    required this.onSelected,
+  });
+
+  static const List<_AgeEmojiOption> _options = [
+    _AgeEmojiOption('🧑‍🎓', 18), // student / youngest
+    _AgeEmojiOption('🧑', 20),    // young adult
+    _AgeEmojiOption('🕺', 21),    // party age
+    _AgeEmojiOption('🧑‍💼', 23), // working adult
+    _AgeEmojiOption('🧑‍🦳', 25), // oldest (25+)
+  ];
+
+  int _selectedIndexForAge(int? age) {
+    final a = age ?? 18;
+
+    int bestIndex = 0;
+    int bestDiff = (a - _options[0].age).abs();
+
+    for (var i = 1; i < _options.length; i++) {
+      final diff = (a - _options[i].age).abs();
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIndex = i;
+      }
+    }
+
+    return bestIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedIndex = _selectedIndexForAge(minAge);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(_options.length, (i) {
+          final opt = _options[i];
+          final isActive = i == selectedIndex;
+
+          return GestureDetector(
+            onTap: () => onSelected(opt.age),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? owlPurple.withOpacity(.28)
+                    : transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                opt.emoji,
+                style: TextStyle(
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _AgeEmojiOption {
+  final String emoji;
+  final int age;
+
+  const _AgeEmojiOption(this.emoji, this.age);
+}
+
 // ---- Distance label with tap-to-edit ----
 
 class _DistanceLabel extends StatelessWidget {
@@ -647,11 +802,7 @@ class _DistanceLabel extends StatelessWidget {
     // If the user hasn't picked a custom distance yet,
     // show their preference-based default instead of "Off".
     final double? baseKm = currentKm ?? defaultKm;
-
-    final double km = baseKm!; // non-null here
-
-    final String displayKm =
-    km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);    String text;
+    String text;
 
     if (baseKm == null) {
       // Should only happen while prefs are still loading.
@@ -660,6 +811,9 @@ class _DistanceLabel extends StatelessWidget {
       // Right-most position is "60+ km"
       text = '60+ km';
     } else {
+      final km = baseKm;
+      final displayKm =
+      km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);
       text = '$displayKm km';
     }
 
@@ -690,32 +844,47 @@ class _AllTypesFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = selected ? owlPurple : grey.withOpacity(.25);
+    void handleTap() => onTap();
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: bg,
-            child: Icon(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Avatar tap
+        GestureDetector(
+          onTap: handleTap,
+          child: AnimatedContainer(
+            duration: _kVenueChipAnimDuration,
+            curve: Curves.easeInOutCubic,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bg,
+            ),
+            child: const Icon(
               Icons.all_inclusive,
               size: 22,
               color: white,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'All',
-            style: Styles.basicText.copyWith(
-              fontSize: 11,
-              color: white,
+        ),
+        const SizedBox(height: 4),
+        // Text tap
+        GestureDetector(
+          onTap: handleTap,
+          child: SizedBox(
+            height: 16,
+            child: Center(
+              child: AutoSizeText(
+                'All',
+                maxLines: 1,
+                minFontSize: 8,
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -726,6 +895,7 @@ class _TypeFilterChip extends StatelessWidget {
   final VoidCallback onTap;
 
   const _TypeFilterChip({
+    super.key,
     required this.type,
     required this.selected,
     required this.onTap,
@@ -737,32 +907,48 @@ class _TypeFilterChip extends StatelessWidget {
     final bg = selected ? owlPurple : black;
     final iconColor = selected ? white : owlPurple;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: bg,
+    void handleTap() => onTap();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Icon tap
+        GestureDetector(
+          onTap: handleTap,
+          child: AnimatedContainer(
+            duration: _kVenueChipAnimDuration,
+            curve: Curves.easeInOutCubic,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bg,
+            ),
             child: Icon(
-              type.icon, // extension on VenueType (same as in VenuesSection)
+              type.icon,
               size: 22,
               color: iconColor,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Styles.basicText.copyWith(
-              fontSize: 11,
-              color: white,
+        ),
+        const SizedBox(height: 4),
+        // Text tap
+        GestureDetector(
+          onTap: handleTap,
+          child: SizedBox(
+            height: 16,
+            child: Center(
+              child: AutoSizeText(
+                label,
+                maxLines: 1,
+                minFontSize: 8,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -777,46 +963,81 @@ Future<double?> _promptForNumber({
   required double max,
   String? suffix,
 }) async {
-  final controller =
-  TextEditingController(text: initial.toStringAsFixed(0));
+  final controller = TextEditingController(
+    text: initial.toStringAsFixed(0),
+  );
 
   return showDialog<double>(
     context: context,
+    barrierDismissible: true,
     builder: (ctx) {
-      return AlertDialog(
-        backgroundColor: black,
-        title: Text(title, style: Styles.popupHeader),
-        content: TextField(
-          controller: controller,
-          keyboardType:
-          const TextInputType.numberWithOptions(decimal: true),
-          style: const TextStyle(color: white),
-          decoration: InputDecoration(
-            suffixText: suffix,
+      return PopupDialogDefault(
+        title: title,
+        children: [
+          const SizedBox(height: verticalSpacerDefault),
+
+          // Input field
+          TextField(
+            controller: controller,
+            keyboardType:
+            const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(color: white),
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Max distance',
+              labelStyle: Styles.popupText.copyWith(
+                color: grey.withOpacity(0.8),
+              ),
+              suffixText: suffix,
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: grey),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: owlPurple),
+              ),
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final raw = controller.text.replaceAll(',', '.');
-              final v = double.tryParse(raw);
-              if (v == null) {
-                Navigator.of(ctx).pop();
-                return;
-              }
-              double clamped = v;
-              if (clamped < min) clamped = min;
-              if (clamped > max) clamped = max;
-              Navigator.of(ctx).pop(clamped);
-            },
-            child: const Text('OK'),
+
+          const SizedBox(height: verticalSpacerDefault),
+
+          // Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: grey),
+                ),
+              ),
+              const SizedBox(width: 12),
+              TextButton(
+                onPressed: () {
+                  final raw = controller.text.replaceAll(',', '.');
+                  final v = double.tryParse(raw);
+
+                  if (v == null) {
+                    Navigator.of(ctx).pop();
+                    return;
+                  }
+
+                  double clamped = v;
+                  if (clamped < min) clamped = min;
+                  if (clamped > max) clamped = max;
+
+                  Navigator.of(ctx).pop(clamped);
+                },
+                child: const Text(
+                  'Set',
+                  style: TextStyle(color: owlPurple),
+                ),
+              ),
+            ],
           ),
         ],
       );
     },
   );
 }
+
