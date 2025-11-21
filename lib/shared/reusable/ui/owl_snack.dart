@@ -12,38 +12,32 @@ enum OwlSnackVariant { info, success, warning, error, neutral }
 class OwlSnack {
   /// Show a floating bottom snackbar with title + optional message.
   /// Requires a [ScaffoldMessenger] in the widget tree.
-  static void show(
-    BuildContext context, {
-    // TODO bool to push forward on screen z value.
-    required String title,
-    String? message,
-    OwlSnackVariant variant = OwlSnackVariant.neutral,
-    SnackBarBehavior = SnackBarBehavior.floating,
-    // Visuals
-    Widget? icon, // override default logo
-    bool showIcon = true, // hide/show icon
-    double iconSize = 22,
-    bool showDivider = true,
-    Duration duration = const Duration(seconds: 3),
-    EdgeInsetsGeometry? margin,
-    EdgeInsetsGeometry? padding,
-    double borderRadius = borderRadiusDefault,
-
-    // Colors (override per-call)
-    Color? backgroundColor,
-    Color? textColor,
-    Color? borderColor,
-
-    // Optional action
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
+  static void show( // TODO bool to push forward on screen z value.
+      BuildContext context, {
+        required String title,
+        String? message,
+        OwlSnackVariant variant = OwlSnackVariant.neutral,
+        SnackBarBehavior behavior = SnackBarBehavior.floating, // <- rename
+        // Visuals
+        Widget? icon,
+        bool showIcon = true,
+        double iconSize = 22,
+        bool showDivider = true,
+        Duration duration = const Duration(seconds: 3),
+        EdgeInsetsGeometry? margin,
+        EdgeInsetsGeometry? padding,
+        double borderRadius = borderRadiusDefault,
+        Color? backgroundColor,
+        Color? textColor,
+        Color? borderColor,
+        String? actionLabel,
+        VoidCallback? onAction,
+      }) {
     final palette = _paletteFor(variant);
     final bg = backgroundColor ?? palette.$1;
     final fg = textColor ?? palette.$2;
     final brd = borderColor ?? palette.$3;
 
-    // Default icon → NightOwl logo
     final Widget defaultIcon = Image.asset(
       ImagePaths.logo,
       width: iconSize,
@@ -56,7 +50,6 @@ class OwlSnack {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header row: title + (optional) icon
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -75,20 +68,15 @@ class OwlSnack {
                 ),
             ],
           ),
-
           if (showDivider) const Divider(color: owlPurple),
-
-// SizedBox(height: PlatformConfig.height(context)*0.005,),
-
-          // Message
           if ((message ?? '').trim().isNotEmpty)
             Align(
               alignment: Alignment.centerLeft,
-              child:
-                  Text(message!, style: Styles.popupText.copyWith(color: fg)),
+              child: Text(
+                message!,
+                style: Styles.popupText.copyWith(color: fg),
+              ),
             ),
-
-          // Action button
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 8),
             Align(
@@ -97,7 +85,7 @@ class OwlSnack {
                 style: TextButton.styleFrom(
                   foregroundColor: fg,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -112,7 +100,7 @@ class OwlSnack {
     );
 
     final snack = SnackBar(
-      behavior: SnackBarBehavior,
+      behavior: behavior, // <- use the param here
       duration: duration,
       margin: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: padding ?? const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -129,6 +117,7 @@ class OwlSnack {
     messenger.removeCurrentSnackBar();
     messenger.showSnackBar(snack);
   }
+
 
   /// Default palette per variant: (background, text, border).
   static (Color, Color, Color) _paletteFor(OwlSnackVariant v) {

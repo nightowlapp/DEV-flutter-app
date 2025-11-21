@@ -4,6 +4,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_snack.dart';
 
 import '../filters/filter_controller.dart';
 import 'nearby_venue_count_provider.dart';
@@ -33,7 +34,8 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
   @override
   void initState() {
     super.initState();
-    _focus.addListener(() => setState(() {}));
+    _focus.addListener(() => setState(() {}
+      ));
     widget.controller.addListener(_handleTextChanged);
   }
 
@@ -48,7 +50,8 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
     final text = widget.controller.text;
     // Push text into global search query provider
     ref.read(searchQueryProvider.notifier).state = text;
-    setState(() {}); // rebuild to switch nearby ↔ matches label
+    setState(() {}
+    ); // rebuild to switch nearby ↔ matches label
   }
 
   @override
@@ -75,8 +78,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
         },
         decoration: InputDecoration(
           hintText: widget.hint,
-          hintStyle:
-          Styles.greyedOutPopupText,
+          hintStyle: Styles.greyedOutPopupText,
           isDense: true,
           filled: true,
           fillColor: owlPurple.withOpacity(0.03),
@@ -95,37 +97,37 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: hasText
-                // ── SEARCH TEXT → show search matches ───────────────
+                  // ── SEARCH TEXT → show search matches ───────────────
+                  ? Padding(
+                    key: const ValueKey('matches'),
+                    padding: const EdgeInsets.only(right: 0),
+                    child: _CountText(
+                      count: matchCount ?? 0,
+                      label: ' matches',
+                      semanticsLabelWhenUnknown: 'Search matches',
+                    ),
+                  )
+                  // ── NO TEXT, FILTERS ACTIVE → show filter matches ───
+                  : filtersActive
                     ? Padding(
-                  key: const ValueKey('matches'),
-                  padding: const EdgeInsets.only(right: 0),
-                  child: _CountText(
-                    count: matchCount ?? 0,
-                    label: ' matches',
-                    semanticsLabelWhenUnknown: 'Search matches',
-                  ),
-                )
-                // ── NO TEXT, FILTERS ACTIVE → show filter matches ───
-                    : filtersActive
-                    ? Padding(
-                  key: const ValueKey('filterMatches'),
-                  padding: const EdgeInsets.only(right: 0),
-                  child: _CountText(
-                    count: filterMatchCount ?? 0,
-                    label: ' matches', // same style as search
-                    semanticsLabelWhenUnknown: 'Filtered venues',
-                  ),
-                )
-                // ── NO TEXT, NO FILTERS → show nearby count ─────
+                      key: const ValueKey('filterMatches'),
+                      padding: const EdgeInsets.only(right: 0),
+                      child: _CountText(
+                        count: filterMatchCount ?? 0,
+                        label: ' matches', // same style as search
+                        semanticsLabelWhenUnknown: 'Filtered venues',
+                      ),
+                    )
+                    // ── NO TEXT, NO FILTERS → show nearby count ─────
                     : Padding(
-                  key: const ValueKey('nearby'),
-                  padding: const EdgeInsets.only(right: 0),
-                  child: _CountText(
-                    count: nearbyCount,
-                    label: ' nearby',
-                    semanticsLabelWhenUnknown: 'Nearby venues',
-                  ),
-                ),
+                      key: const ValueKey('nearby'),
+                      padding: const EdgeInsets.only(right: 0),
+                      child: _CountText(
+                        count: nearbyCount,
+                        label: ' nearby',
+                        semanticsLabelWhenUnknown: 'Nearby venues',
+                      ),
+                    ),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
@@ -135,10 +137,23 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                   tuneIcon,
                   color: filtersActive ? owlPurple : white,
                 ),
-                onPressed: widget.onTapTune,
-                //TODO long tap removes all filtesr.
+                onPressed: widget.onTapTune, // short tap → open popup
+                onLongPress: () {
+                  // long press → reset all filters back to defaults
+                  ref.read(filtersProvider.notifier).reset();
+                  if (filtersActive) {
+                    OwlSnack.show(
+                      context,
+                      title: 'Filters reset',
+                      variant: OwlSnackVariant.info, // or success/neutral
+                      duration: const Duration(milliseconds: 1400),
+                      showDivider: false,
+                    );
+                  }
+                },
                 tooltip: 'Filters',
               ),
+
             ],
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -164,8 +179,8 @@ class _CountText extends StatelessWidget {
     if (count == null) return const SizedBox.shrink();
 
     final plural = (label.trim() == 'matches' || label.contains('matches'))
-        ? (count == 1 ? ' match' : ' matches')
-        : label;
+      ? (count == 1 ? ' match' : ' matches')
+      : label;
     final numColor = (count == 0) ? red : owlPurple;
     return Semantics(
       label: count == null ? semanticsLabelWhenUnknown : '$count$plural',
