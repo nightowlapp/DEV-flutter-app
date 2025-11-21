@@ -1,4 +1,3 @@
-// lib/features/explore/filters/filter_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
@@ -11,11 +10,14 @@ import 'advanced_search_filter.dart';
 /// - types = all (empty set = no restriction)
 final _defaultFiltersProvider =
 Provider.autoDispose<AdvancedSearchFilter>((ref) {
-  final prefs = ref.watch(userPrefsProvider);
+  // Use the same prefs the ranker uses so defaults stay in sync.
+  final prefsAv = ref.watch(mePrefsAvProvider); // AsyncValue<UserPrefs>
+  final prefs = prefsAv.asData?.value;
+
   return AdvancedSearchFilter(
     openNowOnly: true,
-    maxDistanceKm: prefs?.maxDistanceKm, // may be null if not loaded yet
-    minRating: null, //TODO potential to select favorite tags and so on in setting and be displayed.
+    maxDistanceKm: prefs?.maxDistanceKm, // may be null while prefs load
+    minRating: null,
     types: const {}, // empty == all
     verifiedOnly: false,
     minAgeRestriction: null,
@@ -28,7 +30,24 @@ final filtersProvider =
 StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
       (ref) {
     final defaults = ref.watch(_defaultFiltersProvider);
-    return FilterController(defaults);
+    final ctrl = FilterController(defaults);
+
+    // If prefs/defaults change after the controller was created,
+    // keep defaults (and untouched state) in sync.
+    ref.listen<AdvancedSearchFilter>(
+      _defaultFiltersProvider,
+          (previous, next) {
+        ctrl.updateDefaults(next);
+
+        // If user hasn’t changed filters yet (state == old defaults),
+        // move the state to the new defaults.
+        if (previous == null || ctrl.state.isSameAs(previous)) {
+          ctrl.state = next;
+        }
+      },
+    );
+
+    return ctrl;
   },
   name: 'filtersProvider',
 );
@@ -37,7 +56,6 @@ StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
 final filtersActiveProvider = Provider.autoDispose<bool>((ref) {
   final current = ref.watch(filtersProvider);
   final defaults = ref.watch(_defaultFiltersProvider);
-  // either "not equal" or a simpler rule: hasAnyRestriction
   return !current.isSameAs(defaults);
 });
 
@@ -61,10 +79,12 @@ class FilterController extends StateNotifier<AdvancedSearchFilter> {
 
   void clearMinRating() => state = state.copyWith(clearMinRating: true);
 
-  void setMaxDistanceKm(double? km) =>
-      state = state.copyWith(maxDistanceKm: km, clearMaxDistance: km == null);
+  // Now takes a non-null km (we use clearMaxDistance for "default")
+  void setMaxDistanceKm(double km) =>
+      state = state.copyWith(maxDistanceKm: km, clearMaxDistance: false);
 
-  void clearMaxDistance() => state = state.copyWith(clearMaxDistance: true);
+  void clearMaxDistance() =>
+      state = state.copyWith(clearMaxDistance: true);
 
   void setMinAgeRestriction(int? age) =>
       state = state.copyWith(minAgeRestriction: age, clearMinAge: age == null);
@@ -93,8 +113,7 @@ class FilterController extends StateNotifier<AdvancedSearchFilter> {
   /// Reset back to the **current** defaults.
   void reset() => state = _defaults;
 
-  /// If you want defaults to update when prefs arrive later,
-  /// expose this (optional).
+  /// Called when prefs/defaults change.
   void updateDefaults(AdvancedSearchFilter d) {
     _defaults = d;
   }

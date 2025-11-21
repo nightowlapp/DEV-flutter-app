@@ -137,7 +137,13 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                   tuneIcon,
                   color: filtersActive ? owlPurple : white,
                 ),
-                onPressed: widget.onTapTune, // short tap → open popup
+                onPressed: () {
+                  // clear search text
+                  widget.controller.clear();
+                  // (listener on controller will update searchQueryProvider)
+                  // open filters popup
+                  widget.onTapTune?.call();
+                },
                 onLongPress: () {
                   // long press → reset all filters back to defaults
                   ref.read(filtersProvider.notifier).reset();

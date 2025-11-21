@@ -1,9 +1,10 @@
-// lib/features/explore/filters/filter_predicate.dart
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 
 import 'advanced_search_filter.dart';
+
+const double _kDistanceSliderMaxKm = 60.0;
 
 bool venuePassesFilters(
     Venue v,
@@ -13,8 +14,14 @@ bool venuePassesFilters(
     }) {
   // distance
   if (f.maxDistanceKm != null && userLoc != null) {
-    final meters = Distance.metersLatLng(userLoc, v.entry);
-    if (meters > (f.maxDistanceKm! * 1000)) return false;
+    final maxKm = f.maxDistanceKm!;
+
+    // Right-most "60+ km" means "don't filter by distance".
+    // Only apply a distance gate when 0 < maxKm < slider max.
+    if (maxKm > 0 && maxKm < _kDistanceSliderMaxKm) {
+      final meters = Distance.metersLatLng(userLoc, v.entry);
+      if (meters > (maxKm * 1000)) return false;
+    }
   }
 
   // rating
