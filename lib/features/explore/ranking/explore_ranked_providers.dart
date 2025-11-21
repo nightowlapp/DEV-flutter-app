@@ -51,20 +51,20 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
 
   final rankerAv = ref.watch(_rankerAvProvider);
 
-  // // 👇 DEBUG: log prefs whenever ranker is ready (debug builds only)
-  // assert(() {
-  //   rankerAv.whenData((ranker) {
-  //     debugPrint(
-  //       'RANKER PREFS -> '
-  //           'types=${ranker.prefs?.preferredVenueTypes} '
-  //           'maxKm=${ranker.prefs?.maxDistanceKm} '
-  //           'age=${ranker.prefs?.age} '
-  //           'status=${ranker.prefs?.partyStatus} '
-  //           'gender=${ranker.prefs?.gender}',
-  //     );
-  //   });
-  //   return true;
-  // }());
+  // 👇 DEBUG: log prefs whenever ranker is ready (debug builds only)
+  assert(() {
+    rankerAv.whenData((ranker) {
+      debugPrint(
+        'RANKER PREFS -> '
+            'types=${ranker.prefs?.preferredVenueTypes} '
+            'maxKm=${ranker.prefs?.maxDistanceKm} '
+            'age=${ranker.prefs?.age} '
+            'status=${ranker.prefs?.partyStatus} '
+            'gender=${ranker.prefs?.gender}',
+      );
+    });
+    return true;
+  }());
 
   if (rankerAv.isLoading) return AsyncData(all.take(24).toList());
   if (rankerAv.hasError) {

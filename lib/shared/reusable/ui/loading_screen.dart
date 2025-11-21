@@ -13,7 +13,7 @@ class LoadingScreen extends StatefulWidget {
     this.imagePath = ImagePaths.logoDownBackground,
     this.backgroundColor = transparent,
     this.imageSize = 150,
-    this.slogan = 'Claim the night',
+    this.slogan = 'Claim The Night',
     this.switchDuration = const Duration(seconds: 2),
     this.transitionDuration = const Duration(seconds: 1),
   });

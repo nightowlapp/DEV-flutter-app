@@ -81,8 +81,8 @@ class _FiltersCard extends ConsumerWidget {
                 children: [
                   Text('Filters', style: Styles.popupHeader),
                   const Spacer(),
-                  const Text('Open now', style: TextStyle(color: white)),
-                  const SizedBox(width: verticalSpacerSmall),
+                  Text('Open now', style: Styles.smallText),
+                  const SizedBox(width: 6),
                   Switch.adaptive(
                     value: filters.openNowOnly,
                     onChanged: ctrl.setOpenNow,
@@ -129,7 +129,8 @@ class _FiltersCard extends ConsumerWidget {
                             );
                             if (result == null) return;
                             ctrl.setMaxDistanceKm(
-                                result <= 0 ? null : result);
+                              result <= 0 ? null : result,
+                            );
                           },
                         ),
                         child: Column(
@@ -140,17 +141,16 @@ class _FiltersCard extends ConsumerWidget {
                                 activeTrackColor: owlPurple,
                                 inactiveTrackColor: grey.withOpacity(.3),
                                 thumbColor: owlPurple,
-                                overlayColor:
-                                owlPurple.withOpacity(.15),
+                                overlayColor: owlPurple.withOpacity(.15),
                               ),
                               child: Slider(
                                 min: 0,
                                 max: 60,
                                 divisions: 60,
                                 value: filters.maxDistanceKm ?? 0,
-                                onChanged: (v) =>
-                                    ctrl.setMaxDistanceKm(
-                                        v <= 0 ? null : v),
+                                onChanged: (v) => ctrl.setMaxDistanceKm(
+                                  v <= 0 ? null : v,
+                                ),
                               ),
                             ),
                             const _EmojiScale(),
@@ -172,33 +172,40 @@ class _FiltersCard extends ConsumerWidget {
                             color: owlPurple,
                           ),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    activeTrackColor:
-                                    grey.withOpacity(.35),
-                                    inactiveTrackColor: owlPurple,
-                                    thumbColor: owlPurple,
-                                    overlayColor:
-                                    owlPurple.withOpacity(.15),
-                                  ),
-                                  child: Slider(
-                                    min: 0,
-                                    max: 5,
-                                    divisions: 10,
-                                    value: (filters.minRating ?? 0),
-                                    onChanged: (v) => ctrl.setMinRating(
-                                        v == 0 ? null : v),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      activeTrackColor: owlPurple,
+                                      inactiveTrackColor: grey.withOpacity(.35),
+                                      thumbColor: owlPurple,
+                                      overlayColor: owlPurple.withOpacity(.15),
+                                    ),
+                                    child: Slider(
+                                      min: 0,
+                                      max: 4.5,
+                                      divisions: 9,
+                                      // Any => 0 (far left, empty)
+                                      value: filters.minRating ?? 0,
+                                      onChanged: (v) => ctrl.setMinRating(
+                                        v == 0 ? null : v,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                _RatingFace(minRating: filters.minRating),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            _RatingFace(minRating: filters.minRating),
+                            const SizedBox(height: 8),
+                            _RatingEmojiScale(
+                              minRating: filters.minRating,
+                              onSelected: (v) => ctrl.setMinRating(v),
+                            ),
                           ],
                         ),
                       ),
@@ -227,8 +234,8 @@ class _FiltersCard extends ConsumerWidget {
                             min: 18,
                             max: 25,
                             divisions: 7,
-                            value: (filters.minAgeRestriction ?? 18)
-                                .toDouble(),
+                            value:
+                            (filters.minAgeRestriction ?? 18).toDouble(),
                             onChanged: (v) {
                               final age = v.round();
                               ctrl.setMinAgeRestriction(age);
@@ -271,12 +278,10 @@ class _FiltersCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 for (final type in VenueType.values
-                                    .where((t) =>
-                                t != VenueType.unknown)) ...[
+                                    .where((t) => t != VenueType.unknown)) ...[
                                   _TypeFilterChip(
                                     type: type,
-                                    selected: filters.types
-                                        .contains(type),
+                                    selected: filters.types.contains(type),
                                     onTap: () => ctrl.toggleType(type),
                                   ),
                                   const SizedBox(width: 12),
@@ -355,10 +360,9 @@ class _CardSection extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: verticalSpacerDefault),
-          const Divider(color: grey),
-          const SizedBox(height: verticalSpacerDefault),
           child,
+          const SizedBox(height: verticalSpacerSmall),
+          const Divider(color: grey),
         ],
       ),
     );
@@ -405,20 +409,109 @@ class _RatingFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = minRating ?? 0;
     String face;
-    if (r >= 4.5) {
+    if (r >= 4.0) {
       face = '😍';
-    } else if (r >= 3.5) {
+    } else if (r >= 3.0) {
       face = '😊';
     } else if (r >= 2.0) {
       face = '🙂';
     } else if (r > 0) {
-      face = '🙁';
+      face = '😐';
     } else {
       face = '⭐';
     }
-    return Text(face);
+    return const SizedBox.shrink();
   }
 }
+
+class _RatingEmojiScale extends StatelessWidget {
+  final double? minRating;
+  final ValueChanged<double?> onSelected;
+
+  const _RatingEmojiScale({
+    required this.minRating,
+    required this.onSelected,
+  });
+
+  // Single source of truth for emojis + their values
+  static const List<_RatingEmojiOption> _options = [
+    _RatingEmojiOption('⭐', null),  // Any
+    _RatingEmojiOption('😐', 2.0),
+    _RatingEmojiOption('🙂', 3.0),
+    _RatingEmojiOption('😊', 3.5),
+    _RatingEmojiOption('😍', 4.0),
+  ];
+
+  int _selectedIndexForRating(double? rating) {
+    final r = rating ?? 0;
+
+    // Any / off
+    if (r <= 0) return 0;
+
+    // Find the option (from index 1..) with the nearest value
+    int bestIndex = 1;
+    double bestDiff = double.infinity;
+
+    for (var i = 1; i < _options.length; i++) {
+      final v = _options[i].value!;
+      final diff = (v - r).abs();
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIndex = i;
+      }
+    }
+
+    return bestIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedIndex = _selectedIndexForRating(minRating);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(_options.length, (i) {
+          final opt = _options[i];
+          final isActive = i == selectedIndex;
+
+          return GestureDetector(
+            onTap: () => onSelected(opt.value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? owlPurple.withOpacity(.28)
+                    : transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                opt.emoji,
+                style: TextStyle(
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _RatingEmojiOption {
+  final String emoji;
+  final double? value;
+
+  const _RatingEmojiOption(this.emoji, this.value);
+}
+
 
 // ---- Distance label with tap-to-edit ----
 
