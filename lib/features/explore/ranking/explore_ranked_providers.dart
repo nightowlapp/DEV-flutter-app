@@ -1,6 +1,7 @@
 // lib/features/explore/ranking/explore_ranked_providers.dart
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
@@ -15,12 +16,15 @@ import '../search/search_controller.dart';
 import '../search/search_engine.dart';
 import 'venue_ranker.dart';
 
-final rankerRulesProvider =
-StateProvider<PointRules>((_) => const PointRules());
+/// Rules for ranking (we can later make this react to search, etc.)
+final rankerRulesProvider = StateProvider<PointRules>((_) => const PointRules());
 
 final _rankerAvProvider = Provider<AsyncValue<VenueRanker>>((ref) {
   final rules = ref.watch(rankerRulesProvider);
+
+  // IMPORTANT: mePrefsAvProvider must yield AsyncValue<UserPrefs>
   final prefsAv = ref.watch(mePrefsAvProvider);
+
   return prefsAv.when(
     data: (prefs) => AsyncData(VenueRanker(rules: rules, prefs: prefs)),
     loading: () => const AsyncLoading(),
@@ -45,8 +49,23 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
   final bootDone = ref.watch(venuesLocalBootDoneProvider);
   final all = bootDone ? ref.watch(allVenuesListProvider) : const <Venue>[];
 
-
   final rankerAv = ref.watch(_rankerAvProvider);
+
+  // // 👇 DEBUG: log prefs whenever ranker is ready (debug builds only)
+  // assert(() {
+  //   rankerAv.whenData((ranker) {
+  //     debugPrint(
+  //       'RANKER PREFS -> '
+  //           'types=${ranker.prefs?.preferredVenueTypes} '
+  //           'maxKm=${ranker.prefs?.maxDistanceKm} '
+  //           'age=${ranker.prefs?.age} '
+  //           'status=${ranker.prefs?.partyStatus} '
+  //           'gender=${ranker.prefs?.gender}',
+  //     );
+  //   });
+  //   return true;
+  // }());
+
   if (rankerAv.isLoading) return AsyncData(all.take(24).toList());
   if (rankerAv.hasError) {
     return AsyncError(rankerAv.error!, rankerAv.stackTrace!);

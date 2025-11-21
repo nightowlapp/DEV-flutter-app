@@ -5,6 +5,7 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 
+import '../filters/filter_controller.dart';
 import 'nearby_venue_count_provider.dart';
 import 'search_controller.dart';
 import 'search_match_provider.dart';
@@ -55,6 +56,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
     final nearbyCount = ref.watch(nearbyVenueCountProvider);
     final matchCount = ref.watch(searchMatchCountProvider);
     final hasText = widget.controller.text.trim().isNotEmpty;
+    final filtersActive = ref.watch(filtersActiveProvider);
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -117,7 +119,9 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 constraints: const BoxConstraints(),
                 icon: Icon(
                   tuneIcon,
-                  color: white, // TODO: highlight when filters active
+                  color: filtersActive
+                      ? owlPurple   // active color (override)
+                      : white,      // inactive color
                 ),
                 onPressed: widget.onTapTune,
                 tooltip: 'Filters',

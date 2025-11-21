@@ -1,3 +1,4 @@
+// lib/features/explore/filters/filters_popup.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
@@ -26,8 +27,7 @@ Future<void> showFiltersPopup(BuildContext context, WidgetRef ref) async {
       );
     },
     pageBuilder: (ctx, _, __) {
-      final dy =
-          PlatformConfig.height(context) * 0.035; // 10% of platform height
+      final dy = PlatformConfig.height(context) * 0.035;
       return Center(
         child: Transform.translate(
           offset: Offset(0, dy),
@@ -54,7 +54,6 @@ class _FiltersCard extends ConsumerWidget {
     final filters = ref.watch(filtersProvider);
     final ctrl = ref.read(filtersProvider.notifier);
 
-    // More rounded outer radius + grey border on the entire card
     final double outerRadius = borderRadiusDefault * 1.6;
 
     return Material(
@@ -63,14 +62,14 @@ class _FiltersCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(outerRadius),
-        side: BorderSide(color: grey, width: 1),
+        side: const BorderSide(color: grey, width: 1),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(outerRadius),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header (title + Open Today switch)
+            // HEADER
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 horizontalSpacerDefault,
@@ -82,55 +81,51 @@ class _FiltersCard extends ConsumerWidget {
                 children: [
                   Text('Filters', style: Styles.popupHeader),
                   const Spacer(),
-                  const Text('Open Now', style: TextStyle(color: white)),
-                  SizedBox(width: verticalSpacerSmall),
+                  const Text('Open now', style: TextStyle(color: white)),
+                  const SizedBox(width: verticalSpacerSmall),
                   Switch.adaptive(
                     value: filters.openNowOnly,
                     onChanged: ctrl.setOpenNow,
                     activeColor: owlPurple,
                     trackOutlineColor:
-                        WidgetStatePropertyAll(grey.withOpacity(.5)),
+                    WidgetStatePropertyAll(grey.withOpacity(.5)),
                     inactiveThumbColor: grey,
                     inactiveTrackColor: grey.withOpacity(.35),
                   ),
                 ],
               ),
             ),
-            Divider(color: grey),
+            const Divider(color: grey),
 
-            // Scrollable body
+            // BODY
             Expanded(
               child: Scrollbar(
                 thumbVisibility: true,
                 thickness: 3,
                 radius: Radius.circular(borderRadiusDefault),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    verticalSpacerDefault,
-                    verticalSpacerDefault,
-                    verticalSpacerDefault,
-                    verticalSpacerDefault,
-                  ),
+                  padding: const EdgeInsets.all(verticalSpacerDefault),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Distance (km)
+                      // Distance
                       _CardSection(
                         title: 'Distance',
                         trailing: Text(
-                          () {
-                            final v = filters.maxDistanceKm; //TODO should be default to user pref - then default amount (15km?)
-                            if (v == null || v == 0) return 'off';
+                              () {
+                            final v = filters.maxDistanceKm;
+                            if (v == null || v == 0) return 'Off';
                             if (v >= 60) return '60+ km';
                             return '${v.round()} km';
                           }(),
-                          style: Styles.basicText
-                              .copyWith(fontWeight: FontWeight.w600, color: owlPurple),
+                          style: Styles.basicText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: owlPurple,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Immediate saving on change -> provider already updates
                             SliderTheme(
                               data: SliderTheme.of(context).copyWith(
                                 activeTrackColor: owlPurple,
@@ -152,22 +147,23 @@ class _FiltersCard extends ConsumerWidget {
                         ),
                       ),
 
-                      SizedBox(height: verticalSpacerDefault),
+                      const SizedBox(height: verticalSpacerDefault),
 
-                      // Ratings
+                      // Rating
                       _CardSection(
-                        title: 'Ratings',
+                        title: 'Rating',
                         trailing: Text(
                           filters.minRating == null
-                              ? 'any'
+                              ? 'Any'
                               : '${filters.minRating!.toStringAsFixed(1)}+',
-                          style: Styles.basicText
-                              .copyWith(fontWeight: FontWeight.w600, color: owlPurple),
+                          style: Styles.basicText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: owlPurple,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Expanded(
-                              // Approximate the "fill from right" feel by inverting colors & direction
                               child: Directionality(
                                 textDirection: TextDirection.rtl,
                                 child: SliderTheme(
@@ -175,15 +171,16 @@ class _FiltersCard extends ConsumerWidget {
                                     activeTrackColor: grey.withOpacity(.35),
                                     inactiveTrackColor: owlPurple,
                                     thumbColor: owlPurple,
-                                    overlayColor: owlPurple.withOpacity(.15),
+                                    overlayColor:
+                                    owlPurple.withOpacity(.15),
                                   ),
                                   child: Slider(
                                     min: 0,
                                     max: 5,
                                     divisions: 10,
                                     value: (filters.minRating ?? 0),
-                                    onChanged: (v) =>
-                                        ctrl.setMinRating(v == 0 ? null : v),
+                                    onChanged: (v) => ctrl
+                                        .setMinRating(v == 0 ? null : v),
                                   ),
                                 ),
                               ),
@@ -194,30 +191,112 @@ class _FiltersCard extends ConsumerWidget {
                         ),
                       ),
 
-                      SizedBox(height: verticalSpacerDefault),
+                      const SizedBox(height: verticalSpacerDefault),
 
-                      //TODO NEED CHANGE
-                      // Types (chips)
+                      // Verified
                       _CardSection(
-                        title: 'Location type',
+                        title: 'Verification',
+                        trailing: Switch.adaptive(
+                          value: filters.verifiedOnly,
+                          onChanged: ctrl.setVerifiedOnly,
+                          activeColor: owlPurple,
+                          inactiveThumbColor: grey,
+                          inactiveTrackColor: grey.withOpacity(.35),
+                        ),
+                        child: Text(
+                          'Show only verified venues',
+                          style: Styles.basicText,
+                        ),
+                      ),
+
+                      const SizedBox(height: verticalSpacerDefault),
+
+                      // Age restriction
+                      _CardSection(
+                        title: 'Age restriction',
+                        trailing: Text(
+                          filters.minAgeRestriction == null
+                              ? 'Any'
+                              : '${filters.minAgeRestriction!}+',
+                          style: Styles.basicText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: owlPurple,
+                          ),
+                        ),
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: owlPurple,
+                            inactiveTrackColor: grey.withOpacity(.3),
+                            thumbColor: owlPurple,
+                          ),
+                          child: Slider(
+                            min: 0,
+                            max: 30,
+                            divisions: 30,
+                            value: (filters.minAgeRestriction ?? 0).toDouble(),
+                            onChanged: (v) {
+                              final age = v.round();
+                              ctrl.setMinAgeRestriction(age == 0 ? null : age);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: verticalSpacerDefault),
+
+                      // Price
+                      _CardSection(
+                        title: 'Entry price',
+                        trailing: Text(
+                          filters.maxEntryPrice == null
+                              ? 'Any'
+                              : '≤ ${filters.maxEntryPrice!.toStringAsFixed(0)}€',
+                          style: Styles.basicText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: owlPurple,
+                          ),
+                        ),
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: owlPurple,
+                            inactiveTrackColor: grey.withOpacity(.3),
+                            thumbColor: owlPurple,
+                          ),
+                          child: Slider(
+                            min: 0,
+                            max: 50,
+                            divisions: 50,
+                            value: (filters.maxEntryPrice ?? 0),
+                            onChanged: (v) {
+                              ctrl.setMaxEntryPrice(v == 0 ? null : v);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: verticalSpacerDefault),
+
+                      // Types
+                      _CardSection(
+                        title: 'Venue type',
                         trailing: Text(
                           filters.types.isEmpty
                               ? 'All'
-                              : '${filters.types.length}',
-                          style: Styles.basicText
-                              .copyWith(fontWeight: FontWeight.w600),
+                              : '${filters.types.length} selected',
+                          style: Styles.basicText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: owlPurple,
+                          ),
                         ),
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            // "All" chip visually selected when none chosen
+                            // "All" chip
                             FilterChip(
-                              //TODO remove all.
-                              label: Text(''),
+                              label: const Text('All types'),
                               selected: filters.types.isEmpty,
                               onSelected: (_) {
-                                // Clear by toggling all currently selected types off
                                 if (filters.types.isNotEmpty) {
                                   for (final t in filters.types.toList()) {
                                     ctrl.toggleType(t);
@@ -225,13 +304,14 @@ class _FiltersCard extends ConsumerWidget {
                                 }
                               },
                               selectedColor: owlPurple,
-                              backgroundColor: grey,
+                              backgroundColor: grey.withOpacity(.25),
                               side: BorderSide(
-                                color: filters.types.isEmpty ? owlPurple : grey,
+                                color:
+                                filters.types.isEmpty ? owlPurple : grey,
                                 width: 0.7,
                               ),
                               materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
+                              MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
                             ),
                             ...VenueType.values
@@ -241,29 +321,34 @@ class _FiltersCard extends ConsumerWidget {
                               return FilterChip(
                                 label: Text(
                                   Utility.formatString(t.name),
-                                  style: TextStyle(color: sel ? black : white),
+                                  style: TextStyle(
+                                      color: sel ? black : white),
                                 ),
                                 selected: sel,
                                 onSelected: (_) => ctrl.toggleType(t),
                                 selectedColor: owlPurple,
                                 backgroundColor: grey.withOpacity(.25),
                                 side: BorderSide(
-                                    color: sel ? owlPurple : grey, width: 0.7),
+                                  color: sel ? owlPurple : grey,
+                                  width: 0.7,
+                                ),
                                 materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
+                                MaterialTapTargetSize.shrinkWrap,
                                 visualDensity: VisualDensity.compact,
                               );
                             }),
                           ],
                         ),
                       ),
+
+                      // You can add a "Tags" section later that calls ctrl.toggleTag(tagId)
                     ],
                   ),
                 ),
               ),
             ),
 
-            // Footer actions
+            // FOOTER
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 horizontalSpacerDefault,
@@ -283,7 +368,6 @@ class _FiltersCard extends ConsumerWidget {
                         fontSize: fontSizeSmall,
                       ),
                     ),
-                    // TODO border
                   ),
                 ],
               ),
@@ -294,6 +378,7 @@ class _FiltersCard extends ConsumerWidget {
     );
   }
 }
+
 
 class _CardSection extends StatelessWidget {
   const _CardSection({
