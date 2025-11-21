@@ -56,8 +56,15 @@ class _FiltersCard extends ConsumerWidget {
 
     final double outerRadius = borderRadiusDefault * 1.6;
 
+    // Raw effective distance from filters or defaults (may be 0)
     final effectiveDistanceKm =
-      filters.maxDistanceKm ?? defaults.maxDistanceKm ?? 0.0;
+        filters.maxDistanceKm ?? defaults.maxDistanceKm ?? 0.0;
+
+    // Value we actually show in UI (never < 1)
+    final uiDistanceKm = (effectiveDistanceKm <= 0
+        ? (defaults.maxDistanceKm ?? 15.0)
+        : effectiveDistanceKm)
+        .clamp(1.0, 60.0);
 
     return Material(
       color: black,
@@ -102,9 +109,14 @@ class _FiltersCard extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Pro Tip: ', style: Styles.smallText.copyWith(color: owlPurple)),
-                Text('You can change your default filters in settings', style: Styles.smallText),
-
+                Text(
+                  'Pro Tip: ',
+                  style: Styles.smallText.copyWith(color: owlPurple),
+                ),
+                Text(
+                  'You can change your default filters in settings',
+                  style: Styles.smallText,
+                ),
               ],
             ),
             const Divider(color: grey),
@@ -129,8 +141,7 @@ class _FiltersCard extends ConsumerWidget {
                           currentKm: filters.maxDistanceKm,
                           defaultKm: defaults.maxDistanceKm,
                           onTap: () async {
-                            final initial =
-                              effectiveDistanceKm <= 0 ? 15.0 : effectiveDistanceKm;
+                            final initial = uiDistanceKm;
                             final result = await _promptForNumber(
                               context: context,
                               title: 'Max distance (km)',
@@ -144,8 +155,7 @@ class _FiltersCard extends ConsumerWidget {
                             if (result <= 0) {
                               // 0 → "back to default" (use user prefs)
                               ctrl.clearMaxDistance();
-                            }
-                            else {
+                            } else {
                               ctrl.setMaxDistanceKm(result);
                             }
                           },
@@ -164,20 +174,17 @@ class _FiltersCard extends ConsumerWidget {
                                 min: 1,
                                 max: 60,
                                 divisions: 59,
-                                // When filter value is null → show the user-pref default
-                                value: effectiveDistanceKm.clamp(1, 60),
+                                value: uiDistanceKm,
                                 onChanged: (v) {
-                                  if (v <= 0) {
-                                    // Slider all the way left → default (no explicit override)
-                                    ctrl.setMaxDistanceKm(1);
-                                  }
-                                  else {
-                                    ctrl.setMaxDistanceKm(v);
-                                  }
+                                  ctrl.setMaxDistanceKm(v);
                                 },
                               ),
                             ),
-                            const _EmojiScale(),
+                            const SizedBox(height: 8),
+                            _DistanceEmojiScale(
+                              distanceKm: uiDistanceKm,
+                              onSelected: (km) => ctrl.setMaxDistanceKm(km),
+                            ),
                           ],
                         ),
                       ),
@@ -187,8 +194,8 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Rating',
                         trailing: Text(
                           filters.minRating == null
-                            ? 'Any'
-                            : '${filters.minRating!.toStringAsFixed(1)}+',
+                              ? 'Any'
+                              : '${filters.minRating!.toStringAsFixed(1)}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -239,8 +246,8 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Age restriction',
                         trailing: Text(
                           filters.minAgeRestriction == null
-                            ? '18+'
-                            : '${filters.minAgeRestriction!}+',
+                              ? '18+'
+                              : '${filters.minAgeRestriction!}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -271,8 +278,8 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Venue type',
                         trailing: Text(
                           filters.types.isEmpty
-                            ? 'All'
-                            : '${filters.types.length}',
+                              ? 'All'
+                              : '${filters.types.length}',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -298,15 +305,15 @@ class _FiltersCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 for (final type in VenueType.values
-                                  .where(
-                                    (t) => t != VenueType.unknown)) ...[
-                                    _TypeFilterChip(
-                                      type: type,
-                                      selected: filters.types.contains(type),
-                                      onTap: () => ctrl.toggleType(type),
-                                    ),
-                                    const SizedBox(width: 12),
-                                  ],
+                                    .where(
+                                        (t) => t != VenueType.unknown)) ...[
+                                  _TypeFilterChip(
+                                    type: type,
+                                    selected: filters.types.contains(type),
+                                    onTap: () => ctrl.toggleType(type),
+                                  ),
+                                  const SizedBox(width: 12),
+                                ],
                                 const SizedBox(width: 8),
                               ],
                             ),
@@ -328,16 +335,19 @@ class _FiltersCard extends ConsumerWidget {
                 horizontalSpacerSmall,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
                     onPressed: ctrl.reset,
-                    child: const Text(
-                      'Reset',
-                      style: TextStyle(
-                        color: red,
-                        fontSize: fontSizeSmall,
-                      ),
+                    child: Text(
+                      'Reset Filters',
+                      style: Styles.smallText.copyWith(color: red),
+                    ),
+                  ),  TextButton(
+                    onPressed: ctrl.reset,
+                    child: Text(
+                      'Reset Filters',
+                      style: Styles.smallText.copyWith(color: red),
                     ),
                   ),
                 ],
@@ -398,11 +408,11 @@ class _CardSection extends StatelessWidget {
           child: child,
         ),
         const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(
+        const Padding(
+          padding: EdgeInsets.symmetric(
             horizontal: horizontalSpacerDefault,
           ),
-          child: const Divider(
+          child: Divider(
             color: grey,
             height: 0, // no extra vertical padding from Divider itself
           ),
@@ -413,37 +423,98 @@ class _CardSection extends StatelessWidget {
   }
 }
 
-class _EmojiScale extends StatelessWidget {
-  const _EmojiScale();
+/// Distance emoji scale – behaves like Rating emoji scale:
+/// - One emoji always active (nearest to distanceKm)
+/// - Clicking emoji sets the distance (and moves the slider)
+class _DistanceEmojiScale extends StatelessWidget {
+  final double distanceKm;
+  final ValueChanged<double> onSelected;
+
+  const _DistanceEmojiScale({
+    required this.distanceKm,
+    required this.onSelected,
+  });
+
+  // Single source of truth for emojis + their corresponding km values
+  static const List<_DistanceEmojiOption> _options = [
+    _DistanceEmojiOption('🚶', 1.5),   // very close
+    _DistanceEmojiOption('🚲', 5.0),   // nearby
+    _DistanceEmojiOption('🚌', 20.0),  // in the city
+    _DistanceEmojiOption('🚄', 40.0),  // out of town
+    _DistanceEmojiOption('✈️', 60.0),  // far away / max
+  ];
+
+  int _selectedIndexForDistance(double value) {
+    double d = value;
+    if (d <= 0) d = _options.first.km;
+
+    // Plane only when at max (60+)
+    if (d >= 60) {
+      return _options.length - 1; // ✈️
+    }
+
+    // Find nearest option among all EXCEPT plane
+    int bestIndex = 0;
+    double bestDiff = (d - _options[0].km).abs();
+
+    for (var i = 1; i < _options.length - 1; i++) { // <-- note -1 here
+      final diff = (d - _options[i].km).abs();
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIndex = i;
+      }
+    }
+
+    return bestIndex;
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    const stops = <String>['🚶', '🚲', '🚌', '🚄', '✈️'];
+    final selectedIndex = _selectedIndexForDistance(distanceKm);
+
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: stops.map((s) {
-            final isEmoji = RegExp(r'[^\d]').hasMatch(s);
-            return SizedBox(
-              width: 28,
-              child: Center(
-                child: Text(
-                  s,
-                  style: TextStyle(
-                    fontSize: isEmoji ? 16 : 12,
-                    color: white.withOpacity(.85),
-                    fontWeight:
-                    isEmoji ? FontWeight.w600 : FontWeight.w400,
-                  ),
+        children: List.generate(_options.length, (i) {
+          final opt = _options[i];
+          final isActive = i == selectedIndex;
+
+          return GestureDetector(
+            onTap: () => onSelected(opt.km),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? owlPurple.withOpacity(.28)
+                    : transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                opt.emoji,
+                style: TextStyle(
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
-            );
-          }
-        ).toList(),
+            ),
+          );
+        }),
       ),
     );
   }
+}
+
+class _DistanceEmojiOption {
+  final String emoji;
+  final double km;
+
+  const _DistanceEmojiOption(this.emoji, this.km);
 }
 
 class _RatingFace extends StatelessWidget {
@@ -456,17 +527,13 @@ class _RatingFace extends StatelessWidget {
     String face;
     if (r >= 4.0) {
       face = '😍';
-    }
-    else if (r >= 3.0) {
+    } else if (r >= 3.0) {
       face = '😊';
-    }
-    else if (r >= 2.0) {
+    } else if (r >= 2.0) {
       face = '🙂';
-    }
-    else if (r > 0) {
+    } else if (r > 0) {
       face = '😐';
-    }
-    else {
+    } else {
       face = '⭐';
     }
     // currently hidden – you can show it if you want
@@ -523,34 +590,33 @@ class _RatingEmojiScale extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(_options.length, (i) {
-            final opt = _options[i];
-            final isActive = i == selectedIndex;
+          final opt = _options[i];
+          final isActive = i == selectedIndex;
 
-            return GestureDetector(
-              onTap: () => onSelected(opt.value),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive
+          return GestureDetector(
+            onTap: () => onSelected(opt.value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
                     ? owlPurple.withOpacity(.28)
                     : transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  opt.emoji,
-                  style: TextStyle(
-                    fontSize: isActive ? iconSizeMedium : iconSizeDefault,
-                    color: isActive ? owlPurple : white.withOpacity(.85),
-                  ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                opt.emoji,
+                style: TextStyle(
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
-            );
-          }
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -581,23 +647,20 @@ class _DistanceLabel extends StatelessWidget {
     // If the user hasn't picked a custom distance yet,
     // show their preference-based default instead of "Off".
     final double? baseKm = currentKm ?? defaultKm;
-    String text;
+
+    final double km = baseKm!; // non-null here
+
+    final String displayKm =
+    km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);    String text;
 
     if (baseKm == null) {
       // Should only happen while prefs are still loading.
       text = 'Any distance';
-    }
-    else if (baseKm >= 60) {
+    } else if (baseKm >= 60) {
       // Right-most position is "60+ km"
       text = '60+ km';
-    }
-    else if (defaultKm != null &&
-      (baseKm - defaultKm!).abs() < 0.5) {
-      // Close enough to the user-pref value → show "Default"
-      text = '${baseKm.round()} km';
-    }
-    else {
-      text = '${baseKm.round()} km';
+    } else {
+      text = '$displayKm km';
     }
 
     return InkWell(
@@ -717,7 +780,7 @@ Future<double?> _promptForNumber({
   String? suffix,
 }) async {
   final controller =
-    TextEditingController(text: initial.toStringAsFixed(0));
+  TextEditingController(text: initial.toStringAsFixed(0));
 
   return showDialog<double>(
     context: context,
