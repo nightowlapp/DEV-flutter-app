@@ -1,18 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
+import '../../../core/storage/venues_sso.dart';
 import '../../../data/providers/users/user_providers.dart';
+import '../../../data/providers/venues/venue_providers.dart';
 import 'advanced_search_filter.dart';
 
 /// Build defaults once from user prefs.
 /// - openNowOnly = true
 /// - maxDistanceKm = user's pref (if present)
 /// - types = all (empty set = no restriction)
+// Build defaults once from user prefs.
 final _defaultFiltersProvider =
 Provider.autoDispose<AdvancedSearchFilter>((ref) {
-  // Use the same prefs the ranker uses so defaults stay in sync.
   final prefsAv = ref.watch(mePrefsAvProvider); // AsyncValue<UserPrefs>
   final prefs = prefsAv.asData?.value;
+
+  // Which age restrictions actually exist today
+  final ageOptions = ref.watch(ageRestrictionOptionsProvider);
+  final sortedAges = [...ageOptions]..sort();
+  final lowestAge = sortedAges.isNotEmpty ? sortedAges.first : 18;
+
+  int? defaultMinAge;
+
+  if (sortedAges.isNotEmpty) {
+    final userAge = prefs?.age;
+
+    if (userAge != null && userAge < 25) {
+      // Pick the highest actual restriction <= userAge, else lowest available
+      final eligible = sortedAges.where((a) => a <= userAge).toList();
+      defaultMinAge = eligible.isNotEmpty ? eligible.last : lowestAge;
+    } else {
+      // Otherwise prefer 18+ if it exists, else the lowest available restriction
+      defaultMinAge = sortedAges.contains(18) ? 18 : lowestAge; //TODO ages should not be able to go below 18.
+    }
+  }
 
   return AdvancedSearchFilter(
     openNowOnly: true,
@@ -20,11 +42,12 @@ Provider.autoDispose<AdvancedSearchFilter>((ref) {
     minRating: null,
     types: const {}, // empty == all
     verifiedOnly: false,
-    minAgeRestriction: null,
+    minAgeRestriction: defaultMinAge,
     maxEntryPrice: null,
     includeTags: const {},
   );
 });
+
 
 final filtersProvider =
 StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
@@ -63,6 +86,34 @@ final filtersActiveProvider = Provider.autoDispose<bool>((ref) {
 final filterDefaultsProvider =
 Provider.autoDispose<AdvancedSearchFilter>((ref) {
   return ref.watch(_defaultFiltersProvider);
+});
+
+// ---- Which age restrictions actually exist in venues *today* ----
+final ageRestrictionOptionsProvider =
+Provider.autoDispose<List<int>>((ref) {
+  final bootDone = ref.watch(venuesLocalBootDoneProvider);
+  if (!bootDone) {
+    // While venues boot, fall back to 18+
+    return const [18];
+  }
+
+  final venues = ref.watch(allVenuesListProvider); // List<Venue>
+  final now = DateTime.now();
+  final ages = <int>{};
+
+  for (final v in venues) {
+    final age = v.effectiveAgeRestriction(now); // uses age_restriction[today] or default_age_rest
+    if (age > 0) {
+      ages.add(age);
+    }
+  }
+
+  if (ages.isEmpty) {
+    ages.add(18);
+  }
+
+  final list = ages.toList()..sort();
+  return list;
 });
 
 class FilterController extends StateNotifier<AdvancedSearchFilter> {

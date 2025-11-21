@@ -1,4 +1,3 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
@@ -7,6 +6,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
+import '../../../data/providers/users/user_providers.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/reusable/ui/popup_dialog_default.dart';
 import 'filter_controller.dart';
@@ -59,7 +59,23 @@ class _FiltersCard extends ConsumerWidget {
     final defaults = ref.watch(filterDefaultsProvider);
     final ctrl = ref.read(filtersProvider.notifier);
 
+    // User prefs (for gender / age)
+    final prefsAv = ref.watch(mePrefsAvProvider);
+    final prefs = prefsAv.asData?.value;
+    final gender = prefs?.gender ?? Gender.other;
 
+    // Age restriction options available today (from venues)
+    final ageOptionsRaw = ref.watch(ageRestrictionOptionsProvider);
+    final ageOptions = [...ageOptionsRaw]..sort();
+
+    // Fallback age (if somehow empty → 18)
+    final fallbackAge = ageOptions.isNotEmpty ? ageOptions.first : 18;
+
+    // Current effective age value (filter overrides defaults)
+    final currentAgeValue =
+      filters.minAgeRestriction ??
+        defaults.minAgeRestriction ??
+        fallbackAge;
 
     final double outerRadius = borderRadiusDefault * 1.6;
 
@@ -249,13 +265,11 @@ class _FiltersCard extends ConsumerWidget {
                         ),
                       ),
 
-                      // ---- Age restriction (18–25) ----
+                      // ---- Age restriction (dynamic, based on venues) ----
                       _CardSection(
                         title: 'Age Restriction',
                         trailing: Text(
-                          filters.minAgeRestriction == null
-                            ? '18+'
-                            : '${filters.minAgeRestriction!}+',
+                          '${currentAgeValue}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -264,30 +278,54 @@ class _FiltersCard extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: owlPurple,
-                                inactiveTrackColor: grey.withOpacity(.3),
-                                thumbColor: owlPurple,
-                              ),
-                              child: Slider(
-                                min: 18,
-                                max: 25,
-                                divisions: 7,
-                                value:
-                                (filters.minAgeRestriction ?? 18).toDouble(),
-                                onChanged: (v) {
-                                  final age =
-                                    v.round().clamp(18, 25);
-                                  ctrl.setMinAgeRestriction(age);
-                                },
-                              ),
+                            Builder(
+                              builder: (context) {
+                                // Slider works on indices over actual age options
+                                final ages = ageOptions.isNotEmpty ? ageOptions : <int>[18];
+
+                                int selectedIndex = 0;
+                                if (ages.length > 1) {
+                                  // find nearest index to currentAgeValue
+                                  int bestIdx = 0;
+                                  int bestDiff = (ages[0] - currentAgeValue).abs();
+                                  for (var i = 1; i < ages.length; i++) {
+                                    final diff = (ages[i] - currentAgeValue).abs();
+                                    if (diff < bestDiff) {
+                                      bestDiff = diff;
+                                      bestIdx = i;
+                                    }
+                                  }
+                                  selectedIndex = bestIdx;
+                                }
+
+                                final maxIndex = ages.length - 1;
+
+                                return SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    activeTrackColor: owlPurple,
+                                    inactiveTrackColor: grey.withOpacity(.3),
+                                    thumbColor: owlPurple,
+                                  ),
+                                  child: Slider(
+                                    min: 0,
+                                    max: maxIndex.toDouble(),
+                                    divisions: maxIndex > 0 ? maxIndex : null,
+                                    value: selectedIndex.toDouble(),
+                                    onChanged: (v) {
+                                      final idx = v.round().clamp(0, maxIndex);
+                                      final age = ages[idx];
+                                      ctrl.setMinAgeRestriction(age);
+                                    },
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 8),
                             _AgeEmojiScale(
-                              minAge: filters.minAgeRestriction ?? 18,
-                              onSelected: (age) =>
-                              ctrl.setMinAgeRestriction(age),
+                              minAge: currentAgeValue,
+                              ageOptions: ageOptions,
+                              gender: gender,
+                              onSelected: (age) => ctrl.setMinAgeRestriction(age),
                             ),
                           ],
                         ),
@@ -318,8 +356,8 @@ class _FiltersCard extends ConsumerWidget {
                                 children: () {
                                   // stable base order from enum
                                   final allTypes = VenueType.values
-                                      .where((t) => t != VenueType.unknown)
-                                      .toList();
+                                    .where((t) => t != VenueType.unknown)
+                                    .toList();
 
                                   final selectedTypes = <VenueType>[];
                                   final unselectedTypes = <VenueType>[];
@@ -327,7 +365,8 @@ class _FiltersCard extends ConsumerWidget {
                                   for (final t in allTypes) {
                                     if (filters.types.contains(t)) {
                                       selectedTypes.add(t);
-                                    } else {
+                                    }
+                                    else {
                                       unselectedTypes.add(t);
                                     }
                                   }
@@ -399,13 +438,13 @@ class _FiltersCard extends ConsumerWidget {
                                   children.add(const SizedBox(width: 4));
 
                                   return children;
-                                }(),
+                                }
+                                (),
                               ),
                             ),
                           ),
                         ),
                       ),
-
 
                     ],
                   ),
@@ -430,7 +469,7 @@ class _FiltersCard extends ConsumerWidget {
                       'Reset Filters',
                       style: Styles.smallText.copyWith(color: red),
                     ),
-                  ),          TextButton(
+                  ), TextButton(
                     onPressed: ctrl.reset,
                     child: Text(
                       'Reset Filters',
@@ -724,90 +763,96 @@ class _RatingEmojiOption {
   const _RatingEmojiOption(this.emoji, this.value);
 }
 
-/// Age emoji scale – same behavior as distance/rating:
+/// Age emoji scale –
 /// - One emoji always active (nearest to minAge)
 /// - Clicking emoji sets minAge (and moves the slider)
+/// - Uses actual age restriction options from venues
+/// - Picks male / female emoji set based on user gender
 class _AgeEmojiScale extends StatelessWidget {
   final int? minAge;
+  final List<int> ageOptions;
+  final Gender gender;
   final ValueChanged<int> onSelected;
 
   const _AgeEmojiScale({
     required this.minAge,
+    required this.ageOptions,
+    required this.gender,
     required this.onSelected,
   });
 
-  static const List<_AgeEmojiOption> _options = [
-    _AgeEmojiOption('🧑‍🎓', 18), // student / youngest
-    _AgeEmojiOption('🧑', 20),    // young adult
-    _AgeEmojiOption('🕺', 21),    // party age
-    _AgeEmojiOption('🧑‍💼', 23), // working adult
-    _AgeEmojiOption('🧑‍🦳', 25), // oldest (25+)
-  ];
+  @override
+  Widget build(BuildContext context) {
+    if (ageOptions.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  int _selectedIndexForAge(int? age) {
-    final a = age ?? 18;
+    final ages = [...ageOptions]..sort();
+    final current = minAge ?? ages.first;
 
-    int bestIndex = 0;
-    int bestDiff = (a - _options[0].age).abs();
-
-    for (var i = 1; i < _options.length; i++) {
-      final diff = (a - _options[i].age).abs();
+    // Find nearest age index
+    int selectedIndex = 0;
+    int bestDiff = (ages[0] - current).abs();
+    for (var i = 1; i < ages.length; i++) {
+      final diff = (ages[i] - current).abs();
       if (diff < bestDiff) {
         bestDiff = diff;
-        bestIndex = i;
+        selectedIndex = i;
       }
     }
 
-    return bestIndex;
-  }
+    // Gender-specific emoji sets
+    const maleEmojis   = ['🧑‍🎓', '🧑', '🕺', '🧔', '👴'];
+    const femaleEmojis = ['🧑‍🎓', '👩', '💃', '👩‍🦰', '👵'];
 
-  @override
-  Widget build(BuildContext context) {
-    final selectedIndex = _selectedIndexForAge(minAge);
+    final useFemale = gender != Gender.male;
+    final base = useFemale ? femaleEmojis : maleEmojis;
+
+    // 👇 age-based mapping: old face ONLY at 25+
+    String emojiForAge(int age) {
+      if (age >= 25) return base[4];      // 👨‍🦳 / 👩‍🦳  ← always 25+
+      if (age >= 23) return base[3];      // 👨‍💼 / 👩‍💼  (23–24)
+      if (age >= 21) return base[2];      // 🕺 / 💃      (21–22)
+      if (age >= 20) return base[1];      // 👨 / 👩      (20)
+      return base[0];                     // 👨‍🎓 / 👩‍🎓  (18–19)
+    }
 
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(_options.length, (i) {
-            final opt = _options[i];
-            final isActive = i == selectedIndex;
+        children: List.generate(ages.length, (i) {
+          final age = ages[i];
+          final emoji = emojiForAge(age);
+          final isActive = i == selectedIndex;
 
-            return GestureDetector(
-              onTap: () => onSelected(opt.age),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive
+          return GestureDetector(
+            onTap: () => onSelected(age),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: isActive
                     ? owlPurple.withOpacity(.28)
                     : transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  opt.emoji,
-                  style: TextStyle(
-                    fontSize: isActive ? iconSizeMedium : iconSizeDefault,
-                    color: isActive ? owlPurple : white.withOpacity(.85),
-                  ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                emoji,
+                style: TextStyle(
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
-            );
-          }
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
-}
-
-class _AgeEmojiOption {
-  final String emoji;
-  final int age;
-
-  const _AgeEmojiOption(this.emoji, this.age);
 }
 
 // ---- Distance label with tap-to-edit ----
