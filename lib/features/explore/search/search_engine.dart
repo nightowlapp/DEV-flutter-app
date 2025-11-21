@@ -1,10 +1,19 @@
 // lib/features/explore/search/search_engine.dart
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
+import 'package:nightowlcode/shared/utility/european_location_mapper.dart'
+as eu hide LatLng;
+
+// ---------------------------------------------------------------------------
+// Public provider
+// ---------------------------------------------------------------------------
 
 typedef NowInTz = DateTime Function(String? tzid);
 
@@ -16,10 +25,15 @@ Provider.autoDispose<VenueSearchEngine>((ref) {
   return VenueSearchEngine(nowInTz: nowInTz);
 });
 
+// ---------------------------------------------------------------------------
+// Engine
+// ---------------------------------------------------------------------------
+
 class VenueSearchEngine {
   VenueSearchEngine({required this.nowInTz});
 
   final NowInTz nowInTz;
+  final eu.EuropeanLocationMapper _locMapper = eu.EuropeanLocationMapper();
 
   /// Main entry:
   ///
@@ -40,20 +54,32 @@ class VenueSearchEngine {
     return input.where((v) => _matches(v, spec)).toList(growable: false);
   }
 
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // TOKENIZATION / NORMALIZATION
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
+  /// Split on whitespace but keep things like "4,2*", "21+" and "5km" intact.
+  /// Also supports quoted phrases: "deep house" is treated as one term.
   List<String> _tokenize(String raw) {
     final norm = _normalize(raw);
-    return norm.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+
+    // Matches either "quoted phrase" OR bare non-space chunk
+    final rx = RegExp(r'"([^"]+)"|(\S+)');
+    final matches = rx.allMatches(norm);
+
+    final out = <String>[];
+    for (final m in matches) {
+      final phrase = m.group(1);
+      final token = m.group(2);
+      final t = (phrase ?? token ?? '').trim();
+      if (t.isNotEmpty) out.add(t);
+    }
+    return out;
   }
 
-  String _normalize(String s) => s.toLowerCase(); // simple, ASCII-safe
-
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // PARSING INTO SPEC
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
   _Spec _parse(List<String> tokens, {LatLng? userLoc}) {
     final spec = _Spec()..userLoc = userLoc;
@@ -63,36 +89,36 @@ class VenueSearchEngine {
       if (t.isEmpty) continue;
 
       // OPEN
-      if (t == 'open' || t == 'opennow' || t == 'now') {
+      if (_openNowTerms.contains(t)) {
         spec.openNow = true;
         continue;
       }
-      if (t == 'opentoday' || t == 'today') {
+      if (_openTodayTerms.contains(t)) {
         spec.openToday = true;
         continue;
       }
 
       // VERIFIED
-      if (t == 'verified' || t == 'official') {
+      if (_verifiedTerms.contains(t)) {
         spec.verifiedOnly = true;
         continue;
       }
 
       // AGE: 18+, age:18, age>=18, a18+, 21+
-      final age = _parseNumberWithPlus(t, prefixes: const ['age', 'a']);
+      final age = _parseNumberWithPlus(t, prefixes: const ['age', 'a', 'alder']);
       if (age != null && age >= 10) {
         spec.minAge = age;
         continue;
       }
 
-      // RATING: r:4.2, rating>=4, 4.5★, 4*, 4*+, 4+
+      // RATING: r:4.2, rating>=4, 4.5★, 4*, 4*+, 4+, 4,2*, 4,2
       final rating = _parseRating(t);
       if (rating != null) {
         spec.minRating = rating;
         continue;
       }
 
-      // PRICE: price<=10 / p<=10 / €10 / $10
+      // PRICE: price<=10 / p<=10 / €10 / $10 / 10kr
       final price = _parsePriceMax(t);
       if (price != null) {
         spec.maxPrice = price;
@@ -106,23 +132,28 @@ class VenueSearchEngine {
         continue;
       }
 
-      // DISTANCE: within:5km / <=5km / 5km
+      // DISTANCE: within:5km / <=5km / 5km / 5,5km
       final distKm = _parseDistanceKm(t);
       if (distKm != null) {
         spec.maxDistanceKm = distKm;
         continue;
       }
 
-      // otherwise → free text term
-      spec.textTerms.add(t);
+      // otherwise → free text term (but expand basic synonyms like "klub")
+      final synonym = _synonymMap[t];
+      if (synonym != null) {
+        spec.textTerms.add(synonym);
+      } else {
+        spec.textTerms.add(t);
+      }
     }
 
     return spec;
   }
 
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // MATCHING
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
   bool _matches(Venue v, _Spec s) {
     final now = nowInTz(v.timeZoneId);
@@ -164,15 +195,28 @@ class VenueSearchEngine {
     // TEXT: name / alt name / desc / city / country / tags / misc
     if (s.textTerms.isNotEmpty) {
       final blob = _buildTextBlob(v);
+      final nameBlob = _normalize(
+        '${v.displayName.isNotEmpty ? v.displayName : v.name} '
+            '${v.city} '
+            '${v.countryCode}',
+      );
+
       for (final term in s.textTerms) {
-        if (!blob.contains(term)) return false;
+        // exact substring in giant blob
+        if (blob.contains(term)) continue;
+
+        // fuzzy within names / city / tags
+        if (_fuzzyMatchInText(term, nameBlob)) continue;
+
+        // otherwise → no match
+        return false;
       }
     }
 
     return true;
   }
 
-  /// Big lowercase blob of searchable fields.
+  /// Big lowercase-then-folded blob of searchable fields.
   String _buildTextBlob(Venue v) {
     final displayName =
     (v.displayName.isNotEmpty ? v.displayName : v.name).trim();
@@ -186,7 +230,7 @@ class VenueSearchEngine {
     // description
       ..write(v.description)
       ..write(' ')
-    // location
+    // location (raw from venue)
       ..write(v.city)
       ..write(' ')
       ..write(v.countryCode)
@@ -213,7 +257,52 @@ class VenueSearchEngine {
       ..write(' ')
       ..write('${v.defaultAgeRestriction}+ ')
     // rating forms
-      ..write(_ratingBlob(v));
+      ..write(_ratingBlob(v))
+      ..write(' ');
+
+    // Enrich with location names from mapper (English city/country) + synonyms
+    try {
+      final loc = _locMapper.resolve(
+        lat: v.entry.lat,
+        lon: v.entry.lng,
+      );
+
+      if (loc.countryName != null) {
+        final countryName = loc.countryName!;
+        sb
+          ..write(countryName)
+          ..write(' ');
+
+        final key = _normalize(countryName);
+        final syns = _countrySynonyms[key];
+        if (syns != null) {
+          for (final s in syns) {
+            sb
+              ..write(s)
+              ..write(' ');
+          }
+        }
+      }
+
+      if (loc.cityName != null) {
+        final cityName = loc.cityName!;
+        sb
+          ..write(cityName)
+          ..write(' ');
+
+        final key = _normalize(cityName);
+        final syns = _citySynonyms[key];
+        if (syns != null) {
+          for (final s in syns) {
+            sb
+              ..write(s)
+              ..write(' ');
+          }
+        }
+      }
+    } catch (_) {
+      // Mapper failures should never break search.
+    }
 
     return _normalize(sb.toString());
   }
@@ -223,16 +312,23 @@ class VenueSearchEngine {
     if (rating == null) return '';
     final r1 = rating.toStringAsFixed(1); // "4.6"
     final r0 = rating.round().toString(); // "5"
-    return '$r1 $r0 ${r1}* ${r0}* ';
+
+    // Also add comma variants for European decimal-style searches
+    final r1Comma = r1.replaceAll('.', ',');
+
+    return '$r1 $r0 ${r1}* ${r0}* $r1Comma ${r1Comma}* ';
   }
 
-  // ---------------------------------------------------------------------------
-  // HELPERS
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // HELPERS – parsing
+  // -------------------------------------------------------------------------
 
   double? _parseRating(String t) {
+    // Normalize decimal comma → dot so "4,2*" becomes "4.2*"
+    var s = t.replaceAll(',', '.');
+
     // Strip star symbols first so "4*+", "4★" etc become "4+" / "4".
-    var s = t.replaceAll('★', '').replaceAll('*', '').trim();
+    s = s.replaceAll('★', '').replaceAll('*', '').trim();
 
     // rating:4.2 / r:4 / rating>=4 / r>=4
     final p = RegExp(r'^(r|rating)[:=<>]*\s*([0-5](?:\.\d)?)$');
@@ -262,55 +358,93 @@ class VenueSearchEngine {
   }
 
   double? _parsePriceMax(String t) {
-    // price<=10 / p<=10 / €10 / $10
+    // price<=10 / p<=10 / €10 / $10 / 10kr / 10,5
+    var s = t.toLowerCase();
+    s = s.replaceAll(',', '.');
+
     final rx = RegExp(
-      r'^(?:price|p)?\s*(?:<=|=|:)?\s*(?:€|\$)?\s*([0-9]+(?:\.[0-9]+)?)$',
+      r'^(?:price|pris|p)?\s*(?:<=|=|:)?\s*(?:€|\$)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:kr)?$',
     );
-    final m = rx.firstMatch(t);
+    final m = rx.firstMatch(s);
     return m == null ? null : double.tryParse(m.group(1)!);
   }
 
   double? _parseDistanceKm(String t) {
-    // within:5km / dist:5km / <=5km / 5km
+    // within:5km / dist:5km / <=5km / 5km / 5,5km
+    var s = t.toLowerCase();
+    s = s.replaceAll(',', '.');
+
     final rx = RegExp(
-      r'^(?:within|dist|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$',
+      r'^(?:within|dist|distance|d)?[:=<>]*\s*([0-9]+(?:\.[0-9]+)?)\s*km$',
     );
-    final m = rx.firstMatch(t);
+    final m = rx.firstMatch(s);
     return m == null ? null : double.tryParse(m.group(1)!);
+  }
+
+  // -------------------------------------------------------------------------
+  // HELPERS – fuzzy matching
+  // -------------------------------------------------------------------------
+
+  bool _fuzzyMatchInText(String term, String text) {
+    final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+
+    for (final w in words) {
+      // fast exact
+      if (w == term) return true;
+
+      // skip wildly different lengths (optimization)
+      final lenDiff = (w.length - term.length).abs();
+      if (lenDiff > 2) continue;
+
+      final dist = _levenshtein(term, w);
+
+      // Cheap but effective thresholds:
+      if (term.length <= 4) {
+        if (dist <= 1) return true; // e.g. "klub" vs "club"
+      } else if (dist <= 2) {
+        return true; // e.g. "copenhagn" vs "copenhagen"
+      }
+    }
+    return false;
+  }
+
+  int _levenshtein(String a, String b) {
+    final la = a.length;
+    final lb = b.length;
+    if (la == 0) return lb;
+    if (lb == 0) return la;
+
+    final dp = List<List<int>>.generate(
+      la + 1,
+          (_) => List<int>.filled(lb + 1, 0),
+    );
+
+    for (var i = 0; i <= la; i++) {
+      dp[i][0] = i;
+    }
+    for (var j = 0; j <= lb; j++) {
+      dp[0][j] = j;
+    }
+
+    for (var i = 1; i <= la; i++) {
+      for (var j = 1; j <= lb; j++) {
+        final cost = a.codeUnitAt(i - 1) == b.codeUnitAt(j - 1) ? 0 : 1;
+        dp[i][j] = math.min(
+          math.min(
+            dp[i - 1][j] + 1, // deletion
+            dp[i][j - 1] + 1, // insertion
+          ),
+          dp[i - 1][j - 1] + cost, // substitution
+        );
+      }
+    }
+    return dp[la][lb];
   }
 }
 
-// Extend with your set of types/synonyms
-final Map<String, VenueType> _typeMap = {
-  // Plain words
-  'club': VenueType.club,
-  'clubs': VenueType.club,
-  'nightclub': VenueType.club,
-  'nightclubs': VenueType.club,
-  'bar': VenueType.bar,
-  'bars': VenueType.bar,
-  'pub': VenueType.pub,
-  'pubs': VenueType.pub,
-
-  // Specific bar subtypes
-  'beer_bar': VenueType.beer_bar,
-  'beer bar': VenueType.beer_bar,
-  'cocktail_bar': VenueType.cocktail_bar,
-  'cocktail bar': VenueType.cocktail_bar,
-  'gay_bar': VenueType.gay_bar,
-  'gay bar': VenueType.gay_bar,
-  'wine_bar': VenueType.wine_bar,
-  'wine bar': VenueType.wine_bar,
-  'sports_bar': VenueType.sports_bar,
-  'sports bar': VenueType.sports_bar,
-  'karaoke_bar': VenueType.karaoke_bar,
-  'karaoke bar': VenueType.karaoke_bar,
-  'karaoke': VenueType.karaoke_bar,
-  //TODO improve with all kinds of search - "københavn" and so on.
-
-  // Enum names as fallback (covers everything else)
-  for (final e in VenueType.values) describeEnum(e).toLowerCase(): e,
-};
+// ---------------------------------------------------------------------------
+// SPEC
+// ---------------------------------------------------------------------------
 
 class _Spec {
   bool? openNow;
@@ -323,4 +457,298 @@ class _Spec {
   final Set<VenueType> types = {};
   final List<String> textTerms = [];
   LatLng? userLoc;
+}
+
+// ---------------------------------------------------------------------------
+// TYPE & TEXT SYNONYMS
+// ---------------------------------------------------------------------------
+
+/// Extend with your set of types/synonyms.
+/// All keys are expected to be pre-normalized via `_normalize`.
+final Map<String, VenueType> _typeMap = {
+  // Core English
+  'club': VenueType.club,
+  'clubs': VenueType.club,
+  'nightclub': VenueType.club,
+  'nightclubs': VenueType.club,
+  'night club': VenueType.club,
+  'night clubs': VenueType.club,
+  'bar': VenueType.bar,
+  'bars': VenueType.bar,
+  'pub': VenueType.pub,
+  'pubs': VenueType.pub,
+
+  // Nordic & European synonyms for "club"
+  'klub': VenueType.club,
+  'klubb': VenueType.club,
+  'clubben': VenueType.club,
+  'diskotek': VenueType.club,
+  'diskoteket': VenueType.club,
+  'discoteca': VenueType.club,
+  'discoteque': VenueType.club,
+  'discotheque': VenueType.club,
+  'disco': VenueType.club,
+  'natklub': VenueType.club,
+  'natklubb': VenueType.club,
+  'nightlife': VenueType.club,
+
+  // "bar" variants
+  'barer': VenueType.bar,
+  'barerne': VenueType.bar,
+  'bierbar': VenueType.beer_bar,
+  'ølbar': VenueType.beer_bar,
+  'beerbar': VenueType.beer_bar,
+
+  // Specific bar subtypes
+  'beer_bar': VenueType.beer_bar,
+  'beer bar': VenueType.beer_bar,
+  'cocktail_bar': VenueType.cocktail_bar,
+  'cocktail bar': VenueType.cocktail_bar,
+  'cocktailbar': VenueType.cocktail_bar,
+  'gay_bar': VenueType.gay_bar,
+  'gay bar': VenueType.gay_bar,
+  'gaybar': VenueType.gay_bar,
+  'wine_bar': VenueType.wine_bar,
+  'wine bar': VenueType.wine_bar,
+  'winebar': VenueType.wine_bar,
+  'sports_bar': VenueType.sports_bar,
+  'sports bar': VenueType.sports_bar,
+  'sportsbar': VenueType.sports_bar,
+  'karaoke_bar': VenueType.karaoke_bar,
+  'karaoke bar': VenueType.karaoke_bar,
+  'karaokebar': VenueType.karaoke_bar,
+  'karaoke': VenueType.karaoke_bar,
+
+  // Enum names as fallback (covers everything else)
+  for (final e in VenueType.values) describeEnum(e).toLowerCase(): e,
+};
+
+/// Generic text synonyms – these are applied to *tokens* before matching.
+/// Use this for simple one-token replacements like "klub" → "club".
+final Map<String, String> _synonymMap = {
+  // Types (for cases where type parsing didn't catch)
+  'klub': 'club',
+  'klubb': 'club',
+  'diskotek': 'club',
+  'diskoteket': 'club',
+  'disco': 'club',
+  'natklub': 'club',
+  'natklubb': 'club',
+  'ølbar': 'beer bar',
+  'beerbar': 'beer bar',
+
+  // Small city abbreviations (will also be handled via blob)
+  'cph': 'copenhagen',
+  'kbh': 'kobenhavn',
+};
+
+// ---------------------------------------------------------------------------
+// Location synonyms (used when building the blob)
+// ---------------------------------------------------------------------------
+
+/// Keys & values here are normalized via `_normalize`.
+final Map<String, List<String>> _citySynonyms = {
+  // Copenhagen
+  _normalize('Copenhagen'): [
+    _normalize('København'),
+    _normalize('Kobenhavn'),
+    _normalize('København K'),
+    _normalize('Cph'),
+    _normalize('Kbh'),
+  ],
+
+  // Stockholm
+  _normalize('Stockholm'): [
+    _normalize('Sthlm'),
+  ],
+
+  // Hamburg
+  _normalize('Hamburg'): [
+    _normalize('HH'),
+  ],
+
+  // Berlin
+  _normalize('Berlin'): [
+    _normalize('Berlín'),
+  ],
+
+  // Paris
+  _normalize('Paris'): [
+    _normalize('París'),
+  ],
+
+  // Barcelona
+  _normalize('Barcelona'): [
+    _normalize('Barça'),
+    _normalize('Barca'),
+  ],
+
+  // Milan
+  _normalize('Milan'): [
+    _normalize('Milano'),
+  ],
+};
+
+final Map<String, List<String>> _countrySynonyms = {
+  _normalize('Denmark'): [
+    _normalize('Danmark'),
+    _normalize('DK'),
+  ],
+  _normalize('Sweden'): [
+    _normalize('Sverige'),
+    _normalize('SE'),
+  ],
+  _normalize('Norway'): [
+    _normalize('Norge'),
+    _normalize('NO'),
+  ],
+  _normalize('Germany'): [
+    _normalize('Deutschland'),
+    _normalize('DE'),
+  ],
+  _normalize('Finland'): [
+    _normalize('Suomi'),
+    _normalize('FI'),
+  ],
+  _normalize('Spain'): [
+    _normalize('España'),
+    _normalize('ES'),
+  ],
+  _normalize('France'): [
+    _normalize('France'),
+    _normalize('FR'),
+  ],
+  _normalize('Italy'): [
+    _normalize('Italia'),
+    _normalize('IT'),
+  ],
+  _normalize('Netherlands'): [
+    _normalize('Holland'),
+    _normalize('NL'),
+  ],
+  _normalize('United Kingdom'): [
+    _normalize('UK'),
+    _normalize('Great Britain'),
+    _normalize('GB'),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Simple keyword sets
+// ---------------------------------------------------------------------------
+
+final Set<String> _openNowTerms = {
+  'open',
+  'opennow',
+  'now',
+  'åben',
+  'åbent',
+  'nu',
+};
+
+final Set<String> _openTodayTerms = {
+  'opentoday',
+  'today',
+  'idag',
+  'i dag',
+};
+
+final Set<String> _verifiedTerms = {
+  'verified',
+  'official',
+  'verificeret',
+};
+
+// ---------------------------------------------------------------------------
+// NORMALIZATION / DIACRITIC FOLDING
+// ---------------------------------------------------------------------------
+
+/// Aggressive normalization:
+/// - lowercases
+/// - strips / folds diacritics: 'ø' → 'o', 'å' → 'a', 'ä' → 'a', 'é' → 'e', ...
+/// - collapses whitespace
+/// - keeps digits & useful symbols (.,+*#:@) for parsing
+String _normalize(String input) {
+  if (input.isEmpty) return '';
+
+  final sb = StringBuffer();
+  bool lastWasSpace = false;
+
+  for (final rune in input.runes) {
+    var ch = String.fromCharCode(rune);
+    ch = ch.toLowerCase();
+
+    final mapped = _foldChar(ch);
+    if (mapped == ' ') {
+      if (!lastWasSpace) {
+        sb.write(' ');
+        lastWasSpace = true;
+      }
+    } else {
+      sb.write(mapped);
+      lastWasSpace = false;
+    }
+  }
+
+  return sb.toString().trim();
+}
+
+/// Map a single character into its ASCII-ish representation.
+String _foldChar(String ch) {
+  // Letters & digits we want to keep as is
+  final code = ch.codeUnitAt(0);
+  if (code >= 0x30 && code <= 0x39) return ch; // 0-9
+  if (code >= 0x61 && code <= 0x7a) return ch; // a-z
+
+  // Common symbols we want to keep for tokens like "4.2*", "5km", "#techno"
+  const keep = '.:,;+*#@%/=<>+-_';
+  if (keep.contains(ch)) return ch;
+
+  // Whitespace-like
+  if (RegExp(r'\s').hasMatch(ch)) return ' ';
+
+  // Nordic / European diacritics – feel free to expand
+  switch (ch) {
+    case 'æ':
+      return 'ae';
+    case 'ø':
+      return 'o';
+    case 'å':
+      return 'a';
+    case 'ä':
+    case 'á':
+    case 'à':
+    case 'â':
+    case 'ã':
+    case 'å': // double-safety
+      return 'a';
+    case 'ö':
+    case 'ó':
+    case 'ò':
+    case 'ô':
+    case 'õ':
+      return 'o';
+    case 'ü':
+    case 'ú':
+    case 'ù':
+    case 'û':
+      return 'u';
+    case 'é':
+    case 'è':
+    case 'ê':
+    case 'ë':
+      return 'e';
+    case 'í':
+    case 'ì':
+    case 'î':
+    case 'ï':
+      return 'i';
+    case 'ç':
+      return 'c';
+    case 'ß':
+      return 'ss';
+  }
+
+  // Everything else -> space (separates words)
+  return ' ';
 }
