@@ -105,7 +105,8 @@ class VenueSearchEngine {
       }
 
       // AGE: 18+, age:18, age>=18, a18+, 21+
-      final age = _parseNumberWithPlus(t, prefixes: const ['age', 'a', 'alder']);
+      final age =
+      _parseNumberWithPlus(t, prefixes: const ['age', 'a', 'alder']);
       if (age != null && age >= 10) {
         spec.minAge = age;
         continue;
@@ -217,6 +218,7 @@ class VenueSearchEngine {
   }
 
   /// Big lowercase-then-folded blob of searchable fields.
+  /// IMPORTANT: city/country & their synonyms come from EuropeanLocationMapper.
   String _buildTextBlob(Venue v) {
     final displayName =
     (v.displayName.isNotEmpty ? v.displayName : v.name).trim();
@@ -260,44 +262,34 @@ class VenueSearchEngine {
       ..write(_ratingBlob(v))
       ..write(' ');
 
-    // Enrich with location names from mapper (English city/country) + synonyms
+    // Enrich with location names from mapper (English city/country) + altNames
     try {
       final loc = _locMapper.resolve(
         lat: v.entry.lat,
         lon: v.entry.lng,
       );
 
-      if (loc.countryName != null) {
-        final countryName = loc.countryName!;
+      final country = loc.country;
+      if (country != null) {
         sb
-          ..write(countryName)
+          ..write(country.name)
           ..write(' ');
-
-        final key = _normalize(countryName);
-        final syns = _countrySynonyms[key];
-        if (syns != null) {
-          for (final s in syns) {
-            sb
-              ..write(s)
-              ..write(' ');
-          }
+        for (final alt in country.altNames) {
+          sb
+            ..write(alt)
+            ..write(' ');
         }
       }
 
-      if (loc.cityName != null) {
-        final cityName = loc.cityName!;
+      final city = loc.city;
+      if (city != null) {
         sb
-          ..write(cityName)
+          ..write(city.name)
           ..write(' ');
-
-        final key = _normalize(cityName);
-        final syns = _citySynonyms[key];
-        if (syns != null) {
-          for (final s in syns) {
-            sb
-              ..write(s)
-              ..write(' ');
-          }
+        for (final alt in city.altNames) {
+          sb
+            ..write(alt)
+            ..write(' ');
         }
       }
     } catch (_) {
@@ -460,7 +452,7 @@ class _Spec {
 }
 
 // ---------------------------------------------------------------------------
-// TYPE & TEXT SYNONYMS
+// TYPE & TEXT SYNONYMS (non-location)
 // ---------------------------------------------------------------------------
 
 /// Extend with your set of types/synonyms.
@@ -523,10 +515,10 @@ final Map<String, VenueType> _typeMap = {
   for (final e in VenueType.values) describeEnum(e).toLowerCase(): e,
 };
 
-/// Generic text synonyms – these are applied to *tokens* before matching.
-/// Use this for simple one-token replacements like "klub" → "club".
+/// Generic non-location text synonyms – these are applied to *tokens* before
+/// matching. Keep location synonyms (city/country) in the mapper via altNames.
 final Map<String, String> _synonymMap = {
-  // Types (for cases where type parsing didn't catch)
+  // Types
   'klub': 'club',
   'klubb': 'club',
   'diskotek': 'club',
@@ -536,101 +528,6 @@ final Map<String, String> _synonymMap = {
   'natklubb': 'club',
   'ølbar': 'beer bar',
   'beerbar': 'beer bar',
-
-  // Small city abbreviations (will also be handled via blob)
-  'cph': 'copenhagen',
-  'kbh': 'kobenhavn',
-};
-
-// ---------------------------------------------------------------------------
-// Location synonyms (used when building the blob)
-// ---------------------------------------------------------------------------
-
-/// Keys & values here are normalized via `_normalize`.
-final Map<String, List<String>> _citySynonyms = {
-  // Copenhagen
-  _normalize('Copenhagen'): [
-    _normalize('København'),
-    _normalize('Kobenhavn'),
-    _normalize('København K'),
-    _normalize('Cph'),
-    _normalize('Kbh'),
-  ],
-
-  // Stockholm
-  _normalize('Stockholm'): [
-    _normalize('Sthlm'),
-  ],
-
-  // Hamburg
-  _normalize('Hamburg'): [
-    _normalize('HH'),
-  ],
-
-  // Berlin
-  _normalize('Berlin'): [
-    _normalize('Berlín'),
-  ],
-
-  // Paris
-  _normalize('Paris'): [
-    _normalize('París'),
-  ],
-
-  // Barcelona
-  _normalize('Barcelona'): [
-    _normalize('Barça'),
-    _normalize('Barca'),
-  ],
-
-  // Milan
-  _normalize('Milan'): [
-    _normalize('Milano'),
-  ],
-};
-
-final Map<String, List<String>> _countrySynonyms = {
-  _normalize('Denmark'): [
-    _normalize('Danmark'),
-    _normalize('DK'),
-  ],
-  _normalize('Sweden'): [
-    _normalize('Sverige'),
-    _normalize('SE'),
-  ],
-  _normalize('Norway'): [
-    _normalize('Norge'),
-    _normalize('NO'),
-  ],
-  _normalize('Germany'): [
-    _normalize('Deutschland'),
-    _normalize('DE'),
-  ],
-  _normalize('Finland'): [
-    _normalize('Suomi'),
-    _normalize('FI'),
-  ],
-  _normalize('Spain'): [
-    _normalize('España'),
-    _normalize('ES'),
-  ],
-  _normalize('France'): [
-    _normalize('France'),
-    _normalize('FR'),
-  ],
-  _normalize('Italy'): [
-    _normalize('Italia'),
-    _normalize('IT'),
-  ],
-  _normalize('Netherlands'): [
-    _normalize('Holland'),
-    _normalize('NL'),
-  ],
-  _normalize('United Kingdom'): [
-    _normalize('UK'),
-    _normalize('Great Britain'),
-    _normalize('GB'),
-  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -720,7 +617,6 @@ String _foldChar(String ch) {
     case 'à':
     case 'â':
     case 'ã':
-    case 'å': // double-safety
       return 'a';
     case 'ö':
     case 'ó':

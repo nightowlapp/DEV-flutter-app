@@ -36,11 +36,11 @@ import 'more_info_screen.dart';
 // -------------------- LIVE COUNT PROVIDERS --------------------
 // Stream<int> -> Riverpod provider so we can watch it in the UI.
 final liveVenueCountProvider = StreamProvider.family<int, String>(
-  (ref, venueId) => liveVenueCount(venueId));
+        (ref, venueId) => liveVenueCount(venueId));
 
 // (Optional) all counts if you ever need them elsewhere.
 final liveAllVenueCountsProvider =
-  StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
+StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
 
 class VenueScreenContent extends ConsumerWidget {
   const VenueScreenContent({
@@ -93,7 +93,7 @@ class VenueScreenContent extends ConsumerWidget {
 
     // safe % filled
     final int percentFilled =
-      (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
+    (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
 
     return Column(
       children: [
@@ -145,11 +145,11 @@ class VenueScreenContent extends ConsumerWidget {
                 MoodImagesSection(venueId: venue.id),
                 SizedBox(height: PlatformConfig.height(context) * 0.05),
                 if (venue.tagids.isNotEmpty)
-                VenueTagsGrid(
-                  tagIds: venue.tagids,
-                  viewportWidth: PlatformConfig.width(context),
-                  viewportHeight: PlatformConfig.height(context),
-                ),
+                  VenueTagsGrid(
+                    tagIds: venue.tagids,
+                    viewportWidth: PlatformConfig.width(context),
+                    viewportHeight: PlatformConfig.height(context),
+                  ),
                 if (venue.tagids.isNotEmpty)
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
 
@@ -176,21 +176,21 @@ class VenueScreenContent extends ConsumerWidget {
                       ),
                     ),
                     if (venue.isVerified)
-                    SizedBox(
-                      height: PlatformConfig.height(context) * 0.04,
-                      width: PlatformConfig.width(context) * 0.35,
-                      child: OwlButton(
-                        borderRadius: borderRadiusSmall,
-                        label: 'Bar Card',
-                        onPressed: () => context.pushNamedPage(
-                          BarCardScreen.routeName,
-                          extra: BarCardArgs(
-                            venueId: venue.id,
-                            venueName: venue.displayName,
+                      SizedBox(
+                        height: PlatformConfig.height(context) * 0.04,
+                        width: PlatformConfig.width(context) * 0.35,
+                        child: OwlButton(
+                          borderRadius: borderRadiusSmall,
+                          label: 'Bar Card',
+                          onPressed: () => context.pushNamedPage(
+                            BarCardScreen.routeName,
+                            extra: BarCardArgs(
+                              venueId: venue.id,
+                              venueName: venue.displayName,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
 
@@ -214,7 +214,7 @@ class VenueScreenContent extends ConsumerWidget {
                                 TextSpan(
                                   text: visits.toString(),
                                   style: Styles.basicTextHeader
-                                    .copyWith(color: owlPurple),
+                                      .copyWith(color: owlPurple),
                                 ),
                                 TextSpan(
                                   text: " Right now",
@@ -233,7 +233,7 @@ class VenueScreenContent extends ConsumerWidget {
                                 TextSpan(
                                   text: "$percentFilled",
                                   style: Styles.basicTextHeader
-                                    .copyWith(color: owlPurple),
+                                      .copyWith(color: owlPurple),
                                 ),
                                 const TextSpan(
                                   text: "% ",
@@ -257,7 +257,7 @@ class VenueScreenContent extends ConsumerWidget {
 
                 if (asyncMedia.hasValue) ...[
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
-                OfferTodaySection(venueId: venue.id),
+                  OfferTodaySection(venueId: venue.id),
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
                 ] ,
               ],
@@ -285,13 +285,14 @@ class VenueScreenContent extends ConsumerWidget {
   // Replace your _displayOpeningHours(Venue v) with this version.
   // It shows yesterday's range if the venue is currently open due to yesterday's overnight window.
   Widget _displayOpeningHours(Venue v) {
-    final now = DateTime.now(); // make sure this is venue-local if you use TZs
+    final now = DateTime.now(); // venue-local if you use TZs
     final status = v.openingHours.statusAt(now);
-
-    final r = venue.openingHoursToday();
+    final r = v.openingHoursToday();
 
     final baseStyle = Styles.boldText.copyWith(letterSpacing: 1.2);
-    final supStyle = Styles.smallText.copyWith(fontWeight: FontWeight.w600);
+    final supStyle = baseStyle.copyWith(
+      fontSize: (baseStyle.fontSize ?? 14) * 0.7, // smaller superscript
+    );
 
     final isOpenNow = status.phase == OpeningPhase.open;
     final isClosedForDisplay = !isOpenNow && r.isClosed;
@@ -310,28 +311,39 @@ class VenueScreenContent extends ConsumerWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: isClosedForDisplay
-              ? Text('Closed today', style: baseStyle.copyWith(color: red))
-              : RichText(
-                text: TextSpan(
-                  style: baseStyle,
-                  children: [
-                    TextSpan(text: '${r.open} - ${r.close}'),
-                    if (r.nextDay)
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.baseline,
-                      baseline: TextBaseline.alphabetic,
-                      child: Transform.translate(
-                        offset: const Offset(2, -5),
-                        child: Text('+1', style: supStyle),
+                ? Text(
+              'Closed today',
+              style: baseStyle.copyWith(color: red),
+            )
+                : Align(
+              alignment: Alignment.centerLeft,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // base time range
+                  Text(
+                    '${r.open} - ${r.close}',
+                    style: baseStyle,
+                  ),
+                  if (r.nextDay) //TODO only show if after 00:01
+                  // "+1" sits slightly above and to the right
+                    Positioned(
+                      right: -10, // negative so it overlaps instead of widening
+                      top: -8,
+                      child: Text(
+                        '+1',
+                        style: supStyle,
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
+            ),
           ),
         ),
       ),
     );
   }
+
+
 
 }
