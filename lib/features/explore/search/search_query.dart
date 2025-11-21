@@ -65,7 +65,7 @@ class SearchQuery {
       'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U', 'Ű': 'U', 'Ū': 'U',
       'Ý': 'Y',
       'Ž': 'Z', 'Ź': 'Z', 'Ż': 'Z',
-    }; //TODO improve with all kinds of search - "københavn" and so on.
+    };
     final buf = StringBuffer();
     for (final ch in input.runes) {
       final s = String.fromCharCode(ch);

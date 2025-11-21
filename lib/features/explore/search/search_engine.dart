@@ -305,6 +305,8 @@ final Map<String, VenueType> _typeMap = {
   'sports bar': VenueType.sports_bar,
   'karaoke_bar': VenueType.karaoke_bar,
   'karaoke bar': VenueType.karaoke_bar,
+  'karaoke': VenueType.karaoke_bar,
+  //TODO improve with all kinds of search - "københavn" and so on.
 
   // Enum names as fallback (covers everything else)
   for (final e in VenueType.values) describeEnum(e).toLowerCase(): e,

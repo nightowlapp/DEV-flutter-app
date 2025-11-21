@@ -46,8 +46,8 @@ Future<void> showFiltersPopup(BuildContext context, WidgetRef ref) async {
     },
   );
 }
-const double _kVenueChipWidth = 74.0; // tweak to taste
-const Duration _kVenueChipAnimDuration = Duration(milliseconds: 420);
+const double _kVenueChipWidth = 60.0; // was 74.0 – more compact
+const Duration _kVenueChipAnimDuration = Duration(milliseconds: 620); // smoother & slower
 
 
 class _FiltersCard extends ConsumerWidget {
@@ -59,17 +59,19 @@ class _FiltersCard extends ConsumerWidget {
     final defaults = ref.watch(filterDefaultsProvider);
     final ctrl = ref.read(filtersProvider.notifier);
 
+
+
     final double outerRadius = borderRadiusDefault * 1.6;
 
     // Raw effective distance from filters or defaults (may be 0)
     final effectiveDistanceKm =
-        filters.maxDistanceKm ?? defaults.maxDistanceKm ?? 0.0;
+      filters.maxDistanceKm ?? defaults.maxDistanceKm ?? 0.0;
 
     // Value we actually show in UI (never < 1)
     final uiDistanceKm = (effectiveDistanceKm <= 0
-        ? (defaults.maxDistanceKm ?? 15.0)
-        : effectiveDistanceKm)
-        .clamp(1.0, 60.0);
+      ? (defaults.maxDistanceKm ?? 15.0)
+      : effectiveDistanceKm)
+      .clamp(1.0, 60.0);
 
     return Material(
       color: black,
@@ -160,7 +162,8 @@ class _FiltersCard extends ConsumerWidget {
                             if (result <= 0) {
                               // 0 → "back to default" (use user prefs)
                               ctrl.clearMaxDistance();
-                            } else {
+                            }
+                            else {
                               ctrl.setMaxDistanceKm(result);
                             }
                           },
@@ -199,8 +202,8 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Rating',
                         trailing: Text(
                           filters.minRating == null
-                              ? 'Any'
-                              : '${filters.minRating!.toStringAsFixed(1)}+',
+                            ? 'Any'
+                            : '${filters.minRating!.toStringAsFixed(1)}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -251,8 +254,8 @@ class _FiltersCard extends ConsumerWidget {
                         title: 'Age Restriction',
                         trailing: Text(
                           filters.minAgeRestriction == null
-                              ? '18+'
-                              : '${filters.minAgeRestriction!}+',
+                            ? '18+'
+                            : '${filters.minAgeRestriction!}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -275,7 +278,7 @@ class _FiltersCard extends ConsumerWidget {
                                 (filters.minAgeRestriction ?? 18).toDouble(),
                                 onChanged: (v) {
                                   final age =
-                                  v.round().clamp(18, 25);
+                                    v.round().clamp(18, 25);
                                   ctrl.setMinAgeRestriction(age);
                                 },
                               ),
@@ -284,15 +287,17 @@ class _FiltersCard extends ConsumerWidget {
                             _AgeEmojiScale(
                               minAge: filters.minAgeRestriction ?? 18,
                               onSelected: (age) =>
-                                  ctrl.setMinAgeRestriction(age),
+                              ctrl.setMinAgeRestriction(age),
                             ),
                           ],
                         ),
                       ),
 
                       // ---- Venue type (sideways scroll with icons) ----
+                      // ---- Venue type (sideways scroll with icons) ----
                       _CardSection(
                         title: 'Venue Type',
+                        contentHorizontalPadding: 8, // 👈 tighter than default
                         trailing: Text(
                           filters.types.isEmpty ? 'All' : '${filters.types.length}',
                           style: Styles.basicText.copyWith(
@@ -301,7 +306,7 @@ class _FiltersCard extends ConsumerWidget {
                           ),
                         ),
                         child: SizedBox(
-                          height: 100,
+                          height: 80, // was 88 / 100 – a bit tighter vertically
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: AnimatedSwitcher(
@@ -327,9 +332,11 @@ class _FiltersCard extends ConsumerWidget {
                                     }
                                   }
 
+                                  const gap = SizedBox(width: 4);
                                   final children = <Widget>[];
 
-                                  children.add(const SizedBox(width: 8));
+                                  // small outer padding (left)
+                                  children.add(const SizedBox(width: 4));
 
                                   // "All" – always leftmost, fixed width
                                   children.add(
@@ -348,9 +355,10 @@ class _FiltersCard extends ConsumerWidget {
                                     ),
                                   );
 
-                                  children.add(const SizedBox(width: 6));
+                                  // gap after "All"
+                                  children.add(gap);
 
-                                  // Selected types (jump left, next to All)
+                                  // Selected types
                                   for (final type in selectedTypes) {
                                     children.add(
                                       SizedBox(
@@ -363,15 +371,15 @@ class _FiltersCard extends ConsumerWidget {
                                         ),
                                       ),
                                     );
-                                    children.add(const SizedBox(width: 6));
+                                    children.add(gap);
                                   }
 
-                                  // Gap between selected and unselected groups
+                                  // tiny gap between selected & unselected
                                   if (selectedTypes.isNotEmpty && unselectedTypes.isNotEmpty) {
-                                    children.add(const SizedBox(width: 6));
+                                    children.add(gap);
                                   }
 
-                                  // Unselected types (to the right)
+                                  // Unselected types
                                   for (final type in unselectedTypes) {
                                     children.add(
                                       SizedBox(
@@ -384,10 +392,12 @@ class _FiltersCard extends ConsumerWidget {
                                         ),
                                       ),
                                     );
-                                    children.add(const SizedBox(width: 6));
+                                    children.add(gap);
                                   }
 
-                                  children.add(const SizedBox(width: 8));
+                                  // small outer padding (right)
+                                  children.add(const SizedBox(width: 4));
+
                                   return children;
                                 }(),
                               ),
@@ -395,6 +405,7 @@ class _FiltersCard extends ConsumerWidget {
                           ),
                         ),
                       ),
+
 
                     ],
                   ),
@@ -411,9 +422,15 @@ class _FiltersCard extends ConsumerWidget {
                 horizontalSpacerSmall,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
+                    onPressed: ctrl.reset,
+                    child: Text(
+                      'Reset Filters',
+                      style: Styles.smallText.copyWith(color: red),
+                    ),
+                  ),          TextButton(
                     onPressed: ctrl.reset,
                     child: Text(
                       'Reset Filters',
@@ -437,11 +454,13 @@ class _CardSection extends StatelessWidget {
     required this.title,
     this.trailing,
     required this.child,
+    this.contentHorizontalPadding = horizontalSpacerDefault, // NEW
   });
 
   final String title;
   final Widget? trailing;
   final Widget child;
+  final double contentHorizontalPadding; // NEW
 
   @override
   Widget build(BuildContext context) {
@@ -470,10 +489,10 @@ class _CardSection extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            horizontalSpacerDefault,
+          padding: EdgeInsets.fromLTRB(
+            contentHorizontalPadding, // was horizontalSpacerDefault
             6,
-            horizontalSpacerDefault,
+            contentHorizontalPadding,
             0,
           ),
           child: child,
@@ -485,7 +504,7 @@ class _CardSection extends StatelessWidget {
           ),
           child: Divider(
             color: grey,
-            height: 0, // no extra vertical padding from Divider itself
+            height: 0,
           ),
         ),
         const SizedBox(height: 4),
@@ -548,33 +567,34 @@ class _DistanceEmojiScale extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(_options.length, (i) {
-          final opt = _options[i];
-          final isActive = i == selectedIndex;
+            final opt = _options[i];
+            final isActive = i == selectedIndex;
 
-          return GestureDetector(
-            onTap: () => onSelected(opt.km),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: isActive
+            return GestureDetector(
+              onTap: () => onSelected(opt.km),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isActive
                     ? owlPurple.withOpacity(.28)
                     : transparent,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                opt.emoji,
-                style: TextStyle(
-                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive ? owlPurple : white.withOpacity(.85),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  opt.emoji,
+                  style: TextStyle(
+                    fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                    color: isActive ? owlPurple : white.withOpacity(.85),
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }
+        ),
       ),
     );
   }
@@ -597,13 +617,17 @@ class _RatingFace extends StatelessWidget {
     String face;
     if (r >= 4.0) {
       face = '😍';
-    } else if (r >= 3.0) {
+    }
+    else if (r >= 3.0) {
       face = '😊';
-    } else if (r >= 2.0) {
+    }
+    else if (r >= 2.0) {
       face = '🙂';
-    } else if (r > 0) {
+    }
+    else if (r > 0) {
       face = '😐';
-    } else {
+    }
+    else {
       face = '⭐';
     }
     // currently hidden – you can show it if you want
@@ -660,33 +684,34 @@ class _RatingEmojiScale extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(_options.length, (i) {
-          final opt = _options[i];
-          final isActive = i == selectedIndex;
+            final opt = _options[i];
+            final isActive = i == selectedIndex;
 
-          return GestureDetector(
-            onTap: () => onSelected(opt.value),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: isActive
+            return GestureDetector(
+              onTap: () => onSelected(opt.value),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isActive
                     ? owlPurple.withOpacity(.28)
                     : transparent,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                opt.emoji,
-                style: TextStyle(
-                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive ? owlPurple : white.withOpacity(.85),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  opt.emoji,
+                  style: TextStyle(
+                    fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                    color: isActive ? owlPurple : white.withOpacity(.85),
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }
+        ),
       ),
     );
   }
@@ -745,33 +770,34 @@ class _AgeEmojiScale extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(_options.length, (i) {
-          final opt = _options[i];
-          final isActive = i == selectedIndex;
+            final opt = _options[i];
+            final isActive = i == selectedIndex;
 
-          return GestureDetector(
-            onTap: () => onSelected(opt.age),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: isActive
+            return GestureDetector(
+              onTap: () => onSelected(opt.age),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isActive
                     ? owlPurple.withOpacity(.28)
                     : transparent,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                opt.emoji,
-                style: TextStyle(
-                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive ? owlPurple : white.withOpacity(.85),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  opt.emoji,
+                  style: TextStyle(
+                    fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                    color: isActive ? owlPurple : white.withOpacity(.85),
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }
+        ),
       ),
     );
   }
@@ -807,13 +833,15 @@ class _DistanceLabel extends StatelessWidget {
     if (baseKm == null) {
       // Should only happen while prefs are still loading.
       text = 'Any distance';
-    } else if (baseKm >= 60) {
+    }
+    else if (baseKm >= 60) {
       // Right-most position is "60+ km"
       text = '60+ km';
-    } else {
+    }
+    else {
       final km = baseKm;
       final displayKm =
-      km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);
+        km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);
       text = '$displayKm km';
     }
 
@@ -849,37 +877,35 @@ class _AllTypesFilterChip extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Avatar tap
         GestureDetector(
           onTap: handleTap,
           child: AnimatedContainer(
             duration: _kVenueChipAnimDuration,
             curve: Curves.easeInOutCubic,
-            width: 44,
-            height: 44,
+            width: 40,   // was 44
+            height: 40,  // was 44
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: bg,
             ),
             child: const Icon(
               Icons.all_inclusive,
-              size: 22,
+              size: 20,   // was 22
               color: white,
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        // Text tap
+        const SizedBox(height: 2), // was 4
         GestureDetector(
           onTap: handleTap,
           child: SizedBox(
-            height: 16,
+            height: 14, // was 16
             child: Center(
-              child: AutoSizeText(
+              child: Text(
                 'All',
                 maxLines: 1,
-                minFontSize: 8,
-                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: Styles.smallText,
               ),
             ),
           ),
@@ -912,38 +938,35 @@ class _TypeFilterChip extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Icon tap
         GestureDetector(
           onTap: handleTap,
           child: AnimatedContainer(
             duration: _kVenueChipAnimDuration,
             curve: Curves.easeInOutCubic,
-            width: 44,
-            height: 44,
+            width: 40,   // was 44
+            height: 40,  // was 44
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: bg,
             ),
             child: Icon(
               type.icon,
-              size: 22,
+              size: 20,   // was 22
               color: iconColor,
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        // Text tap
+        const SizedBox(height: 2),
         GestureDetector(
           onTap: handleTap,
           child: SizedBox(
-            height: 16,
+            height: 14,
             child: Center(
-              child: AutoSizeText(
+              child: Text(
                 label,
                 maxLines: 1,
-                minFontSize: 8,
                 overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+                style: Styles.smallText,
               ),
             ),
           ),
@@ -952,6 +975,7 @@ class _TypeFilterChip extends StatelessWidget {
     );
   }
 }
+
 
 // ---- Simple numeric input dialog ----
 
