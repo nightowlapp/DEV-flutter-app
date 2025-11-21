@@ -104,7 +104,9 @@ class _FiltersCard extends ConsumerWidget {
                 thickness: 3,
                 radius: Radius.circular(borderRadiusDefault),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(verticalSpacerDefault),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: verticalSpacerDefault,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -158,8 +160,6 @@ class _FiltersCard extends ConsumerWidget {
                         ),
                       ),
 
-                      const SizedBox(height: verticalSpacerDefault),
-
                       // ---- Rating ----
                       _CardSection(
                         title: 'Rating',
@@ -181,9 +181,11 @@ class _FiltersCard extends ConsumerWidget {
                                   child: SliderTheme(
                                     data: SliderTheme.of(context).copyWith(
                                       activeTrackColor: owlPurple,
-                                      inactiveTrackColor: grey.withOpacity(.35),
+                                      inactiveTrackColor:
+                                      grey.withOpacity(.35),
                                       thumbColor: owlPurple,
-                                      overlayColor: owlPurple.withOpacity(.15),
+                                      overlayColor:
+                                      owlPurple.withOpacity(.15),
                                     ),
                                     child: Slider(
                                       min: 0,
@@ -209,8 +211,6 @@ class _FiltersCard extends ConsumerWidget {
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: verticalSpacerDefault),
 
                       // ---- Age restriction (18–25) ----
                       _CardSection(
@@ -244,15 +244,13 @@ class _FiltersCard extends ConsumerWidget {
                         ),
                       ),
 
-                      const SizedBox(height: verticalSpacerDefault),
-
                       // ---- Venue type (sideways scroll with icons) ----
                       _CardSection(
                         title: 'Venue type',
                         trailing: Text(
                           filters.types.isEmpty
                               ? 'All'
-                              : '${filters.types.length} selected',
+                              : '${filters.types.length}',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
                             color: owlPurple,
@@ -278,7 +276,8 @@ class _FiltersCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 for (final type in VenueType.values
-                                    .where((t) => t != VenueType.unknown)) ...[
+                                    .where(
+                                        (t) => t != VenueType.unknown)) ...[
                                   _TypeFilterChip(
                                     type: type,
                                     selected: filters.types.contains(type),
@@ -329,6 +328,7 @@ class _FiltersCard extends ConsumerWidget {
   }
 }
 
+// Tighter section layout: title + content + small gap + divider
 class _CardSection extends StatelessWidget {
   const _CardSection({
     required this.title,
@@ -342,12 +342,17 @@ class _CardSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(horizontalSpacerDefault),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            horizontalSpacerLarge,
+            horizontalSpacerSmall,
+            horizontalSpacerLarge,
+            horizontalSpacerSmall,
+          ),
+          child: Row(
             children: [
               Text(
                 title,
@@ -360,11 +365,28 @@ class _CardSection extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          child,
-          const SizedBox(height: verticalSpacerSmall),
-          const Divider(color: grey),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            horizontalSpacerDefault,
+            6,
+            horizontalSpacerDefault,
+            0,
+          ),
+          child: child,
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: horizontalSpacerDefault,
+          ),
+          child: const Divider(
+            color: grey,
+            height: 0, // no extra vertical padding from Divider itself
+          ),
+        ),
+        const SizedBox(height: 4),
+      ],
     );
   }
 }
@@ -420,6 +442,7 @@ class _RatingFace extends StatelessWidget {
     } else {
       face = '⭐';
     }
+    // currently hidden – you can show it if you want
     return const SizedBox.shrink();
   }
 }
@@ -435,7 +458,7 @@ class _RatingEmojiScale extends StatelessWidget {
 
   // Single source of truth for emojis + their values
   static const List<_RatingEmojiOption> _options = [
-    _RatingEmojiOption('⭐', null),  // Any
+    _RatingEmojiOption('⭐', null), // Any
     _RatingEmojiOption('😐', 2.0),
     _RatingEmojiOption('🙂', 3.0),
     _RatingEmojiOption('😊', 3.5),
@@ -512,7 +535,6 @@ class _RatingEmojiOption {
   const _RatingEmojiOption(this.emoji, this.value);
 }
 
-
 // ---- Distance label with tap-to-edit ----
 
 class _DistanceLabel extends StatelessWidget {
@@ -537,7 +559,7 @@ class _DistanceLabel extends StatelessWidget {
     } else if (currentKm! >= 60) {
       text = '60+ km';
     } else {
-      text = '${currentKm!.round()} km';
+      text = 'Within ${currentKm!.round()} km';
     }
 
     return InkWell(
