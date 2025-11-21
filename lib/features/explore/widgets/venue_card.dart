@@ -102,21 +102,21 @@ class VenueCard extends ConsumerWidget {
                     // Background image
                     Positioned.fill(
                       child: overrideFallbackAsset == null
-                          ? CoverImage.fromMedia(
-                        media: media,
-                        city: venue.city,
-                        height: height,
-                        fit: BoxFit.cover,
-                      )
-                          : CoverImage(
-                        imageUrl: (media?.coverExists == true &&
+                        ? CoverImage.fromMedia(
+                          media: media,
+                          city: venue.city,
+                          height: height,
+                          fit: BoxFit.cover,
+                        )
+                        : CoverImage(
+                          imageUrl: (media?.coverExists == true &&
                             (media?.coverUrl?.isNotEmpty ?? false))
                             ? media!.coverUrl
                             : null,
-                        fallbackAsset: overrideFallbackAsset,
-                        height: height,
-                        fit: BoxFit.cover,
-                      ),
+                          fallbackAsset: overrideFallbackAsset,
+                          height: height,
+                          fit: BoxFit.cover,
+                        ),
                     ),
 
                     // Title pill
@@ -135,20 +135,7 @@ class VenueCard extends ConsumerWidget {
                           BorderRadius.circular(borderRadiusDefault),
                         ),
                         child: Center(
-                          child: AutoSizeText(
-                            title,
-                            group: isVerified ? null : _titleGroup,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                            presetFontSizes: const [18, 16, 14, 12],
-                            stepGranularity: 1,
-                            style: Styles.basicText.copyWith(
-                              fontWeight: isVerified
-                                  ? FontWeight.w700
-                                  : FontWeight.w100,
-                              fontSize: 18,
-                            ),
-                          ),
+                          child: VenueTitle(title),
                         ),
                       ),
                     ),
@@ -166,14 +153,14 @@ class VenueCard extends ConsumerWidget {
                           int minutesLeft = -1;
                           if (isOpen) {
                             minutesLeft =
-                                venue.closeTimeToday().difference(now).inMinutes;
+                            venue.closeTimeToday().difference(now).inMinutes;
                             if (minutesLeft < 0) minutesLeft = 0;
                           }
                           final closingSoon = isOpen && minutesLeft <= 60;
 
                           final left = closingSoon
-                              ? _pill('Closing soon', fg: orange)
-                              : (isOpen
+                            ? _pill('Closing soon', fg: orange)
+                            : (isOpen
                               ? _pill(walkText)
                               : _pill('Closed', fg: red));
 
@@ -196,6 +183,21 @@ class VenueCard extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class VenueTitle extends StatelessWidget {
+  final String text;
+  const VenueTitle(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Styles.basicText
     );
   }
 }
