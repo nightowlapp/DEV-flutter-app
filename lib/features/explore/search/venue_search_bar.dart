@@ -55,6 +55,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
   Widget build(BuildContext context) {
     final nearbyCount = ref.watch(nearbyVenueCountProvider);
     final matchCount = ref.watch(searchMatchCountProvider);
+    final filterMatchCount = ref.watch(filterMatchCountProvider);
     final hasText = widget.controller.text.trim().isNotEmpty;
     final filtersActive = ref.watch(filtersActiveProvider);
 
@@ -94,6 +95,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: hasText
+                // ── SEARCH TEXT → show search matches ───────────────
                     ? Padding(
                   key: const ValueKey('matches'),
                   padding: const EdgeInsets.only(right: 0),
@@ -103,6 +105,18 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                     semanticsLabelWhenUnknown: 'Search matches',
                   ),
                 )
+                // ── NO TEXT, FILTERS ACTIVE → show filter matches ───
+                    : filtersActive
+                    ? Padding(
+                  key: const ValueKey('filterMatches'),
+                  padding: const EdgeInsets.only(right: 0),
+                  child: _CountText(
+                    count: filterMatchCount ?? 0,
+                    label: ' matches', // same style as search
+                    semanticsLabelWhenUnknown: 'Filtered venues',
+                  ),
+                )
+                // ── NO TEXT, NO FILTERS → show nearby count ─────
                     : Padding(
                   key: const ValueKey('nearby'),
                   padding: const EdgeInsets.only(right: 0),
@@ -119,11 +133,10 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 constraints: const BoxConstraints(),
                 icon: Icon(
                   tuneIcon,
-                  color: filtersActive
-                      ? owlPurple   // active color (override)
-                      : white,      // inactive color
+                  color: filtersActive ? owlPurple : white,
                 ),
                 onPressed: widget.onTapTune,
+                //TODO long tap removes all filtesr.
                 tooltip: 'Filters',
               ),
             ],

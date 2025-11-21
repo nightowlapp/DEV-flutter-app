@@ -15,7 +15,7 @@ Provider.autoDispose<AdvancedSearchFilter>((ref) {
   return AdvancedSearchFilter(
     openNowOnly: true,
     maxDistanceKm: prefs?.maxDistanceKm, // may be null if not loaded yet
-    minRating: null,
+    minRating: null, //TODO potential to select favorite tags and so on in setting and be displayed.
     types: const {}, // empty == all
     verifiedOnly: false,
     minAgeRestriction: null,
@@ -39,6 +39,12 @@ final filtersActiveProvider = Provider.autoDispose<bool>((ref) {
   final defaults = ref.watch(_defaultFiltersProvider);
   // either "not equal" or a simpler rule: hasAnyRestriction
   return !current.isSameAs(defaults);
+});
+
+/// Public view of defaults (for labels / comparisons).
+final filterDefaultsProvider =
+Provider.autoDispose<AdvancedSearchFilter>((ref) {
+  return ref.watch(_defaultFiltersProvider);
 });
 
 class FilterController extends StateNotifier<AdvancedSearchFilter> {

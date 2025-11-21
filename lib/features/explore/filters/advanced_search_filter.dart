@@ -3,7 +3,7 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 
 class AdvancedSearchFilter {
   final double? maxDistanceKm; // null = ignore
-  final double? minRating;     // 0–5, null = ignore
+  final double? minRating;     // 0–5, null = ignore //TODO want smart to use venues.lowestrated.round
   final bool openNowOnly;      // default true (from defaults provider)
   final Set<VenueType> types;  // empty = all
 

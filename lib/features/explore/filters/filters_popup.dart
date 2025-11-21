@@ -1,4 +1,3 @@
-// lib/features/explore/filters/filters_popup.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';
@@ -52,6 +51,7 @@ class _FiltersCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(filtersProvider);
+    final defaults = ref.watch(filterDefaultsProvider);
     final ctrl = ref.read(filtersProvider.notifier);
 
     final double outerRadius = borderRadiusDefault * 1.6;
@@ -108,20 +108,29 @@ class _FiltersCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Distance
+                      // ---- Distance ----
                       _CardSection(
                         title: 'Distance',
-                        trailing: Text(
-                              () {
-                            final v = filters.maxDistanceKm;
-                            if (v == null || v == 0) return 'Off';
-                            if (v >= 60) return '60+ km';
-                            return '${v.round()} km';
-                          }(),
-                          style: Styles.basicText.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: owlPurple,
-                          ),
+                        trailing: _DistanceLabel(
+                          currentKm: filters.maxDistanceKm,
+                          defaultKm: defaults.maxDistanceKm,
+                          onTap: () async {
+                            final initial =
+                                filters.maxDistanceKm ??
+                                    defaults.maxDistanceKm ??
+                                    15;
+                            final result = await _promptForNumber(
+                              context: context,
+                              title: 'Max distance (km)',
+                              initial: initial,
+                              min: 0,
+                              max: 60,
+                              suffix: 'km',
+                            );
+                            if (result == null) return;
+                            ctrl.setMaxDistanceKm(
+                                result <= 0 ? null : result);
+                          },
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,15 +140,17 @@ class _FiltersCard extends ConsumerWidget {
                                 activeTrackColor: owlPurple,
                                 inactiveTrackColor: grey.withOpacity(.3),
                                 thumbColor: owlPurple,
-                                overlayColor: owlPurple.withOpacity(.15),
+                                overlayColor:
+                                owlPurple.withOpacity(.15),
                               ),
                               child: Slider(
                                 min: 0,
                                 max: 60,
                                 divisions: 60,
-                                value: (filters.maxDistanceKm ?? 15),
+                                value: filters.maxDistanceKm ?? 0,
                                 onChanged: (v) =>
-                                    ctrl.setMaxDistanceKm(v == 0 ? null : v),
+                                    ctrl.setMaxDistanceKm(
+                                        v <= 0 ? null : v),
                               ),
                             ),
                             const _EmojiScale(),
@@ -149,7 +160,7 @@ class _FiltersCard extends ConsumerWidget {
 
                       const SizedBox(height: verticalSpacerDefault),
 
-                      // Rating
+                      // ---- Rating ----
                       _CardSection(
                         title: 'Rating',
                         trailing: Text(
@@ -168,7 +179,8 @@ class _FiltersCard extends ConsumerWidget {
                                 textDirection: TextDirection.rtl,
                                 child: SliderTheme(
                                   data: SliderTheme.of(context).copyWith(
-                                    activeTrackColor: grey.withOpacity(.35),
+                                    activeTrackColor:
+                                    grey.withOpacity(.35),
                                     inactiveTrackColor: owlPurple,
                                     thumbColor: owlPurple,
                                     overlayColor:
@@ -179,8 +191,8 @@ class _FiltersCard extends ConsumerWidget {
                                     max: 5,
                                     divisions: 10,
                                     value: (filters.minRating ?? 0),
-                                    onChanged: (v) => ctrl
-                                        .setMinRating(v == 0 ? null : v),
+                                    onChanged: (v) => ctrl.setMinRating(
+                                        v == 0 ? null : v),
                                   ),
                                 ),
                               ),
@@ -193,30 +205,12 @@ class _FiltersCard extends ConsumerWidget {
 
                       const SizedBox(height: verticalSpacerDefault),
 
-                      // Verified
-                      _CardSection(
-                        title: 'Verification',
-                        trailing: Switch.adaptive(
-                          value: filters.verifiedOnly,
-                          onChanged: ctrl.setVerifiedOnly,
-                          activeColor: owlPurple,
-                          inactiveThumbColor: grey,
-                          inactiveTrackColor: grey.withOpacity(.35),
-                        ),
-                        child: Text(
-                          'Show only verified venues',
-                          style: Styles.basicText,
-                        ),
-                      ),
-
-                      const SizedBox(height: verticalSpacerDefault),
-
-                      // Age restriction
+                      // ---- Age restriction (18–25) ----
                       _CardSection(
                         title: 'Age restriction',
                         trailing: Text(
                           filters.minAgeRestriction == null
-                              ? 'Any'
+                              ? '18+'
                               : '${filters.minAgeRestriction!}+',
                           style: Styles.basicText.copyWith(
                             fontWeight: FontWeight.w600,
@@ -230,13 +224,14 @@ class _FiltersCard extends ConsumerWidget {
                             thumbColor: owlPurple,
                           ),
                           child: Slider(
-                            min: 0,
-                            max: 30,
-                            divisions: 30,
-                            value: (filters.minAgeRestriction ?? 0).toDouble(),
+                            min: 18,
+                            max: 25,
+                            divisions: 7,
+                            value: (filters.minAgeRestriction ?? 18)
+                                .toDouble(),
                             onChanged: (v) {
                               final age = v.round();
-                              ctrl.setMinAgeRestriction(age == 0 ? null : age);
+                              ctrl.setMinAgeRestriction(age);
                             },
                           ),
                         ),
@@ -244,39 +239,7 @@ class _FiltersCard extends ConsumerWidget {
 
                       const SizedBox(height: verticalSpacerDefault),
 
-                      // Price
-                      _CardSection(
-                        title: 'Entry price',
-                        trailing: Text(
-                          filters.maxEntryPrice == null
-                              ? 'Any'
-                              : '≤ ${filters.maxEntryPrice!.toStringAsFixed(0)}€',
-                          style: Styles.basicText.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: owlPurple,
-                          ),
-                        ),
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: owlPurple,
-                            inactiveTrackColor: grey.withOpacity(.3),
-                            thumbColor: owlPurple,
-                          ),
-                          child: Slider(
-                            min: 0,
-                            max: 50,
-                            divisions: 50,
-                            value: (filters.maxEntryPrice ?? 0),
-                            onChanged: (v) {
-                              ctrl.setMaxEntryPrice(v == 0 ? null : v);
-                            },
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: verticalSpacerDefault),
-
-                      // Types
+                      // ---- Venue type (sideways scroll with icons) ----
                       _CardSection(
                         title: 'Venue type',
                         trailing: Text(
@@ -288,60 +251,42 @@ class _FiltersCard extends ConsumerWidget {
                             color: owlPurple,
                           ),
                         ),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            // "All" chip
-                            FilterChip(
-                              label: const Text('All types'),
-                              selected: filters.types.isEmpty,
-                              onSelected: (_) {
-                                if (filters.types.isNotEmpty) {
-                                  for (final t in filters.types.toList()) {
-                                    ctrl.toggleType(t);
-                                  }
-                                }
-                              },
-                              selectedColor: owlPurple,
-                              backgroundColor: grey.withOpacity(.25),
-                              side: BorderSide(
-                                color:
-                                filters.types.isEmpty ? owlPurple : grey,
-                                width: 0.7,
-                              ),
-                              materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
+                        child: SizedBox(
+                          height: 100,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                _AllTypesFilterChip(
+                                  selected: filters.types.isEmpty,
+                                  onTap: () {
+                                    if (filters.types.isNotEmpty) {
+                                      for (final t
+                                      in filters.types.toList()) {
+                                        ctrl.toggleType(t);
+                                      }
+                                    }
+                                  },
+                                ),
+                                const SizedBox(width: 12),
+                                for (final type in VenueType.values
+                                    .where((t) =>
+                                t != VenueType.unknown)) ...[
+                                  _TypeFilterChip(
+                                    type: type,
+                                    selected: filters.types
+                                        .contains(type),
+                                    onTap: () => ctrl.toggleType(type),
+                                  ),
+                                  const SizedBox(width: 12),
+                                ],
+                                const SizedBox(width: 8),
+                              ],
                             ),
-                            ...VenueType.values
-                                .where((t) => t != VenueType.unknown)
-                                .map((t) {
-                              final sel = filters.types.contains(t);
-                              return FilterChip(
-                                label: Text(
-                                  Utility.formatString(t.name),
-                                  style: TextStyle(
-                                      color: sel ? black : white),
-                                ),
-                                selected: sel,
-                                onSelected: (_) => ctrl.toggleType(t),
-                                selectedColor: owlPurple,
-                                backgroundColor: grey.withOpacity(.25),
-                                side: BorderSide(
-                                  color: sel ? owlPurple : grey,
-                                  width: 0.7,
-                                ),
-                                materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              );
-                            }),
-                          ],
+                          ),
                         ),
                       ),
-
-                      // You can add a "Tags" section later that calls ctrl.toggleTag(tagId)
                     ],
                   ),
                 ),
@@ -379,7 +324,6 @@ class _FiltersCard extends ConsumerWidget {
   }
 }
 
-
 class _CardSection extends StatelessWidget {
   const _CardSection({
     required this.title,
@@ -393,7 +337,6 @@ class _CardSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // No section borders; keep spacing + subtle divider for structure
     return Container(
       padding: const EdgeInsets.all(horizontalSpacerDefault),
       child: Column(
@@ -403,8 +346,10 @@ class _CardSection extends StatelessWidget {
             children: [
               Text(
                 title,
-                style:
-                    const TextStyle(color: white, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const Spacer(),
               if (trailing != null) trailing!,
@@ -440,7 +385,8 @@ class _EmojiScale extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isEmoji ? 16 : 12,
                   color: white.withOpacity(.85),
-                  fontWeight: isEmoji ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight:
+                  isEmoji ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
@@ -462,7 +408,7 @@ class _RatingFace extends StatelessWidget {
     if (r >= 4.5) {
       face = '😍';
     } else if (r >= 3.5) {
-      face = '😊'; // slightly less ecstatic than '😍'
+      face = '😊';
     } else if (r >= 2.0) {
       face = '🙂';
     } else if (r > 0) {
@@ -470,13 +416,193 @@ class _RatingFace extends StatelessWidget {
     } else {
       face = '⭐';
     }
-    return Text(
-      face,
+    return Text(face);
+  }
+}
+
+// ---- Distance label with tap-to-edit ----
+
+class _DistanceLabel extends StatelessWidget {
+  final double? currentKm;
+  final double? defaultKm;
+  final VoidCallback onTap;
+
+  const _DistanceLabel({
+    required this.currentKm,
+    required this.defaultKm,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+    if (currentKm == null) {
+      text = 'Off';
+    } else if (defaultKm != null &&
+        (currentKm! - defaultKm!).abs() < 0.5) {
+      text = 'Default (${currentKm!.round()} km)';
+    } else if (currentKm! >= 60) {
+      text = '60+ km';
+    } else {
+      text = '${currentKm!.round()} km';
+    }
+
+    return InkWell(
+      onTap: onTap,
+      child: Text(
+        text,
+        style: Styles.basicText.copyWith(
+          fontWeight: FontWeight.w600,
+          color: owlPurple,
+        ),
+      ),
     );
   }
 }
 
-extension on Text {
-  Text copyWith({String? data, TextStyle? style}) =>
-      Text(data ?? this.data ?? '', style: style ?? this.style);
+// ---- Venue type chips ----
+
+class _AllTypesFilterChip extends StatelessWidget {
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AllTypesFilterChip({
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = selected ? owlPurple : grey.withOpacity(.25);
+    final fg = selected ? black : white;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: bg,
+            child: Icon(
+              Icons.all_inclusive,
+              size: 22,
+              color: fg,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'All',
+            style: Styles.basicText.copyWith(
+              fontSize: 11,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypeFilterChip extends StatelessWidget {
+  final VenueType type;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TypeFilterChip({
+    required this.type,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = Utility.formatString(type.name);
+    final bg = selected ? owlPurple : owlPurple.withOpacity(0.12);
+    final iconColor = selected ? black : owlPurple;
+    final textColor = selected ? black : white;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: bg,
+            child: Icon(
+              type.icon, // extension on VenueType (same as in VenuesSection)
+              size: 22,
+              color: iconColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: Styles.basicText.copyWith(
+              fontSize: 11,
+              color: textColor,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---- Simple numeric input dialog ----
+
+Future<double?> _promptForNumber({
+  required BuildContext context,
+  required String title,
+  required double initial,
+  required double min,
+  required double max,
+  String? suffix,
+}) async {
+  final controller =
+  TextEditingController(text: initial.toStringAsFixed(0));
+
+  return showDialog<double>(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        backgroundColor: black,
+        title: Text(title, style: Styles.popupHeader),
+        content: TextField(
+          controller: controller,
+          keyboardType:
+          const TextInputType.numberWithOptions(decimal: true),
+          style: const TextStyle(color: white),
+          decoration: InputDecoration(
+            suffixText: suffix,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final raw = controller.text.replaceAll(',', '.');
+              final v = double.tryParse(raw);
+              if (v == null) {
+                Navigator.of(ctx).pop();
+                return;
+              }
+              double clamped = v;
+              if (clamped < min) clamped = min;
+              if (clamped > max) clamped = max;
+              Navigator.of(ctx).pop(clamped);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
 }
