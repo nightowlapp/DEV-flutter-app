@@ -243,7 +243,7 @@ Widget _addTagChip({
         const SizedBox(width: 4),
         const Expanded(
           child: Text(
-            'Add tag',
+            'Add tag', //TODO only have add tag if not user and its own owner - not user && !owner for now.
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

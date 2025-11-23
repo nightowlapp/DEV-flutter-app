@@ -11,7 +11,7 @@ final mapIcon = Icons.map_outlined;
 final calenderIcon = Icons.calendar_today;
 final socialIcon = Icons.group;
 final profileIcon = Icons.person_4_rounded; // TODO rename all like this.
-final venuesIcon = Icons.nightlife;
+final venuesIcon = Icons.nightlife_outlined;
 final adminIcon = Icons.shield ?? FontAwesomeIcons.personBreastfeeding;
 
 // Platform
@@ -89,7 +89,7 @@ final karaokeBarIcon = Icons.mic_none;
 final sportsBarIcon = Icons.sports_soccer;
 final gayBarIcon = Icons.transgender;
 final pubIcon = Icons.local_drink;
-final unknowBarIcon = Icons.nightlife;
+final unknowBarIcon = Icons.nightlife_outlined;
 final barIcon = Icons.table_bar;
 final clubIcon = Icons.flourescent;
 

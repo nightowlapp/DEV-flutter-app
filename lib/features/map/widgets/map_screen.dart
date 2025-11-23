@@ -20,6 +20,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/map_nav_providers.dart';
@@ -32,6 +33,7 @@ import '../../../data/services/navigation/navigation_service.dart';
 import '../../../data/services/navigation/route_renderer.dart';
 import '../../../models/navigation/nav_models.dart';
 import '../../../models/users/live_location.dart';
+import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/utility/distance.dart';
 import '../presentation/friends_fc.dart';
 import '../presentation/map_logo_registry.dart';
@@ -75,7 +77,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   String _logoImageIdFor(Venue v) =>
       'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
-  final bool _showClosed = true;
+  bool _showClosed = true;
 
   Future<void> _ensureUserLocation() async {
     if (_userLocation != null) return;
@@ -504,6 +506,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 counts: typeCounts,
                 venuesByType: venuesByType,
                 userLocation: _userLocation,
+
+                // NEW: "Is open" toggle (true => only open venues)
+                showOnlyOpen: !_showClosed,
+                onShowOnlyOpenChanged: (value) async {
+                  // value == true  → show only open
+                  // value == false → show open + closed
+                  final map = _map;
+                  if (map == null || !_styleReady) return;
+
+                  setState(() {
+                    _showClosed = !value;
+                  });
+
+                  final fcNow = ref.read(venuesGeoJsonProvider);
+
+                  await _style.applyFilters(
+                    map,
+                    showClosed: _showClosed,
+                    allowedTypes: _allowedTypeNamesForStyle(),
+                    baseClusterableFc: fcNow.clusterable,
+                    baseVipFc: fcNow.vip,
+                  );
+                },
+
                 onSelectionChanged: (selection) async {
                   final map = _map;
                   if (map == null || !_styleReady) return;
@@ -524,21 +550,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     baseVipFc: fcNow.vip,
                   );
                 },
+
                 onVenueTap: (venue) async {
-                  // If this venue's type is currently filtered OUT, do nothing (or show a toast).
-                  final venueType = venue.type; // assuming Venue.type is VenueType?
+                  final venueType = venue.type;
                   if (venueType == null || !_allowedTypes.contains(venueType)) {
                     _toast(
-                      'This venue is hidden. Enable the "${venueType?.name.replaceAll('_', ' ') ?? 'type'}" filter to open it.',
+                      '${venue.displayName} is hidden. Display "${Utility.formatString(venueType!.name.replaceAll('_', ' ')) ?? 'type'}" venues on map to open it.',
                     );
                     return;
                   }
-
-                  // Only if it's visible according to current filters:
                   setState(() => _filtersOpen = false);
                   _openVenue(venue);
                 },
               ),
+
             ),
           ],
 
@@ -627,7 +652,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         profile: profile,
       );
       if (route.isEmpty) {
-        _toast('No route found');
+        _toast('No route found', variant: OwlSnackVariant.error);
         return;
       }
 
@@ -658,7 +683,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ).listen(_onLocationTick);
     }
     catch (e) {
-      _toast('Routing failed: $e');
+      _toast('Routing failed: $e', variant: OwlSnackVariant.error);
     }
     finally {
       if (mounted) setState(() => _loading = false);
@@ -717,12 +742,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   // ---- helpers ----
-  void _toast(String msg) {
+  void _toast(
+      String msg, {
+        OwlSnackVariant variant = OwlSnackVariant.neutral,
+      }) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+
+    OwlSnack.show(
+      context,
+      title: '',
+      message: msg,
+      variant: variant,
+      showDivider: false,
+      behavior: SnackBarBehavior.floating,
     );
   }
+
 
   void _openVenueByIdOrExplain(String id) {
     final venues = ref.read(venuesByIdMapProvider);
@@ -1022,6 +1057,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
 // ======= FILTER PANEL + EXPANDABLE TILES ===================================
 
+// ======= FILTER PANEL + EXPANDABLE TILES ===================================
+
 class _VenueTypeFilterPanel extends StatefulWidget {
   const _VenueTypeFilterPanel({
     required this.selected,
@@ -1031,6 +1068,8 @@ class _VenueTypeFilterPanel extends StatefulWidget {
     required this.userLocation,
     required this.onSelectionChanged,
     required this.onVenueTap,
+    required this.showOnlyOpen,
+    required this.onShowOnlyOpenChanged,
   });
 
   final Set<VenueType> selected;
@@ -1038,6 +1077,10 @@ class _VenueTypeFilterPanel extends StatefulWidget {
   final Map<VenueType, int> counts;
   final Map<VenueType, List<Venue>> venuesByType;
   final LatLng? userLocation;
+
+  final bool showOnlyOpen;
+  final ValueChanged<bool> onShowOnlyOpenChanged;
+
   final Future<void> Function(Set<VenueType>) onSelectionChanged;
   final Future<void> Function(Venue) onVenueTap;
 
@@ -1070,6 +1113,10 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
     // True when ALL types are currently enabled
     final allOn = _selected.length == widget.allTypes.length;
 
+    // All venues aggregated (for the "All" expandable row)
+    final List<Venue> allVenues =
+    widget.venuesByType.values.expand((v) => v).toList();
+
     // Only show types that actually have venues, sorted by amount desc
     final visibleTypes = widget.allTypes
         .where((t) => (widget.counts[t] ?? 0) > 0)
@@ -1079,8 +1126,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
         final cb = widget.counts[b] ?? 0;
         if (cb != ca) return cb.compareTo(ca); // most → first
         return _labelFor(a).compareTo(_labelFor(b));
-      }
-      );
+      });
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1100,80 +1146,100 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: grey,
-                  borderRadius: BorderRadius.circular(borderRadiusSmallest),
+                  borderRadius:
+                  BorderRadius.circular(borderRadiusSmallest),
                 ),
               ),
 
-              // Header: title + total count + global toggle
+              // Header: title + "Open now" toggle
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Text('Venues on map', style: Styles.basicTextHeader),
+                    Text(
+                      'Filters',
+                      style: Styles.basicTextHeader,
+                    ),
                     const Spacer(),
-
-                    //TODO switch this out with is open filter.
-
-
+                    Text(
+                      'Open now',
+                      style: Styles.smallText.copyWith(color: greyLighter),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch.adaptive(
+                      value: widget.showOnlyOpen,
+                      onChanged: widget.onShowOnlyOpenChanged,
+                      activeColor: owlPurple,
+                      activeTrackColor: owlPurple.withOpacity(0.4),
+                      inactiveThumbColor: grey,
+                      inactiveTrackColor: white.withOpacity(0.12),
+                    ),
                   ],
                 ),
               ),
 
               Divider(color: grey),
-              Row(
-                children: [
-                  if (totalCount > 0) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      '($totalCount)',
-                      style: Styles.smallText.copyWith(color: greyLighter),
-                    ),
-                  ],
-                  Switch.adaptive(
-                    value: allOn,
-                    onChanged: (value) {
-                      _updateSelection(() {
-                        if (value) {
-                          _selected
-                            ..clear()
-                            ..addAll(widget.allTypes);
-                        } else {
-                          _selected.clear();
-                        }
-                      });
-                    },
-                    activeColor: owlPurple,
-                    activeTrackColor: owlPurple.withOpacity(0.4),
-                    inactiveThumbColor: grey,
-                    inactiveTrackColor: white.withOpacity(0.12),
-                  ),
-                ],
-              ),
-              // Per-type expandable toggles with counts (sorted by count)
+
+              // Scrollable list: "All" row + per-type rows – all in the same ListView
               Expanded(
-                child: visibleTypes.isEmpty
+                child: totalCount == 0
                     ? Center(
                   child: Text(
                     'No venues found',
-                    style: Styles.smallText.copyWith(color: greyLighter),
+                    style: Styles.smallText
+                        .copyWith(color: greyLighter),
                   ),
                 )
                     : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: visibleTypes.length,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ),
+                  itemCount: 1 + visibleTypes.length,
                   separatorBuilder: (_, __) => Divider(
                     height: 1,
                     color: white.withOpacity(0.06),
                   ),
                   itemBuilder: (context, index) {
-                    final t = visibleTypes[index];
+                    // First row = "All"
+                    if (index == 0) {
+                      return _VenueFilterExpandableTile(
+                        label: 'All',
+                        icon: Icons.all_inclusive_outlined,
+                        isOn: allOn,
+                        count: totalCount,
+                        venues: allVenues,
+                        userLocation: widget.userLocation,
+                        // A venue is "active" here iff its type is currently selected
+                        isVenueActive: (venue) {
+                          final type = venue.type;
+                          return type != null &&
+                              _selected.contains(type);
+                        },
+                        onToggleChanged: (value) {
+                          _updateSelection(() {
+                            if (value) {
+                              _selected
+                                ..clear()
+                                ..addAll(widget.allTypes);
+                            } else {
+                              _selected.clear();
+                            }
+                          });
+                        },
+                        onVenueTap: widget.onVenueTap,
+                      );
+                    }
+
+                    // Other rows = each type
+                    final t = visibleTypes[index - 1];
                     final isOn = _selected.contains(t);
                     final count = widget.counts[t] ?? 0;
-                    final venues = widget.venuesByType[t] ?? const <Venue>[];
+                    final venues =
+                        widget.venuesByType[t] ?? const <Venue>[];
 
-                    return _VenueTypeExpandableTile(
+                    return _VenueFilterExpandableTile(
                       label: _labelFor(t),
-                      type: t,
+                      icon: t.icon,
                       isOn: isOn,
                       count: count,
                       venues: venues,
@@ -1182,12 +1248,10 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                         _updateSelection(() {
                           if (value) {
                             _selected.add(t);
-                          }
-                          else {
+                          } else {
                             _selected.remove(t);
                           }
-                        }
-                        );
+                        });
                       },
                       onVenueTap: widget.onVenueTap,
                     );
@@ -1202,20 +1266,21 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
   }
 }
 
-class _VenueTypeExpandableTile extends StatefulWidget {
-  const _VenueTypeExpandableTile({
+class _VenueFilterExpandableTile extends StatefulWidget {
+  const _VenueFilterExpandableTile({
     required this.label,
-    required this.type,
+    required this.icon,
     required this.isOn,
     required this.count,
     required this.venues,
     required this.userLocation,
     required this.onToggleChanged,
     required this.onVenueTap,
+    this.isVenueActive,
   });
 
   final String label;
-  final VenueType type;
+  final IconData icon;
   final bool isOn;
   final int count;
   final List<Venue> venues;
@@ -1223,12 +1288,17 @@ class _VenueTypeExpandableTile extends StatefulWidget {
   final ValueChanged<bool> onToggleChanged;
   final Future<void> Function(Venue) onVenueTap;
 
+  /// Optional per-venue active check.
+  /// If null, `isOn` is used for all venues in this tile.
+  final bool Function(Venue v)? isVenueActive;
+
   @override
-  State<_VenueTypeExpandableTile> createState() =>
-      _VenueTypeExpandableTileState();
+  State<_VenueFilterExpandableTile> createState() =>
+      _VenueFilterExpandableTileState();
 }
 
-class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
+class _VenueFilterExpandableTileState
+    extends State<_VenueFilterExpandableTile> {
   bool _expanded = false;
 
   List<Venue> _sortedVenues() {
@@ -1240,8 +1310,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
       final da = Distance.metersLatLng(user, a.entry);
       final db = Distance.metersLatLng(user, b.entry);
       return da.compareTo(db);
-    }
-    );
+    });
     return list;
   }
 
@@ -1255,10 +1324,15 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
   @override
   Widget build(BuildContext context) {
     final venues = _sortedVenues();
+    final bool headerActive = widget.isOn;
+
+    final TextStyle headerLabelStyle = headerActive
+        ? Styles.basicText
+        : Styles.basicText.copyWith(color: greyLighter);
 
     return Column(
       children: [
-        // Top row: icon, label, count, toggle, dropdown chevron
+        // Top row: icon, label, count, toggle, chevron
         Row(
           children: [
             // Icon circle
@@ -1266,15 +1340,15 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: widget.isOn
+                color: headerActive
                     ? owlPurple.withOpacity(0.18)
                     : white.withOpacity(0.04),
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
               child: Icon(
-                widget.type.icon,
-                color: widget.isOn ? owlPurple : greyLighter,
+                widget.icon,
+                color: headerActive ? owlPurple : greyLighter,
                 size: iconSizeSmall,
               ),
             ),
@@ -1284,7 +1358,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
             Expanded(
               child: Text(
                 widget.label,
-                style: Styles.basicText,
+                style: headerLabelStyle,
               ),
             ),
 
@@ -1309,7 +1383,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
               inactiveTrackColor: white.withOpacity(0.12),
             ),
 
-            // Dropdown chevron (RIGHT of toggle)
+            // Dropdown chevron
             IconButton(
               iconSize: 20,
               splashRadius: 20,
@@ -1317,7 +1391,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                 setState(() => _expanded = !_expanded);
               },
               icon: AnimatedRotation(
-                turns: _expanded ? 0.5 : 0.0, // 180°
+                turns: _expanded ? 0.5 : 0.0,
                 duration: const Duration(milliseconds: 150),
                 child: Icon(
                   chevronUpIcon,
@@ -1326,11 +1400,10 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                 ),
               ),
             ),
-
           ],
         ),
 
-        // Expanded list of venues of this type, sorted by distance
+        // Expanded list of venues
         if (_expanded && venues.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
@@ -1344,10 +1417,22 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                 }
 
                 final name =
-                (v.displayName.isNotEmpty ? v.displayName : v.name);
+                v.displayName.isNotEmpty ? v.displayName : v.name;
+
+                // For this *venue*, are we active? (used by "All" tile)
+                final bool venueActive =
+                    widget.isVenueActive?.call(v) ?? widget.isOn;
+
+                final itemTextStyle = venueActive
+                    ? Styles.smallText
+                    : Styles.smallText.copyWith(color: greyLighter);
+
+                final distanceTextStyle = venueActive
+                    ? Styles.smallText.copyWith(color: owlPurple)
+                    : Styles.smallText.copyWith(color: grey);
 
                 return InkWell(
-                  onTap: widget.isOn ? () => widget.onVenueTap(v) : null,
+                  onTap: () => widget.onVenueTap(v),
                   borderRadius: BorderRadius.circular(borderRadiusSmall),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1356,9 +1441,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                         Expanded(
                           child: Text(
                             name,
-                            style: Styles.smallText.copyWith(
-                              color: widget.isOn ? white : grey, // optional visual hint
-                            ),
+                            style: itemTextStyle,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -1366,18 +1449,14 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                           const SizedBox(width: 8),
                           Text(
                             distanceLabel,
-                            style: Styles.smallText.copyWith(
-                              color: widget.isOn ? owlPurple : grey, // optional
-                            ),
+                            style: distanceTextStyle,
                           ),
                         ],
                       ],
                     ),
                   ),
                 );
-
-              }
-              ).toList(),
+              }).toList(),
             ),
           ),
       ],
@@ -1386,79 +1465,5 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
 }
 
 
-
-class _VenueTypeToggleTile extends StatelessWidget {
-  const _VenueTypeToggleTile({
-    required this.label,
-    required this.type,
-    required this.isOn,
-    required this.count,
-    required this.onChanged,
-  });
-
-  final String label;
-  final VenueType type;
-  final bool isOn;
-  final int count;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(!isOn),
-      borderRadius: BorderRadius.circular(borderRadiusSmall),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            // Icon in a soft circle
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isOn ? owlPurple.withOpacity(0.18) : white.withOpacity(0.04),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                type.icon,
-                color: isOn ? owlPurple : greyLighter,
-                size: iconSizeSmall,
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Label
-            Expanded(
-              child: Text(
-                label,
-                style: Styles.basicText,
-              ),
-            ),
-
-            // Count
-            if (count > 0) ...[
-              const SizedBox(width: 8),
-              Text(
-                '($count)',
-                style: Styles.smallText.copyWith(color: greyLighter),
-              ),
-            ],
-
-            // Switch
-            Switch.adaptive(
-              value: isOn,
-              onChanged: onChanged,
-              activeColor: owlPurple,
-              activeTrackColor: owlPurple.withOpacity(0.4),
-              inactiveThumbColor: grey,
-              inactiveTrackColor: white.withOpacity(0.12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 

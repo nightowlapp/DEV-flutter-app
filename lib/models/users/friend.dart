@@ -2,10 +2,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Friend {
-  Friend({required this.userid, this.name = ''});
+  Friend(this.isGoodFriend, {required this.userid, this.name = ''});
 
   final String userid;
   final String name;
+  final bool isGoodFriend;
   // final GeoPoint currentLocation; // = locations/{userid}/{live_location}
 }
 //TODO make below instead.
