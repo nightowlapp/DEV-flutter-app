@@ -33,6 +33,7 @@ import '../../../data/services/navigation/navigation_service.dart';
 import '../../../data/services/navigation/route_renderer.dart';
 import '../../../models/navigation/nav_models.dart';
 import '../../../models/users/live_location.dart';
+import '../../../shared/reusable/ui/owl_scrollbar.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/utility/distance.dart';
 import '../presentation/friends_fc.dart';
@@ -792,16 +793,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // Respect current filters
     if (type == null || !_allowedTypes.contains(type)) {
-      _toast('This venue is hidden by your filters.');
+      _toast('${v.displayName} is hidden by your filters.');
       return;
     }
 
-    if (!_showClosed) {
-      final isOpen = v.isOpenNow == true; // again, adjust field name if needed
-      if (!isOpen) {
-        _toast('This venue is hidden because it’s closed.');
-        return;
-      }
+    if (!_isVenueOpenNow(v)) {
+      _toast('${v.displayName} is hidden because it’s closed.');
+      return;
     }
 
     _openVenue(v);
@@ -841,10 +839,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         }
 
         // Respect open/closed filter if you ever set _showClosed = false
-        if (!_showClosed) {
-          final isOpen = v.isOpenNow == true; // adjust field name if needed
-          if (!isOpen) return;
-        }
+        if (!_isVenueOpenNow(v)) return;
 
         final d = Distance.metersLatLng(tap, v.entry);
         if (d < best) {
@@ -1082,8 +1077,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final type = v.type;
       if (type == null || !_allowedTypes.contains(type)) continue;
 
-      // When _showClosed is false → we only show open venues
-      if (!_showClosed && v.isOpenNow != true) continue;
+      // OLD:
+      // if (!_showClosed && v.isOpenNow != true) continue;
+
+      // NEW:
+      if (!_showClosed && !_isVenueOpenNow(v)) continue;
 
       total++;
     }
@@ -1091,7 +1089,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return total;
   }
 
+
 }
+
+bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());
+
 
 // ======= FILTER PANEL + EXPANDABLE TILES ===================================
 
@@ -1150,7 +1152,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
         if (!_selected.contains(type)) return;
 
         for (final v in venues) {
-          if (widget.showOnlyOpen && v.isOpenNow != true) continue;
+          if (widget.showOnlyOpen && !_isVenueOpenNow(v)) continue;
           total++;
         }
       }
@@ -1179,24 +1181,45 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
     final panelHeight = screenHeight * 0.7;
     final double outerRadius = borderRadiusDefault * 1.6;
 
-    // Total venues across all filterable types (ignores "Open now")
+    // Build an "effective" per-type map that already respects the
+    // "Open now" toggle. When showOnlyOpen == true, we drop closed venues.
+    final Map<VenueType, List<Venue>> effectiveByType = {
+      for (final t in widget.allTypes) t: <Venue>[],
+    };
+
+    widget.venuesByType.forEach((type, venues) {
+        final list = widget.showOnlyOpen
+          ? venues.where(_isVenueOpenNow).toList()
+          : List<Venue>.from(venues);
+        effectiveByType[type] = list;
+      }
+    );
+
+    // Counts based on the effective list (so they also respect "Open now")
+    final Map<VenueType, int> effectiveCounts = {
+      for (final t in widget.allTypes) t: effectiveByType[t]?.length ?? 0,
+    };
+
+    // Total venues across all types, respecting "Open now"
     final totalCount =
-      widget.counts.values.fold<int>(0, (prev, v) => prev + v);
+      effectiveCounts.values.fold<int>(0, (prev, v) => prev + v);
 
     // True when ALL types are currently enabled
     final allOn = _selected.length == widget.allTypes.length;
 
-    // All venues aggregated (for the "All" expandable row)
+    // All venues aggregated (for the "All" expandable row),
+    // already filtered by open/closed depending on showOnlyOpen.
     final List<Venue> allVenues =
-      widget.venuesByType.values.expand((v) => v).toList();
+      effectiveByType.values.expand((v) => v).toList();
 
-    // Only show types that actually have venues, sorted by amount desc
+    // Only show types that actually have (effective) venues,
+    // sorted by amount desc
     final visibleTypes = widget.allTypes
-      .where((t) => (widget.counts[t] ?? 0) > 0)
+      .where((t) => (effectiveCounts[t] ?? 0) > 0)
       .toList()
     ..sort((a, b) {
-        final ca = widget.counts[a] ?? 0;
-        final cb = widget.counts[b] ?? 0;
+        final ca = effectiveCounts[a] ?? 0;
+        final cb = effectiveCounts[b] ?? 0;
         if (cb != ca) return cb.compareTo(ca); // most → first
         return _labelFor(a).compareTo(_labelFor(b));
       }
@@ -1276,17 +1299,13 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
 
                 // ===== BODY: scrollable type list ==========================
                 Expanded(
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    thickness: 3,
-                    radius:
-                    const Radius.circular(borderRadiusDefault),
+                  child: OwlScrollbar(
                     child: totalCount == 0
-                      ? Center(
+                      ? Center( //TODO Make sadfaceOwl to show when errors/isempty
                         child: Text(
-                          'No venues found',
+                          'No venues match your filters',
                           style: Styles.smallText
-                            .copyWith(color: greyLighter),
+                            .copyWith(color: grey),
                         ),
                       )
                       : ListView.separated(
@@ -1313,13 +1332,8 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                               isVenueActive: (venue) {
                                 final type = venue.type;
                                 if (type == null) return false;
-                                if (!_selected.contains(type)) {
-                                  return false;
-                                }
-                                if (widget.showOnlyOpen &&
-                                  venue.isOpenNow != true) {
-                                  return false;
-                                }
+                                if (!_selected.contains(type)) return false;
+                                if (widget.showOnlyOpen && !_isVenueOpenNow(venue)) return false;
                                 return true;
                               },
                               onToggleChanged: (value) {
@@ -1342,13 +1356,11 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                           // Other rows = each type
                           final t = visibleTypes[index - 1];
                           final isOn = _selected.contains(t);
-                          final count =
-                            widget.counts[t] ?? 0;
+                          final count = effectiveCounts[t] ?? 0;
                           final venues =
-                            widget.venuesByType[t] ??
-                              const <Venue>[];
+                            effectiveByType[t] ?? const <Venue>[];
 
-                          return _VenueFilterExpandableTile(
+                          return _VenueFilterExpandableTile( //TODO add scroll bar inside dropdown as well. AND remove show more. Just show if at bottom of scroll.
                             label: _labelFor(t),
                             icon: t.icon,
                             isOn: isOn,
@@ -1451,22 +1463,62 @@ class _VenueFilterExpandableTile extends StatefulWidget {
 }
 
 
-class _VenueFilterExpandableTileState
-  extends State<_VenueFilterExpandableTile> {
+class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> {
   bool _expanded = false;
 
   // Pagination: how many venues we currently show in this tile.
   static const int _pageSize = 48;
   int _visibleCount = _pageSize;
 
+  // Scroll controller for the inner dropdown list
+  late final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _toggleExpanded() {
     setState(() {
-        _expanded = !_expanded;
-        if (_expanded) {
-          _visibleCount = _pageSize; // reset page when opened
+      _expanded = !_expanded;
+      if (_expanded) {
+        // Reset page + scroll back to top when opening
+        _visibleCount = _pageSize;
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
         }
       }
-    );
+    });
+  }
+
+  // Auto "show more" when scrolled to the bottom
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+
+    // Small tolerance so it still triggers if you're *almost* at the bottom
+    const double tolerance = 16.0;
+
+    if (pos.pixels >= pos.maxScrollExtent - tolerance) {
+      _maybeLoadMore();
+    }
+  }
+
+  void _maybeLoadMore() {
+    final total = widget.venues.length;
+    if (_visibleCount >= total) return; // nothing more to load
+
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, total);
+    });
   }
 
   List<Venue> _sortedVenues() {
@@ -1475,11 +1527,10 @@ class _VenueFilterExpandableTileState
     if (user == null) return list;
 
     list.sort((a, b) {
-        final da = Distance.metersLatLng(user, a.entry);
-        final db = Distance.metersLatLng(user, b.entry);
-        return da.compareTo(db);
-      }
-    );
+      final da = Distance.metersLatLng(user, a.entry);
+      final db = Distance.metersLatLng(user, b.entry);
+      return da.compareTo(db);
+    });
     return list;
   }
 
@@ -1506,11 +1557,11 @@ class _VenueFilterExpandableTileState
     // Clamp visible count so we never go out of range.
     final int visible = math.min(_visibleCount, venues.length);
     final List<Venue> visibleVenues = venues.take(visible).toList();
-    final int remaining = venues.length - visible;
+    final int remaining = venues.length - visible; // still used for sizing
 
     final TextStyle headerLabelStyle = headerActive
-      ? Styles.basicText
-      : Styles.basicText.copyWith(color: greyLighter);
+        ? Styles.basicText
+        : Styles.basicText.copyWith(color: greyLighter);
 
     return Column(
       children: [
@@ -1528,8 +1579,8 @@ class _VenueFilterExpandableTileState
                   height: 32,
                   decoration: BoxDecoration(
                     color: headerActive
-                      ? owlPurple.withOpacity(0.18)
-                      : white.withOpacity(0.04),
+                        ? owlPurple.withOpacity(0.18)
+                        : white.withOpacity(0.04),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -1587,61 +1638,47 @@ class _VenueFilterExpandableTileState
           ),
         ),
 
-        // ===== EXPANDED CONTENT (unchanged from your version) ==========
+        // ===== EXPANDED CONTENT ========================================
         if (_expanded && venues.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Max height for the inner scroll area
-              const double maxInnerHeight = 260.0;
+          Padding(
+            padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Max height for the inner scroll area
+                const double maxInnerHeight = 260.0;
 
-              // Estimate a row height so the list doesn't get taller than needed
-              const double rowHeight = 32.0; // approx text + padding
-              final int visible = visibleVenues.length;
-              final bool hasMore = remaining > 0;
+                // Estimate a row height so the list doesn't get taller than needed
+                const double rowHeight = 32.0; // approx text + padding
+                final int visible = visibleVenues.length;
 
-              final double neededHeight =
-                visible * rowHeight + (hasMore ? 40.0 : 0.0);
+                // We still use `remaining` only to approximate needed height,
+                // but there is no "Show more" row any more.
+                final double neededHeight =
+                    visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
 
-              final double height = math.min(
-                maxInnerHeight,
-                neededHeight,
-              );
+                final double height = math.min(
+                  maxInnerHeight,
+                  neededHeight,
+                );
 
-              return SizedBox(
-                height: height,
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: visibleVenues.length + (hasMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index < visibleVenues.length) {
-                      final v = visibleVenues[index];
-                      return _buildVenueRow(context, v);
-                    }
-
-                    // Last item = "Show more" button
-                    return TextButton(
-                      onPressed: () {
-                        setState(() {
-                            _visibleCount = math.min(
-                              _visibleCount + _pageSize,
-                              venues.length,
-                            );
-                          }
-                        );
+                return SizedBox(
+                  height: height,
+                  child: OwlScrollbar(
+                    thickness: 1,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(right: 3), // space for scrollbar
+                      itemCount: visibleVenues.length,
+                      itemBuilder: (context, index) {
+                        final v = visibleVenues[index];
+                        return _buildVenueRow(context, v);
                       },
-                      child: Text(
-                        'Show more ($remaining more)',
-                        style: Styles.smallText.copyWith(color: owlPurple),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -1658,15 +1695,15 @@ class _VenueFilterExpandableTileState
 
     // For this *venue*, are we active? (used by "All" tile)
     final bool venueActive =
-      widget.isVenueActive?.call(v) ?? widget.isOn;
+        widget.isVenueActive?.call(v) ?? widget.isOn;
 
     final itemTextStyle = venueActive
-      ? Styles.smallText
-      : Styles.smallText.copyWith(color: greyLighter);
+        ? Styles.smallText
+        : Styles.smallText.copyWith(color: greyLighter);
 
     final distanceTextStyle = venueActive
-      ? Styles.smallText.copyWith(color: owlPurple)
-      : Styles.smallText.copyWith(color: grey);
+        ? Styles.smallText.copyWith(color: owlPurple)
+        : Styles.smallText.copyWith(color: grey);
 
     return InkWell(
       onTap: () => widget.onVenueTap(v),
@@ -1695,4 +1732,3 @@ class _VenueFilterExpandableTileState
     );
   }
 }
-

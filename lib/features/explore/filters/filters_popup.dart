@@ -6,6 +6,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 
+import '../../../shared/reusable/ui/owl_scrollbar.dart';
 import 'filter_controller.dart';
 import 'popup_widgets/distance_filter_section.dart';
 import 'popup_widgets/rating_filter_section.dart';
@@ -114,28 +115,24 @@ class _FiltersCard extends ConsumerWidget {
 
             // BODY
             const Expanded(
-              child: Scrollbar(
-                thumbVisibility: true,
-                thickness: 3,
-                radius: Radius.circular(borderRadiusDefault),
+              child: OwlScrollbar(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
                     vertical: verticalSpacerDefault,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DistanceFilterSection(),
-                      RatingFilterSection(),
-                      AgeRestrictionFilterSection(),
-                      VenueTypeFilterSection(),
-                      //TODO Other filters like entry price, dresscode, tags, most people right now / empty
-                    ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DistanceFilterSection(),
+                        RatingFilterSection(),
+                        AgeRestrictionFilterSection(),
+                        VenueTypeFilterSection(),
+                        //TODO Other filters like entry price, dresscode, tags, most people right now / empty
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-
             // FOOTER
             Padding(
               padding: const EdgeInsets.fromLTRB(
