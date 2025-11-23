@@ -367,7 +367,7 @@
     String label() {
       String fmt(int m) =>
           '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
-
+//TODO add opens soon (1hour).
       switch (phase) {
         case OpeningPhase.open:
           return 'Open now · until ${fmt(closeMinutes!)}';

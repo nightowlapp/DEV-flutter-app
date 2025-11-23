@@ -45,7 +45,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-  with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin {
   mb.MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
@@ -73,7 +73,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   final NavTts _tts = NavTts();
 
   String _logoImageIdFor(Venue v) =>
-  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
+      'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   final bool _showClosed = true;
 
@@ -114,9 +114,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.initState();
     _tts.init(); // default en-US
     _tts.muted.addListener(() {
-        if (mounted) setState(() {}
-          );
-      }
+      if (mounted) setState(() {}
+      );
+    }
     );
   }
 
@@ -225,11 +225,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final sym = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrVip,
-          MapStyle.lyrUnclustered,
-          MapStyle.lyrVipLabels,
-          MapStyle.lyrLabels,
-        ]),
+        MapStyle.lyrVip,
+        MapStyle.lyrUnclustered,
+        MapStyle.lyrVipLabels,
+        MapStyle.lyrLabels,
+      ]),
     );
     debugPrint('tap: symbol/labels hits = ${sym.length}');
     final symId = _firstId(sym);
@@ -306,64 +306,70 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.build(context);
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
-        final map = _map;
-        if (next == null || next.id <= _lastNavId) return;
-        _lastNavId = next.id;
+      final map = _map;
+      if (next == null || next.id <= _lastNavId) return;
+      _lastNavId = next.id;
 
-        if (map == null || !_styleReady) {
-          _pendingNav = next;
-          return;
-        }
-        map.easeTo(
-          mb.CameraOptions(
-            center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
-            zoom: next.zoom,
-          ),
-          mb.MapAnimationOptions(duration: 500),
-        );
+      if (map == null || !_styleReady) {
+        _pendingNav = next;
+        return;
       }
+      map.easeTo(
+        mb.CameraOptions(
+          center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
+          zoom: next.zoom,
+        ),
+        mb.MapAnimationOptions(duration: 500),
+      );
+    }
     );
 
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
-        final map = _map;
-        if (map == null || !_styleReady) return;
-        await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
+      final map = _map;
+      if (map == null || !_styleReady) return;
 
-        final venues = ref.read(allVenuesListProvider);
-        final idToPath2 = <String, String>{};
-        for (final v in venues) {
-          if (v.isVerified) {
-            final id = _logoImageIdFor(v);
-            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
-          }
+      await _style.applyFilters(
+        map,
+        showClosed: _showClosed,
+        allowedTypes: _allowedTypeNamesForStyle(),
+        baseClusterableFc: next.clusterable,
+        baseVipFc: next.vip,
+      );
+
+      final venues = ref.read(allVenuesListProvider);
+      final idToPath2 = <String, String>{};
+      for (final v in venues) {
+        if (v.isVerified) {
+          final id = _logoImageIdFor(v);
+          idToPath2[id] = 'venue_images/${v.id}/logo.webp';
         }
-        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
       }
-    );
+      await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
+    });
 
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
-      (prev, next) async {
+          (prev, next) async {
         final map = _map;
         if (map == null || !_styleReady) return;
         next.whenData((m) async {
-            final fc = friendsToFeatureCollection(m);
-            await _style.setFriendsData(map, fc);
-          }
+          final fc = friendsToFeatureCollection(m);
+          await _style.setFriendsData(map, fc);
+        }
         );
       },
     );
 
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-        _venuesById
+      _venuesById
         ..clear()
         ..addAll(next);
-      }
+    }
     );
 
     ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider, (prev, next) {
-        next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
-      }
+      next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
+    }
     );
 
     final camAsync = ref.watch(initialCameraProvider);
@@ -409,11 +415,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
           _navBanner(),
           if (_loading)
-          const Positioned.fill(
-            child: ColoredBox(
-              color: transparent,
+            const Positioned.fill(
+              child: ColoredBox(
+                color: transparent,
+              ),
             ),
-          ),
 
           // Center on user
           Positioned(
@@ -501,20 +507,34 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 onSelectionChanged: (selection) async {
                   final map = _map;
                   if (map == null || !_styleReady) return;
+
                   setState(() {
-                      _allowedTypes
+                    _allowedTypes
                       ..clear()
                       ..addAll(selection);
-                    }
-                  );
+                  });
+
+                  final fcNow = ref.read(venuesGeoJsonProvider);
+
                   await _style.applyFilters(
                     map,
                     showClosed: _showClosed,
                     allowedTypes: _allowedTypeNamesForStyle(),
+                    baseClusterableFc: fcNow.clusterable,
+                    baseVipFc: fcNow.vip,
                   );
                 },
                 onVenueTap: (venue) async {
-                  // Close the panel, then open the venue popup
+                  // If this venue's type is currently filtered OUT, do nothing (or show a toast).
+                  final venueType = venue.type; // assuming Venue.type is VenueType?
+                  if (venueType == null || !_allowedTypes.contains(venueType)) {
+                    _toast(
+                      'This venue is hidden. Enable the "${venueType?.name.replaceAll('_', ' ') ?? 'type'}" filter to open it.',
+                    );
+                    return;
+                  }
+
+                  // Only if it's visible according to current filters:
                   setState(() => _filtersOpen = false);
                   _openVenue(venue);
                 },
@@ -554,14 +574,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     MapLogoRegistry.instance.clear();
 
     await _style.ensure(map);
+
+    final fcNow = ref.read(venuesGeoJsonProvider);
+
     await _style.applyFilters(
       map,
       showClosed: _showClosed,
       allowedTypes: _allowedTypeNamesForStyle(),
+      baseClusterableFc: fcNow.clusterable,
+      baseVipFc: fcNow.vip,
     );
-
-    final fcNow = ref.read(venuesGeoJsonProvider);
-    await _style.setVenueData(map, clusterableFc: fcNow.clusterable, vipFc: fcNow.vip);
 
     final venues = ref.read(allVenuesListProvider);
     final idToPath = <String, String>{};
@@ -652,7 +674,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _lastRerouteAt = null;
     await _renderer?.clear();
     if (mounted) setState(() {}
-      );
+    );
   }
 
   Future<void> _onLocationTick(geo.Position p) async {
@@ -661,9 +683,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // simple throttle to reduce API spam
     final now = DateTime.now();
     if (_lastRerouteAt != null &&
-      now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
+        now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
       if (mounted) setState(() {}
-        ); // still refresh banner counters
+      ); // still refresh banner counters
       return;
     }
     _lastRerouteAt = now;
@@ -687,7 +709,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
 
       if (mounted) setState(() {}
-        );
+      );
     }
     catch (_) {
       // ignore transient failures
@@ -710,8 +732,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
       _toast('Loading venue… try again in a sec');
       return;
     }
+
+    final type = v.type;
+
+    // Respect current filters
+    if (type == null || !_allowedTypes.contains(type)) {
+      _toast('This venue is hidden by your filters.');
+      return;
+    }
+
+    if (!_showClosed) {
+      final isOpen = v.isOpenNow == true; // again, adjust field name if needed
+      if (!isOpen) {
+        _toast('This venue is hidden because it’s closed.');
+        return;
+      }
+    }
+
     _openVenue(v);
   }
+
 
   void _openVenue(Venue v) async {
     await _navigateTo(v.entry);
@@ -738,16 +778,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final venues = ref.read(venuesByIdMapProvider);
     String? bestId;
     double best = maxMeters;
+
     venues.forEach((id, v) {
-        final d = Distance.metersLatLng(tap, v.entry);
-        if (d < best) {
-          best = d;
-          bestId = id;
-        }
+      final type = v.type; // VenueType?
+      // Respect current type filters
+      if (type == null || !_allowedTypes.contains(type)) {
+        return; // skip hidden types
       }
-    );
+
+      // Respect open/closed filter if you ever set _showClosed = false
+      if (!_showClosed) {
+        final isOpen = v.isOpenNow == true; // adjust field name if needed
+        if (!isOpen) return;
+      }
+
+      final d = Distance.metersLatLng(tap, v.entry);
+      if (d < best) {
+        best = d;
+        bestId = id;
+      }
+    });
+
     return bestId;
   }
+
 
   Color _routeColorFor(NavProfile p) {
     switch (p) {
@@ -761,7 +815,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   RouteStyle _routeStyleFor(NavProfile p) =>
-  p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
+      p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
 
   IconData _modeIcon(NavProfile p) {
     switch (p) {
@@ -837,41 +891,41 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: grey,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(_modeIcon(_navProfile),
-                                color: white, size: iconSizeDefault),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: _toggleMute,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: grey,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                _tts.isMuted
-                                  ? Icons.volume_off_rounded
-                                  : Icons.volume_up_rounded,
-                                color: white,
-                                size: iconSizeDefault,
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: grey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(_modeIcon(_navProfile),
+                                    color: white, size: iconSizeDefault),
                               ),
                             ),
-                          ),
-                        ]),
+                            const SizedBox(height: 8),
+                            InkWell(
+                              onTap: _toggleMute,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: grey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  _tts.isMuted
+                                      ? Icons.volume_off_rounded
+                                      : Icons.volume_up_rounded,
+                                  color: white,
+                                  size: iconSizeDefault,
+                                ),
+                              ),
+                            ),
+                          ]),
                       const SizedBox(width: 8),
                       Column(
                         mainAxisSize: MainAxisSize.min,
@@ -880,12 +934,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           Text(travelTime, style: Styles.basicText),
                           const SizedBox(height: 6),
                           Text(dist,
-                            style: Styles.smallText
-                              .copyWith(fontSize: fontSizeSmaller)),
+                              style: Styles.smallText
+                                  .copyWith(fontSize: fontSizeSmaller)),
                           const SizedBox(height: 6),
                           Text(eta,
-                            style: Styles.smallText
-                              .copyWith(fontSize: fontSizeSmaller)),
+                              style: Styles.smallText
+                                  .copyWith(fontSize: fontSizeSmaller)),
                         ],
                       ),
                       const SizedBox(width: 8),
@@ -923,7 +977,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   onTap: _stopNavigation,
                   borderRadius: BorderRadius.circular(8),
                   child: Icon(Icons.close_rounded,
-                    color: greyLighter, size: iconSizeDefault),
+                      color: greyLighter, size: iconSizeDefault),
                 ),
               ),
             ],
@@ -936,7 +990,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _toggleMute() async {
     await _tts.toggleMuted();
     if (mounted) setState(() {}
-      );
+    );
   }
 
   // ===== scrollable content below rating/header (placeholder) =====
@@ -956,8 +1010,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
             alignment: Alignment.center,
             child: Text(
-              'Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
-              style: Styles.basicText),
+                'Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
+                style: Styles.basicText),
           ),
           const SizedBox(height: 12),
         ],
@@ -1011,22 +1065,22 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
 
     // Total venues across all filterable types
     final totalCount =
-      widget.counts.values.fold<int>(0, (prev, v) => prev + v);
+    widget.counts.values.fold<int>(0, (prev, v) => prev + v);
 
     // True when ALL types are currently enabled
     final allOn = _selected.length == widget.allTypes.length;
 
     // Only show types that actually have venues, sorted by amount desc
     final visibleTypes = widget.allTypes
-      .where((t) => (widget.counts[t] ?? 0) > 0)
-      .toList()
-    ..sort((a, b) {
+        .where((t) => (widget.counts[t] ?? 0) > 0)
+        .toList()
+      ..sort((a, b) {
         final ca = widget.counts[a] ?? 0;
         final cb = widget.counts[b] ?? 0;
         if (cb != ca) return cb.compareTo(ca); // most → first
         return _labelFor(a).compareTo(_labelFor(b));
       }
-    );
+      );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1056,83 +1110,89 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                 child: Row(
                   children: [
                     Text('Venues on map', style: Styles.basicTextHeader),
-                    if (totalCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '($totalCount)',
-                        style: Styles.smallText.copyWith(color: greyLighter),
-                      ),
-                    ],
                     const Spacer(),
-                    Switch.adaptive(
-                      value: allOn,
-                      onChanged: (value) {
-                        _updateSelection(() {
-                          if (value) {
-                            _selected
-                              ..clear()
-                              ..addAll(widget.allTypes);
-                          } else {
-                            _selected.clear();
-                          }
-                        });
-                      },
-                      activeColor: owlPurple,
-                      activeTrackColor: owlPurple.withOpacity(0.4),
-                      inactiveThumbColor: grey,
-                      inactiveTrackColor: white.withOpacity(0.12),
-                    ),
+
+                    //TODO switch this out with is open filter.
+
 
                   ],
                 ),
               ),
 
-              Divider(height: 1, color: white.withOpacity(0.06)),
-
+              Divider(color: grey),
+              Row(
+                children: [
+                  if (totalCount > 0) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '($totalCount)',
+                      style: Styles.smallText.copyWith(color: greyLighter),
+                    ),
+                  ],
+                  Switch.adaptive(
+                    value: allOn,
+                    onChanged: (value) {
+                      _updateSelection(() {
+                        if (value) {
+                          _selected
+                            ..clear()
+                            ..addAll(widget.allTypes);
+                        } else {
+                          _selected.clear();
+                        }
+                      });
+                    },
+                    activeColor: owlPurple,
+                    activeTrackColor: owlPurple.withOpacity(0.4),
+                    inactiveThumbColor: grey,
+                    inactiveTrackColor: white.withOpacity(0.12),
+                  ),
+                ],
+              ),
               // Per-type expandable toggles with counts (sorted by count)
               Expanded(
                 child: visibleTypes.isEmpty
-                  ? Center(
-                    child: Text(
-                      'No venues found',
-                      style: Styles.smallText.copyWith(color: greyLighter),
-                    ),
-                  )
-                  : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: visibleTypes.length,
-                    separatorBuilder: (_, __) => Divider(
-                      height: 1,
-                      color: white.withOpacity(0.06),
-                    ),
-                    itemBuilder: (context, index) {
-                      final t = visibleTypes[index];
-                      final isOn = _selected.contains(t);
-                      final count = widget.counts[t] ?? 0;
-                      final venues = widget.venuesByType[t] ?? const <Venue>[];
-
-                      return _VenueTypeExpandableTile(
-                        label: _labelFor(t),
-                        type: t,
-                        isOn: isOn,
-                        count: count,
-                        venues: venues,
-                        userLocation: widget.userLocation,
-                        onToggleChanged: (value) {
-                          _updateSelection(() {
-                              if (value) {
-                                _selected.add(t);
-                              }
-                              else {
-                                _selected.remove(t);
-                              }
-                            }
-                          );
-                        },
-                        onVenueTap: widget.onVenueTap,
-                      );
-                    },
+                    ? Center(
+                  child: Text(
+                    'No venues found',
+                    style: Styles.smallText.copyWith(color: greyLighter),
                   ),
+                )
+                    : ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: visibleTypes.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: white.withOpacity(0.06),
+                  ),
+                  itemBuilder: (context, index) {
+                    final t = visibleTypes[index];
+                    final isOn = _selected.contains(t);
+                    final count = widget.counts[t] ?? 0;
+                    final venues = widget.venuesByType[t] ?? const <Venue>[];
+
+                    return _VenueTypeExpandableTile(
+                      label: _labelFor(t),
+                      type: t,
+                      isOn: isOn,
+                      count: count,
+                      venues: venues,
+                      userLocation: widget.userLocation,
+                      onToggleChanged: (value) {
+                        _updateSelection(() {
+                          if (value) {
+                            _selected.add(t);
+                          }
+                          else {
+                            _selected.remove(t);
+                          }
+                        }
+                        );
+                      },
+                      onVenueTap: widget.onVenueTap,
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -1165,7 +1225,7 @@ class _VenueTypeExpandableTile extends StatefulWidget {
 
   @override
   State<_VenueTypeExpandableTile> createState() =>
-  _VenueTypeExpandableTileState();
+      _VenueTypeExpandableTileState();
 }
 
 class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
@@ -1177,10 +1237,10 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
     if (user == null) return list;
 
     list.sort((a, b) {
-        final da = Distance.metersLatLng(user, a.entry);
-        final db = Distance.metersLatLng(user, b.entry);
-        return da.compareTo(db);
-      }
+      final da = Distance.metersLatLng(user, a.entry);
+      final db = Distance.metersLatLng(user, b.entry);
+      return da.compareTo(db);
+    }
     );
     return list;
   }
@@ -1207,8 +1267,8 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
               height: 32,
               decoration: BoxDecoration(
                 color: widget.isOn
-                  ? owlPurple.withOpacity(0.18)
-                  : white.withOpacity(0.04),
+                    ? owlPurple.withOpacity(0.18)
+                    : white.withOpacity(0.04),
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -1272,10 +1332,10 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
 
         // Expanded list of venues of this type, sorted by distance
         if (_expanded && venues.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
-          child: Column(
-            children: venues.map((v) {
+          Padding(
+            padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
+            child: Column(
+              children: venues.map((v) {
                 final user = widget.userLocation;
                 String? distanceLabel;
                 if (user != null) {
@@ -1284,10 +1344,10 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                 }
 
                 final name =
-                  (v.displayName.isNotEmpty ? v.displayName : v.name);
+                (v.displayName.isNotEmpty ? v.displayName : v.name);
 
                 return InkWell(
-                  onTap: () => widget.onVenueTap(v),
+                  onTap: widget.isOn ? () => widget.onVenueTap(v) : null,
                   borderRadius: BorderRadius.circular(borderRadiusSmall),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1296,7 +1356,9 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                         Expanded(
                           child: Text(
                             name,
-                            style: Styles.smallText,
+                            style: Styles.smallText.copyWith(
+                              color: widget.isOn ? white : grey, // optional visual hint
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -1305,7 +1367,7 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                           Text(
                             distanceLabel,
                             style: Styles.smallText.copyWith(
-                              color: owlPurple,
+                              color: widget.isOn ? owlPurple : grey, // optional
                             ),
                           ),
                         ],
@@ -1313,10 +1375,11 @@ class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
                     ),
                   ),
                 );
+
               }
-            ).toList(),
+              ).toList(),
+            ),
           ),
-        ),
       ],
     );
   }

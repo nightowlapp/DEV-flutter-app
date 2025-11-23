@@ -301,8 +301,8 @@ class MapStyle {
         'text-field',
         jsonEncode([
           'format',
-            ['get', 'name '], {'text-color': white.toHex()},
-                      '  ', {},
+          ['get', 'name '], {'text-color': white.toHex()},
+          '  ', {},
           [
             'number-format',
             [
@@ -589,10 +589,10 @@ class MapStyle {
   }
 
   Future<void> setVenueData(
-    MapboxMap map, {
-    required String clusterableFc,
-    required String vipFc,
-  }) async {
+      MapboxMap map, {
+        required String clusterableFc,
+        required String vipFc,
+      }) async {
     final style = map.style;
     if (await style.styleSourceExists(srcVenuesClusterable)) {
       await style.setStyleSourceProperty(
@@ -610,80 +610,90 @@ class MapStyle {
   }
 
   Future<void> applyFilters(
-    MapboxMap map, {
-    required bool showClosed,
-    required Set<String> allowedTypes,
-  }) async {
+      MapboxMap map, {
+        required bool showClosed,
+        required Set<String> allowedTypes,
+        required String baseClusterableFc,
+        required String baseVipFc,
+      }) async {
     final style = map.style;
 
-    final typesList = allowedTypes.where((e) => e.isNotEmpty).toList()..sort();
-    final typeExpr = typesList.isEmpty
-        ? ['has', 'venueType']
-        : [
-            'in',
-            ['get', 'venueType'],
-            ['literal', typesList]
-          ];
+    // Interpret your sentinel semantics:
+    // - allowedTypes == {}          → all types ON
+    // - allowedTypes contains '__none__' → all OFF
+    bool _typeAllowed(Map<String, dynamic> props) {
+      final type = props['venueType']?.toString();
+      if (allowedTypes.isEmpty) {
+        // All ON
+        return true;
+      }
+      if (allowedTypes.contains('__none__')) {
+        // All OFF
+        return false;
+      }
+      if (type == null) return false;
+      return allowedTypes.contains(type);
+    }
 
-    final openPredicate = [
-      'any',
-      [
-        '==',
-        ['get', 'isOpenNow'],
-        true
-      ],
-      [
-        '==',
-        ['get', 'opensLaterToday'],
-        true
-      ],
-    ];
+    bool _openAllowed(Map<String, dynamic> props) {
+      if (showClosed) return true;
+      final v = props['isOpenNow'];
+      // Treat anything non-true as "closed"
+      return v == true;
+    }
 
-    final combined = showClosed ? typeExpr : ['all', typeExpr, openPredicate];
+    Map<String, dynamic> _filterFc(String fcJson) {
+      final decoded = jsonDecode(fcJson);
+      if (decoded is! Map) {
+        // fallback to empty FC if something is weird
+        return <String, dynamic>{
+          'type': 'FeatureCollection',
+          'features': <dynamic>[],
+        };
+      }
 
-    await Future.wait([
-      style.setStyleLayerProperty(
-        MapStyle.lyrUnclusteredBg,
-        'filter',
-        jsonEncode([
-          'all',
-          [
-            '!',
-            ['has', 'point_count']
-          ],
-          combined
-        ]),
-      ),
-      style.setStyleLayerProperty(
-        MapStyle.lyrUnclustered,
-        'filter',
-        jsonEncode([
-          'all',
-          [
-            '!',
-            ['has', 'point_count']
-          ],
-          combined
-        ]),
-      ),
-      style.setStyleLayerProperty(
-        MapStyle.lyrLabels,
-        'filter',
-        jsonEncode([
-          'all',
-          [
-            '!',
-            ['has', 'point_count']
-          ],
-          combined
-        ]),
-      ),
-      style.setStyleLayerProperty(
-          MapStyle.lyrVipBg, 'filter', jsonEncode(combined)),
-      style.setStyleLayerProperty(
-          MapStyle.lyrVip, 'filter', jsonEncode(combined)),
-      style.setStyleLayerProperty(
-          MapStyle.lyrVipLabels, 'filter', jsonEncode(combined)),
-    ]);
+      final root = Map<String, dynamic>.from(decoded);
+      final original = (root['features'] as List?) ?? const <dynamic>[];
+      final filtered = <dynamic>[];
+
+      for (final f in original) {
+        if (f is! Map) continue;
+        final rawProps = f['properties'];
+        final props = rawProps is Map
+            ? rawProps.cast<String, dynamic>()
+            : <String, dynamic>{};
+
+        if (_typeAllowed(props) && _openAllowed(props)) {
+          filtered.add(f);
+        }
+      }
+
+      root['features'] = filtered;
+      return root;
+    }
+
+    final filteredClusterable =
+    jsonEncode(_filterFc(baseClusterableFc));
+    final filteredVip = jsonEncode(_filterFc(baseVipFc));
+
+    if (await style.styleSourceExists(srcVenuesClusterable)) {
+      await style.setStyleSourceProperty(
+        srcVenuesClusterable,
+        'data',
+        filteredClusterable,
+      );
+    }
+
+    if (await style.styleSourceExists(srcVenuesVip)) {
+      await style.setStyleSourceProperty(
+        srcVenuesVip,
+        'data',
+        filteredVip,
+      );
+    }
   }
+
+
+
+
 }
