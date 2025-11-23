@@ -5,7 +5,7 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 import '../../../../shared/reusable/ui/owl_snack.dart';
 
@@ -61,8 +61,8 @@ class _FeedbackButtonState extends State<FeedbackButton> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return PopupDialogDefault(
-              title: 'Send Feedback',
+            return OwlPopup(
+              title: 'Give Feedback',
               children: [
                 Wrap(
                   spacing: 6,

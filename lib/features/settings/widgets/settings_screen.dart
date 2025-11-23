@@ -21,7 +21,7 @@ import '../../../shared/constants/icons.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../../shared/reusable/ui/location_indicator.dart';
-import '../../../shared/reusable/ui/popup_dialog_default.dart';
+import '../../../shared/reusable/ui/owl_popup.dart';
 import '../../../shared/reusable/users/language_switcher.dart';
 
 // providers & model
@@ -881,7 +881,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return await showDialog<bool>(
       context: context,
       barrierDismissible: true, // tap outside == cancel
-      builder: (ctx) => PopupDialogDefault( //TODO when loggin out it needs to delete all cached stuff.
+      builder: (ctx) => OwlPopup( //TODO when loggin out it needs to delete all cached stuff.
         title: 'Log out?',
         children: [
           Text('You will be returned to the start screen.', style: Styles.popupText),
@@ -930,7 +930,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return await showDialog<bool>(
       context: context,
       barrierDismissible: true, // tap outside == cancel
-      builder: (ctx) => PopupDialogDefault(
+      builder: (ctx) => OwlPopup(
         title: 'Delete account?',
         children: [
           Text('This action is permanent and cannot be undone.', style: Styles.popupText),
@@ -1001,7 +1001,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         }
 
         return StatefulBuilder(
-          builder: (ctx, setSt) => PopupDialogDefault(
+          builder: (ctx, setSt) => OwlPopup(
             title: 'Preferred venue types',
             children: [
               Row(
@@ -1094,7 +1094,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         }
 
         return StatefulBuilder(
-          builder: (ctx, setSt) => PopupDialogDefault(
+          builder: (ctx, setSt) => OwlPopup(
             title: 'Max venue distance (km)',
             children: [
               Row(
@@ -1233,7 +1233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               .toList()
             ..sort((a, b) => a.name.compareTo(b.name));
 
-            return PopupDialogDefault(
+            return OwlPopup(
               title: 'Choose home location',
               children: [
                 // Country dropdown

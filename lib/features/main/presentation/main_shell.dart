@@ -123,39 +123,32 @@ class _MainShellState extends ConsumerState<MainShell> {
       },
     );
 
-    final rolesAsync = ref.watch(userRolesProvider);
+    final roles = ref.watch(userRolesProvider);
+    final tabs = _visibleTabs(roles);
 
-    return rolesAsync.when(
-      data: (roles) {
-        final tabs = _visibleTabs(roles);
+    final MainScreenName activeGlobal =
+    kBranchOrder[widget.nav.currentIndex];
+    final currentVisibleIndex =
+    tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
 
-        final MainScreenName activeGlobal =
-            kBranchOrder[widget.nav.currentIndex];
-        final currentVisibleIndex =
-            tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
+    final pendingCount = ref.watch(pendingRequestsCountProvider);
 
-        final pendingCount = ref.watch(pendingRequestsCountProvider);
-
-        return MainScaffold(
-          appBar: MainAppBar(screen: activeGlobal),
-          body: widget.nav,
-          bottomNavigationBar: MainBottomNavigationBar(
-            tabs: tabs,
-            currentIndex: currentVisibleIndex,
-            onTap: (i) {
-              final target = tabs[i];
-              final branchIndex = kBranchOrder.indexOf(target);
-              widget.nav.goBranch(
-                branchIndex,
-                initialLocation: branchIndex == widget.nav.currentIndex,
-              );
-            },
-            socialBadgeCount: pendingCount,
-          ),
-        );
-      },
-      loading: () => const LoadingScreen(),
-      error: (_, __) => const ErrorScreen(),
+    return MainScaffold(
+      appBar: MainAppBar(screen: activeGlobal),
+      body: widget.nav,
+      bottomNavigationBar: MainBottomNavigationBar(
+        tabs: tabs,
+        currentIndex: currentVisibleIndex,
+        onTap: (i) {
+          final target = tabs[i];
+          final branchIndex = kBranchOrder.indexOf(target);
+          widget.nav.goBranch(
+            branchIndex,
+            initialLocation: branchIndex == widget.nav.currentIndex,
+          );
+        },
+        socialBadgeCount: pendingCount,
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import '../../../data/providers/other_providers.dart';
+import '../../../data/repositories/users/role_repository.dart';
 import '../../../data/services/tags/tag_helpers.dart';
 import '../../../models/venues/tag.dart';
 
@@ -35,8 +36,13 @@ class VenueTagsGrid extends ConsumerWidget {
     // Local, instant, sorted by your tagTypeOrderProvider
     final tags = ref.watch(localSortedTagsByIdsProvider(tagIds));
 
+    // 🔐 Read current user's roles (synchronous)
+    final roles = ref.watch(userRolesProvider);
+
+    // Only these roles are allowed to see "Add tag"
+    final canAddTags = roles.isAdmin || roles.isTester || roles.isReviewer;
+
     if (tags.isEmpty) {
-      // At cold start this might be empty until SSO loads; show a tiny loader or nothing.
       return _boxed(const LoadingIndicator());
     }
 
@@ -48,12 +54,16 @@ class VenueTagsGrid extends ConsumerWidget {
         childAspectRatio = 5.0;
     const chipHeight = 28.0;
 
-    final bool showAddTagButton = tags.length < _maxTagCountForAddButton;
+    // ✅ Only show Add tag if:
+    //   - user has allowed role, AND
+    //   - we haven't hit the max tag count, AND
+    //   - there's actually a callback wired
+    final bool showAddTagButton = canAddTags &&
+        onAddTag != null &&
+        tags.length < _maxTagCountForAddButton;
+
     final int visualItemCount = tags.length + (showAddTagButton ? 1 : 0);
 
-    // Ensure the "visual order" is:
-    // first: top-left, second: top-right, third: bottom-left, fourth: bottom-right, ...
-    // The "Add tag" chip is always the last in this visual order.
     final gridToVisualIndex = _computeGridToVisualIndex(
       itemCount: visualItemCount,
       rows: rows,

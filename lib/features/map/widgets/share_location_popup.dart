@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 /// Audience options for location sharing (visuals only)
 enum ShareAudience { friends, closeFriends, none }
@@ -50,7 +50,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
     final captionStyle =
       Styles.smallText.copyWith(color: greyLighter, height: 1.35, fontSize: fontSizeSmaller);
 
-    return PopupDialogDefault(
+    return OwlPopup(
       title: 'Share Location',
       maxWidth: 520,
       maxHeightFraction: 0.86,

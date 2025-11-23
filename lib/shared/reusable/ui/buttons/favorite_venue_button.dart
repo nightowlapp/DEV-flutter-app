@@ -7,7 +7,7 @@ import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 
@@ -150,7 +150,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     await showDialog(
       context: ctx,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: title,
         children: [
           Text(text, style: Styles.popupText),
@@ -207,7 +207,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     await showDialog(
       context: ctx,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: title,
         children: [
           Text(text, style: Styles.popupText),
@@ -262,7 +262,7 @@ class _FavoriteVenueButtonState extends ConsumerState<FavoriteVenueButton>
     await showDialog(
       context: ctx,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: 'Too many favorites',
         children: [
           Text(

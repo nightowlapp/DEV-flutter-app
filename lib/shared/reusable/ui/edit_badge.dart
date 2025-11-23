@@ -3,7 +3,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 import '../../../data/repositories/users/feedback_repository.dart';
 import '../../../models/venues/venue.dart';
@@ -32,7 +32,13 @@ class EditBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(editIcon, color: greyLighter, size: iconSizeDefault),
-            Text('Edit', style: Styles.smallText.copyWith(fontSize: 6, color: greyLighter)),
+            Text(
+              'Edit',
+              style: Styles.smallText.copyWith(
+                fontSize: 6,
+                color: greyLighter,
+              ),
+            ),
           ],
         ),
       ),
@@ -43,53 +49,53 @@ class EditBadge extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: 'Suggest an edit',
         children: [
           _EditOption(
-            label: 'Wrong age restriction',
+            label: 'Age restriction',
             icon: Icons.child_friendly_outlined,
-            onTap: () => _submit(context, 'wrong_age_restriction'),
+            onTap: () => _submit(context, 'age_restriction'),
           ),
           _EditOption(
-            label: 'Wrong venue type',
+            label: 'Venue type',
             icon: venuesIcon,
-            onTap: () => _submit(context, 'wrong_type'),
+            onTap: () => _submit(context, 'venue_type'),
           ),
           _EditOption(
-            label: 'Wrong tags',
+            label: 'Tags',
             icon: Icons.tag_outlined,
-            onTap: () => _submit(context, 'wrong_tags'),
+            onTap: () => _submit(context, 'tags'),
           ),
           _EditOption(
-            label: 'Wrong opening hours',
+            label: 'Opening hours',
             icon: Icons.schedule_outlined,
-            onTap: () => _submit(context, 'wrong_opening_hours'),
+            onTap: () => _submit(context, 'opening_hours'),
           ),
           _EditOption(
-            label: 'Wrong entry price',
+            label: 'Entry price',
             icon: Icons.attach_money_outlined,
-            onTap: () => _submit(context, 'wrong_entry_price'),
+            onTap: () => _submit(context, 'entry_price'),
           ),
           _EditOption(
-            label: 'Wrong dress code',
+            label: 'Dress code',
             icon: Icons.checkroom_outlined,
-            onTap: () => _submit(context, 'wrong_dress_code'),
+            onTap: () => _submit(context, 'dress_code'),
           ),
           _EditOption(
-            label: 'Wrong offer(s)',
+            label: 'Offers',
             icon: Icons.local_offer_outlined,
-            onTap: () => _submit(context, 'wrong_offers'),
+            onTap: () => _submit(context, 'offers'),
           ),
           _EditOption(
-            label: 'Wrong name',
+            label: 'Name',
             icon: Icons.signpost_outlined,
-            onTap: () => _submit(context, 'wrong_name'),
+            onTap: () => _submit(context, 'name'),
           ),
           _EditOption(
-            label: 'Wrong location',
+            label: 'Location',
             icon: Icons.place_outlined,
-            onTap: () => _submit(context, 'wrong_location'),
+            onTap: () => _submit(context, 'location'),
           ),
         ],
       ),
@@ -101,13 +107,14 @@ class EditBadge extends StatelessWidget {
     try {
       await FeedbackRepository.submitVenueFeedback(
         venueId: venue.id,
-        category: category,
+        category: category, // e.g. "age_restriction", "venue_type", ...
         message: '', // simple for now; no extra prompt
       );
       OwlSnack.show(
         context,
         title: 'Edit suggestion sent',
         message: 'Category: ${Utility.formatString(category)}',
+        // "age_restriction" -> "Age restriction"
         variant: OwlSnackVariant.success,
       );
     } catch (e) {

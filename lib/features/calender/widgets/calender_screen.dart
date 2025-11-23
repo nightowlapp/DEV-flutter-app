@@ -4,7 +4,7 @@ import 'package:nightowlcode/shared/constants/colors.dart';
 
 // your avatar
 import '../../../shared/constants/styles.dart';
-import '../../../shared/reusable/ui/popup_dialog_default.dart';
+import '../../../shared/reusable/ui/owl_popup.dart';
 import '../../../shared/reusable/users/profile_picture_avatar.dart';
 // your icon constants (chevrons etc.)
 import 'package:nightowlcode/shared/constants/icons.dart';
@@ -93,7 +93,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
     final month = _Fmt.monthShort(date);
     await showDialog<bool>(
       context: context,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: '', //TODO
         children: [
           ListTile(

@@ -104,23 +104,24 @@ class FeedbackDocumentPaths {
 
   static const collection = FirestoreCollections.feedback;
 
-  /// feedback/{uid}
   static String doc(String uid) => '$collection/$uid';
 
-  // ---- Subcollections under feedback/{uid} ----
   static const appFeedback = 'app_feedback';
   static const venueFeedback = 'venue_feedback';
   static const crashes = 'crashes';
+  static const venueTags = 'tags';
 
-  // ---- Common fields inside feedback documents ----
   static const message = 'message';
   static const createdAt = FirestoreFields.createdAt;
 
-  // Venue feedback
   static const venueId = 'venue_id';
   static const category = 'category';
 
-  // Crash reports
+  // Tag suggestion fields
+  static const tagId = 'tag_id';
+  static const isApplied = 'is_applied';
+
+  // Crash
   static const error = 'error';
   static const errorString = 'error_string';
 }

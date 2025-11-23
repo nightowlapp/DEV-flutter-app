@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart'; // adjust path
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart'; // adjust path
 
 import '../../../shared/reusable/ui/owl_dialogs.dart';
 import 'location_controller.dart';
@@ -63,7 +63,7 @@ class _LocationGateState extends ConsumerState<LocationGate> {
     _dialogOpen = true;
     OwlDialogs.show(
       context: context,
-      child: PopupDialogDefault(
+      child: OwlPopup(
         title: title,
         children: [
           Text(body, style: Styles.popupText),

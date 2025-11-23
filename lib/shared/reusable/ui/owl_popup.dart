@@ -5,8 +5,8 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 import 'package:nightowlcode/assets.dart';
 
-class PopupDialogDefault extends StatelessWidget {
-  factory PopupDialogDefault({
+class OwlPopup extends StatelessWidget {
+  factory OwlPopup({
     Key? key,
     required String title,
     required List<Widget> children,
@@ -29,7 +29,7 @@ class PopupDialogDefault extends StatelessWidget {
     double maxHeightFraction = 0.85, // cap dialog height to 85% of screen
     double maxWidth = 560,           // optional desktop/tablet nicety
   }) {
-    return PopupDialogDefault._internal(
+    return OwlPopup._internal(
       key: key,
       title: Utility.formatString(title),
       borderRadius: borderRadius,
@@ -53,7 +53,7 @@ class PopupDialogDefault extends StatelessWidget {
     );
   }
 
-  const PopupDialogDefault._internal({
+  const OwlPopup._internal({
     super.key,
     required this.title,
     required this.children,

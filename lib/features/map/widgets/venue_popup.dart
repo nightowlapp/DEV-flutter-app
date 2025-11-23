@@ -17,6 +17,7 @@ import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
 import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
+import '../../../shared/utility/tag_actions.dart';
 import '../../explore/utility/mood_images_section.dart';
 import '../../../shared/reusable/venues/venue_tags_grid.dart';
 import '../utility/rating_display.dart';
@@ -252,6 +253,7 @@ class _VenuePopupContent extends ConsumerWidget {
                           tagIds: venue.tagids,
                           viewportWidth: PlatformConfig.width(context),
                           viewportHeight: PlatformConfig.height(context),
+                          onAddTag: () => handleAddTagPressed(context, ref, venue),
                         ),
                         const SizedBox(height: 16),
                       ],

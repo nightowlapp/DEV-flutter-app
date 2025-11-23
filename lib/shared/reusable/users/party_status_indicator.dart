@@ -8,7 +8,7 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../constants/styles.dart';
 import '../../constants/colors.dart';
@@ -135,7 +135,7 @@ Future<PartyStatusTypes?> _showStatusDialog(
 }) {
   return showDialog<PartyStatusTypes>(
     context: context,
-    builder: (dialogCtx) => PopupDialogDefault(
+    builder: (dialogCtx) => OwlPopup(
       title: 'Select Status',
       children: [
         for (final it in PartyStatusTypes.values)

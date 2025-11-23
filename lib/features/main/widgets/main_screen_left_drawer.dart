@@ -19,15 +19,8 @@ class MainScreenLeftDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final width = PlatformConfig.width(context) * 0.5;
-    final roles = ref.watch(userRolesProvider).maybeWhen(
-      data: (data) => data,
-      orElse: () => const UserRoles(
-        isAdmin: false,
-        isOwner: false,
-        isTester: false,
-        isReviewer: false,
-      ),
-    );
+    final roles = ref.watch(userRolesProvider);
+
 
     return Drawer(
       surfaceTintColor: owlPurple.withOpacity(0.01),

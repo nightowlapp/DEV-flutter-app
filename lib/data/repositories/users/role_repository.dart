@@ -1,30 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// lib/data/repositories/users/role_repository.dart
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
+import 'package:nightowlcode/data/providers/other_providers.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-
-Future<bool> _hasRole(UserRole role) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return false;
-
-  final doc = await FirebaseFirestore.instance
-      .collection(UserDocumentPaths.collection)
-      .doc(user.uid)
-      .get();
-
-  final roles = doc.data()?[UserDocumentPaths.roles];
-
-  if (roles is List) {
-    return roles.contains(role.name);
-  }
-
-  return false;
-}
-
-Future<bool> checkIfAdmin() => _hasRole(UserRole.admin);
-Future<bool> checkIfTester() => _hasRole(UserRole.tester);
-Future<bool> checkIfReviewer() => _hasRole(UserRole.reviewer);
+import 'package:nightowlcode/models/users/user.dart' as model;
 
 class UserRoles {
   final bool isAdmin;
@@ -40,19 +19,44 @@ class UserRoles {
   });
 }
 
-final userRolesProvider = FutureProvider<UserRoles>((ref) async {
-  final isAdmin = await checkIfAdmin();
-  final isOwner = await checkIfOwner();
-  final isTester = await checkIfTester();
-  final isReviewer = await checkIfReviewer();
+/// Derives roles from the already-loaded `authUserProvider` user model.
+/// No extra Firestore reads – just uses user.roles.
+final userRolesProvider = Provider<UserRoles>((ref) {
+  final authUserAsync = ref.watch(authUserProvider);
 
-  return UserRoles(
-    isAdmin: isAdmin,
-    isOwner: isOwner,
-    isTester: isTester,
-    isReviewer: isReviewer,
+  return authUserAsync.maybeWhen(
+    data: (model.User? user) {
+      final roles = user?.roles ?? const <UserRole>{};
+
+      return UserRoles(
+        isAdmin: roles.contains(UserRole.admin),
+        isOwner: roles.contains(UserRole.owner),
+        isTester: roles.contains(UserRole.tester),
+        isReviewer: roles.contains(UserRole.reviewer),
+      );
+    },
+    orElse: () => const UserRoles(
+      isAdmin: false,
+      isOwner: false,
+      isTester: false,
+      isReviewer: false,
+    ),
   );
 });
 
-Future<bool> checkIfOwner() =>
-    _hasRole(UserRole.owner); // TODO owner should be own array field - returns venueIds.
+/// Convenience boolean providers (optional)
+final currentUserIsAdminProvider = Provider<bool>((ref) {
+  return ref.watch(userRolesProvider).isAdmin;
+});
+
+final currentUserIsTesterProvider = Provider<bool>((ref) {
+  return ref.watch(userRolesProvider).isTester;
+});
+
+final currentUserIsReviewerProvider = Provider<bool>((ref) {
+  return ref.watch(userRolesProvider).isReviewer;
+});
+
+final currentUserIsOwnerProvider = Provider<bool>((ref) {
+  return ref.watch(userRolesProvider).isOwner;
+});

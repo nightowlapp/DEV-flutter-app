@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 import '../filter_controller.dart';
 import 'card_section.dart';
@@ -223,7 +223,7 @@ Future<double?> _promptForNumber({
     context: context,
     barrierDismissible: true,
     builder: (ctx) {
-      return PopupDialogDefault(
+      return OwlPopup(
         title: title,
         children: [
           const SizedBox(height: verticalSpacerDefault),

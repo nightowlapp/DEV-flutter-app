@@ -4,7 +4,7 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 
 import '../../../assets.dart';
-import '../ui/popup_dialog_default.dart';
+import '../ui/owl_popup.dart';
 
 class LanguageSwitcher extends StatelessWidget {
   const LanguageSwitcher({
@@ -34,7 +34,7 @@ class LanguageSwitcher extends StatelessWidget {
   void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => PopupDialogDefault(
+      builder: (context) => OwlPopup(
         title: 'Select Language',
         children: [
           ListTile(

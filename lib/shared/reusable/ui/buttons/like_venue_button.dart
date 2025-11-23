@@ -7,7 +7,7 @@ import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
-import 'package:nightowlcode/shared/reusable/ui/popup_dialog_default.dart';
+import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 import 'package:nightowlcode/core/platform_config.dart';
 
 class LikeVenueButton extends StatefulWidget {
@@ -134,7 +134,7 @@ class _LikeVenueButtonState extends State<LikeVenueButton>
     await showDialog(
       context: ctx,
       barrierDismissible: true,
-      builder: (_) => PopupDialogDefault(
+      builder: (_) => OwlPopup(
         title: title,
         children: [
           Text(text, style: Styles.popupText),

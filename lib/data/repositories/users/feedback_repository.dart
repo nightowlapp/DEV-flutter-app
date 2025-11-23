@@ -1,7 +1,9 @@
+// lib/data/repositories/users/feedback_repository.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../firestore_paths/firestore_paths.dart';
+import '../../firestore_paths/firestore_paths.dart'; // has FeedbackDocumentPaths, VenueDocumentPaths, FirestoreFields
 
 class FeedbackRepository {
   static FirebaseFirestore get _db => FirebaseFirestore.instance;
@@ -62,6 +64,72 @@ class FeedbackRepository {
       // roles / user meta can also be centralized later
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // NEW: Tag suggestions:
+  // feedback/{uid}/venue_feedback/{venueId}/tags/{autoId}
+  // ---------------------------------------------------------------------------
+// feedback/{uid}/venue_feedback/{venueId}/tags/{autoId}
+  static Future<void> submitVenueTagSuggestion({
+    required String venueId,
+    required String tagId,
+    required bool isAdmin,
+    String? message,
+    List<String> conflictingTagIds = const <String>[], // 🔹 NEW
+  }) async {
+    final user = _requireUser;
+
+    final tagsCol = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.venueFeedback)
+        .doc(venueId)
+        .collection(FeedbackDocumentPaths.venueTags);
+
+    final suggestionRef = tagsCol.doc(); // auto-id
+
+    if (!isAdmin) {
+      // Normal user: just record suggestion, not applied yet
+      await suggestionRef.set({
+        FeedbackDocumentPaths.venueId: venueId,
+        FeedbackDocumentPaths.tagId: tagId,
+        FeedbackDocumentPaths.message: message,
+        FeedbackDocumentPaths.isApplied: false,
+        FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
+    // Admin: record suggestion + immediately add tag to venue.tag_ids
+    await _db.runTransaction((tx) async {
+      // 1) suggestion doc
+      tx.set(suggestionRef, {
+        FeedbackDocumentPaths.venueId: venueId,
+        FeedbackDocumentPaths.tagId: tagId,
+        FeedbackDocumentPaths.message: message,
+        FeedbackDocumentPaths.isApplied: true,
+        FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+        FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 2) update venue tags atomically
+      final venueRef = _db.doc(VenueDocumentPaths.doc(venueId));
+
+      // First remove conflicting tags (e.g. old venue_type / smoking_policy)
+      if (conflictingTagIds.isNotEmpty) {
+        tx.update(venueRef, {
+          VenueDocumentPaths.tagIds:
+          FieldValue.arrayRemove(conflictingTagIds.toSet().toList()),
+        });
+      }
+
+      // Then add the new one
+      tx.update(venueRef, {
+        VenueDocumentPaths.tagIds: FieldValue.arrayUnion(<String>[tagId]),
+        FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+
 
   // ---------------------------------------------------------------------------
   // Crash reports:
