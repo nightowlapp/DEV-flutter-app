@@ -182,32 +182,52 @@ class _CountText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (count == null) return const SizedBox.shrink();
+    Widget child;
 
-    final plural = (label.trim() == 'matches' || label.contains('matches'))
-      ? (count == 1 ? ' match' : ' matches')
-      : label;
-    final numColor = (count == 0) ? red : owlPurple;
-    return Semantics(
-      label: count == null ? semanticsLabelWhenUnknown : '$count$plural',
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '${count ?? ''}',
-              style: TextStyle(
-                color: numColor,
-                fontWeight: FontWeight.w700,
-                fontSize: fontSizeSmall,
+    if (count == null) {
+      // Invisible but still keeps semantics if you want SRs to read something
+      child = Semantics(
+        key: const ValueKey('count_empty'),
+        label: semanticsLabelWhenUnknown,
+        child: const SizedBox.shrink(),
+      );
+    } else {
+      final isMatchesLabel =
+          label.trim() == 'matches' || label.contains('matches');
+      final plural = isMatchesLabel
+          ? (count == 1 ? ' match' : ' matches')
+          : label;
+      final numColor = (count == 0) ? red : owlPurple;
+
+      child = Semantics(
+        key: ValueKey('count_${label}_$count'),
+        label: '$count$plural',
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '$count',
+                style: TextStyle(
+                  color: numColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: fontSizeSmall,
+                ),
               ),
-            ),
-            TextSpan(
-              text: plural,
-              style: Styles.basicText,
-            ),
-          ],
+              TextSpan(
+                text: plural,
+                style: Styles.basicText,
+              ),
+            ],
+          ),
         ),
-      ),
+      );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: child,
     );
   }
 }

@@ -14,6 +14,17 @@ import 'package:nightowlcode/shared/utility/distance.dart';
 import '../../../data/services/media_existence.dart';
 import '../../../navigation/nav_shortcuts.dart';
 
+/// Global ticker so all cards can rebuild in "real time"
+final timeTickerProvider = StreamProvider<DateTime>((ref) async* {
+  // emit immediately
+  yield DateTime.now();
+  // then every 30 seconds
+  yield* Stream.periodic(
+    const Duration(seconds: 30),
+        (_) => DateTime.now(),
+  );
+});
+
 class VenueCard extends ConsumerWidget {
   const VenueCard({
     super.key,
@@ -39,19 +50,26 @@ class VenueCard extends ConsumerWidget {
 
   static final AutoSizeGroup _titleGroup = AutoSizeGroup();
 
-  Widget _pill(String text, {Color? bg, Color? fg}) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-    decoration: BoxDecoration(
-      color: bg ?? (text.isNotEmpty ? black : transparent),
-      borderRadius: BorderRadius.circular(borderRadiusDefault),
-    ),
-    child: AutoSizeText(
-      text,
-      style: Styles.smallText.copyWith(color: fg),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    ),
-  );
+  Widget _pill(
+      String text, {
+        Color? bg,
+        Color? fg,
+        Key? key,
+      }) =>
+      Container(
+        key: key,
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        decoration: BoxDecoration(
+          color: bg ?? (text.isNotEmpty ? black : transparent),
+          borderRadius: BorderRadius.circular(borderRadiusDefault),
+        ),
+        child: AutoSizeText(
+          text,
+          style: Styles.smallText.copyWith(color: fg),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +77,10 @@ class VenueCard extends ConsumerWidget {
     final age = venue.defaultAgeRestriction;
     final isVerified = venue.isVerified;
     final String walkText = Distance.walkText(userLocation, venue);
+
+    // ⏱ watch global time ticker (updates ~every 30s)
+    final nowAsync = ref.watch(timeTickerProvider);
+    final now = nowAsync.asData?.value ?? DateTime.now();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -102,21 +124,21 @@ class VenueCard extends ConsumerWidget {
                     // Background image
                     Positioned.fill(
                       child: overrideFallbackAsset == null
-                        ? CoverImage.fromMedia(
-                          media: media,
-                          city: venue.city,
-                          height: height,
-                          fit: BoxFit.cover,
-                        )
-                        : CoverImage(
-                          imageUrl: (media?.coverExists == true &&
+                          ? CoverImage.fromMedia(
+                        media: media,
+                        city: venue.city,
+                        height: height,
+                        fit: BoxFit.cover,
+                      )
+                          : CoverImage(
+                        imageUrl: (media?.coverExists == true &&
                             (media?.coverUrl?.isNotEmpty ?? false))
                             ? media!.coverUrl
                             : null,
-                          fallbackAsset: overrideFallbackAsset,
-                          height: height,
-                          fit: BoxFit.cover,
-                        ),
+                        fallbackAsset: overrideFallbackAsset,
+                        height: height,
+                        fit: BoxFit.cover,
+                      ),
                     ),
 
                     // Title pill
@@ -147,29 +169,89 @@ class VenueCard extends ConsumerWidget {
                       right: 2,
                       child: Builder(
                         builder: (context) {
-                          final now = DateTime.now();
-                          final isOpen = venue.isOpenNow(now);
+                          final status = venue.openingHours.statusAt(now);
+                          final isOpen =
+                              status.phase == OpeningPhase.open;
 
+                          // --- Closing soon logic (when already open) ---
                           int minutesLeft = -1;
                           if (isOpen) {
-                            minutesLeft =
-                            venue.closeTimeToday().difference(now).inMinutes;
+                            minutesLeft = venue
+                                .closeTimeToday()
+                                .difference(now)
+                                .inMinutes;
                             if (minutesLeft < 0) minutesLeft = 0;
                           }
-                          final closingSoon = isOpen && minutesLeft <= 60;
+                          final closingSoon =
+                              isOpen && minutesLeft <= 60;
 
-                          final left = closingSoon
-                            ? _pill('Closing soon', fg: orange)
-                            : (isOpen
-                              ? _pill(walkText)
-                              : _pill('Closed', fg: red));
+                          // --- Opening soon logic (when currently closed) ---
+                          int minutesUntilOpen = -1;
+                          final nowM = now.hour * 60 + now.minute;
+
+                          if (status.openMinutes != null) {
+                            if (status.phase ==
+                                OpeningPhase.opensLaterToday) {
+                              // Same-day opening later
+                              minutesUntilOpen =
+                                  status.openMinutes! - nowM;
+                            } else if (status.phase ==
+                                OpeningPhase.opensTomorrow) {
+                              // Opening tomorrow, compute across midnight
+                              minutesUntilOpen =
+                                  (24 * 60 - nowM) +
+                                      status.openMinutes!;
+                            }
+                          }
+
+                          final openingSoon = !isOpen &&
+                              minutesUntilOpen >= 0 &&
+                              minutesUntilOpen <= 60;
+
+                          // --- Decide label + color for left pill ---
+                          String leftLabel;
+                          Color? leftFg;
+
+                          if (closingSoon) {
+                            leftLabel = 'Closing soon';
+                            leftFg = orange;
+                          } else if (openingSoon) {
+                            leftLabel = 'Opening soon';
+                            leftFg = green;
+                          } else if (isOpen) {
+                            leftLabel = walkText;
+                            leftFg = null;
+                          } else {
+                            leftLabel = 'Closed';
+                            leftFg = red;
+                          }
 
                           final right = _pill('$age+');
 
                           return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                             children: [
-                              left,
+                              // 🔥 Smooth transition between states
+                              AnimatedSwitcher(
+                                duration:
+                                const Duration(milliseconds: 250),
+                                transitionBuilder:
+                                    (child, animation) =>
+                                    FadeTransition(
+                                      opacity: animation,
+                                      child: SizeTransition(
+                                        sizeFactor: animation,
+                                        axis: Axis.horizontal,
+                                        child: child,
+                                      ),
+                                    ),
+                                child: _pill(
+                                  leftLabel,
+                                  fg: leftFg,
+                                  key: ValueKey(leftLabel),
+                                ),
+                              ),
                               right,
                             ],
                           );
@@ -197,7 +279,7 @@ class VenueTitle extends StatelessWidget {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: Styles.basicText
+      style: Styles.basicText,
     );
   }
 }

@@ -31,8 +31,12 @@ final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
   if (maxKm <= 0) return 0;
 
   final maxMeters = maxKm * 1000.0;
+  final now = DateTime.now();
+
   int count = 0;
+
   for (final v in venues) {
+    if (!v.isOpenNow(now)) continue;
     if (Distance.metersLatLng(userLoc, v.entry) <= maxMeters) count++;
   }
   return count;
