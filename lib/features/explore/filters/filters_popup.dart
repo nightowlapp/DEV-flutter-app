@@ -113,12 +113,12 @@ class _FiltersCard extends ConsumerWidget {
             const Divider(color: grey),
 
             // BODY
-            Expanded(
+            const Expanded(
               child: Scrollbar(
                 thumbVisibility: true,
                 thickness: 3,
                 radius: Radius.circular(borderRadiusDefault),
-                child: const SingleChildScrollView(
+                child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
                     vertical: verticalSpacerDefault,
                   ),
@@ -129,6 +129,7 @@ class _FiltersCard extends ConsumerWidget {
                       RatingFilterSection(),
                       AgeRestrictionFilterSection(),
                       VenueTypeFilterSection(),
+                      //TODO Other filters like entry price, dresscode, tags, most people right now / empty
                     ],
                   ),
                 ),

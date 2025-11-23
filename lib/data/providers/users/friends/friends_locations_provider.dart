@@ -1,61 +1,116 @@
-// lib/data/providers/friends_locations_provider.dart
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../../../models/users/live_location.dart';
+import '../../../firestore_paths/firestore_paths.dart';
+import '../../other_providers.dart';
 
-final friendsIdsProvider = Provider<List<String>>((ref) => <String>[]);
-
+/// Map<friendUid, LiveLocation> for all friends that have a recent
+/// locations/{uid} document.
 final friendsLocationsProvider =
-    StreamProvider<Map<String, LiveLocation>>((ref) {
-  final ids = ref.watch(friendsIdsProvider);
-  final db = FirebaseFirestore.instance;
-  if (ids.isEmpty) return const Stream.empty();
+StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
+  final auth = ref.watch(firebaseAuthProvider);
+  final me = auth.currentUser;
+  if (me == null) {
+    return Stream.value(const <String, LiveLocation>{});
+  }
 
-  Iterable<List<String>> chunks(int size) sync* {
-    for (var i = 0; i < ids.length; i += size) {
-      yield ids.sublist(i, (i + size > ids.length) ? ids.length : i + size);
+  final db = FirebaseFirestore.instance;
+
+  final controller = StreamController<Map<String, LiveLocation>>();
+  final locations = <String, LiveLocation>{};
+  final locSubs =
+  <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? friendsSub;
+
+  void emit() {
+    if (!controller.isClosed) {
+      controller.add(Map.unmodifiable(locations));
     }
   }
 
-  final latest = <String, LiveLocation>{};
-  final controller = StreamController<Map<String, LiveLocation>>.broadcast();
-  final subs = <StreamSubscription>[];
+  Future<void> unwatchLocation(String friendUid) async {
+    final sub = locSubs.remove(friendUid);
+    await sub?.cancel();
+    final removed = locations.remove(friendUid) != null;
+    if (removed) emit();
+  }
 
-  void emit() => controller.add(Map<String, LiveLocation>.from(latest));
+  void watchLocation(String friendUid) {
+    if (locSubs.containsKey(friendUid)) return;
 
-  for (final chunk in chunks(10)) {
     final sub = db
         .collection(FirestoreCollections.locations)
-        .where(FieldPath.documentId, whereIn: chunk)
+        .doc(friendUid)
         .snapshots()
-        .listen((snap) {
-      for (final ch in snap.docChanges) {
-        final id = ch.doc.id;
-        if (ch.type == DocumentChangeType.removed) {
-          latest.remove(id);
-        } else {
-          latest[id] = LiveLocation.fromDoc(id, ch.doc.data()!);
-        }
+        .listen((doc) {
+      if (!doc.exists) {
+        final removed = locations.remove(friendUid) != null;
+        if (removed) emit();
+        return;
       }
-      if (snap.docChanges.isEmpty) {
-        latest
-          ..removeWhere((k, _) => chunk.contains(k))
-          ..addEntries(snap.docs.map(
-              (d) => MapEntry(d.id, LiveLocation.fromDoc(d.id, d.data()))));
+
+      final data = doc.data() ?? const <String, dynamic>{};
+      final loc = LiveLocation.fromDoc(friendUid, data);
+
+      // Hide locations older than 24 hours
+      final age = DateTime.now().difference(loc.timestamp);
+      if (age > const Duration(hours: 24)) {
+        final removed = locations.remove(friendUid) != null;
+        if (removed) emit();
+        return;
       }
+
+      locations[friendUid] = loc;
       emit();
-    });
-    subs.add(sub);
+    }, onError: controller.addError);
+
+    locSubs[friendUid] = sub;
   }
 
-  controller.onCancel = () {
-    for (final s in subs) {
-      s.cancel();
+  // Listen to my friends subcollection: users/{me}/friends/{friendUid}
+  friendsSub = db
+      .collection('users')
+      .doc(me.uid)
+      .collection('friends')
+      .snapshots()
+      .listen((snap) async {
+    final activeFriendIds = <String>{};
+
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      final friendUid = doc.id;
+      activeFriendIds.add(friendUid);
+
+      // Optional: respect i_can_see_them if you use FriendEdge
+      final canSee = (data['i_can_see_them'] as bool?) ?? true;
+      if (canSee) {
+        watchLocation(friendUid);
+      } else {
+        await unwatchLocation(friendUid);
+      }
     }
-  };
+
+    // Remove listeners for friends that disappeared from the list
+    final toRemove = locSubs.keys
+        .where((uid) => !activeFriendIds.contains(uid))
+        .toList();
+    for (final uid in toRemove) {
+      await unwatchLocation(uid);
+    }
+  }, onError: controller.addError);
+
+  ref.onDispose(() async {
+    await friendsSub?.cancel();
+    for (final s in locSubs.values) {
+      await s.cancel();
+    }
+    if (!controller.isClosed) {
+      await controller.close();
+    }
+  });
 
   return controller.stream;
 });

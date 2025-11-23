@@ -24,6 +24,7 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/map_nav_providers.dart';
 import '../../../data/providers/users/friends/friends_locations_provider.dart';
+import '../../../data/services/location/live_location_sharing_provider.dart';
 import '../../../data/services/location/location_controller.dart';
 import '../../../data/providers/venues/venue_providers.dart';
 import '../../../data/services/navigation/nav_tts.dart';
@@ -44,7 +45,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-    with AutomaticKeepAliveClientMixin {
+  with AutomaticKeepAliveClientMixin {
   mb.MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
@@ -64,16 +65,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
   final MapStyle _style = MapStyle();
   final Map<String, Venue> _venuesById = {};
 
+  LatLng? _userLocation;
+
   // ---- navigation services
   late final NavigationService _directions;
   RouteRenderer? _renderer;
   final NavTts _tts = NavTts();
 
   String _logoImageIdFor(Venue v) =>
-      'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
+  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   final bool _showClosed = true;
-  final Set<VenueType> _allowedTypes = const {
+
+  Future<void> _ensureUserLocation() async {
+    if (_userLocation != null) return;
+    try {
+      final pos = await geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.best,
+      );
+      _userLocation = LatLng(pos.latitude, pos.longitude);
+    }
+    catch (_) {
+      // ignore – panel will just omit distances
+    }
+  }
+
+  // All types we allow the user to toggle
+  static const List<VenueType> _filterableTypes = [
     VenueType.bar,
     VenueType.club,
     VenueType.pub,
@@ -83,15 +101,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
     VenueType.sports_bar,
     VenueType.karaoke_bar,
     VenueType.gay_bar,
-  };
+  ];
+
+  // Currently enabled types (starts with all ON)
+  final Set<VenueType> _allowedTypes = Set.of(_filterableTypes);
+
+  // Panel open/closed
+  bool _filtersOpen = false;
 
   @override
   void initState() {
     super.initState();
     _tts.init(); // default en-US
     _tts.muted.addListener(() {
-      if (mounted) setState(() {});
-    });
+        if (mounted) setState(() {}
+          );
+      }
+    );
   }
 
   @override
@@ -104,7 +130,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void dispose() {
     _posSub?.cancel();
-    _tts.dispose(); // fire-and-forget is fine here
+    _tts.dispose();
     super.dispose();
   }
 
@@ -167,6 +193,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       body: _venueDetails(v), // scrollable area content
     );
   }
+
   Future<void> _onMapTap(mb.MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
@@ -198,11 +225,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final sym = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-        MapStyle.lyrVip,
-        MapStyle.lyrUnclustered,
-        MapStyle.lyrVipLabels,
-        MapStyle.lyrLabels,
-      ]),
+          MapStyle.lyrVip,
+          MapStyle.lyrUnclustered,
+          MapStyle.lyrVipLabels,
+          MapStyle.lyrLabels,
+        ]),
     );
     debugPrint('tap: symbol/labels hits = ${sym.length}');
     final symId = _firstId(sym);
@@ -263,7 +290,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _openVenueByIdOrExplain(nearestId);
         return;
       }
-    } catch (_) {}
+    }
+    catch (_) {}
 
     debugPrint('tap: nothing hit');
   }
@@ -278,66 +306,94 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.build(context);
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
-      final map = _map;
-      if (next == null || next.id <= _lastNavId) return;
-      _lastNavId = next.id;
+        final map = _map;
+        if (next == null || next.id <= _lastNavId) return;
+        _lastNavId = next.id;
 
-      if (map == null || !_styleReady) {
-        _pendingNav = next;
-        return;
+        if (map == null || !_styleReady) {
+          _pendingNav = next;
+          return;
+        }
+        map.easeTo(
+          mb.CameraOptions(
+            center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
+            zoom: next.zoom,
+          ),
+          mb.MapAnimationOptions(duration: 500),
+        );
       }
-      map.easeTo(
-        mb.CameraOptions(
-          center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
-          zoom: next.zoom,
-        ),
-        mb.MapAnimationOptions(duration: 500),
-      );
-    });
+    );
 
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
-      final map = _map;
-      if (map == null || !_styleReady) return;
-      await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
+        final map = _map;
+        if (map == null || !_styleReady) return;
+        await _style.setVenueData(map, clusterableFc: next.clusterable, vipFc: next.vip);
 
-      final venues = ref.read(allVenuesListProvider);
-      final idToPath2 = <String, String>{};
-      for (final v in venues) {
-        if (v.isVerified) {
-          final id = _logoImageIdFor(v);
-          idToPath2[id] = 'venue_images/${v.id}/logo.webp';
+        final venues = ref.read(allVenuesListProvider);
+        final idToPath2 = <String, String>{};
+        for (final v in venues) {
+          if (v.isVerified) {
+            final id = _logoImageIdFor(v);
+            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
+          }
         }
+        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
       }
-      await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
-    });
+    );
 
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
-          (prev, next) async {
+      (prev, next) async {
         final map = _map;
         if (map == null || !_styleReady) return;
         next.whenData((m) async {
-          final fc = friendsToFeatureCollection(m);
-          await _style.setFriendsData(map, fc);
-        });
+            final fc = friendsToFeatureCollection(m);
+            await _style.setFriendsData(map, fc);
+          }
+        );
       },
     );
 
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-      _venuesById
+        _venuesById
         ..clear()
         ..addAll(next);
-    });
+      }
+    );
 
     ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider, (prev, next) {
-      next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
-    });
+        next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
+      }
+    );
 
     final camAsync = ref.watch(initialCameraProvider);
     final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
 
     final bottomOffset = _navigating ? 100.0 : 16.0; // avoids nav banner
-    final sharingPosition = false; //TODO
+
+    // All venues list, used for per-type counts and lists in the filter panel
+    final allVenues = ref.watch(allVenuesListProvider);
+
+    // Group venues per type (only the filterable ones)
+    final Map<VenueType, List<Venue>> venuesByType = {
+      for (final t in _filterableTypes) t: <Venue>[],
+    };
+
+    for (final v in allVenues) {
+      final VenueType? t = v.type; // adjust if your field is named differently
+      if (t != null && venuesByType.containsKey(t)) {
+        venuesByType[t]!.add(v);
+      }
+    }
+
+    // Counts per type
+    final Map<VenueType, int> typeCounts = {
+      for (final t in _filterableTypes) t: venuesByType[t]!.length,
+    };
+
+    // Current audience from provider
+    final shareAudience = ref.watch(shareAudienceProvider);
+    final sharingPosition = shareAudience != ShareAudience.none;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -353,12 +409,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
           _navBanner(),
           if (_loading)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: transparent,
-              ),
+          const Positioned.fill(
+            child: ColoredBox(
+              color: transparent,
             ),
+          ),
 
+          // Center on user
           Positioned(
             right: 16,
             bottom: bottomOffset,
@@ -371,31 +428,47 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ),
 
+          // Filter FAB (chevron rotates when open)
           Positioned(
             right: 64,
             bottom: bottomOffset,
             child: FloatingActionButton(
-              // heroTag: 'fab_reset_north',
               mini: true,
-              // tooltip: 'Reset north',
-              onPressed: _centerOnUser, //TODO
-              child: Icon(chevronUpIcon, color: white,),
+              tooltip: 'Filter venues',
+              onPressed: () async {
+                await _ensureUserLocation();
+                setState(() => _filtersOpen = !_filtersOpen);
+              },
+              child: AnimatedRotation(
+                turns: _filtersOpen ? 0.5 : 0.0, // 180°
+                duration: const Duration(milliseconds: 180),
+                child: Icon(
+                  chevronUpIcon,
+                  color: white,
+                ),
+              ),
             ),
           ),
 
+          // Share-location FAB
           Positioned(
             left: 12,
             top: 12,
             child: FloatingActionButton(
               mini: true,
               onPressed: () async {
-                // show the visual popup; ignore the result for now
-                await showShareLocationPopup(
+                final currentAudience = ref.read(shareAudienceProvider);
+
+                final selected = await showShareLocationPopup(
                   context,
-                  initial: ShareAudience.friends,
-                  friendsCount: 123,
+                  initial: currentAudience,
+                  friendsCount: 123, //TODO
                   closeFriendsCount: 21,
                 );
+
+                if (!mounted || selected == null) return;
+
+                await ref.read(shareAudienceProvider.notifier).setAudience(selected);
               },
               child: Icon(
                 sharingPosition ? distanceIcon : distanceDisabledIcon,
@@ -403,9 +476,74 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
             ),
           ),
+
+          // Overlay + panel (above the FABs)
+          if (_filtersOpen) ...[
+            // Dark overlay for everything outside the panel.
+            // Tapping it closes the panel.
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _filtersOpen = false),
+                child: Container(color: black.withOpacity(0.6)),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: bottomOffset + 72, // sits above FAB row
+              child: _VenueTypeFilterPanel(
+                selected: _allowedTypes,
+                allTypes: _filterableTypes,
+                counts: typeCounts,
+                venuesByType: venuesByType,
+                userLocation: _userLocation,
+                onSelectionChanged: (selection) async {
+                  final map = _map;
+                  if (map == null || !_styleReady) return;
+                  setState(() {
+                      _allowedTypes
+                      ..clear()
+                      ..addAll(selection);
+                    }
+                  );
+                  await _style.applyFilters(
+                    map,
+                    showClosed: _showClosed,
+                    allowedTypes: _allowedTypeNamesForStyle(),
+                  );
+                },
+                onVenueTap: (venue) async {
+                  // Close the panel, then open the venue popup
+                  setState(() => _filtersOpen = false);
+                  _openVenue(venue);
+                },
+              ),
+            ),
+          ],
+
         ],
       ),
     );
+  }
+
+  /// Map current selection to what MapStyle.applyFilters expects.
+  ///
+  /// - All ON  → empty set  → no type filter (show all)
+  /// - All OFF → sentinel '__none__' → hide everything
+  /// - Mixed   → the selected type names.
+  Set<String> _allowedTypeNamesForStyle() {
+    if (_allowedTypes.isEmpty) {
+      // Hide everything – no venue has this type
+      return {'__none__'};
+    }
+
+    if (_allowedTypes.length == _filterableTypes.length) {
+      // All on → no filtering by type
+      return {};
+    }
+
+    return _allowedTypes.map((e) => e.name).toSet();
   }
 
   Future<void> _onStyleLoaded(mb.StyleLoadedEventData _) async {
@@ -419,7 +557,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await _style.applyFilters(
       map,
       showClosed: _showClosed,
-      allowedTypes: _allowedTypes.map((e) => e.name).toSet(),
+      allowedTypes: _allowedTypeNamesForStyle(),
     );
 
     final fcNow = ref.read(venuesGeoJsonProvider);
@@ -496,9 +634,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
           distanceFilter: 5, // meters between ticks
         ),
       ).listen(_onLocationTick);
-    } catch (e) {
+    }
+    catch (e) {
       _toast('Routing failed: $e');
-    } finally {
+    }
+    finally {
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -511,7 +651,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _navDest = null;
     _lastRerouteAt = null;
     await _renderer?.clear();
-    if (mounted) setState(() {});
+    if (mounted) setState(() {}
+      );
   }
 
   Future<void> _onLocationTick(geo.Position p) async {
@@ -520,8 +661,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // simple throttle to reduce API spam
     final now = DateTime.now();
     if (_lastRerouteAt != null &&
-        now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
-      if (mounted) setState(() {}); // still refresh banner counters
+      now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
+      if (mounted) setState(() {}
+        ); // still refresh banner counters
       return;
     }
     _lastRerouteAt = now;
@@ -544,8 +686,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
         width: 6,
       );
 
-      if (mounted) setState(() {});
-    } catch (_) {
+      if (mounted) setState(() {}
+        );
+    }
+    catch (_) {
       // ignore transient failures
     }
   }
@@ -595,16 +739,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     String? bestId;
     double best = maxMeters;
     venues.forEach((id, v) {
-      final d = Distance.metersLatLng(tap, v.entry);
-      if (d < best) {
-        best = d;
-        bestId = id;
+        final d = Distance.metersLatLng(tap, v.entry);
+        if (d < best) {
+          best = d;
+          bestId = id;
+        }
       }
-    });
+    );
     return bestId;
   }
 
-  // TODO need to click the walking icon to be able to change to car/cycling.
   Color _routeColorFor(NavProfile p) {
     switch (p) {
       case NavProfile.walking:
@@ -617,7 +761,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   RouteStyle _routeStyleFor(NavProfile p) =>
-      p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
+  p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
 
   IconData _modeIcon(NavProfile p) {
     switch (p) {
@@ -650,19 +794,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final dt = DateTime.now().add(Duration(seconds: seconds.round()));
     final tod = TimeOfDay.fromDateTime(dt);
 
-    // Respect user’s 12/24h preference if available
     final use24h = MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false;
     final loc = MaterialLocalizations.of(context);
     final clock = loc.formatTimeOfDay(tod, alwaysUse24HourFormat: use24h);
 
-    // Optional: show "today"/"tomorrow" when crossing midnight
     final now = DateTime.now();
     if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
       return clock; // today
-    } else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
+    }
+    else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
       return clock;
-    } else {
-      // e.g. 3/12 19:24 (keep it compact)
+    }
+    else {
       return '${dt.month}/${dt.day} $clock';
     }
   }
@@ -682,7 +825,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Padding(
-          // small, wide bar; leaves room for FAB
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
           child: Stack(
             children: [
@@ -695,48 +837,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // --- Mode toggle (walk/bike/car)
-                            InkWell(
-                              // onTap: _cycleProfile,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: grey,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(_modeIcon(_navProfile),
-                                    color: white, size: iconSizeDefault),
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: grey,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(_modeIcon(_navProfile),
+                                color: white, size: iconSizeDefault),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: _toggleMute,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: grey,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                _tts.isMuted
+                                  ? Icons.volume_off_rounded
+                                  : Icons.volume_up_rounded,
+                                color: white,
+                                size: iconSizeDefault,
                               ),
                             ),
-                            const SizedBox(height: 8),
-
-                            // --- Mute/unmute TTS
-                            InkWell(
-                              onTap: _toggleMute,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: grey,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  _tts.isMuted
-                                      ? Icons.volume_off_rounded
-                                      : Icons.volume_up_rounded,
-                                  color: white,
-                                  size: iconSizeDefault,
-                                ),
-                              ),
-                            ),
-                          ]),
+                          ),
+                        ]),
                       const SizedBox(width: 8),
-
-                      // ETA (top) over Distance (bottom)
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,19 +880,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           Text(travelTime, style: Styles.basicText),
                           const SizedBox(height: 6),
                           Text(dist,
-                              style: Styles.smallText.copyWith(
-                                  fontSize: fontSizeSmaller)),
+                            style: Styles.smallText
+                              .copyWith(fontSize: fontSizeSmaller)),
                           const SizedBox(height: 6),
                           Text(eta,
-                              style: Styles.smallText.copyWith(
-                                  fontSize: fontSizeSmaller)),
+                            style: Styles.smallText
+                              .copyWith(fontSize: fontSizeSmaller)),
                         ],
                       ),
-
                       const SizedBox(width: 8),
                       const SizedBox(width: 8),
-
-                      // Step on the right
                       Flexible(
                         child: Text(
                           step,
@@ -770,7 +903,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ),
                 ),
               ),
-
               Positioned(
                 bottom: 10,
                 right: 10,
@@ -784,8 +916,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ],
                 ),
               ),
-
-              // Small 'X' overlay to stop navigation
               Positioned(
                 top: 10,
                 right: 10,
@@ -793,7 +923,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   onTap: _stopNavigation,
                   borderRadius: BorderRadius.circular(8),
                   child: Icon(Icons.close_rounded,
-                      color: greyLighter, size: iconSizeDefault),
+                    color: greyLighter, size: iconSizeDefault),
                 ),
               ),
             ],
@@ -805,10 +935,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _toggleMute() async {
     await _tts.toggleMuted();
-    if (mounted) setState(() {}); // refresh icon
+    if (mounted) setState(() {}
+      );
   }
 
-  // ===== Your scrollable content below the rating/header (replace with your UI) =====
+  // ===== scrollable content below rating/header (placeholder) =====
   Widget _venueDetails(Venue v) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -824,8 +955,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
               border: Border.all(color: Colors.white12),
             ),
             alignment: Alignment.center,
-            child: Text('Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
-                style: Styles.basicText),
+            child: Text(
+              'Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
+              style: Styles.basicText),
           ),
           const SizedBox(height: 12),
         ],
@@ -833,3 +965,437 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 }
+
+// ======= FILTER PANEL + EXPANDABLE TILES ===================================
+
+class _VenueTypeFilterPanel extends StatefulWidget {
+  const _VenueTypeFilterPanel({
+    required this.selected,
+    required this.allTypes,
+    required this.counts,
+    required this.venuesByType,
+    required this.userLocation,
+    required this.onSelectionChanged,
+    required this.onVenueTap,
+  });
+
+  final Set<VenueType> selected;
+  final List<VenueType> allTypes;
+  final Map<VenueType, int> counts;
+  final Map<VenueType, List<Venue>> venuesByType;
+  final LatLng? userLocation;
+  final Future<void> Function(Set<VenueType>) onSelectionChanged;
+  final Future<void> Function(Venue) onVenueTap;
+
+  @override
+  State<_VenueTypeFilterPanel> createState() => _VenueTypeFilterPanelState();
+}
+
+class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
+  late Set<VenueType> _selected = Set<VenueType>.from(widget.selected);
+
+  String _labelFor(VenueType t) {
+    final name = t.name.replaceAll('_', ' ');
+    if (name.isEmpty) return '';
+    return name[0].toUpperCase() + name.substring(1);
+  }
+
+  Future<void> _updateSelection(void Function() mutate) async {
+    setState(mutate);
+    await widget.onSelectionChanged(Set<VenueType>.from(_selected));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height * 0.7;
+
+    // Total venues across all filterable types
+    final totalCount =
+      widget.counts.values.fold<int>(0, (prev, v) => prev + v);
+
+    // True when ALL types are currently enabled
+    final allOn = _selected.length == widget.allTypes.length;
+
+    // Only show types that actually have venues, sorted by amount desc
+    final visibleTypes = widget.allTypes
+      .where((t) => (widget.counts[t] ?? 0) > 0)
+      .toList()
+    ..sort((a, b) {
+        final ca = widget.counts[a] ?? 0;
+        final cb = widget.counts[b] ?? 0;
+        if (cb != ca) return cb.compareTo(ca); // most → first
+        return _labelFor(a).compareTo(_labelFor(b));
+      }
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: black,
+        borderRadius: BorderRadius.circular(borderRadiusDefault),
+        elevation: 12,
+        child: SizedBox(
+          height: height,
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              // drag handle
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: grey,
+                  borderRadius: BorderRadius.circular(borderRadiusSmallest),
+                ),
+              ),
+
+              // Header: title + total count + global toggle
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text('Venues on map', style: Styles.basicTextHeader),
+                    if (totalCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '($totalCount)',
+                        style: Styles.smallText.copyWith(color: greyLighter),
+                      ),
+                    ],
+                    const Spacer(),
+                    Switch.adaptive(
+                      value: allOn,
+                      onChanged: (value) {
+                        _updateSelection(() {
+                          if (value) {
+                            _selected
+                              ..clear()
+                              ..addAll(widget.allTypes);
+                          } else {
+                            _selected.clear();
+                          }
+                        });
+                      },
+                      activeColor: owlPurple,
+                      activeTrackColor: owlPurple.withOpacity(0.4),
+                      inactiveThumbColor: grey,
+                      inactiveTrackColor: white.withOpacity(0.12),
+                    ),
+
+                  ],
+                ),
+              ),
+
+              Divider(height: 1, color: white.withOpacity(0.06)),
+
+              // Per-type expandable toggles with counts (sorted by count)
+              Expanded(
+                child: visibleTypes.isEmpty
+                  ? Center(
+                    child: Text(
+                      'No venues found',
+                      style: Styles.smallText.copyWith(color: greyLighter),
+                    ),
+                  )
+                  : ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: visibleTypes.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: white.withOpacity(0.06),
+                    ),
+                    itemBuilder: (context, index) {
+                      final t = visibleTypes[index];
+                      final isOn = _selected.contains(t);
+                      final count = widget.counts[t] ?? 0;
+                      final venues = widget.venuesByType[t] ?? const <Venue>[];
+
+                      return _VenueTypeExpandableTile(
+                        label: _labelFor(t),
+                        type: t,
+                        isOn: isOn,
+                        count: count,
+                        venues: venues,
+                        userLocation: widget.userLocation,
+                        onToggleChanged: (value) {
+                          _updateSelection(() {
+                              if (value) {
+                                _selected.add(t);
+                              }
+                              else {
+                                _selected.remove(t);
+                              }
+                            }
+                          );
+                        },
+                        onVenueTap: widget.onVenueTap,
+                      );
+                    },
+                  ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VenueTypeExpandableTile extends StatefulWidget {
+  const _VenueTypeExpandableTile({
+    required this.label,
+    required this.type,
+    required this.isOn,
+    required this.count,
+    required this.venues,
+    required this.userLocation,
+    required this.onToggleChanged,
+    required this.onVenueTap,
+  });
+
+  final String label;
+  final VenueType type;
+  final bool isOn;
+  final int count;
+  final List<Venue> venues;
+  final LatLng? userLocation;
+  final ValueChanged<bool> onToggleChanged;
+  final Future<void> Function(Venue) onVenueTap;
+
+  @override
+  State<_VenueTypeExpandableTile> createState() =>
+  _VenueTypeExpandableTileState();
+}
+
+class _VenueTypeExpandableTileState extends State<_VenueTypeExpandableTile> {
+  bool _expanded = false;
+
+  List<Venue> _sortedVenues() {
+    final list = List<Venue>.from(widget.venues);
+    final user = widget.userLocation;
+    if (user == null) return list;
+
+    list.sort((a, b) {
+        final da = Distance.metersLatLng(user, a.entry);
+        final db = Distance.metersLatLng(user, b.entry);
+        return da.compareTo(db);
+      }
+    );
+    return list;
+  }
+
+  String _fmtMeters(double meters) {
+    final m = meters.round();
+    if (m < 1000) return '$m m';
+    final km = meters / 1000.0;
+    return '${km.toStringAsFixed(km >= 10 ? 0 : 1)} km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final venues = _sortedVenues();
+
+    return Column(
+      children: [
+        // Top row: icon, label, count, toggle, dropdown chevron
+        Row(
+          children: [
+            // Icon circle
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: widget.isOn
+                  ? owlPurple.withOpacity(0.18)
+                  : white.withOpacity(0.04),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                widget.type.icon,
+                color: widget.isOn ? owlPurple : greyLighter,
+                size: iconSizeSmall,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Label
+            Expanded(
+              child: Text(
+                widget.label,
+                style: Styles.basicText,
+              ),
+            ),
+
+            // Count
+            if (widget.count > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '(${widget.count})',
+                style: Styles.smallText.copyWith(color: greyLighter),
+              ),
+            ],
+
+            const SizedBox(width: 8),
+
+            // Toggle
+            Switch.adaptive(
+              value: widget.isOn,
+              onChanged: widget.onToggleChanged,
+              activeColor: owlPurple,
+              activeTrackColor: owlPurple.withOpacity(0.4),
+              inactiveThumbColor: grey,
+              inactiveTrackColor: white.withOpacity(0.12),
+            ),
+
+            // Dropdown chevron (RIGHT of toggle)
+            IconButton(
+              iconSize: 20,
+              splashRadius: 20,
+              onPressed: () {
+                setState(() => _expanded = !_expanded);
+              },
+              icon: AnimatedRotation(
+                turns: _expanded ? 0.5 : 0.0, // 180°
+                duration: const Duration(milliseconds: 150),
+                child: Icon(
+                  chevronUpIcon,
+                  color: white,
+                  size: 18,
+                ),
+              ),
+            ),
+
+          ],
+        ),
+
+        // Expanded list of venues of this type, sorted by distance
+        if (_expanded && venues.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
+          child: Column(
+            children: venues.map((v) {
+                final user = widget.userLocation;
+                String? distanceLabel;
+                if (user != null) {
+                  final d = Distance.metersLatLng(user, v.entry);
+                  distanceLabel = _fmtMeters(d);
+                }
+
+                final name =
+                  (v.displayName.isNotEmpty ? v.displayName : v.name);
+
+                return InkWell(
+                  onTap: () => widget.onVenueTap(v),
+                  borderRadius: BorderRadius.circular(borderRadiusSmall),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: Styles.smallText,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (distanceLabel != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            distanceLabel,
+                            style: Styles.smallText.copyWith(
+                              color: owlPurple,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }
+            ).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+
+class _VenueTypeToggleTile extends StatelessWidget {
+  const _VenueTypeToggleTile({
+    required this.label,
+    required this.type,
+    required this.isOn,
+    required this.count,
+    required this.onChanged,
+  });
+
+  final String label;
+  final VenueType type;
+  final bool isOn;
+  final int count;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onChanged(!isOn),
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            // Icon in a soft circle
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isOn ? owlPurple.withOpacity(0.18) : white.withOpacity(0.04),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                type.icon,
+                color: isOn ? owlPurple : greyLighter,
+                size: iconSizeSmall,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Label
+            Expanded(
+              child: Text(
+                label,
+                style: Styles.basicText,
+              ),
+            ),
+
+            // Count
+            if (count > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '($count)',
+                style: Styles.smallText.copyWith(color: greyLighter),
+              ),
+            ],
+
+            // Switch
+            Switch.adaptive(
+              value: isOn,
+              onChanged: onChanged,
+              activeColor: owlPurple,
+              activeTrackColor: owlPurple.withOpacity(0.4),
+              inactiveThumbColor: grey,
+              inactiveTrackColor: white.withOpacity(0.12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
