@@ -27,8 +27,7 @@ Widget VenueLogo({
 
   // Fallback options
   bool showInitialFallback = true, // controls whether *any* fallback is shown
-  bool showTypeIfNoLogo =
-      false, // when true, use venue.type.icon instead of initials
+  bool showTypeIfNoLogo = true, // when true, use venue.type.icon instead of initials
   String? fallbackText,
   Color fallbackBgColor = const Color(0xFF222222),
   Color fallbackTextColor = white,
@@ -54,8 +53,10 @@ Widget VenueLogo({
       : borderColor;
 
   Widget _fallbackBadge() {
-    final useTypeIcon =
-        showTypeIfNoLogo; // toggle: show icon instead of initials
+    // Only use the type icon if we *want* to and the type isn't unknown
+    final bool hasTypeIcon = venue.type != VenueType.unknown;
+    final bool useTypeIcon = showTypeIfNoLogo && hasTypeIcon;
+
     final label = (fallbackText ?? _initialOf(venue)).toUpperCase();
 
     final textStyle = TextStyle(
@@ -68,20 +69,22 @@ Widget VenueLogo({
 
     final decoration = shape == VenueLogoShape.circle
         ? BoxDecoration(
-            shape: BoxShape.circle,
-            color: backgroundColor ?? fallbackBgColor,
-            border: Border.all(color: _effectiveBorder, width: borderWidth),
-          )
+      shape: BoxShape.circle,
+      color: backgroundColor ?? fallbackBgColor,
+      border: Border.all(color: _effectiveBorder, width: borderWidth),
+    )
         : BoxDecoration(
-            color: backgroundColor ?? fallbackBgColor,
-            borderRadius: borderRadius,
-            border: Border.all(color: _effectiveBorder, width: borderWidth),
-          );
+      color: backgroundColor ?? fallbackBgColor,
+      borderRadius: borderRadius,
+      border: Border.all(color: _effectiveBorder, width: borderWidth),
+    );
 
     final child = useTypeIcon
         ? Icon(venue.type.icon, color: fallbackTextColor, size: size * 0.56)
         : FittedBox(
-            fit: BoxFit.scaleDown, child: Text(label, style: textStyle));
+      fit: BoxFit.scaleDown,
+      child: Text(label, style: textStyle),
+    );
 
     return Container(
       width: size,

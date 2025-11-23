@@ -35,6 +35,7 @@ import '../../../models/navigation/nav_models.dart';
 import '../../../models/users/live_location.dart';
 import '../../../shared/reusable/ui/owl_scrollbar.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
+import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/utility/distance.dart';
 import '../presentation/friends_fc.dart';
 import '../presentation/map_logo_registry.dart';
@@ -104,6 +105,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     VenueType.sports_bar,
     VenueType.karaoke_bar,
     VenueType.gay_bar,
+    // VenueType.unknown, // TODO Actual problem Unknown should be a placeholder for venues Right now they are not a part of map. Maybe just call other at some point (if so need to check everything for lingering "unknown" around all codebases.)
   ];
 
   // Currently enabled types (starts with all ON)
@@ -794,11 +796,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Respect current filters
     if (type == null || !_allowedTypes.contains(type)) {
       _toast('${v.displayName} is hidden by your filters.');
-      return;
-    }
-
-    if (!_isVenueOpenNow(v)) {
-      _toast('${v.displayName} is hidden because it’s closed.');
       return;
     }
 
@@ -1694,8 +1691,7 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     final name = v.displayName.isNotEmpty ? v.displayName : v.name;
 
     // For this *venue*, are we active? (used by "All" tile)
-    final bool venueActive =
-        widget.isVenueActive?.call(v) ?? widget.isOn;
+    final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
 
     final itemTextStyle = venueActive
         ? Styles.smallText
@@ -1712,6 +1708,14 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
+            // Venue logo / type icon (scaled down to fit row)
+            VenueLogo(
+              venue: v,
+              size: iconSizeLarge,
+            ),
+            const SizedBox(width: 6),
+
+            // Name
             Expanded(
               child: Text(
                 name,
@@ -1719,8 +1723,9 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+
+            // Distance (if any)
             if (distanceLabel != null) ...[
-              const SizedBox(width: 8),
               Text(
                 distanceLabel,
                 style: distanceTextStyle,
@@ -1731,4 +1736,5 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
       ),
     );
   }
+
 }
