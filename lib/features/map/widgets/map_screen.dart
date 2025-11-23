@@ -1102,11 +1102,44 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
     await widget.onSelectionChanged(Set<VenueType>.from(_selected));
   }
 
+  /// How many venues are currently actually visible on the map,
+  /// given the selected types + "Open now" toggle.
+  int _visibleOnMapCount() {
+    if (_selected.isEmpty) return 0;
+
+    int total = 0;
+    widget.venuesByType.forEach((type, venues) {
+      if (!_selected.contains(type)) return;
+
+      for (final v in venues) {
+        if (widget.showOnlyOpen && v.isOpenNow != true) continue;
+        total++;
+      }
+    });
+    return total;
+  }
+
+  Future<void> _resetFilters() async {
+    // 1) Reset types to "all on"
+    await _updateSelection(() {
+      _selected
+        ..clear()
+        ..addAll(widget.allTypes);
+    });
+
+    // 2) Reset "Open now" to off (show open + closed)
+    if (widget.showOnlyOpen) {
+      widget.onShowOnlyOpenChanged(false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height * 0.7;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final panelHeight = screenHeight * 0.7;
+    final double outerRadius = borderRadiusDefault * 1.6;
 
-    // Total venues across all filterable types
+    // Total venues across all filterable types (ignores "Open now")
     final totalCount =
     widget.counts.values.fold<int>(0, (prev, v) => prev + v);
 
@@ -1128,137 +1161,212 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
         return _labelFor(a).compareTo(_labelFor(b));
       });
 
+    final visibleOnMap = _visibleOnMapCount();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
         color: black,
-        borderRadius: BorderRadius.circular(borderRadiusDefault),
-        elevation: 12,
-        child: SizedBox(
-          height: height,
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              // drag handle
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: grey,
-                  borderRadius:
-                  BorderRadius.circular(borderRadiusSmallest),
+        elevation: 8,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(outerRadius),
+          side: const BorderSide(color: grey, width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(outerRadius),
+          child: SizedBox(
+            height: panelHeight,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ===== HEADER (matches _FiltersCard) =======================
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    horizontalSpacerDefault,
+                    horizontalSpacerDefault,
+                    horizontalSpacerDefault,
+                    horizontalSpacerSmall,
+                  ),
+                  child: Row(
+                    children: [
+                      Text('Filters', style: Styles.popupHeader),
+                      const Spacer(),
+                      Text('Open now', style: Styles.smallText),
+                      const SizedBox(width: 6),
+                      Switch.adaptive(
+                        value: widget.showOnlyOpen,
+                        onChanged: widget.onShowOnlyOpenChanged,
+                        activeColor: owlPurple,
+                        trackOutlineColor: WidgetStatePropertyAll(
+                          grey.withOpacity(.5),
+                        ),
+                        inactiveThumbColor: grey,
+                        inactiveTrackColor: grey.withOpacity(.35),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Header: title + "Open now" toggle
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      'Filters',
-                      style: Styles.basicTextHeader,
-                    ),
-                    const Spacer(),
-                    Text(
-                      'Open now',
-                      style: Styles.smallText.copyWith(color: greyLighter),
-                    ),
-                    const SizedBox(width: 8),
-                    Switch.adaptive(
-                      value: widget.showOnlyOpen,
-                      onChanged: widget.onShowOnlyOpenChanged,
-                      activeColor: owlPurple,
-                      activeTrackColor: owlPurple.withOpacity(0.4),
-                      inactiveThumbColor: grey,
-                      inactiveTrackColor: white.withOpacity(0.12),
-                    ),
-                  ],
+                // ===== TOP CENTER INFO (replaces "Pro tip") ================
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: Row(
+                    key: ValueKey<int>(visibleOnMap),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$visibleOnMap ',
+                        style:
+                        Styles.smallText.copyWith(color: owlPurple),
+                      ),
+                      Text(
+                        'venues shown on map',
+                        style: Styles.smallText,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              Divider(color: grey),
+                const SizedBox(height: 4),
+                const Divider(color: grey),
 
-              // Scrollable list: "All" row + per-type rows – all in the same ListView
-              Expanded(
-                child: totalCount == 0
-                    ? Center(
-                  child: Text(
-                    'No venues found',
-                    style: Styles.smallText
-                        .copyWith(color: greyLighter),
-                  ),
-                )
-                    : ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
-                  itemCount: 1 + visibleTypes.length,
-                  separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    color: white.withOpacity(0.06),
-                  ),
-                  itemBuilder: (context, index) {
-                    // First row = "All"
-                    if (index == 0) {
-                      return _VenueFilterExpandableTile(
-                        label: 'All',
-                        icon: Icons.all_inclusive_outlined,
-                        isOn: allOn,
-                        count: totalCount,
-                        venues: allVenues,
-                        userLocation: widget.userLocation,
-                        // A venue is "active" here iff its type is currently selected
-                        isVenueActive: (venue) {
-                          final type = venue.type;
-                          return type != null &&
-                              _selected.contains(type);
-                        },
-                        onToggleChanged: (value) {
-                          _updateSelection(() {
-                            if (value) {
-                              _selected
-                                ..clear()
-                                ..addAll(widget.allTypes);
-                            } else {
-                              _selected.clear();
-                            }
-                          });
-                        },
-                        onVenueTap: widget.onVenueTap,
-                      );
-                    }
+                // ===== BODY: scrollable type list ==========================
+                Expanded(
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    thickness: 3,
+                    radius:
+                    const Radius.circular(borderRadiusDefault),
+                    child: totalCount == 0
+                        ? Center(
+                      child: Text(
+                        'No venues found',
+                        style: Styles.smallText
+                            .copyWith(color: greyLighter),
+                      ),
+                    )
+                        : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: horizontalSpacerDefault,
+                        vertical: verticalSpacerDefault,
+                      ),
+                      itemCount: 1 + visibleTypes.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        color: white.withOpacity(0.06),
+                      ),
+                      itemBuilder: (context, index) {
+                        // First row = "All"
+                        if (index == 0) {
+                          return _VenueFilterExpandableTile(
+                            label: 'All',
+                            icon: Icons.all_inclusive_outlined,
+                            isOn: allOn,
+                            count: totalCount,
+                            venues: allVenues,
+                            userLocation: widget.userLocation,
+                            // active per venue if its type is selected
+                            isVenueActive: (venue) {
+                              final type = venue.type;
+                              if (type == null) return false;
+                              if (!_selected.contains(type)) {
+                                return false;
+                              }
+                              if (widget.showOnlyOpen &&
+                                  venue.isOpenNow != true) {
+                                return false;
+                              }
+                              return true;
+                            },
+                            onToggleChanged: (value) {
+                              _updateSelection(() {
+                                if (value) {
+                                  _selected
+                                    ..clear()
+                                    ..addAll(widget.allTypes);
+                                } else {
+                                  _selected.clear();
+                                }
+                              });
+                            },
+                            onVenueTap: widget.onVenueTap,
+                          );
+                        }
 
-                    // Other rows = each type
-                    final t = visibleTypes[index - 1];
-                    final isOn = _selected.contains(t);
-                    final count = widget.counts[t] ?? 0;
-                    final venues =
-                        widget.venuesByType[t] ?? const <Venue>[];
+                        // Other rows = each type
+                        final t = visibleTypes[index - 1];
+                        final isOn = _selected.contains(t);
+                        final count =
+                            widget.counts[t] ?? 0;
+                        final venues =
+                            widget.venuesByType[t] ??
+                                const <Venue>[];
 
-                    return _VenueFilterExpandableTile(
-                      label: _labelFor(t),
-                      icon: t.icon,
-                      isOn: isOn,
-                      count: count,
-                      venues: venues,
-                      userLocation: widget.userLocation,
-                      onToggleChanged: (value) {
-                        _updateSelection(() {
-                          if (value) {
-                            _selected.add(t);
-                          } else {
-                            _selected.remove(t);
-                          }
-                        });
+                        return _VenueFilterExpandableTile(
+                          label: _labelFor(t),
+                          icon: t.icon,
+                          isOn: isOn,
+                          count: count,
+                          venues: venues,
+                          userLocation: widget.userLocation,
+                          onToggleChanged: (value) {
+                            _updateSelection(() {
+                              if (value) {
+                                _selected.add(t);
+                              } else {
+                                _selected.remove(t);
+                              }
+                            });
+                          },
+                          onVenueTap: widget.onVenueTap,
+                        );
                       },
-                      onVenueTap: widget.onVenueTap,
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ],
+
+                const Divider(color: grey),
+
+                // ===== FOOTER: Reset Filters (both sides) =================
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    horizontalSpacerDefault,
+                    horizontalSpacerSmall,
+                    horizontalSpacerDefault,
+                    horizontalSpacerSmall,
+                  ),
+                  child: Row(
+                    mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          _resetFilters();
+                        },
+                        child: Text(
+                          'Reset Filters',
+                          style: Styles.smallText
+                              .copyWith(color: red),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _resetFilters();
+                        },
+                        child: Text(
+                          'Reset Filters',
+                          style: Styles.smallText
+                              .copyWith(color: red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1288,7 +1396,7 @@ class _VenueFilterExpandableTile extends StatefulWidget {
   final ValueChanged<bool> onToggleChanged;
   final Future<void> Function(Venue) onVenueTap;
 
-  /// Optional per-venue active check.
+  /// Optional per-venue active check (used by "All" row).
   /// If null, `isOn` is used for all venues in this tile.
   final bool Function(Venue v)? isVenueActive;
 
@@ -1297,9 +1405,23 @@ class _VenueFilterExpandableTile extends StatefulWidget {
       _VenueFilterExpandableTileState();
 }
 
+
 class _VenueFilterExpandableTileState
     extends State<_VenueFilterExpandableTile> {
   bool _expanded = false;
+
+  // Pagination: how many venues we currently show in this tile.
+  static const int _pageSize = 48;
+  int _visibleCount = _pageSize;
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+      if (_expanded) {
+        _visibleCount = _pageSize; // reset page when opened
+      }
+    });
+  }
 
   List<Venue> _sortedVenues() {
     final list = List<Venue>.from(widget.venues);
@@ -1316,8 +1438,16 @@ class _VenueFilterExpandableTileState
 
   String _fmtMeters(double meters) {
     final m = meters.round();
+
+    // Under 1 km → show meters
     if (m < 1000) return '$m m';
+
     final km = meters / 1000.0;
+
+    // Over 99 km → cap label
+    if (km > 99) return '99+ km';
+
+    // Otherwise: 0–9.9 → 1 decimal, 10–99 → no decimals
     return '${km.toStringAsFixed(km >= 10 ? 0 : 1)} km';
   }
 
@@ -1326,144 +1456,195 @@ class _VenueFilterExpandableTileState
     final venues = _sortedVenues();
     final bool headerActive = widget.isOn;
 
+    // Clamp visible count so we never go out of range.
+    final int visible = math.min(_visibleCount, venues.length);
+    final List<Venue> visibleVenues = venues.take(visible).toList();
+    final int remaining = venues.length - visible;
+
     final TextStyle headerLabelStyle = headerActive
         ? Styles.basicText
         : Styles.basicText.copyWith(color: greyLighter);
 
     return Column(
       children: [
-        // Top row: icon, label, count, toggle, chevron
-        Row(
-          children: [
-            // Icon circle
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: headerActive
-                    ? owlPurple.withOpacity(0.18)
-                    : white.withOpacity(0.04),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                widget.icon,
-                color: headerActive ? owlPurple : greyLighter,
-                size: iconSizeSmall,
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Label
-            Expanded(
-              child: Text(
-                widget.label,
-                style: headerLabelStyle,
-              ),
-            ),
-
-            // Count
-            if (widget.count > 0) ...[
-              const SizedBox(width: 8),
-              Text(
-                '(${widget.count})',
-                style: Styles.smallText.copyWith(color: greyLighter),
-              ),
-            ],
-
-            const SizedBox(width: 8),
-
-            // Toggle
-            Switch.adaptive(
-              value: widget.isOn,
-              onChanged: widget.onToggleChanged,
-              activeColor: owlPurple,
-              activeTrackColor: owlPurple.withOpacity(0.4),
-              inactiveThumbColor: grey,
-              inactiveTrackColor: white.withOpacity(0.12),
-            ),
-
-            // Dropdown chevron
-            IconButton(
-              iconSize: 20,
-              splashRadius: 20,
-              onPressed: () {
-                setState(() => _expanded = !_expanded);
-              },
-              icon: AnimatedRotation(
-                turns: _expanded ? 0.5 : 0.0,
-                duration: const Duration(milliseconds: 150),
-                child: Icon(
-                  chevronUpIcon,
-                  color: white,
-                  size: 18,
+        // ===== HEADER ROW (ENTIRE ROW CLICKABLE) =======================
+        InkWell(
+          borderRadius: BorderRadius.circular(borderRadiusSmall),
+          onTap: _toggleExpanded,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                // Icon circle
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: headerActive
+                        ? owlPurple.withOpacity(0.18)
+                        : white.withOpacity(0.04),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    widget.icon,
+                    color: headerActive ? owlPurple : greyLighter,
+                    size: iconSizeSmall,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+
+                // Label
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: headerLabelStyle,
+                  ),
+                ),
+
+                // Count
+                if (widget.count > 0) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${widget.count})',
+                    style: Styles.smallText.copyWith(color: greyLighter),
+                  ),
+                ],
+
+                const SizedBox(width: 8),
+
+                // Toggle (still only toggles filter, not expansion)
+                Switch.adaptive(
+                  value: widget.isOn,
+                  onChanged: widget.onToggleChanged,
+                  activeColor: owlPurple,
+                  activeTrackColor: owlPurple.withOpacity(0.4),
+                  inactiveThumbColor: grey,
+                  inactiveTrackColor: white.withOpacity(0.12),
+                ),
+
+                const SizedBox(width: 4),
+
+                // Chevron (purely visual now – row InkWell handles tap)
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Icon(
+                    chevronUpIcon,
+                    color: white,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
 
-        // Expanded list of venues
+        // ===== EXPANDED CONTENT (unchanged from your version) ==========
         if (_expanded && venues.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
-            child: Column(
-              children: venues.map((v) {
-                final user = widget.userLocation;
-                String? distanceLabel;
-                if (user != null) {
-                  final d = Distance.metersLatLng(user, v.entry);
-                  distanceLabel = _fmtMeters(d);
-                }
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Max height for the inner scroll area
+                const double maxInnerHeight = 260.0;
 
-                final name =
-                v.displayName.isNotEmpty ? v.displayName : v.name;
+                // Estimate a row height so the list doesn't get taller than needed
+                const double rowHeight = 32.0; // approx text + padding
+                final int visible = visibleVenues.length;
+                final bool hasMore = remaining > 0;
 
-                // For this *venue*, are we active? (used by "All" tile)
-                final bool venueActive =
-                    widget.isVenueActive?.call(v) ?? widget.isOn;
+                final double neededHeight =
+                    visible * rowHeight + (hasMore ? 40.0 : 0.0);
 
-                final itemTextStyle = venueActive
-                    ? Styles.smallText
-                    : Styles.smallText.copyWith(color: greyLighter);
+                final double height = math.min(
+                  maxInnerHeight,
+                  neededHeight,
+                );
 
-                final distanceTextStyle = venueActive
-                    ? Styles.smallText.copyWith(color: owlPurple)
-                    : Styles.smallText.copyWith(color: grey);
+                return SizedBox(
+                  height: height,
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: visibleVenues.length + (hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index < visibleVenues.length) {
+                        final v = visibleVenues[index];
+                        return _buildVenueRow(context, v);
+                      }
 
-                return InkWell(
-                  onTap: () => widget.onVenueTap(v),
-                  borderRadius: BorderRadius.circular(borderRadiusSmall),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: itemTextStyle,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      // Last item = "Show more" button
+                      return TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _visibleCount = math.min(
+                              _visibleCount + _pageSize,
+                              venues.length,
+                            );
+                          });
+                        },
+                        child: Text(
+                          'Show more ($remaining more)',
+                          style: Styles.smallText.copyWith(color: owlPurple),
                         ),
-                        if (distanceLabel != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            distanceLabel,
-                            style: distanceTextStyle,
-                          ),
-                        ],
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 );
-              }).toList(),
+              },
             ),
           ),
       ],
     );
   }
+
+  Widget _buildVenueRow(BuildContext context, Venue v) {
+    final user = widget.userLocation;
+    String? distanceLabel;
+    if (user != null) {
+      final d = Distance.metersLatLng(user, v.entry);
+      distanceLabel = _fmtMeters(d);
+    }
+
+    final name = v.displayName.isNotEmpty ? v.displayName : v.name;
+
+    // For this *venue*, are we active? (used by "All" tile)
+    final bool venueActive =
+        widget.isVenueActive?.call(v) ?? widget.isOn;
+
+    final itemTextStyle = venueActive
+        ? Styles.smallText
+        : Styles.smallText.copyWith(color: greyLighter);
+
+    final distanceTextStyle = venueActive
+        ? Styles.smallText.copyWith(color: owlPurple)
+        : Styles.smallText.copyWith(color: grey);
+
+    return InkWell(
+      onTap: () => widget.onVenueTap(v),
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: itemTextStyle,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (distanceLabel != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                distanceLabel,
+                style: distanceTextStyle,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-
-
 
