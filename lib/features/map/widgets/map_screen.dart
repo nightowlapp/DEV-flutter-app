@@ -1485,15 +1485,16 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
   void _toggleExpanded() {
     setState(() {
-      _expanded = !_expanded;
-      if (_expanded) {
-        // Reset page + scroll back to top when opening
-        _visibleCount = _pageSize;
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(0);
+        _expanded = !_expanded;
+        if (_expanded) {
+          // Reset page + scroll back to top when opening
+          _visibleCount = _pageSize;
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
         }
       }
-    });
+    );
   }
 
   // Auto "show more" when scrolled to the bottom
@@ -1514,8 +1515,9 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     if (_visibleCount >= total) return; // nothing more to load
 
     setState(() {
-      _visibleCount = math.min(_visibleCount + _pageSize, total);
-    });
+        _visibleCount = math.min(_visibleCount + _pageSize, total);
+      }
+    );
   }
 
   List<Venue> _sortedVenues() {
@@ -1524,10 +1526,11 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     if (user == null) return list;
 
     list.sort((a, b) {
-      final da = Distance.metersLatLng(user, a.entry);
-      final db = Distance.metersLatLng(user, b.entry);
-      return da.compareTo(db);
-    });
+        final da = Distance.metersLatLng(user, a.entry);
+        final db = Distance.metersLatLng(user, b.entry);
+        return da.compareTo(db);
+      }
+    );
     return list;
   }
 
@@ -1557,8 +1560,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     final int remaining = venues.length - visible; // still used for sizing
 
     final TextStyle headerLabelStyle = headerActive
-        ? Styles.basicText
-        : Styles.basicText.copyWith(color: greyLighter);
+      ? Styles.basicText
+      : Styles.basicText.copyWith(color: greyLighter);
 
     return Column(
       children: [
@@ -1576,8 +1579,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                   height: 32,
                   decoration: BoxDecoration(
                     color: headerActive
-                        ? owlPurple.withOpacity(0.18)
-                        : white.withOpacity(0.04),
+                      ? owlPurple.withOpacity(0.18)
+                      : white.withOpacity(0.04),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -1637,100 +1640,187 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
         // ===== EXPANDED CONTENT ========================================
         if (_expanded && venues.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 4, bottom: 4),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Max height for the inner scroll area
-                const double maxInnerHeight = 260.0;
+        Padding(
+          padding: const EdgeInsets.only(bottom: 0),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Max height for the inner scroll area
+              const double maxInnerHeight = 260.0;
 
-                // Estimate a row height so the list doesn't get taller than needed
-                const double rowHeight = 32.0; // approx text + padding
-                final int visible = visibleVenues.length;
+              // Estimate a row height so the list doesn't get taller than needed
+              const double rowHeight = 52.0;
+              final int visible = visibleVenues.length;
 
-                // We still use `remaining` only to approximate needed height,
-                // but there is no "Show more" row any more.
-                final double neededHeight =
-                    visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
+              bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());
+              add:
+              // We still use `remaining` only to approximate needed height,
+              // but there is no "Show more" row any more.
+              final double neededHeight =
+                visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
 
-                final double height = math.min(
-                  maxInnerHeight,
-                  neededHeight,
-                );
+              final double height = math.min(
+                maxInnerHeight,
+                neededHeight,
+              );
 
-                return SizedBox(
-                  height: height,
-                  child: OwlScrollbar(
-                    thickness: 1,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.only(right: 3), // space for scrollbar
-                      itemCount: visibleVenues.length,
-                      itemBuilder: (context, index) {
-                        final v = visibleVenues[index];
-                        return _buildVenueRow(context, v);
-                      },
-                    ),
+              return SizedBox(
+                height: height,
+                child: OwlScrollbar(
+                  thickness: 1,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(right: 3), // space for scrollbar
+                    itemCount: visibleVenues.length,
+                    itemBuilder: (context, index) {
+                      final v = visibleVenues[index];
+                      return _buildVenueRow(context, v);
+                    },
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
+        ),
       ],
     );
   }
 
   Widget _buildVenueRow(BuildContext context, Venue v) {
     final user = widget.userLocation;
-    String? distanceLabel;
-    if (user != null) {
-      final d = Distance.metersLatLng(user, v.entry);
-      distanceLabel = _fmtMeters(d);
-    }
+    final now = DateTime.now();
 
     final name = v.displayName.isNotEmpty ? v.displayName : v.name;
 
-    // For this *venue*, are we active? (used by "All" tile)
+    // Active under current filters? (used by "All" tile)
     final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
 
-    final itemTextStyle = venueActive
-        ? Styles.smallText
-        : Styles.smallText.copyWith(color: greyLighter);
+    final TextStyle nameStyle = venueActive
+        ? Styles.basicText
+        : Styles.basicText.copyWith(color: greyLighter);
 
-    final distanceTextStyle = venueActive
-        ? Styles.smallText.copyWith(color: owlPurple)
-        : Styles.smallText.copyWith(color: grey);
+    final TextStyle walkStyle = Styles.smallText.copyWith(
+      color: white, // ⬅️ walk text should be white
+      fontSize: fontSizeSmaller,
+    );
+
+    // Walking distance text like "🚶 5 min"
+    final String walk = Distance.walkText(user, v);
+    final String? walkLabel = walk.isEmpty ? null : walk;
+
+    // Opening-hours display info (range + +1 flag)
+    final _OpeningDisplayRow opening = _openingDisplayForVenue(v, now);
+
+    // Age restriction, e.g. "21+"
+    final String? ageLabel = _ageRestrictionLabelFor(v, now);
+
+    // Right side top: only the time range, or nothing.
+    Widget openingTop;
+    if (opening.showRange) {
+      // Show "HH:mm - HH:mm" with "+1" as superscript when nextDay = true.
+      // Always white text.
+      final baseStyle = Styles.smallText.copyWith(
+        color: white,
+        fontSize: fontSizeSmaller,
+      );
+      final supStyle = Styles.smallText.copyWith(
+        fontSize: 6,
+      );
+
+      openingTop = Align(
+        alignment: Alignment.centerRight,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Text(
+              '${opening.open} - ${opening.close}',
+              style: baseStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (opening.nextDay)
+              Positioned(
+                right: -2,
+                top: -5,
+                child: Text(
+                  '+1',
+                  style: supStyle,
+                ),
+              ),
+          ],
+        ),
+      );
+    } else {
+      // Closed today (or only opens tomorrow) → show nothing
+      openingTop = const SizedBox.shrink();
+    }
 
     return InkWell(
       onTap: () => widget.onVenueTap(v),
       borderRadius: BorderRadius.circular(borderRadiusSmall),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        // slightly larger vertically
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Venue logo / type icon (scaled down to fit row)
+            // ===== LEFT: logo ============================================
             VenueLogo(
               venue: v,
-              size: iconSizeLarge,
+              size: iconSizeLarge + 4,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
 
-            // Name
+            // ===== CENTER: name (top) + walk text (bottom) ===============
             Expanded(
-              child: Text(
-                name,
-                style: itemTextStyle,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name (one line, ellipsis)
+                  Text(
+                    name,
+                    style: nameStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  // Walk text (white)
+                  if (walkLabel != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        walkLabel,
+                        style: walkStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            // Distance (if any)
-            if (distanceLabel != null) ...[
-              Text(
-                distanceLabel,
-                style: distanceTextStyle,
-              ),
-            ],
+            const SizedBox(width: 8),
+
+            // ===== RIGHT: opening hours (top) + age (bottom) =============
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Top: only "HH:mm - HH:mm (+1)" or nothing
+                openingTop,
+
+                const SizedBox(height: 4),
+
+                // Bottom: age restriction e.g. "21+"
+                if (ageLabel != null)
+                  Text(
+                    ageLabel,
+                    style: Styles.smallText.copyWith(
+                      color: venueActive ? white : greyLighter,
+                      fontSize: fontSizeSmaller,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1738,3 +1828,125 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
   }
 
 }
+
+/// Data needed to render the right-side opening-hours block.
+class _OpeningDisplayRow {
+  final bool showRange;  // true => show "HH:mm - HH:mm" (+1)
+  final String open;     // "HH:mm"
+  final String close;    // "HH:mm"
+  final bool nextDay;    // close is next day → show "+1"
+
+  const _OpeningDisplayRow({
+    required this.showRange,
+    required this.open,
+    required this.close,
+    required this.nextDay,
+  });
+}
+
+/// Compute what to show on the right side: time range + "+1" flag.
+///
+/// Rules:
+/// - If closed today  → showRange = false (nothing rendered)
+/// - If open now      → show today's full hours
+/// - If opens later today → show today's full hours
+/// - No "open/close" words, only "HH:mm - HH:mm" (+1)
+_OpeningDisplayRow _openingDisplayForVenue(Venue v, DateTime nowLocal) {
+  final now = nowLocal.toLocal();
+
+  // Structured status (open / opens later today / opens tomorrow / closed today)
+  final status = v.openingHours.statusAt(now);
+
+  // "Today" range (with overnight support + nextDay flag)
+  // Uses your Venue extension from venue.dart
+  final range = v.openingHoursToday(venueLocalNow: now);
+  final bool hasRange = !range.isClosed;
+
+  // Show times only when:
+  //  - currently open, OR
+  //  - it opens later today.
+  //
+  // If closed all day or only opens tomorrow → show nothing.
+  final bool showRange =
+      hasRange &&
+          (status.phase == OpeningPhase.open ||
+              status.phase == OpeningPhase.opensLaterToday);
+
+  if (!showRange) {
+    return const _OpeningDisplayRow(
+      showRange: false,
+      open: '',
+      close: '',
+      nextDay: false,
+    );
+  }
+
+  return _OpeningDisplayRow(
+    showRange: true,
+    open: range.open,
+    close: range.close,
+    nextDay: range.nextDay,
+  );
+}
+
+
+/// Age restriction label for *today/now*, e.g. "21+"
+String? _ageRestrictionLabelFor(Venue v, DateTime nowLocal) {
+  final age = v.effectiveAgeRestriction(nowLocal.toLocal());
+  if (age <= 0) return null;
+  return '$age+';
+}
+
+
+/// Simple struct for an opening-hours label in the filter dropdown.
+class _OpeningStatusInfo {
+  final String text;
+  final Color color;
+  final bool shouldShow;
+
+  _OpeningStatusInfo({
+    required this.text,
+    this.color = white,
+    this.shouldShow = true,
+  });
+}
+
+/// Compute a short opening-status label (open / opens soon / closes soon).
+///
+/// TODO: Wire this into your real opening-hours logic:
+///  - is open now
+///  - opens within 60 minutes
+///  - closes within 60 minutes
+_OpeningStatusInfo _openingStatusInfoFor(Venue v) {
+  final now = DateTime.now(); // ideally venue-local
+  final status = v.openingHours.statusAt(now);
+  final label = status.label(localNow: now, soonThresholdMinutes: 60);
+
+  // Only show something if:
+  //  - venue is open now
+  //  - OR opens soon
+  //  - OR closes soon
+  final phase = status.phase;
+
+  final bool isOpenNow = phase == OpeningPhase.open;
+
+  // We can infer "soon" from the label we generated above:
+  final bool isSoon =
+    label.startsWith('Opens in') || label.startsWith('Closes in');
+
+  final bool shouldShow = isOpenNow || isSoon;
+
+  if (!shouldShow) {
+    return _OpeningStatusInfo(
+      text: '',
+      color: grey,
+    );
+  }
+
+  return _OpeningStatusInfo(
+    text: label,
+    color: label.startsWith('Closes in') ? orange : owlPurple,
+    shouldShow: true,
+  );
+}
+

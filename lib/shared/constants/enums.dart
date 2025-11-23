@@ -44,7 +44,7 @@ extension ScreenNameX on MainScreenName {
 
 enum VenueType {
   //database format
-  unknown,
+  unknown, //TODO Figure out. Maybe change?
   club,
   bar,
   pub,

@@ -364,22 +364,72 @@
   }
 
   extension OpeningStatusFormat on OpeningStatus {
-    String label() {
-      String fmt(int m) =>
-          '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
-//TODO add opens soon (1hour).
+    /// Human-readable label with "opens soon / closes soon" support.
+    ///
+    /// [localNow] must be venue-local time.
+    /// [soonThresholdMinutes] controls when we say "soon" (default 60).
+    String label({
+      DateTime? localNow,
+      int soonThresholdMinutes = 60,
+    }) {
+      final now = (localNow ?? DateTime.now()).toLocal();
+      final nowM = _toMinutes(now.hour, now.minute);
+
+      String fmt(int m) {
+        final h = (m ~/ 60) % 24;
+        final mm = m % 60;
+        return '${h.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}';
+      }
+
+      int _deltaMinutes(int from, int to) {
+        // difference within [0, 1440) – handles overnight by wrapping
+        var diff = to - from;
+        if (diff < 0) diff += 24 * 60;
+        return diff;
+      }
+
       switch (phase) {
         case OpeningPhase.open:
+          if (closeMinutes == null) {
+            return 'Open now';
+          }
+
+          final minutesToClose = _deltaMinutes(nowM, closeMinutes!);
+
+          // "Closes soon" window
+          if (minutesToClose > 0 && minutesToClose <= soonThresholdMinutes) {
+            return 'Closes in $minutesToClose min';
+          }
+
           return 'Open now · until ${fmt(closeMinutes!)}';
+
         case OpeningPhase.opensLaterToday:
+          if (openMinutes == null) {
+            return 'Closed';
+          }
+
+          final minutesToOpen = _deltaMinutes(nowM, openMinutes!);
+
+          // "Opens soon" window
+          if (minutesToOpen > 0 && minutesToOpen <= soonThresholdMinutes) {
+            return 'Opens in $minutesToOpen min';
+          }
+
           return 'Opens ${fmt(openMinutes!)}';
+
         case OpeningPhase.opensTomorrow:
-          return 'Closed today · Opens ${fmt(openMinutes!)}';
+        // You probably don't want "opens soon" here since it's > 60 min away.
+          if (openMinutes != null) {
+            return 'Opens ${fmt(openMinutes!)}';
+          }
+          return '';
+
         case OpeningPhase.closedToday:
-          return 'Closed today';
+          return '';
       }
     }
   }
+
 
   extension OpeningHoursStatus on OpeningHours {
     /// Structured status for UI. `localNow` must be venue local time.
@@ -1016,13 +1066,5 @@
       if (r.isClosed) return 'Closed today';
       return '${r.open} - ${r.close}${r.nextDay ? ' +1' : ''}';
     }
-
-  // --- Backward-compat/alias with your requested name ---
-    ({String open, String close, bool nextDay, bool isClosed})
-    openinghhourtoday({DateTime? venueLocalNow}) =>
-        openingHoursToday(venueLocalNow: venueLocalNow);
-
-    String openinghhourtodayLabel({DateTime? venueLocalNow}) =>
-        openingHoursTodayLabel(venueLocalNow: venueLocalNow);
 
   }
