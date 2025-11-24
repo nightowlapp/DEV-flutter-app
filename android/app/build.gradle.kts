@@ -10,7 +10,8 @@ plugins {
 android {
     namespace = "com.nightowl.nightowlcode"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "29.0.14206865"
+    compileSdkVersion(36)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -30,7 +31,7 @@ android {
         applicationId = "com.nightowl.nightowlcode"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = 23 //flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
