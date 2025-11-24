@@ -29,7 +29,11 @@ class VenueMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logo = VenueLogo(venue: venue, showInitialFallback: false);
+    final logo =
+    VenueLogo(
+      venue: venue,
+      size: iconSizeLarge + 4,
+    );
     //TODO below. Delayed
     final primaryColor = venue.primaryColorHex ?? owlPurple.toHex();
     final secondaryColor = venue.secondaryColorHex ?? owlPurple.toHex();

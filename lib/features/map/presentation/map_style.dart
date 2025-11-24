@@ -34,8 +34,8 @@ class MapStyle {
         id: srcVenuesClusterable,
         data: _emptyFC(),
         cluster: true,
-        clusterRadius: 64,
-        clusterMaxZoom: 15,
+        clusterRadius: 24, //Cluster config. Lower numbers less clustering.
+        clusterMaxZoom: 12, //Cluster config. Lower numbers less clustering.
       ));
     }
     if (!await style.styleSourceExists(srcVenuesVip)) {
