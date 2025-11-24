@@ -10,6 +10,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 // same helper you use in CustomNetworkImage
 import 'package:nightowlcode/core/storage/storage_url.dart';
+import 'package:nightowlcode/shared/constants/colors.dart';
 
 class MapLogoRegistry {
   MapLogoRegistry._();
@@ -18,6 +19,11 @@ class MapLogoRegistry {
   /// IDs we have already pushed into the current Mapbox style.
   final _loaded = <String>{};
 
+  // CircleAvatar styling
+  static const double _borderWidth = 2.0; // px
+  static const ui.Color _borderOpenColor = green;
+  static const ui.Color _borderClosedColor = red;
+
   /// `images`: Mapbox style-image id -> storage path / URL.
   ///
   /// `maxSize` is the final diameter (in px) of the circular sprite
@@ -25,12 +31,12 @@ class MapLogoRegistry {
   Future<void> syncIdToUrl({
     required MapboxMap map,
     required Map<String, String> images,
-    int maxSize = 50,
+    int maxSize = 60,
   }) async {
     final style = map.style;
 
     for (final e in images.entries) {
-      final id = e.key.trim();
+      final id = e.key.trim();   // e.g. logo_<id>_open / logo_<id>_closed
       final path = e.value.trim();
       if (id.isEmpty || path.isEmpty) continue;
       if (_loaded.contains(id)) continue;
@@ -44,7 +50,11 @@ class MapLogoRegistry {
         // ignore if not implemented on platform
       }
 
-      final mbx = await _loadAsMbxImage(path, edge: maxSize);
+      final mbx = await _loadAsMbxImage(
+        id: id,
+        path: path,
+        edge: maxSize,
+      );
       if (mbx == null) continue;
 
       try {
@@ -72,33 +82,52 @@ class MapLogoRegistry {
   // IMAGE PIPELINE
   //   raw path/gs/http  → bytes (disk cached when possible)
   //   bytes             → ui.Image
-  //   ui.Image          → circular, padded, scaled ui.Image
+  //   ui.Image          → circular logo
+  //   logo              → CircleAvatar (logo + colored ring)
   //   ui.Image          → PNG bytes → MbxImage
   // ---------------------------------------------------------------------------
 
-  Future<MbxImage?> _loadAsMbxImage(
-      String path, {
-        required int edge,
-      }) async {
+  Future<MbxImage?> _loadAsMbxImage({
+    required String id,
+    required String path,
+    required int edge,
+  }) async {
     try {
       final bytes = await _loadBytes(path);
       if (bytes == null || bytes.isEmpty) return null;
 
       final img = await _decode(bytes);
-      final circle = await _cropAndFitToCircle(
+
+      // Inner circle for the logo itself – leave room for the border.
+      int innerEdge = edge - (_borderWidth * 2).ceil();
+      if (innerEdge < 8) innerEdge = edge; // safety
+
+      final logoCircle = await _cropAndFitToCircle(
         img,
+        edge: innerEdge,
+        paddingFraction: 0.0,
+      );
+
+      final bool isOpenVariant = id.endsWith('_open');
+      final ui.Color borderColor =
+      isOpenVariant ? _borderOpenColor : _borderClosedColor;
+
+      final avatar = await _composeCircleAvatar(
+        logoCircle,
         edge: edge,
+        borderWidth: _borderWidth,
+        borderColor: borderColor,
       );
 
       final pngData =
-      await circle.toByteData(format: ui.ImageByteFormat.png);
+      await avatar.toByteData(format: ui.ImageByteFormat.png);
       if (pngData == null) return null;
 
       final pngBytes = pngData.buffer.asUint8List();
 
       return MbxImage(
-        width: circle.width,
-        height: circle.height,
+        width: avatar.width,
+        height: avatar.height,
         data: pngBytes,
       );
     } catch (e) {
@@ -168,12 +197,11 @@ class MapLogoRegistry {
 
   /// 1. Detect non-transparent bounding box.
   /// 2. Crop to that box.
-  /// 3. Scale into a circle of diameter [edge] with some padding so the
-  ///    green ring never gets overlapped.
+  /// 3. Scale into a circle of diameter [edge] with some padding.
   Future<ui.Image> _cropAndFitToCircle(
       ui.Image src, {
         required int edge,
-        double paddingFraction = 0.12, // 12% inner margin
+        double paddingFraction = 0.12,
       }) async {
     final width = src.width;
     final height = src.height;
@@ -309,6 +337,49 @@ class MapLogoRegistry {
     );
 
     canvas.drawImageRect(src, srcRect, destRect, paint);
+
+    return await recorder.endRecording().toImage(edge, edge);
+  }
+
+  /// Compose final CircleAvatar sprite:
+  /// - `logoCircle` is already circular with transparent corners.
+  /// - Draw it onto a bigger canvas and add a colored ring.
+  Future<ui.Image> _composeCircleAvatar(
+      ui.Image logoCircle, {
+        required int edge,
+        required double borderWidth,
+        required ui.Color borderColor,
+      }) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final size = edge.toDouble();
+    final center = ui.Offset(size / 2, size / 2);
+
+    // Draw logo inside (smaller than full size to leave room for ring).
+    final logoSize = size - borderWidth * 2;
+    final srcRect = ui.Rect.fromLTWH(
+      0,
+      0,
+      logoCircle.width.toDouble(),
+      logoCircle.height.toDouble(),
+    );
+    final destRect = ui.Rect.fromLTWH(
+      (size - logoSize) / 2,
+      (size - logoSize) / 2,
+      logoSize,
+      logoSize,
+    );
+
+    final imgPaint = ui.Paint()..isAntiAlias = true;
+    canvas.drawImageRect(logoCircle, srcRect, destRect, imgPaint);
+
+    // Draw border on top
+    final borderPaint = ui.Paint()
+      ..isAntiAlias = true
+      ..style = ui.PaintingStyle.stroke
+      ..color = borderColor
+      ..strokeWidth = borderWidth;
+    canvas.drawCircle(center, size / 2 - borderWidth / 2, borderPaint);
 
     return await recorder.endRecording().toImage(edge, edge);
   }

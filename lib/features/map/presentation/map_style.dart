@@ -122,9 +122,15 @@ class MapStyle {
             ]
           ]));
 
+      // Non-verified: purple dot + green/red stroke.
+      // Verified: we hide this circle entirely (CircleAvatar sprite handles ring).
+      await style.setStyleLayerProperty(
+          lyrUnclusteredBg, 'circle-color', purple.toHex());
+      await style.setStyleLayerProperty(lyrUnclusteredBg, 'circle-radius', 8.0);
+
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
-        'circle-color',
+        'circle-opacity',
         jsonEncode([
           'case',
           [
@@ -132,14 +138,26 @@ class MapStyle {
             ['get', 'isVerified'],
             true
           ],
-          'rgba(0,0,0,0)', // transparent when verified
-          purple.toHex(),
+          0.0, // hide for verified
+          1.0,
         ]),
       );
-      await style.setStyleLayerProperty(lyrUnclusteredBg, 'circle-radius', 8.0);
-      await style.setStyleLayerProperty(lyrUnclusteredBg, 'circle-opacity', 1);
+
       await style.setStyleLayerProperty(
-          lyrUnclusteredBg, 'circle-stroke-width', 3.0);
+        lyrUnclusteredBg,
+        'circle-stroke-width',
+        jsonEncode([
+          'case',
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
+          0.0, // no stroke for verified
+          3.0,
+        ]),
+      );
+
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
         'circle-stroke-color',
@@ -155,13 +173,18 @@ class MapStyle {
         ]),
       );
     }
+
 
     if (!await style.styleLayerExists(lyrVipBg)) {
       await style.addLayer(CircleLayer(id: lyrVipBg, sourceId: srcVenuesVip));
 
       await style.setStyleLayerProperty(
+          lyrVipBg, 'circle-color', purpleAccent.toHex());
+      await style.setStyleLayerProperty(lyrVipBg, 'circle-radius', 16.0);
+
+      await style.setStyleLayerProperty(
         lyrVipBg,
-        'circle-color',
+        'circle-opacity',
         jsonEncode([
           'case',
           [
@@ -169,13 +192,26 @@ class MapStyle {
             ['get', 'isVerified'],
             true
           ],
-          'rgba(0,0,0,0)',
-          purpleAccent.toHex(),
+          0.0,
+          1.0,
         ]),
       );
-      await style.setStyleLayerProperty(lyrVipBg, 'circle-radius', 16.0);
-      await style.setStyleLayerProperty(lyrVipBg, 'circle-opacity', 1);
-      await style.setStyleLayerProperty(lyrVipBg, 'circle-stroke-width', 3.0);
+
+      await style.setStyleLayerProperty(
+        lyrVipBg,
+        'circle-stroke-width',
+        jsonEncode([
+          'case',
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
+          0.0,
+          3.0,
+        ]),
+      );
+
       await style.setStyleLayerProperty(
         lyrVipBg,
         'circle-stroke-color',
@@ -191,6 +227,7 @@ class MapStyle {
         ]),
       );
     }
+
 
     // === Foreground icon (inside the circle) =================================
     if (!await style.styleLayerExists(lyrUnclustered)) {
@@ -214,7 +251,26 @@ class MapStyle {
             ['get', 'isVerified'],
             true
           ],
-          ['get', 'logo_image_id'],
+          // Verified → CircleAvatar sprite: open vs closed
+          [
+            'case',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_open'
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_closed'
+            ],
+          ],
+          // Not verified → fallback by type
           [
             'case',
             [
@@ -275,14 +331,16 @@ class MapStyle {
           ]
         ]),
       );
-      await style.setStyleLayerProperty(lyrUnclustered, 'icon-size', 0.8);
+
+      // Slightly larger now – full 1.0 sprite
+      await style.setStyleLayerProperty(lyrUnclustered, 'icon-size', 0.9);
       await style.setStyleLayerProperty(
           lyrUnclustered, 'icon-allow-overlap', true);
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-halo-width', 0.0);
-      // Make symbols sit on top so taps hit them first.
       await style.setStyleLayerProperty(
           lyrUnclustered, 'symbol-sort-key', 1000);
     }
+
 
     // ----- Non-VIP labels (automatic de-clutter) -----
     if (!await style.styleLayerExists(lyrLabels)) {
@@ -384,7 +442,24 @@ class MapStyle {
             ['get', 'isVerified'],
             true
           ],
-          ['get', 'logo_image_id'],
+          [
+            'case',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_open'
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_closed'
+            ],
+          ],
           [
             'case',
             [
@@ -450,6 +525,7 @@ class MapStyle {
       await style.setStyleLayerProperty(lyrVip, 'icon-halo-width', 0.0);
       await style.setStyleLayerProperty(lyrVip, 'symbol-sort-key', 1000);
     }
+
 
     // ----- VIP labels (automatic de-clutter) -----
     if (!await style.styleLayerExists(lyrVipLabels)) {

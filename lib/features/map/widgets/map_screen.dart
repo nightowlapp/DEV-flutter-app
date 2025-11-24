@@ -347,13 +347,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
         final venues = ref.read(allVenuesListProvider);
         final idToPath2 = <String, String>{};
+
         for (final v in venues) {
-          if (v.isVerified) {
-            final id = _logoImageIdFor(v);
-            idToPath2[id] = 'venue_images/${v.id}/logo.webp';
-          }
+          if (!v.isVerified) continue;
+
+          final baseId = _logoImageIdFor(v);
+          final path = 'venue_images/${v.id}/logo.webp';
+
+          // Two CircleAvatar variants – open/closed
+          idToPath2['${baseId}_open'] = path;
+          idToPath2['${baseId}_closed'] = path;
         }
-        await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath2);
+
+        await MapLogoRegistry.instance.syncIdToUrl(
+          map: map,
+          images: idToPath2,
+          maxSize: 46, // tweak to taste
+        );
+
       }
     );
 
@@ -636,12 +647,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final venues = ref.read(allVenuesListProvider);
     final idToPath = <String, String>{};
+
     for (final v in venues) {
       if (!v.isVerified) continue;
-      final id = _logoImageIdFor(v);
-      idToPath[id] = 'venue_images/${v.id}/logo.webp';
+
+      final baseId = _logoImageIdFor(v);
+      final path = 'venue_images/${v.id}/logo.webp';
+
+      idToPath['${baseId}_open'] = path;
+      idToPath['${baseId}_closed'] = path;
     }
-    await MapLogoRegistry.instance.syncIdToUrl(map: map, images: idToPath);
+
+    await MapLogoRegistry.instance.syncIdToUrl(
+      map: map,
+      images: idToPath,
+      maxSize: 46,
+    );
+
 
     if (mounted) setState(() => _loading = false);
 
