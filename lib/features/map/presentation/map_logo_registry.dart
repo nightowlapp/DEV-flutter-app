@@ -16,27 +16,29 @@ class MapLogoRegistry {
   MapLogoRegistry._();
   static final MapLogoRegistry instance = MapLogoRegistry._();
 
-  /// IDs we have already pushed into the current Mapbox style.
   final _loaded = <String>{};
 
-  // CircleAvatar styling
-  static const double _borderWidth = 2.0; // px
+  static const double _borderWidth = 8.0;
   static const ui.Color _borderOpenColor = green;
   static const ui.Color _borderClosedColor = red;
 
-  /// `images`: Mapbox style-image id -> storage path / URL.
-  ///
-  /// `maxSize` is the final diameter (in px) of the circular sprite
-  /// *before* `icon-size` is applied in the style layer.
   Future<void> syncIdToUrl({
     required MapboxMap map,
     required Map<String, String> images,
+
+    // Treat this as the *logical* diameter (in CSS px / map px)
     int maxSize = 60,
+
+    // How many *physical* pixels per logical px we bake into the sprite
+    double pixelRatio = 2.0, // 2x or 3x is ideal on modern phones
   }) async {
     final style = map.style;
 
+    // Actual bitmap edge in physical pixels
+    final int edge = (maxSize * pixelRatio).round();
+
     for (final e in images.entries) {
-      final id = e.key.trim();   // e.g. logo_<id>_open / logo_<id>_closed
+      final id = e.key.trim();
       final path = e.value.trim();
       if (id.isEmpty || path.isEmpty) continue;
       if (_loaded.contains(id)) continue;
@@ -46,21 +48,19 @@ class MapLogoRegistry {
           _loaded.add(id);
           continue;
         }
-      } catch (_) {
-        // ignore if not implemented on platform
-      }
+      } catch (_) {}
 
       final mbx = await _loadAsMbxImage(
         id: id,
         path: path,
-        edge: maxSize,
+        edge: edge,
       );
       if (mbx == null) continue;
 
       try {
         await style.addStyleImage(
           id,
-          1.0,
+          pixelRatio, // ⬅️ tell Mapbox this is a 2x/3x sprite
           mbx,
           false,
           const <ImageStretches?>[],
@@ -75,6 +75,7 @@ class MapLogoRegistry {
       }
     }
   }
+
 
   void clear() => _loaded.clear();
 
@@ -259,7 +260,7 @@ class MapLogoRegistry {
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final paint = ui.Paint()..isAntiAlias = true;
+    final paint = ui.Paint()..isAntiAlias = true ..filterQuality = ui.FilterQuality.high;
 
     final radius = edge / 2.0;
     final center = ui.Offset(radius, radius);
@@ -304,7 +305,7 @@ class MapLogoRegistry {
       }) async {
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final paint = ui.Paint()..isAntiAlias = true;
+    final paint = ui.Paint()..isAntiAlias = true ..filterQuality = ui.FilterQuality.high;
 
     final radius = edge / 2.0;
     final center = ui.Offset(radius, radius);
@@ -355,7 +356,15 @@ class MapLogoRegistry {
     final size = edge.toDouble();
     final center = ui.Offset(size / 2, size / 2);
 
-    // Draw logo inside (smaller than full size to leave room for ring).
+    // 1) Fill inner circle with black (background inside the ring)
+    final innerRadius = (size - borderWidth * 2) / 2.0;
+    final bgPaint = ui.Paint()
+      ..isAntiAlias = true
+      ..style = ui.PaintingStyle.fill
+      ..color = black;
+    canvas.drawCircle(center, innerRadius, bgPaint);
+
+    // 2) Draw logo inside (smaller than full size to leave room for ring).
     final logoSize = size - borderWidth * 2;
     final srcRect = ui.Rect.fromLTWH(
       0,
@@ -370,19 +379,23 @@ class MapLogoRegistry {
       logoSize,
     );
 
-    final imgPaint = ui.Paint()..isAntiAlias = true;
+    final imgPaint = ui.Paint()
+      ..isAntiAlias = true
+      ..filterQuality = ui.FilterQuality.high;
     canvas.drawImageRect(logoCircle, srcRect, destRect, imgPaint);
 
-    // Draw border on top
+    // 3) Draw border on top
     final borderPaint = ui.Paint()
       ..isAntiAlias = true
       ..style = ui.PaintingStyle.stroke
       ..color = borderColor
       ..strokeWidth = borderWidth;
+
     canvas.drawCircle(center, size / 2 - borderWidth / 2, borderPaint);
 
     return await recorder.endRecording().toImage(edge, edge);
   }
+
 
   int _clampInt(int v, int min, int max) {
     if (v < min) return min;

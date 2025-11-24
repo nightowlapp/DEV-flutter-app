@@ -165,6 +165,12 @@ class Distance {
     return '📍 ${formatVenueDistance(dKm)}';
   }
 
+  static String normalDistanceText(LatLng? userLoc, Venue venue) {
+    if (userLoc == null) return '';
+    final dKm = kmLatLng(userLoc, venue.entry);
+    return formatVenueDistance(dKm);
+  }
+
   static String walkText(LatLng? userLoc, Venue venue) {
     if (userLoc == null) return '';
     final m = metersLatLng(userLoc, venue.entry);

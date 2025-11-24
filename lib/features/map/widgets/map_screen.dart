@@ -359,13 +359,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
           idToPath2['${baseId}_closed'] = path;
         }
 
+        final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
+
         await MapLogoRegistry.instance.syncIdToUrl(
           map: map,
-          images: idToPath2,
-          maxSize: 46, // tweak to taste
+          images: idToPath2,        // or idToPath2
+          maxSize: 46,             // logical diameter on the map (same as before)
+          pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
         );
 
-      }
+
+    }
     );
 
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
@@ -658,10 +662,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       idToPath['${baseId}_closed'] = path;
     }
 
+    final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
+
     await MapLogoRegistry.instance.syncIdToUrl(
       map: map,
-      images: idToPath,
-      maxSize: 46,
+      images: idToPath,        // or idToPath2
+      maxSize: 46,             // logical diameter on the map (same as before)
+      pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
     );
 
 
@@ -1379,7 +1386,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                           final venues =
                             effectiveByType[t] ?? const <Venue>[];
 
-                          return _VenueFilterExpandableTile( //TODO add scroll bar inside dropdown as well. AND remove show more. Just show if at bottom of scroll.
+                          return _VenueFilterExpandableTile(
                             label: _labelFor(t),
                             icon: t.icon,
                             isOn: isOn,
@@ -1717,8 +1724,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
 
     final TextStyle nameStyle = venueActive
-        ? Styles.basicText
-        : Styles.basicText.copyWith(color: greyLighter);
+      ? Styles.basicText
+      : Styles.basicText.copyWith(color: greyLighter);
 
     final TextStyle walkStyle = Styles.smallText.copyWith(
       color: white, // ⬅️ walk text should be white
@@ -1727,7 +1734,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
     // Walking distance text like "🚶 5 min"
     final String walk = Distance.walkText(user, v);
-    final String? walkLabel = walk.isEmpty ? null : walk;
+    final String dist = Distance.normalDistanceText(user, v);
+    final String? walkLabel = walk.isEmpty && dist.isEmpty ? null : '$walk - $dist';
 
     // Opening-hours display info (range + +1 flag)
     final _OpeningDisplayRow opening = _openingDisplayForVenue(v, now);
@@ -1759,18 +1767,19 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
               overflow: TextOverflow.ellipsis,
             ),
             if (opening.nextDay)
-              Positioned(
-                right: -2,
-                top: -5,
-                child: Text(
-                  '+1',
-                  style: supStyle,
-                ),
+            Positioned(
+              right: -2,
+              top: -5,
+              child: Text(
+                '+1',
+                style: supStyle,
               ),
+            ),
           ],
         ),
       );
-    } else {
+    }
+    else {
       // Closed today (or only opens tomorrow) → show nothing
       openingTop = const SizedBox.shrink();
     }
@@ -1807,15 +1816,15 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
                   // Walk text (white)
                   if (walkLabel != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        walkLabel,
-                        style: walkStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      walkLabel,
+                      style: walkStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
                 ],
               ),
             ),
@@ -1834,13 +1843,13 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
                 // Bottom: age restriction e.g. "21+"
                 if (ageLabel != null)
-                  Text(
-                    ageLabel,
-                    style: Styles.smallText.copyWith(
-                      color: venueActive ? white : greyLighter,
-                      fontSize: fontSizeSmaller,
-                    ),
+                Text(
+                  ageLabel,
+                  style: Styles.smallText.copyWith(
+                    color: venueActive ? white : greyLighter,
+                    fontSize: fontSizeSmaller,
                   ),
+                ),
               ],
             ),
           ],
@@ -1890,9 +1899,9 @@ _OpeningDisplayRow _openingDisplayForVenue(Venue v, DateTime nowLocal) {
   //
   // If closed all day or only opens tomorrow → show nothing.
   final bool showRange =
-      hasRange &&
-          (status.phase == OpeningPhase.open ||
-              status.phase == OpeningPhase.opensLaterToday);
+    hasRange &&
+      (status.phase == OpeningPhase.open ||
+        status.phase == OpeningPhase.opensLaterToday);
 
   if (!showRange) {
     return const _OpeningDisplayRow(
