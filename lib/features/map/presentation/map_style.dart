@@ -445,7 +445,7 @@ class MapStyle {
           ]
         ]),
       );
-      await style.setStyleLayerProperty(lyrVip, 'icon-size', 0.95);
+      await style.setStyleLayerProperty(lyrVip, 'icon-size', 0.9);
       await style.setStyleLayerProperty(lyrVip, 'icon-allow-overlap', true);
       await style.setStyleLayerProperty(lyrVip, 'icon-halo-width', 0.0);
       await style.setStyleLayerProperty(lyrVip, 'symbol-sort-key', 1000);

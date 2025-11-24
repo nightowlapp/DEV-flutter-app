@@ -2,23 +2,30 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
+// same helper you use in CustomNetworkImage
+import 'package:nightowlcode/core/storage/storage_url.dart';
+
 class MapLogoRegistry {
   MapLogoRegistry._();
   static final MapLogoRegistry instance = MapLogoRegistry._();
 
+  /// IDs we have already pushed into the current Mapbox style.
   final _loaded = <String>{};
 
+  /// `images`: Mapbox style-image id -> storage path / URL.
+  ///
+  /// `maxSize` is the final diameter (in px) of the circular sprite
+  /// *before* `icon-size` is applied in the style layer.
   Future<void> syncIdToUrl({
-    // keep the name if you like; it’s really ID->path
     required MapboxMap map,
-    required Map<String, String>
-        images, // id -> "venue_images/<id>/logo.webp" | gs://... | https://...
-    int maxSize = 96,
+    required Map<String, String> images,
+    int maxSize = 50,
   }) async {
     final style = map.style;
 
@@ -33,9 +40,11 @@ class MapLogoRegistry {
           _loaded.add(id);
           continue;
         }
-      } catch (_) {}
+      } catch (_) {
+        // ignore if not implemented on platform
+      }
 
-      final mbx = await _loadAsMbxImage(path, maxEdge: maxSize);
+      final mbx = await _loadAsMbxImage(path, edge: maxSize);
       if (mbx == null) continue;
 
       try {
@@ -49,22 +58,9 @@ class MapLogoRegistry {
           null,
         );
         _loaded.add(id);
-      } catch (_) {
-        try {
-          // await style.removeStyleImage(id);
-          await style.addStyleImage(
-            id,
-            1.0,
-            mbx,
-            false,
-            const <ImageStretches?>[],
-            const <ImageStretches?>[],
-            null,
-          );
-          _loaded.add(id);
-        } catch (e2) {
-          if (kDebugMode)
-            debugPrint('MapLogoRegistry: add failed for $id -> $e2');
+      } catch (e2) {
+        if (kDebugMode) {
+          debugPrint('MapLogoRegistry: add failed for $id -> $e2');
         }
       }
     }
@@ -72,84 +68,90 @@ class MapLogoRegistry {
 
   void clear() => _loaded.clear();
 
-  // -------- internals --------
+  // ---------------------------------------------------------------------------
+  // IMAGE PIPELINE
+  //   raw path/gs/http  → bytes (disk cached when possible)
+  //   bytes             → ui.Image
+  //   ui.Image          → circular, padded, scaled ui.Image
+  //   ui.Image          → PNG bytes → MbxImage
+  // ---------------------------------------------------------------------------
 
-  Future<MbxImage?> _loadAsMbxImage(String path, {int maxEdge = 96}) async {
+  Future<MbxImage?> _loadAsMbxImage(
+      String path, {
+        required int edge,
+      }) async {
     try {
       final bytes = await _loadBytes(path);
       if (bytes == null || bytes.isEmpty) return null;
 
-      final decoded = await _decode(bytes);
-      final scale = _scaleToFit(decoded.width, decoded.height, maxEdge);
-      final w = (decoded.width * scale).round().clamp(1, 2048);
-      final h = (decoded.height * scale).round().clamp(1, 2048);
-
-      final rec = ui.PictureRecorder();
-      final canvas = ui.Canvas(rec);
-      final paint = ui.Paint()..isAntiAlias = true;
-      canvas.drawImageRect(
-        decoded,
-        ui.Rect.fromLTWH(
-            0, 0, decoded.width.toDouble(), decoded.height.toDouble()),
-        ui.Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
-        paint,
+      final img = await _decode(bytes);
+      final circle = await _cropAndFitToCircle(
+        img,
+        edge: edge,
       );
 
-      final resized = await rec.endRecording().toImage(w, h);
-      final data = await resized.toByteData(format: ui.ImageByteFormat.rawRgba);
-      if (data == null) return null;
+      final pngData =
+      await circle.toByteData(format: ui.ImageByteFormat.png);
+      if (pngData == null) return null;
 
-      return MbxImage(width: w, height: h, data: data.buffer.asUint8List());
+      final pngBytes = pngData.buffer.asUint8List();
+
+      return MbxImage(
+        width: circle.width,
+        height: circle.height,
+        data: pngBytes,
+      );
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('MapLogoRegistry: loadAsMbxImage failed for $path -> $e');
+      if (kDebugMode) {
+        debugPrint('MapLogoRegistry: _loadAsMbxImage failed for $path -> $e');
+      }
       return null;
     }
   }
 
+  /// Load bytes for `path`:
+  /// - normalize storage paths / gs:// → HTTPS when possible
+  /// - use DefaultCacheManager for HTTP (disk cached)
+  /// - fall back to Firebase Storage SDK otherwise
   Future<Uint8List?> _loadBytes(String path) async {
-    // Detect Firebase Storage HTTPS and use SDK (so auth works)
-    bool _isFirebaseStorageHttps(String url) {
-      try {
-        final u = Uri.parse(url);
-        if (u.scheme != 'http' && u.scheme != 'https') return false;
-        // covers both firebasestorage.googleapis.com and storage.googleapis.com domains
-        final h = u.host.toLowerCase();
-        return h.contains('firebasestorage.googleapis.com') ||
-            h.contains('storage.googleapis.com');
-      } catch (_) {
-        return false;
-      }
-    }
+    final raw = path.trim();
 
-    final storage = FirebaseStorage.instance;
+    // Let your StorageUrl helper convert:
+    //  - "venue_images/..."      → https://firebasestorage.googleapis.com/...
+    //  - "gs://bucket/..."       → https://...
+    //  - already-https           → same
+    final normalized = StorageUrl.normalize(raw);
+    final resolved = normalized.isNotEmpty ? normalized : raw;
 
-    // Use Firebase SDK for anything we can resolve as a Firebase ref
-    if (path.startsWith('gs://') ||
-        _isFirebaseStorageHttps(path) ||
-        !path.startsWith('http')) {
+    bool isHttp(String s) =>
+        s.startsWith('http://') || s.startsWith('https://');
+
+    // --- preferred path: HTTP + disk cache (cheapest on Firebase) -----
+    if (isHttp(resolved)) {
       try {
-        final ref = path.startsWith('gs://')
-            ? storage.refFromURL(path)
-            : (path.startsWith('http')
-                ? storage.refFromURL(path) // https -> refFromURL keeps auth
-                : storage.ref(path)); // bucket relative path
-        return await ref.getData(8 * 1024 * 1024);
+        final file = await DefaultCacheManager()
+            .getSingleFile(resolved, key: resolved);
+        return await file.readAsBytes();
       } catch (e) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
-              'MapLogoRegistry: Firebase getData failed for $path -> $e');
-        return null;
+              'MapLogoRegistry: HTTP cache fetch failed for $resolved -> $e');
+        }
+        // fall through to Firebase SDK as last resort
       }
     }
 
-    // Fallback: regular web URL (non-Firebase) via cache manager
+    // --- fallback: Firebase Storage SDK (no disk cache, but auth-safe) ----
+    final storage = FirebaseStorage.instance;
     try {
-      final f = await DefaultCacheManager().getSingleFile(path);
-      return f.readAsBytes();
+      final ref = resolved.startsWith('gs://')
+          ? storage.refFromURL(resolved)
+          : storage.ref(resolved);
+      return await ref.getData(8 * 1024 * 1024);
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('MapLogoRegistry: HTTP fetch failed for $path -> $e');
+      if (kDebugMode) {
+        debugPrint('MapLogoRegistry: Firebase getData failed for $resolved -> $e');
+      }
       return null;
     }
   }
@@ -160,8 +162,160 @@ class MapLogoRegistry {
     return c.future;
   }
 
-  double _scaleToFit(int w, int h, int maxEdge) {
-    final maxDim = w > h ? w : h;
-    return maxDim <= maxEdge ? 1.0 : maxEdge / maxDim;
+  // ---------------------------------------------------------------------------
+  // circle fitting + optional transparent-padding crop
+  // ---------------------------------------------------------------------------
+
+  /// 1. Detect non-transparent bounding box.
+  /// 2. Crop to that box.
+  /// 3. Scale into a circle of diameter [edge] with some padding so the
+  ///    green ring never gets overlapped.
+  Future<ui.Image> _cropAndFitToCircle(
+      ui.Image src, {
+        required int edge,
+        double paddingFraction = 0.12, // 12% inner margin
+      }) async {
+    final width = src.width;
+    final height = src.height;
+
+    final byteData =
+    await src.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) {
+      // fallback: simple scale into circle
+      return _scaleImageToCircle(
+        src,
+        edge: edge,
+        paddingFraction: paddingFraction,
+      );
+    }
+
+    final bytes = byteData.buffer.asUint8List();
+
+    const int alphaThreshold = 10;
+    int left = width;
+    int right = -1;
+    int top = height;
+    int bottom = -1;
+
+    for (int y = 0; y < height; y++) {
+      final rowOffset = y * width * 4;
+      for (int x = 0; x < width; x++) {
+        final offset = rowOffset + x * 4;
+        final a = bytes[offset + 3];
+        if (a > alphaThreshold) {
+          if (x < left) left = x;
+          if (x > right) right = x;
+          if (y < top) top = y;
+          if (y > bottom) bottom = y;
+        }
+      }
+    }
+
+    if (right < left || bottom < top) {
+      // completely transparent → just scale
+      return _scaleImageToCircle(
+        src,
+        edge: edge,
+        paddingFraction: paddingFraction,
+      );
+    }
+
+    const int paddingPx = 2;
+    left = _clampInt(left - paddingPx, 0, width - 1);
+    top = _clampInt(top - paddingPx, 0, height - 1);
+    right = _clampInt(right + paddingPx, 0, width - 1);
+    bottom = _clampInt(bottom + paddingPx, 0, height - 1);
+
+    final cropWidth = right - left + 1;
+    final cropHeight = bottom - top + 1;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final paint = ui.Paint()..isAntiAlias = true;
+
+    final radius = edge / 2.0;
+    final center = ui.Offset(radius, radius);
+
+    final circleRect =
+    ui.Rect.fromCircle(center: center, radius: radius);
+    final clipPath = ui.Path()..addOval(circleRect);
+    canvas.clipPath(clipPath);
+
+    final innerRadius = radius * (1.0 - paddingFraction);
+
+    final srcRect = ui.Rect.fromLTWH(
+      left.toDouble(),
+      top.toDouble(),
+      cropWidth.toDouble(),
+      cropHeight.toDouble(),
+    );
+
+    final double scale =
+        (innerRadius * 2.0) /
+            (cropWidth > cropHeight ? cropWidth : cropHeight);
+
+    final destW = cropWidth * scale;
+    final destH = cropHeight * scale;
+
+    final destRect = ui.Rect.fromLTWH(
+      center.dx - destW / 2.0,
+      center.dy - destH / 2.0,
+      destW,
+      destH,
+    );
+
+    canvas.drawImageRect(src, srcRect, destRect, paint);
+
+    return await recorder.endRecording().toImage(edge, edge);
+  }
+
+  Future<ui.Image> _scaleImageToCircle(
+      ui.Image src, {
+        required int edge,
+        double paddingFraction = 0.12,
+      }) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final paint = ui.Paint()..isAntiAlias = true;
+
+    final radius = edge / 2.0;
+    final center = ui.Offset(radius, radius);
+    final circleRect =
+    ui.Rect.fromCircle(center: center, radius: radius);
+    final clipPath = ui.Path()..addOval(circleRect);
+    canvas.clipPath(clipPath);
+
+    final innerRadius = radius * (1.0 - paddingFraction);
+
+    final srcRect = ui.Rect.fromLTWH(
+      0,
+      0,
+      src.width.toDouble(),
+      src.height.toDouble(),
+    );
+
+    final double scale =
+        (innerRadius * 2.0) /
+            (src.width > src.height ? src.width : src.height);
+
+    final destW = src.width * scale;
+    final destH = src.height * scale;
+
+    final destRect = ui.Rect.fromLTWH(
+      center.dx - destW / 2.0,
+      center.dy - destH / 2.0,
+      destW,
+      destH,
+    );
+
+    canvas.drawImageRect(src, srcRect, destRect, paint);
+
+    return await recorder.endRecording().toImage(edge, edge);
+  }
+
+  int _clampInt(int v, int min, int max) {
+    if (v < min) return min;
+    if (v > max) return max;
+    return v;
   }
 }
