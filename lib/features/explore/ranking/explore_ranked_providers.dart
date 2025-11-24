@@ -135,6 +135,12 @@ Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
         xs = xs
             .where((v) => venuePassesFilters(v, filters, userLoc: userLoc))
             .toList(growable: false);
+
+        // 4) FINAL CHECK: if filters killed everything, loosen them
+        if (xs.isEmpty) {
+          // ignore filters and just show top-ranked venues
+          xs = ranked.take(10).toList(growable: false);
+        }
       }
 
       return AsyncData(xs);

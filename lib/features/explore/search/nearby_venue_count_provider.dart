@@ -12,7 +12,7 @@ import '../ranking/explore_ranked_providers.dart';
 const double _kDefaultMaxDistanceKm = 15;
 
 final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
-  // Ranked venues
+  // Ranked venues (already distance-gated a bit in exploreRankedVenuesProvider)
   final rankedAv = ref.watch(exploreRankedVenuesProvider);
   final List<Venue>? venues = rankedAv.asData?.value;
 
@@ -28,16 +28,40 @@ final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
 
   if (userLoc == null) return null; // still waiting on location
   if (venues == null || venues.isEmpty) return null;
+
+  // If user explicitly sets <= 0 km, respect that and show 0
   if (maxKm <= 0) return 0;
 
   final maxMeters = maxKm * 1000.0;
   final now = DateTime.now();
 
-  int count = 0;
-
-  for (final v in venues) {
-    if (!v.isOpenNow(now)) continue;
-    if (Distance.metersLatLng(userLoc, v.entry) <= maxMeters) count++;
+  // Helper to count open venues within a given radius
+  int _countWithin(double meters) {
+    int count = 0;
+    for (final v in venues) {
+      if (!v.isOpenNow(now)) continue;
+      if (Distance.metersLatLng(userLoc, v.entry) <= meters) {
+        count++;
+      }
+    }
+    return count;
   }
-  return count;
+
+  // 1) Normal behavior: count open venues within maxKm
+  int count = _countWithin(maxMeters);
+
+  if (count > 0) {
+    return count;
+  }
+
+  // 2) FINAL CHECK: if that yields 0, relax the "nearby" filter
+  //    and count all open venues in the ranked pool (ignore distance).
+  int relaxedCount = 0;
+  for (final v in venues) {
+    if (v.isOpenNow(now)) {
+      relaxedCount++;
+    }
+  }
+
+  return relaxedCount;
 }, name: 'nearbyVenueCountProvider');

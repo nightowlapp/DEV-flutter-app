@@ -42,6 +42,7 @@ class FeedbackRepository {
 
   // ---------------------------------------------------------------------------
   // Venue feedback: feedback/{uid}/venue_feedback/{venueId}/{category}/{autoId}
+  // (legacy helper – still usable for very simple cases)
   // ---------------------------------------------------------------------------
   static Future<void> submitVenueFeedback({
     required String venueId,
@@ -66,16 +67,79 @@ class FeedbackRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // NEW: structured venue feedback flow
+  // - create stub once (on first click) → returns docId
+  // - later updates merge into same doc (message, suggested_age, etc.)
+  // ---------------------------------------------------------------------------
+
+  /// Create a stub feedback doc for a given venue + category.
+  /// Used when the user first taps an edit option.
+  ///
+  /// Returns the newly created docId so the UI can update it later.
+  static Future<String> createVenueFeedbackStub({
+    required String venueId,
+    required String category,
+    Map<String, dynamic>? extraFields,
+  }) async {
+    final user = _requireUser;
+
+    final col = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.venueFeedback)
+        .doc(venueId)
+        .collection(category);
+
+    final docRef = col.doc(); // auto-id
+
+    await docRef.set({
+      FeedbackDocumentPaths.message: '',
+      FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+      FeedbackDocumentPaths.venueId: venueId,
+      FeedbackDocumentPaths.category: category,
+      if (extraFields != null) ...extraFields,
+    });
+
+    return docRef.id;
+  }
+
+  /// Merge updates into an existing feedback doc (same user / venue / category / docId).
+  /// Used when user adds details after the initial click.
+  static Future<void> updateVenueFeedbackDetails({
+    required String venueId,
+    required String category,
+    required String feedbackId,
+    String? message,
+    int? suggestedAge, // only used for age_restriction currently
+    Map<String, dynamic>? extraFields,
+  }) async {
+    final user = _requireUser;
+
+    final docRef = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.venueFeedback)
+        .doc(venueId)
+        .collection(category)
+        .doc(feedbackId);
+
+    final data = <String, dynamic>{
+      if (message != null) FeedbackDocumentPaths.message: message,
+      if (suggestedAge != null) 'suggested_age': suggestedAge,
+      if (extraFields != null) ...extraFields,
+      FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    await docRef.set(data, SetOptions(merge: true));
+  }
+
+  // ---------------------------------------------------------------------------
   // NEW: Tag suggestions:
   // feedback/{uid}/venue_feedback/{venueId}/tags/{autoId}
   // ---------------------------------------------------------------------------
-// feedback/{uid}/venue_feedback/{venueId}/tags/{autoId}
+
   static Future<void> submitVenueTagSuggestion({
     required String venueId,
     required String tagId,
     required bool isAdmin,
     String? message,
-    List<String> conflictingTagIds = const <String>[], // 🔹 NEW
+    List<String> conflictingTagIds = const <String>[],
   }) async {
     final user = _requireUser;
 
@@ -129,8 +193,6 @@ class FeedbackRepository {
     });
   }
 
-
-
   // ---------------------------------------------------------------------------
   // Crash reports:
   // feedback/{uid}/crashes/{venueId}/{errorString}/{autoId}
@@ -153,7 +215,7 @@ class FeedbackRepository {
     await doc.set({
       FeedbackDocumentPaths.message: message,
       FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
-      FeedbackDocumentPaths.error: error.toString(),      // avoid raw Error
+      FeedbackDocumentPaths.error: error.toString(), // avoid raw Error
       FeedbackDocumentPaths.errorString: error.toString(),
     });
   }
