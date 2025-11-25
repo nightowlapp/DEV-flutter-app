@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart'; // TextPainter, TextSpan, TextStyle
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 
 class MapTypeIconRegistry {
@@ -38,16 +39,17 @@ class MapTypeIconRegistry {
     final style = map.style;
     final int edge = (logicalSize * pixelRatio).round();
 
-    for (final entry in _iconById.entries) {
-      final id = entry.key;
-      final iconData = entry.value;
-
-      if (_loaded.contains(id)) continue;
+    Future<void> _ensureVariant({
+      required String id,
+      required IconData iconData,
+      required ui.Color color,
+    }) async {
+      if (_loaded.contains(id)) return;
 
       try {
         if (await style.hasStyleImage(id) == true) {
           _loaded.add(id);
-          continue;
+          return;
         }
       } catch (_) {
         // ignore
@@ -56,11 +58,11 @@ class MapTypeIconRegistry {
       final img = await _drawIcon(
         iconData,
         edge: edge,
-        color: const ui.Color(0xFFFFFFFF), // white
+        color: color,
       );
 
       final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) continue;
+      if (byteData == null) return;
 
       final pngBytes = byteData.buffer.asUint8List();
 
@@ -75,15 +77,41 @@ class MapTypeIconRegistry {
           id,
           pixelRatio,
           mbxImage,
-          false, // sdf = false, just a normal PNG
+          false, // sdf = false, normal PNG
           const <ImageStretches?>[],
           const <ImageStretches?>[],
           null,
         );
         _loaded.add(id);
       } catch (_) {
-        // ignore or log in debug
+        // ignore or log
       }
+    }
+
+    for (final entry in _iconById.entries) {
+      final baseId = entry.key;
+      final iconData = entry.value;
+
+      // white base (still available if you need it anywhere)
+      await _ensureVariant(
+        id: baseId,
+        iconData: iconData,
+        color: const ui.Color(0xFFFFFFFF),
+      );
+
+      // green = open
+      await _ensureVariant(
+        id: '${baseId}_open',
+        iconData: iconData,
+        color: green, // from your colors.dart
+      );
+
+      // red = closed
+      await _ensureVariant(
+        id: '${baseId}_closed',
+        iconData: iconData,
+        color: red, // from your colors.dart
+      );
     }
   }
 

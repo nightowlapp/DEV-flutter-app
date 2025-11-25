@@ -126,14 +126,13 @@ class VenueCard extends ConsumerWidget {
                     // Background image
                     Positioned.fill(
                       child: CoverImage(
-                        imageUrl: StorageUrl.normalize(venue.heroImageUrl ?? ''),
+                        imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
                         height: height,
                         fit: BoxFit.cover,
-                        hideIfEmpty: false, // keep this false so fallback asset is used
+                        hideIfEmpty: false,
                         fallbackAsset: overrideFallbackAsset ?? assetForCity(venue.city),
                       ),
                     ),
-
 
                     // Title pill
                     Positioned(

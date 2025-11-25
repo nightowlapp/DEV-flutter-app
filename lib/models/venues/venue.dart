@@ -733,28 +733,45 @@
           .map(LatLng.fromJson)
           .toList();
 
-  // drop-in replacement
       DateTime? _readDate(dynamic v) {
         if (v == null) return null;
         if (v is DateTime) return v;
         if (v is Timestamp) return v.toDate();
-        if (v is int) {
-          // assume milliseconds since epoch
-          return DateTime.fromMillisecondsSinceEpoch(v, isUtc: false);
-        }
-        if (v is String) {
-          // ISO-8601 "2025-09-24T23:20:37.236Z" etc.
-          return DateTime.tryParse(v);
-        }
+        if (v is int) return DateTime.fromMillisecondsSinceEpoch(v, isUtc: false);
+        if (v is String) return DateTime.tryParse(v);
         return null;
       }
+
+      // 🔥 NEW: read raw cover + logo
+      final rawCover = _readOptString(json['cover_image_url']);
+      final rawLogo  = _readOptString(json['logo_url']);
+
+      // 🔥 NEW: coalesce cover → logo
+      String? _effectiveCover(String? cover, String? logo) {
+        final c = cover?.trim();
+        if (c != null && c.isNotEmpty) return c;
+        final l = logo?.trim();
+        if (l != null && l.isNotEmpty) return l;
+        return null;
+      }
+
+      final effectiveCover = _effectiveCover(rawCover, rawLogo);
+
+      // (optional but very helpful for debugging)
+      debugPrint(
+        'Venue[$id] fromJson: rawCover="$rawCover" rawLogo="$rawLogo" effectiveCover="$effectiveCover"',
+      );
 
       return Venue(
         id: id,
         companyNumber: _readString(json['company_number']),
         name: nameRaw,
         displayName: displayNameOrFormattedName,
-        logoUrl: _readOptString(json['logo_url']),
+
+        // media
+        logoUrl: rawLogo,
+        coverImageUrl: effectiveCover,  // 👈 now cover uses logo if cover is empty
+
         type: venueTypeFromString(_readString(json['type'])),
         corners: cornersList,
         rating: _readOptDouble(json['rating']),
@@ -771,9 +788,8 @@
         entry: entry,
         geohash: _readString(json['geohash']),
         defaultAgeRestriction:
-            _readInt(json['default_age_restriction'], defaultValue: 18),
+        _readInt(json['default_age_restriction'], defaultValue: 18),
         capacity: _readInt(json['capacity'], defaultValue: 100),
-        coverImageUrl: _readOptString(json['cover_image_url']),
         barCard: _readOptString(json['bar_card_url']),
         moodImageUrls: JsonUtility.listStrings(json['mood_image_urls']),
         defaultOfferUrl: _readOptString(json['default_offer_url']),
@@ -782,13 +798,13 @@
         createdAt: _readDate(json['created_at']),
         updatedAt: _readDate(json['updated_at']),
         defaultEntryPrice: JsonUtility.asNum<double>(
-                json['default_entry_price'], (n) => n.toDouble()) ??
+            json['default_entry_price'], (n) => n.toDouble()) ??
             0.0,
         links: JsonUtility.mapStringString(json['links']),
         email: _readOptString(json['email']),
         phone: _readOptString(json['phone']),
         subscriptionType:
-            subscriptionTypeFromString(_readOptString(json['subscription_type'])),
+        subscriptionTypeFromString(_readOptString(json['subscription_type'])),
         isVerified: json['is_verified'] as bool? ?? false,
         primaryColorHex: _readOptString(json['primary_color_hex']),
         secondaryColorHex: _readOptString(json['secondary_color_hex']),
@@ -798,6 +814,7 @@
         tagids: JsonUtility.listStrings(json['tag_ids']),
       );
     }
+
 
     Map<String, dynamic> toJson() {
       final map = <String, dynamic>{
@@ -1066,18 +1083,22 @@
       if (r.isClosed) return 'Closed today';
       return '${r.open} - ${r.close}${r.nextDay ? ' +1' : ''}';
     }
-    
+
   }
 
   extension VenueMediaEffective on Venue {
     /// Prefer cover; if missing, fall back to logo; otherwise null.
     String? get heroImageUrl {
       final cover = coverImageUrl?.trim();
+      final logo  = logoUrl?.trim();
+
+      // 👇 temporary debugging
+      debugPrint(
+        'Venue[$id] heroImageUrl: cover="$cover" logo="$logo"',
+      );
+
       if (cover != null && cover.isNotEmpty) return cover;
-
-      final logo = logoUrl?.trim();
-      if (logo != null && logo.isNotEmpty) return logo;
-
+      if (logo  != null && logo.isNotEmpty)  return logo;
       return null;
     }
   }

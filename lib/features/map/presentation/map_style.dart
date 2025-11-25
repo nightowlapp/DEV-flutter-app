@@ -35,7 +35,7 @@ class MapStyle {
           id: srcVenuesClusterable,
           data: _emptyFC(),
           cluster: true,
-          clusterRadius: 24, // lower = less clustering
+          clusterRadius: 28, // lower = less clustering
           clusterMaxZoom: 12, // up to z12 we cluster non-VIP venues
         ),
       );
@@ -60,11 +60,17 @@ class MapStyle {
     }
 
     // --- clusters (non-VIP venues) ------------------------------------------
-    if (!await style.styleLayerExists(lyrClusters)) {
+        {
       final int maxSizeCluster = 9999;
-      await style.addLayer(
-        CircleLayer(id: lyrClusters, sourceId: srcVenuesClusterable),
-      );
+
+      // 1) Ensure the layer exists
+      if (!await style.styleLayerExists(lyrClusters)) {
+        await style.addLayer(
+          CircleLayer(id: lyrClusters, sourceId: srcVenuesClusterable),
+        );
+      }
+
+      // 2) Always (re)apply properties – hot reload friendly
 
       await style.setStyleLayerProperty(
         lyrClusters,
@@ -75,17 +81,7 @@ class MapStyle {
       await style.setStyleLayerProperty(
         lyrClusters,
         'circle-color',
-        jsonEncode([
-          'step',
-          ['get', 'point_count'],
-          purpleAccent.toHex(),
-          25,
-          purple.toHex(),
-          100,
-          deepPurple.toHex(),
-          maxSizeCluster,
-          blue.toHex(),
-        ]),
+        black.toHex(),
       );
 
       await style.setStyleLayerProperty(
@@ -115,6 +111,7 @@ class MapStyle {
         1.0,
       );
     }
+
 
     if (!await style.styleLayerExists(lyrClusterCount)) {
       await style.addLayer(
@@ -151,7 +148,25 @@ class MapStyle {
         'text-halo-width',
         1.2,
       );
+
+      // ✅ keep numbers always visible
+      await style.setStyleLayerProperty(
+        lyrClusterCount,
+        'text-allow-overlap',
+        true,
+      );
+      await style.setStyleLayerProperty(
+        lyrClusterCount,
+        'text-ignore-placement',
+        true,
+      );
+      await style.setStyleLayerProperty(
+        lyrClusterCount,
+        'text-opacity',
+        1.0,
+      );
     }
+
 
     // === Small circle backgrounds (non-VIP venue dots) =======================
     if (!await style.styleLayerExists(lyrUnclusteredBg)) {
@@ -168,60 +183,40 @@ class MapStyle {
         ]),
       );
 
-      // Non-verified: purple dot + green/red stroke.
+      // Non-verified: BLACK dot (no stroke).
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
         'circle-color',
-        purple.toHex(),
+        black.toHex(), // ⬅️ black background
       );
 
-      // Bigger to hold the white icon nicely
+      // Bigger to hold the icon nicely
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
         'circle-radius',
         10.0,
       );
 
+      // Hide background for verified (VIP src handles them)
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
         'circle-opacity',
         jsonEncode([
           'case',
           ['==', ['get', 'isVerified'], true],
-          0.0, // hide bg for verified (VIP src handles them)
-          1.0,
+          0.0, // verified → no bg here
+          1.0, // non-verified → show black circle
         ]),
       );
 
+      // NO STROKE
       await style.setStyleLayerProperty(
         lyrUnclusteredBg,
         'circle-stroke-width',
-        jsonEncode([
-          'case',
-          ['==', ['get', 'isVerified'], true],
-          0.0,
-          3.0,
-        ]),
+        0.0,
       );
-
-      await style.setStyleLayerProperty(
-        lyrUnclusteredBg,
-        'circle-stroke-color',
-        jsonEncode([
-          'case',
-          ['==', ['get', 'isOpenNow'], true],
-          green.toHex(),
-          red.toHex(),
-        ]),
-      );
-
-      // Only show individual non-VIP dots at zoom 13+
-      // await style.setStyleLayerProperty(
-      //   lyrUnclusteredBg,
-      //   'minzoom',
-      //   13.0,
-      // );
     }
+
 
     // === VIP circle background (just for non-logo cases if any) =============
     if (!await style.styleLayerExists(lyrVipBg)) {
@@ -334,7 +329,7 @@ class MapStyle {
       await style.setStyleLayerProperty(lyrVip, 'symbol-sort-key', 0.0);
     }
 
-    // === Foreground icon for NON-VIP venues (inside purple dot) =============
+    // === Foreground icon for NON-VIP venues ==================================
     if (!await style.styleLayerExists(lyrUnclustered)) {
       await style.addLayer(
         SymbolLayer(id: lyrUnclustered, sourceId: srcVenuesClusterable),
@@ -344,8 +339,9 @@ class MapStyle {
         lyrUnclustered,
         'filter',
         jsonEncode([
-          '!',
-          ['has', 'point_count'],
+          'all',
+          ['!', ['has', 'point_count']],
+          ['!=', ['get', 'isVerified'], true], // ⬅️ exclude verified here
         ]),
       );
 
@@ -354,31 +350,39 @@ class MapStyle {
         'icon-image',
         jsonEncode([
           'case',
-          // VERIFIED → logo sprite (from clusterable src if any)
-          ['==', ['get', 'isVerified'], true],
+          // OPEN → pick *_open variants
+          ['==', ['get', 'isOpenNow'], true],
           [
             'case',
-            ['==', ['get', 'isOpenNow'], true],
-            ['concat', ['get', 'logo_image_id'], '_open'],
-            ['concat', ['get', 'logo_image_id'], '_closed'],
+            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar_open',
+            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar_open',
+            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar_open',
+            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar_open',
+            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar_open',
+            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar_open',
+            ['==', ['get', 'venueType'], 'pub'], 'pub_open',
+            ['==', ['get', 'venueType'], 'bar'], 'bar_open',
+            ['==', ['get', 'venueType'], 'club'], 'club_open',
+            'unknown_open',
           ],
 
-          // Non-verified → venue type icon key
+          // CLOSED → pick *_closed variants
           [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar',
-            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar',
-            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar',
-            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar',
-            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar',
-            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar',
-            ['==', ['get', 'venueType'], 'pub'], 'pub',
-            ['==', ['get', 'venueType'], 'bar'], 'bar',
-            ['==', ['get', 'venueType'], 'club'], 'club',
-            'unknown',
+            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar_closed',
+            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar_closed',
+            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar_closed',
+            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar_closed',
+            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar_closed',
+            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar_closed',
+            ['==', ['get', 'venueType'], 'pub'], 'pub_closed',
+            ['==', ['get', 'venueType'], 'bar'], 'bar_closed',
+            ['==', ['get', 'venueType'], 'club'], 'club_closed',
+            'unknown_closed',
           ],
         ]),
       );
+
 
       // Slightly smaller so it sits nicely inside the background circle
       await style.setStyleLayerProperty(
@@ -387,28 +391,42 @@ class MapStyle {
         0.7,
       );
 
-      // Tint SDF icons white (your type icons); PNG logos (verified) ignore this
+      // 🔴 IMPORTANT PARTS BELOW 🔴
+
+      // 1) Hide VERIFIED icons in this layer (they have their own VIP layer)
+      await style.setStyleLayerProperty(
+        lyrUnclustered,
+        'icon-opacity',
+        jsonEncode([
+          'case',
+          ['==', ['get', 'isVerified'], true],
+          0.0,  // verified → don't draw here
+          1.0,  // non-verified → visible
+        ]),
+      );
+
+      // 2) Color NON-VIP icons by open/closed (green/red)
+      // Verified are hidden here so no need to branch on isVerified.
       await style.setStyleLayerProperty(
         lyrUnclustered,
         'icon-color',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
-          white.toHex(),
-          white.toHex(),
+          ['==', ['get', 'isOpenNow'], true],
+          green.toHex(),  // open
+          red.toHex(),    // closed
         ]),
       );
 
       // Always draw the icon wherever the dot is visible
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-allow-overlap', true);
-// still participate in placement for others if you want
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-ignore-placement', false);
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-halo-width', 0.0);
 
-// keep regular venues below VIP markers
+      // keep regular venues below VIP markers
       await style.setStyleLayerProperty(lyrUnclustered, 'symbol-sort-key', 1000.0);
-
     }
+
 
     // ----- Non-VIP labels ----------------------------------------------------
     if (!await style.styleLayerExists(lyrLabels)) {

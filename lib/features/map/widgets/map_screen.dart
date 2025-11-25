@@ -106,7 +106,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     VenueType.sports_bar,
     VenueType.karaoke_bar,
     VenueType.gay_bar,
-    // VenueType.unknown, // TODO Actual problem Unknown should be a placeholder for venues Right now they are not a part of map. Maybe just call other at some point (if so need to check everything for lingering "unknown" around all codebases.)
+    VenueType.unknown, // TODO Actual problem Unknown should be a placeholder for venues Right now they are not a part of map. Maybe just call other at some point (if so need to check everything for lingering "unknown" around all codebases.)
   ];
 
   // Currently enabled types (starts with all ON)
@@ -1393,7 +1393,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                             effectiveByType[t] ?? const <Venue>[];
 
                           return _VenueFilterExpandableTile(
-                            label: _labelFor(t),
+                            label: _labelFor(t) == 'Unknown' ? 'Other' : _labelFor(t),
                             icon: t.icon,
                             isOn: isOn,
                             count: count,
