@@ -99,6 +99,8 @@ class MapTypeIconRegistry {
         color: const ui.Color(0xFFFFFFFF),
       );
 
+      //TODO purple if open/close soon
+
       // green = open
       await _ensureVariant(
         id: '${baseId}_open',

@@ -376,12 +376,12 @@ class EditBadge extends StatelessWidget {
                 body = [
                   Text(
                     'What best describes this place in general?',
-                    style: Styles.smallText.copyWith(color: grey),
+                    style: Styles.mediumSmallText,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Currently shown: ${Utility.formatString(venue.type.name)}',
-                    style: Styles.smallText.copyWith(color: greyLighter),
+                    'Currently type: ${Utility.formatString(venue.type.name)}',
+                    style: Styles.mediumSmallText,
                   ),
                   const SizedBox(height: 8),
                   Align(
@@ -392,11 +392,7 @@ class EditBadge extends StatelessWidget {
                         value: selectedVenueType,
                         dropdownColor: black,
                         iconEnabledColor: white,
-                        decoration: _editFieldDecoration(
-                          label: 'Correct venue type',
-                        ),
                         items: VenueType.values
-                            .where((v) => v != VenueType.unknown)
                             .map(
                               (v) => DropdownMenuItem<VenueType>(
                             value: v,
@@ -409,7 +405,7 @@ class EditBadge extends StatelessWidget {
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
+                                Text( v.name == 'unknown' ? 'Other':
                                   Utility.formatString(v.name),
                                   style: Styles.smallText.copyWith(
                                     color: white,

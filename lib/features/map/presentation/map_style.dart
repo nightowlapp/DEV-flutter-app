@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
+import 'package:nightowlcode/shared/constants/values.dart';
 
 class MapStyle {
   static const srcVenuesClusterable = 'src_venues_clusterable';
@@ -23,10 +24,25 @@ class MapStyle {
   static const lyrFriendDots = 'lyr_friend_dots';
   static const lyrFriendLabels = 'lyr_friend_labels';
 
+  static const srcHotVenues = 'src_hot_venues';
+  static const lyrHotFlamesLeft = 'lyr_hot_flames_left';
+  static const lyrHotFlamesRight = 'lyr_hot_flames_right';
+
+
   Future<void> ensure(MapboxMap map) async {
     final style = map.style;
     String _emptyFC() =>
         jsonEncode({'type': 'FeatureCollection', 'features': []});
+
+    if (!await style.styleSourceExists(srcHotVenues)) {
+      await style.addSource(
+        GeoJsonSource(
+          id: srcHotVenues,
+          data: _emptyFC(),
+          cluster: false,
+        ),
+      );
+    }
 
     // --- sources -------------------------------------------------------------
     if (!await style.styleSourceExists(srcVenuesClusterable)) {
@@ -448,7 +464,7 @@ class MapStyle {
         'text-field',
         jsonEncode([
           'format',
-          ['get', 'name '],
+          ['get', 'name'],
           {'text-color': white.toHex()},
           '  ',
           {},
@@ -677,7 +693,93 @@ class MapStyle {
         MapStyle.lyrVipBg, 'circle-pitch-alignment', 'viewport');
     await style.setStyleLayerProperty(
         MapStyle.lyrVipBg, 'circle-pitch-scale', 'viewport');
+
+
+    // === HOT VENUE FLAMES (simple test) =====================================
+    if (!await style.styleLayerExists(lyrHotFlamesLeft)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrHotFlamesLeft, sourceId: srcHotVenues),
+      );
+
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-field',
+        jsonEncode('🔥'),
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-color',
+        orange.toHex(),
+        // 👈 or '#FF9F1C'
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-offset',
+        const [-0.2, -0.4], // left of the marker
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-anchor',
+        'center',
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-allow-overlap',
+        true,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesLeft,
+        'text-ignore-placement',
+        true,
+      );
+    }
+
+    if (!await style.styleLayerExists(lyrHotFlamesRight)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrHotFlamesRight, sourceId: srcHotVenues),
+      );
+
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-field',
+        jsonEncode('🔥'),
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-color',
+        '#FFB347',
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-offset',
+        const [0.2, -0.4], // right of the marker
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-anchor',
+        'center',
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-allow-overlap',
+        true,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlamesRight,
+        'text-ignore-placement',
+        true,
+      );
+    }
+
+
   }
+
+  Future<void> setHotVenuesData(MapboxMap map, String fc) async {
+    if (await map.style.styleSourceExists(srcHotVenues)) {
+      await map.style.setStyleSourceProperty(srcHotVenues, 'data', fc);
+    }
+  }
+
 
   Future<void> setVenueData(
       MapboxMap map, {

@@ -1,5 +1,6 @@
 // lib/features/map/widgets/map_screen.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/map_nav_providers.dart';
+import '../../../data/providers/real_time_database_providers.dart';
 import '../../../data/providers/users/friends/friends_locations_provider.dart';
 import '../../../data/services/location/live_location_sharing_provider.dart';
 import '../../../data/services/location/location_controller.dart';
@@ -63,12 +65,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Venue? _navDest;
 
   StreamSubscription<geo.Position>? _posSub;
+  StreamSubscription<Map<String, int>>? _liveCountsSub;
+  Map<String, int>? _lastLiveCounts;
+
   DateTime? _lastRerouteAt;
 
   MapNavCommand? _pendingNav;
 
   final MapStyle _style = MapStyle();
   final Map<String, Venue> _venuesById = {};
+  Timer? _flameTimer;
+  bool _flameBig = false;
 
   LatLng? _userLocation;
 
@@ -118,10 +125,42 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void initState() {
     super.initState();
-    _tts.init(); // default en-US
+    _tts.init();
     _tts.muted.addListener(() {
         if (mounted) setState(() {}
           );
+      }
+    );
+
+    // 🔥 subscribe to live counts
+    _liveCountsSub = liveAllVenueCounts().listen((counts) {
+        // cache for later
+        _lastLiveCounts = counts;
+
+        // if the map + style are already ready, update now
+        if (_map != null && _styleReady) {
+          _updateHotVenuesFromCounts(counts);
+        }
+      }
+    );
+
+    _flameTimer = Timer.periodic(const Duration(milliseconds: 700), (_) {
+        final map = _map;
+        if (map == null || !_styleReady) return;
+
+        _flameBig = !_flameBig;
+        final size = _flameBig ? iconSizeMedium : iconSizeSmall;
+
+        map.style.setStyleLayerProperty(
+          MapStyle.lyrHotFlamesLeft,
+          'text-size',
+          size,
+        );
+        map.style.setStyleLayerProperty(
+          MapStyle.lyrHotFlamesRight,
+          'text-size',
+          size,
+        );
       }
     );
   }
@@ -136,7 +175,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void dispose() {
     _posSub?.cancel();
+    _liveCountsSub?.cancel();
     _tts.dispose();
+    _flameTimer?.cancel();
     super.dispose();
   }
 
@@ -369,8 +410,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
         );
 
-
-    }
+      }
     );
 
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
@@ -634,11 +674,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _onStyleLoaded(mb.StyleLoadedEventData _) async {
     final map = _map;
     if (map == null || _styleReady) return;
-    _styleReady = true;
 
     MapLogoRegistry.instance.clear();
 
     await _style.ensure(map);
+
+    // style + hot source exist now
+    _styleReady = true;
 
     final fcNow = ref.read(venuesGeoJsonProvider);
 
@@ -667,9 +709,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     await MapLogoRegistry.instance.syncIdToUrl(
       map: map,
-      images: idToPath,        // or idToPath2
-      maxSize: 46,             // logical diameter on the map (same as before)
-      pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
+      images: idToPath,
+      maxSize: 46,
+      pixelRatio: dpr.toDouble(),
     );
 
     await MapTypeIconRegistry.instance.ensureTypeIcons(
@@ -677,6 +719,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
       logicalSize: 24.0,
       pixelRatio: dpr.toDouble(),
     );
+
+    // 🔥 IMPORTANT: once the style & src_hot_venues exist,
+    // push in whatever counts we already saw (or empty map if none).
+    final counts = _lastLiveCounts ?? const <String, int>{};
+    await _updateHotVenuesFromCounts(counts);
 
     if (mounted) setState(() => _loading = false);
 
@@ -1120,6 +1167,49 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return total;
   }
+
+  Future<void> _updateHotVenuesFromCounts(Map<String, int> counts) async {
+    final map = _map;
+    if (map == null || !_styleReady) return;
+
+    final venues = ref.read(allVenuesListProvider);
+
+    final features = <Map<String, dynamic>>[];
+    final now = DateTime.now();
+
+    for (final v in venues) {
+      final visits = counts[v.id] ?? 0;
+      final cap = v.capacity;
+
+      final bool isHot = (cap > 0 && (visits / cap) >= 0.60);
+
+      if (!isHot) continue;
+
+      features.add({
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [v.entry.lng, v.entry.lat],
+        },
+        'properties': {
+          'id': v.id,
+          'visits': visits,
+          'capacity': cap,
+        },
+      }
+      );
+    }
+
+    final fc = jsonEncode({
+      'type': 'FeatureCollection',
+      'features': features,
+    }
+    );
+
+    await _style.setHotVenuesData(map, fc);
+  }
+
+
 
 
 }

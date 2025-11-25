@@ -18,6 +18,8 @@ class ImagePaths {
   static const String logoTextWide = '$root/logo_text_wide.png';
   static const String logoTextCompact = '$root/logo_text_compact.png';
 
+  static const String flame = '$root/flame.png';
+
   static const String ukFlag = '$flags/uk.png';
   static const String dkFlag = '$flags/dk.png';
 }

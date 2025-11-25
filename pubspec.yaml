@@ -193,6 +193,7 @@ flutter:
     - assets/fonts/
     - assets/nightowl/
     - assets/nightowl/cities/
+    - assets/nightowl/flame.png
 
     - assets/fonts/Bitter-Regular.ttf
 
