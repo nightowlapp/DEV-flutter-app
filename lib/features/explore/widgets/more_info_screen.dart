@@ -62,7 +62,7 @@ class MoreInfoScreen extends ConsumerWidget {
   Widget _header(BuildContext context) {
     final h = PlatformConfig.height(context) * 0.2; // a bit taller feels nicer
     return CoverImage(
-      imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
+      imageUrl: StorageUrl.normalize(venue.heroImageUrl ?? ''),
       height: h,
       hideIfEmpty: false,
       fallbackAsset: assetForCity(venue.city),

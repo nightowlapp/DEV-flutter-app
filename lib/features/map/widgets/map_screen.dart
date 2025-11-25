@@ -828,11 +828,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final type = v.type;
 
-    // Respect current filters
-    if (type == null || !_allowedTypes.contains(type)) {
-      _toast('${v.displayName} is hidden by your filters.');
-      return;
-    }
+    // Respect current filters Still want to open venue if displayed.
+    // if (type == null || !_allowedTypes.contains(type)) {
+    //   _toast('${v.displayName} is hidden by your filters.');
+    //   return;
+    // }
 
     _openVenue(v);
   }

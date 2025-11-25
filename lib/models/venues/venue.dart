@@ -1066,5 +1066,18 @@
       if (r.isClosed) return 'Closed today';
       return '${r.open} - ${r.close}${r.nextDay ? ' +1' : ''}';
     }
+    
+  }
 
+  extension VenueMediaEffective on Venue {
+    /// Prefer cover; if missing, fall back to logo; otherwise null.
+    String? get heroImageUrl {
+      final cover = coverImageUrl?.trim();
+      if (cover != null && cover.isNotEmpty) return cover;
+
+      final logo = logoUrl?.trim();
+      if (logo != null && logo.isNotEmpty) return logo;
+
+      return null;
+    }
   }

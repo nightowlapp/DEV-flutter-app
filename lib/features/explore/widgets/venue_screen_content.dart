@@ -108,7 +108,7 @@ class VenueScreenContent extends ConsumerWidget {
             children: [
               SizedBox(height: PlatformConfig.height(context) * 0.01),
               CoverImage(
-                imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
+                imageUrl: StorageUrl.normalize(venue.heroImageUrl ?? ''),
                 height: PlatformConfig.height(context) * 0.2,
                 fit: BoxFit.cover,
                 hideIfEmpty: false,

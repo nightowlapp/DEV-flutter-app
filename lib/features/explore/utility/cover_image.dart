@@ -59,12 +59,22 @@ class CoverImage extends StatelessWidget {
         (media.coverUrl is String) &&
         (media.coverUrl?.isNotEmpty ?? false);
 
+    final hasLogo = media != null &&
+        (media.logoExists == true) &&
+        (media.logoUrl is String) &&
+        (media.logoUrl?.isNotEmpty ?? false);
+
+    // cover → logo → null
+    final String? effectiveUrl = hasCover
+        ? media.coverUrl as String
+        : (hasLogo ? media.logoUrl as String : null);
+
     final cityAsset = assetForCity(city);
     final shouldHideIfEmpty = hasCover ? hideIfEmpty : false;
 
     return CoverImage(
       key: key,
-      imageUrl: hasCover ? media.coverUrl as String : null,
+      imageUrl: effectiveUrl,
       fallbackAsset: cityAsset,
       height: height,
       heightFactor: heightFactor,
@@ -91,7 +101,7 @@ class CoverImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = (imageUrl ?? '').trim();
-debugPrint('$url !!!!');
+// debugPrint('$url !!!!');
     if (hideIfEmpty && url.isEmpty) return const SizedBox.shrink();
 
     final h = height ?? MediaQuery.of(context).size.height * heightFactor;

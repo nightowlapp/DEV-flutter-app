@@ -94,10 +94,10 @@ class MainScreenLeftDrawer extends ConsumerWidget {
               // const Divider(color: owlPurple),
               // const SizedBox(height: verticalSpacerSmall),
 
-              const ReferAFriendLeftDrawer(
-                inviteCode: 'aszxe213',
-                inviteLink: '',
-              ), //TODO functionallity
+              // const ReferAFriendLeftDrawer(
+              //   inviteCode: 'aszxe213',
+              //   inviteLink: '',
+              // ), //TODO functionallity
 
               // const SizedBox(height: verticalSpacerSmall),
               // const Divider(color: owlPurple),

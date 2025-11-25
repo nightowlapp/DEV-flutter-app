@@ -40,8 +40,8 @@ const friendColor = Colors.teal;
 
 const mapLightOrange = Color(0xFF78350F);
 const mapDarkOrange = Color(0xFF33130A);
-const mapGreen = Color(0xFF2ECC71); // #2ECC71
-const mapRed = Color(0xFFE74C3C); // #E74C3C
+const mapGreen = Colors.lightGreenAccent; // #2ECC71
+const mapRed = Colors.redAccent; // #E74C3C
 
 const TEST = Colors.pink;
 
