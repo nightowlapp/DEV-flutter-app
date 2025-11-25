@@ -122,6 +122,7 @@ class VenueScreenContent extends ConsumerWidget {
                   const SizedBox(width: allSidePaddingDefault),
                   LikeVenueButton(store: likeStore, venue: venue),
                   const SizedBox(width: allSidePaddingDefault),
+                  //TODO multiple places. If admin, tester or reviewer open editbadge on click.
                   venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
                   const Spacer(),
                   Column(

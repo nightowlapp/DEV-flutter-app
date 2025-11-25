@@ -1550,7 +1550,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                       Switch.adaptive(
                         value: widget.showOnlyOpen,
                         onChanged: widget.onShowOnlyOpenChanged,
-                        activeColor: owlPurple,
+                        activeColor: owlPurple, //TODO make circle more grey not whit.
                         trackOutlineColor: WidgetStatePropertyAll(
                           grey.withOpacity(.5),
                         ),
