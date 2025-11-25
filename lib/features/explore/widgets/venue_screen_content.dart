@@ -20,6 +20,7 @@ import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/custom_network_image.dart';
 import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 
+import '../../../core/storage/storage_url.dart' show StorageUrl;
 import '../../../data/providers/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
 import '../../../data/providers/real_time_database_providers.dart';
@@ -28,6 +29,7 @@ import '../../../shared/reusable/ui/buttons/favorite_venue_button.dart';
 import '../../../shared/reusable/ui/buttons/like_venue_button.dart';
 import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
+import '../../../shared/utility/city_asset.dart';
 import '../../../shared/utility/tag_actions.dart';
 import '../utility/bar_card_screen.dart';
 import '../utility/mood_images_section.dart';
@@ -105,10 +107,12 @@ class VenueScreenContent extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: PlatformConfig.height(context) * 0.01),
-              CoverImage.fromMedia(
-                media: media,
-                city: venue.city,
+              CoverImage(
+                imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
                 height: PlatformConfig.height(context) * 0.2,
+                fit: BoxFit.cover,
+                hideIfEmpty: false,
+                fallbackAsset: assetForCity(venue.city),
               ),
               SizedBox(height: PlatformConfig.height(context) * 0.01),
               Row(

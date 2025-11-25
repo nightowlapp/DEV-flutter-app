@@ -14,6 +14,7 @@ import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/data/services/media_existence.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
+import '../../../core/storage/storage_url.dart';
 import '../../../data/providers/likes_providers.dart';
 import '../../../data/providers/favorite_venues/favorite_limit_provider.dart';
 import '../../../data/providers/favorite_venues/favorites_providers.dart';
@@ -24,6 +25,7 @@ import '../../../shared/reusable/ui/edit_badge.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/reusable/ui/verified_badge.dart';
+import '../../../shared/utility/city_asset.dart';
 import '../utility/cover_image.dart';
 import '../utility/opening_info_header_bar.dart';
 import 'venue_main_screen.dart';
@@ -59,10 +61,11 @@ class MoreInfoScreen extends ConsumerWidget {
   // Header (cover) ------------------------------------------------------------
   Widget _header(BuildContext context) {
     final h = PlatformConfig.height(context) * 0.2; // a bit taller feels nicer
-    return CoverImage.fromMedia(
-      media: media,
-      city: venue.city, // <- this wires the city.png fallback
+    return CoverImage(
+      imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
       height: h,
+      hideIfEmpty: false,
+      fallbackAsset: assetForCity(venue.city),
     );
   }
 
@@ -73,7 +76,11 @@ class MoreInfoScreen extends ConsumerWidget {
       favoriteStoreProvider(venue.id),
     );
 
-    final logo = VenueLogo(venue: venue, showInitialFallback: false);
+    final logo =
+    VenueLogo(
+      venue: venue,
+      size: iconSizeLarge + 4,
+    );
     final price = venue.effectiveEntryPrice(DateTime.now());
     final bool hasPrice = (price ?? 0) > 0;
 

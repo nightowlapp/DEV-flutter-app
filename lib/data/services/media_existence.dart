@@ -119,8 +119,11 @@ class MediaExistence {
       }
     }
 
-    // Build a deterministic public URL (no network call).
+
+
+    debugPrint('MediaExistence.check raw="$raw"');
     final directUrl = StorageUrl.normalize(raw);
+    debugPrint('MediaExistence.check normalized="$directUrl"');
 
     // Trust direct URLs to avoid startup stutter. Let the image widget handle 404s with fallback.
     final entry =

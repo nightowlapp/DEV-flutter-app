@@ -11,8 +11,10 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 
+import '../../../core/storage/storage_url.dart';
 import '../../../data/services/media_existence.dart';
 import '../../../navigation/nav_shortcuts.dart';
+import '../../../shared/utility/city_asset.dart';
 
 /// Global ticker so all cards can rebuild in "real time"
 final timeTickerProvider = StreamProvider<DateTime>((ref) async* {
@@ -123,23 +125,15 @@ class VenueCard extends ConsumerWidget {
                   children: [
                     // Background image
                     Positioned.fill(
-                      child: overrideFallbackAsset == null
-                          ? CoverImage.fromMedia(
-                        media: media,
-                        city: venue.city,
+                      child: CoverImage(
+                        imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
                         height: height,
                         fit: BoxFit.cover,
-                      )
-                          : CoverImage(
-                        imageUrl: (media?.coverExists == true &&
-                            (media?.coverUrl?.isNotEmpty ?? false))
-                            ? media!.coverUrl
-                            : null,
-                        fallbackAsset: overrideFallbackAsset,
-                        height: height,
-                        fit: BoxFit.cover,
+                        hideIfEmpty: false,
+                        fallbackAsset: overrideFallbackAsset ?? assetForCity(venue.city),
                       ),
                     ),
+
 
                     // Title pill
                     Positioned(

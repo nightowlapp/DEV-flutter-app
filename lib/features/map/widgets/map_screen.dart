@@ -41,6 +41,7 @@ import '../presentation/friends_fc.dart';
 import '../presentation/map_logo_registry.dart';
 import '../presentation/map_style.dart';
 import '../presentation/initial_camera_provider.dart';
+import '../presentation/map_type_icon_registry.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -257,7 +258,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return;
     }
 
-    // 3) clusters → zoom in
+    // 3) clusters → zoom in //TODO better zoom in when clicking clusters at some point.
     final cl = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [MapStyle.lyrClusters]),
@@ -671,6 +672,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
       pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
     );
 
+    await MapTypeIconRegistry.instance.ensureTypeIcons(
+      map: map,
+      logicalSize: 24.0,
+      pixelRatio: dpr.toDouble(),
+    );
 
     if (mounted) setState(() => _loading = false);
 

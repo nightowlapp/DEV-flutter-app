@@ -91,6 +91,7 @@ class CoverImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = (imageUrl ?? '').trim();
+debugPrint('$url !!!!');
     if (hideIfEmpty && url.isEmpty) return const SizedBox.shrink();
 
     final h = height ?? MediaQuery.of(context).size.height * heightFactor;
