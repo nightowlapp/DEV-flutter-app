@@ -136,7 +136,7 @@ Future<PartyStatusTypes?> _showStatusDialog(
   return showDialog<PartyStatusTypes>(
     context: context,
     builder: (dialogCtx) => OwlPopup(
-      title: 'Select Status',
+      title: 'Select Party Status',
       children: [
         for (final it in PartyStatusTypes.values)
           Builder(builder: (_) {
