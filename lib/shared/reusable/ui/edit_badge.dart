@@ -217,7 +217,8 @@ class EditBadge extends ConsumerWidget {
       // Extra fields for specific categories
       final extra = <String, dynamic>{};
 
-      if (category == 'age_restriction' || category == 'opening_hours') {
+      if (category == 'age_restriction' || category == 'opening_hours' || category == 'entry_price' ||
+          category == 'dress_code') {
         extra['weekday'] = weekdayIndex; // 🔹 important for later migration
       }
 
@@ -797,8 +798,9 @@ class EditBadge extends ConsumerWidget {
 
                             if (offerPhotoPath != null) {
                               final file = File(offerPhotoPath!);
-                              final url = await FeedbackRepository.uploadOfferPhoto(
+                              final url = await FeedbackRepository.uploadOfferImage(
                                 venueId: venue.id,
+                                feedbackId: feedbackId,
                                 file: file,
                               );
                               extraFields['offer_photo_url'] = url;

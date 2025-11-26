@@ -225,13 +225,18 @@ class FeedbackRepository {
       FeedbackDocumentPaths.errorString: error.toString(),
     });
   }
-  static Future<String> uploadOfferPhoto({
+
+  static Future<({String url, DateTime uploadedAt})> uploadOfferImage({
     required String venueId,
+    required String feedbackId,
     required File file,
   }) async {
     final user = _requireUser;
 
-    // 1) Read original bytes (likely JPEG/HEIC from camera)
+    final uploadedAt = DateTime.now();
+    final ts = uploadedAt.millisecondsSinceEpoch;
+
+    // 1) Read original bytes
     final Uint8List originalBytes = await file.readAsBytes();
 
     // 2) Compress & re-encode as WebP
@@ -242,11 +247,12 @@ class FeedbackRepository {
       quality: 80,
     );
 
-    final ts = DateTime.now().millisecondsSinceEpoch;
+    // 3) Path includes feedbackId → easy 1:1 mapping doc <-> file
     final path =
-        '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.offerImages}/$ts.webp'; // folder structure
-    final ref = _storage.ref().child(path);
+        '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/'
+        '$venueId/${StoragePaths.offerImages}/$feedbackId-$ts.webp';
 
+    final ref = _storage.ref().child(path);
 
     // 4) Upload WebP bytes with correct contentType
     await ref.putData(
@@ -254,16 +260,21 @@ class FeedbackRepository {
       SettableMetadata(contentType: 'image/webp'),
     );
 
-    // 5) Return URL
+    // 5) Download URL
     final url = await ref.getDownloadURL();
-    return url;
+
+    return (url: url, uploadedAt: uploadedAt);
   }
+
 
   static Future<String> uploadMoodImage({
     required String venueId,
     required File file,
   }) async {
     final user = _requireUser;
+
+    final now = DateTime.now();
+    final ts = now.millisecondsSinceEpoch;
 
     // 1) Read original bytes (likely JPEG/HEIC from camera)
     final Uint8List originalBytes = await file.readAsBytes();
@@ -277,7 +288,6 @@ class FeedbackRepository {
     );
 
     // 3) Storage path for mood images
-    final ts = DateTime.now().millisecondsSinceEpoch;
     final path = '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.moodImages}/$ts.webp';
     final ref = _storage.ref().child(path);
 

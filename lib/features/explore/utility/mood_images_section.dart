@@ -87,10 +87,66 @@ class _HStrip extends StatelessWidget {
     final addTileCount = canAddMoodImage ? 1 : 0;
     final itemCount = urls.length + addTileCount;
 
+    // No images and no permission → nothing
     if (!hasImages && !canAddMoodImage) {
       return const SizedBox.shrink();
     }
 
+    // ⭐ Special case: ONLY "Add image" tile → center it
+    if (!hasImages && canAddMoodImage) {
+      return SizedBox(
+        height: height,
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(radius),
+            child: SizedBox(
+              width: itemExtent,
+              height: height,
+              child: InkWell(
+                onTap: () => _handleAddMoodImage(
+                  c,
+                  ref: ref,
+                  venueId: venueId,
+                ),
+                splashColor: owlPurple.withOpacity(0.15),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // 🔹 Grey border + black background
+                    Container(
+                      decoration: BoxDecoration(
+                        color: black,
+                        border: Border.all(color: grey, width: 0.6),
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.add_a_photo_outlined,
+                          color: white,
+                          size: iconSizeDefault,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Add image',
+                          style: Styles.smallText.copyWith(
+                            fontSize: 11,
+                            color: greyLighter,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Normal case: one or more mood images (+ optional "Add image" as last tile)
     return SizedBox(
       height: height,
       child: ListView.separated(
@@ -150,7 +206,6 @@ class _HStrip extends StatelessWidget {
               ),
             );
           }
-
 
           // ▶️ Normal mood image tile
           final url = urls[i];
