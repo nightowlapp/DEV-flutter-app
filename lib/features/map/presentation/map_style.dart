@@ -25,8 +25,9 @@ class MapStyle {
   static const lyrFriendLabels = 'lyr_friend_labels';
 
   static const srcHotVenues = 'src_hot_venues';
-  static const lyrHotFlamesLeft = 'lyr_hot_flames_left';
-  static const lyrHotFlamesRight = 'lyr_hot_flames_right';
+  static const lyrHotGlowOuter = 'lyr_hot_glow_outer';
+  static const lyrHotGlowInner = 'lyr_hot_glow_inner';
+  static const lyrHotFlameIcon = 'lyr_hot_flame_icon';
 
 
   Future<void> ensure(MapboxMap map) async {
@@ -465,7 +466,7 @@ class MapStyle {
         jsonEncode([
           'format',
           ['get', 'name'],
-          {'text-color': white.toHex()},
+          {}, // no inline color – use layer text-color instead
           '  ',
           {},
           [
@@ -480,12 +481,23 @@ class MapStyle {
               'max-fraction-digits': 1,
             },
           ],
-          {'text-color': white.toHex()},
+          {}, // rating segment also inherits layer text-color
         ]),
       );
 
+
       await style.setStyleLayerProperty(lyrLabels, 'text-size', 10.0);
-      await style.setStyleLayerProperty(lyrLabels, 'text-color', white.toHex());
+      await style.setStyleLayerProperty(
+        lyrLabels,
+        'text-color',
+        jsonEncode([
+          'case',
+          ['==', ['get', 'isFavorite'], true],
+          owlPurple.toHex(),  // favorite → owl purple
+          white.toHex(),      // otherwise → white
+        ]),
+      );
+
       await style.setStyleLayerProperty(
           lyrLabels, 'text-halo-color', black.toHex());
       await style.setStyleLayerProperty(lyrLabels, 'text-halo-width', 1.25);
@@ -549,7 +561,7 @@ class MapStyle {
         jsonEncode([
           'format',
           ['get', 'name'],
-          {'text-color': white.toHex()},
+          {}, // no inline color – inherit from text-color
           '  ',
           {},
           [
@@ -564,13 +576,23 @@ class MapStyle {
               'max-fraction-digits': 1,
             },
           ],
-          {'text-color': white.toHex()},
+          {}, // same here
         ]),
       );
 
+
       await style.setStyleLayerProperty(lyrVipLabels, 'text-size', 14.0);
       await style.setStyleLayerProperty(
-          lyrVipLabels, 'text-color', white.toHex());
+        lyrVipLabels,
+        'text-color',
+        jsonEncode([
+          'case',
+          ['==', ['get', 'isFavorite'], true],
+          owlPurple.toHex(),
+          blue.toHex(),
+        ]),
+      );
+
       await style.setStyleLayerProperty(
           lyrVipLabels, 'text-halo-color', black.toHex());
       await style.setStyleLayerProperty(
@@ -695,81 +717,108 @@ class MapStyle {
         MapStyle.lyrVipBg, 'circle-pitch-scale', 'viewport');
 
 
-    // === HOT VENUE FLAMES (simple test) =====================================
-    if (!await style.styleLayerExists(lyrHotFlamesLeft)) {
+    // === HOT VENUE FLAMES – pulsing glow + emoji ============================
+    if (!await style.styleLayerExists(lyrHotGlowOuter)) {
       await style.addLayer(
-        SymbolLayer(id: lyrHotFlamesLeft, sourceId: srcHotVenues),
+        CircleLayer(id: lyrHotGlowOuter, sourceId: srcHotVenues),
       );
 
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
+        lyrHotGlowOuter,
+        'circle-color',
+        '#FF4500', // deep orange-red
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowOuter,
+        'circle-radius',
+        18.0, // will be animated
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowOuter,
+        'circle-blur',
+        0.9,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowOuter,
+        'circle-opacity',
+        0.0, // start invisible, animation will drive this
+      );
+    }
+
+    if (!await style.styleLayerExists(lyrHotGlowInner)) {
+      await style.addLayer(
+        CircleLayer(id: lyrHotGlowInner, sourceId: srcHotVenues),
+      );
+
+      await style.setStyleLayerProperty(
+        lyrHotGlowInner,
+        'circle-color',
+        '#FFB347', // bright orange
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowInner,
+        'circle-radius',
+        10.0,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowInner,
+        'circle-blur',
+        0.5,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotGlowInner,
+        'circle-opacity',
+        0.0,
+      );
+    }
+
+    if (!await style.styleLayerExists(lyrHotFlameIcon)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrHotFlameIcon, sourceId: srcHotVenues),
+      );
+
+      await style.setStyleLayerProperty(
+        lyrHotFlameIcon,
         'text-field',
         jsonEncode('🔥'),
       );
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
+        lyrHotFlameIcon,
+        'text-size',
+        18.0,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlameIcon,
         'text-color',
-        orange.toHex(),
-        // 👈 or '#FF9F1C'
+        '#FFE66D', // hot yellow
       );
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
+        lyrHotFlameIcon,
         'text-offset',
-        const [-0.2, -0.4], // left of the marker
+        const [0.0, -0.6], // right of the marker
       );
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
-        'text-anchor',
-        'center',
+        lyrHotFlameIcon,
+        'text-halo-color',
+        '#FF9F1C',
       );
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
+        lyrHotFlameIcon,
+        'text-halo-width',
+        1.4,
+      );
+      await style.setStyleLayerProperty(
+        lyrHotFlameIcon,
         'text-allow-overlap',
         true,
       );
       await style.setStyleLayerProperty(
-        lyrHotFlamesLeft,
+        lyrHotFlameIcon,
         'text-ignore-placement',
         true,
       );
     }
 
-    if (!await style.styleLayerExists(lyrHotFlamesRight)) {
-      await style.addLayer(
-        SymbolLayer(id: lyrHotFlamesRight, sourceId: srcHotVenues),
-      );
-
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-field',
-        jsonEncode('🔥'),
-      );
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-color',
-        '#FFB347',
-      );
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-offset',
-        const [0.2, -0.4], // right of the marker
-      );
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-anchor',
-        'center',
-      );
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-allow-overlap',
-        true,
-      );
-      await style.setStyleLayerProperty(
-        lyrHotFlamesRight,
-        'text-ignore-placement',
-        true,
-      );
-    }
 
 
   }
@@ -815,6 +864,7 @@ class MapStyle {
         required Set<String> allowedTypes,
         required String baseClusterableFc,
         required String baseVipFc,
+        required Set<String> favoriteVenueIds,
       }) async {
     final style = map.style;
 
@@ -857,6 +907,16 @@ class MapStyle {
             : <String, dynamic>{};
 
         if (_typeAllowed(props) && _openAllowed(props)) {
+          // Figure out the venue ID from properties
+          final rawId = props['id'] ?? props['venue_id'] ?? props['venueId'];
+          final id = rawId?.toString();
+
+          // Mark favorites
+          props['isFavorite'] = id != null && favoriteVenueIds.contains(id);
+
+          // Write props back into the feature
+          f['properties'] = props;
+
           filtered.add(f);
         }
       }

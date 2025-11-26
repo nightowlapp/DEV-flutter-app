@@ -23,6 +23,7 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
+import '../../../data/providers/favorite_venues/favorite_venues_provider.dart';
 import '../../../data/providers/other_providers.dart';
 import '../../../data/providers/map_nav_providers.dart';
 import '../../../data/providers/real_time_database_providers.dart';
@@ -75,7 +76,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   final MapStyle _style = MapStyle();
   final Map<String, Venue> _venuesById = {};
   Timer? _flameTimer;
-  bool _flameBig = false;
+  double _flamePhase = 0.0; // 0..2π loop for the sine wave
+
 
   LatLng? _userLocation;
 
@@ -144,25 +146,61 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     );
 
-    _flameTimer = Timer.periodic(const Duration(milliseconds: 700), (_) {
-        final map = _map;
-        if (map == null || !_styleReady) return;
+    _flameTimer = Timer.periodic(const Duration(milliseconds: 80), (_) {
+      final map = _map;
+      if (map == null || !_styleReady) return;
 
-        _flameBig = !_flameBig;
-        final size = _flameBig ? iconSizeMedium : iconSizeSmall;
-
-        map.style.setStyleLayerProperty(
-          MapStyle.lyrHotFlamesLeft,
-          'text-size',
-          size,
-        );
-        map.style.setStyleLayerProperty(
-          MapStyle.lyrHotFlamesRight,
-          'text-size',
-          size,
-        );
+      // advance phase
+      _flamePhase += 0.25; // tweak speed here
+      if (_flamePhase > math.pi * 2) {
+        _flamePhase -= math.pi * 2;
       }
-    );
+
+      // 0..1 pulse value
+      final t = (math.sin(_flamePhase) + 1) / 2.0;
+
+      double lerp(double a, double b, double t) => a + (b - a) * t;
+
+      // Radii + opacities
+      final outerRadius = lerp(16.0, 28.0, t);
+      final innerRadius = lerp(6.0, 16.0, t);
+      final outerOpacity = lerp(0.15, 0.55, t);
+      final innerOpacity = lerp(0.4, 0.9, t);
+
+      // Flame icon size (subtle pulse)
+      final iconSize = lerp(16.0, 22.0, t);
+
+      final style = map.style;
+
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowOuter,
+        'circle-radius',
+        outerRadius,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowOuter,
+        'circle-opacity',
+        outerOpacity,
+      );
+
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowInner,
+        'circle-radius',
+        innerRadius,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowInner,
+        'circle-opacity',
+        innerOpacity,
+      );
+
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotFlameIcon,
+        'text-size',
+        iconSize,
+      );
+    });
+
   }
 
   @override
@@ -353,6 +391,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.build(context);
     // All venues list, used for per-type counts and lists in the filter panel
     final allVenues = ref.watch(allVenuesListProvider);
+    final favoriteIds = ref.watch(favoriteVenueIdsProvider).maybeWhen(
+      data: (ids) => ids.toSet(),
+      orElse: () => <String>{},
+    );
 
     final visibleOnMapCount = _visibleVenuesOnMap(allVenues);
 
@@ -385,6 +427,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           allowedTypes: _allowedTypeNamesForStyle(),
           baseClusterableFc: next.clusterable,
           baseVipFc: next.vip,
+          favoriteVenueIds: favoriteIds,
         );
 
         final venues = ref.read(allVenuesListProvider);
@@ -436,6 +479,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
     ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider, (prev, next) {
         next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
       }
+    );
+
+    ref.listen<AsyncValue<List<String>>>(
+      favoriteVenueIdsProvider,
+          (prev, next) async {
+        final map = _map;
+        if (map == null || !_styleReady) return;
+
+        final ids = next.maybeWhen(
+          data: (ids) => ids.toSet(),
+          orElse: () => <String>{},
+        );
+
+        final fcNow = ref.read(venuesGeoJsonProvider);
+
+        await _style.applyFilters(
+          map,
+          showClosed: _showClosed,
+          allowedTypes: _allowedTypeNamesForStyle(),
+          baseClusterableFc: fcNow.clusterable,
+          baseVipFc: fcNow.vip,
+          favoriteVenueIds: ids,
+        );
+      },
     );
 
     final camAsync = ref.watch(initialCameraProvider);
@@ -584,6 +651,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 counts: typeCounts,
                 venuesByType: venuesByType,
                 userLocation: _userLocation,
+                favoriteVenueIds: favoriteIds,
 
                 // NEW: "Is open" toggle (true => only open venues)
                 showOnlyOpen: !_showClosed,
@@ -606,6 +674,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     allowedTypes: _allowedTypeNamesForStyle(),
                     baseClusterableFc: fcNow.clusterable,
                     baseVipFc: fcNow.vip,
+                    favoriteVenueIds: favoriteIds,
                   );
                 },
 
@@ -628,6 +697,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     allowedTypes: _allowedTypeNamesForStyle(),
                     baseClusterableFc: fcNow.clusterable,
                     baseVipFc: fcNow.vip,
+                    favoriteVenueIds: favoriteIds,
                   );
                 },
 
@@ -684,12 +754,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final fcNow = ref.read(venuesGeoJsonProvider);
 
+    final favIds = ref.read(favoriteVenueIdsProvider).maybeWhen(
+      data: (ids) => ids.toSet(),
+      orElse: () => <String>{},
+    );
+
     await _style.applyFilters(
       map,
       showClosed: _showClosed,
       allowedTypes: _allowedTypeNamesForStyle(),
       baseClusterableFc: fcNow.clusterable,
       baseVipFc: fcNow.vip,
+      favoriteVenueIds: favIds,
     );
 
     final venues = ref.read(allVenuesListProvider);
@@ -1181,7 +1257,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final visits = counts[v.id] ?? 0;
       final cap = v.capacity;
 
-      final bool isHot = (cap > 0 && (visits / cap) >= 0.60);
+      //TODO make hot venues only animated if not in clutter. Make clutter show a perventage of hot venues within clutter (circle diagram
+      final bool isHot = (cap > 0 && (visits / cap) >= 0.65); //TODO find out amount
 
       if (!isHot) continue;
 
@@ -1196,8 +1273,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
           'visits': visits,
           'capacity': cap,
         },
-      }
-      );
+      });
+
     }
 
     final fc = jsonEncode({
@@ -1232,6 +1309,7 @@ class _VenueTypeFilterPanel extends StatefulWidget {
     required this.onVenueTap,
     required this.showOnlyOpen,
     required this.onShowOnlyOpenChanged,
+    required this.favoriteVenueIds,
   });
 
   final Set<VenueType> selected;
@@ -1239,6 +1317,7 @@ class _VenueTypeFilterPanel extends StatefulWidget {
   final Map<VenueType, int> counts;
   final Map<VenueType, List<Venue>> venuesByType;
   final LatLng? userLocation;
+  final Set<String> favoriteVenueIds;
 
   final bool showOnlyOpen;
   final ValueChanged<bool> onShowOnlyOpenChanged;
@@ -1450,6 +1529,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                               count: totalCount,
                               venues: allVenues,
                               userLocation: widget.userLocation,
+                              favoriteVenueIds: widget.favoriteVenueIds,
                               // active per venue if its type is selected
                               isVenueActive: (venue) {
                                 final type = venue.type;
@@ -1489,6 +1569,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                             count: count,
                             venues: venues,
                             userLocation: widget.userLocation,
+                            favoriteVenueIds: widget.favoriteVenueIds,
                             onToggleChanged: (value) {
                               _updateSelection(() {
                                   if (value) {
@@ -1563,6 +1644,7 @@ class _VenueFilterExpandableTile extends StatefulWidget {
     required this.userLocation,
     required this.onToggleChanged,
     required this.onVenueTap,
+    required this.favoriteVenueIds,
     this.isVenueActive,
   });
 
@@ -1574,6 +1656,7 @@ class _VenueFilterExpandableTile extends StatefulWidget {
   final LatLng? userLocation;
   final ValueChanged<bool> onToggleChanged;
   final Future<void> Function(Venue) onVenueTap;
+  final Set<String> favoriteVenueIds;
 
   /// Optional per-venue active check (used by "All" row).
   /// If null, `isOn` is used for all venues in this tile.
@@ -1776,8 +1859,6 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
               const double rowHeight = 52.0;
               final int visible = visibleVenues.length;
 
-              bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());
-              add:
               // We still use `remaining` only to approximate needed height,
               // but there is no "Show more" row any more.
               final double neededHeight =
@@ -1816,12 +1897,23 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
     final name = v.displayName.isNotEmpty ? v.displayName : v.name;
 
-    // Active under current filters? (used by "All" tile)
+// Active under current filters? (used by "All" tile)
     final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
 
-    final TextStyle nameStyle = venueActive
-      ? Styles.basicText
-      : Styles.basicText.copyWith(color: greyLighter);
+// Is this venue one of my favorites?
+    final bool isFavorite = widget.favoriteVenueIds.contains(v.id);
+
+    TextStyle nameStyle;
+    if (!venueActive) {
+      // Dim everything that’s filtered out, even favorites
+      nameStyle = Styles.basicText.copyWith(color: greyLighter);
+    } else if (isFavorite) {
+      // Highlight favorites in owlPurple
+      nameStyle = Styles.basicText.copyWith(color: owlPurple);
+    } else {
+      nameStyle = Styles.basicText;
+    }
+
 
     final TextStyle walkStyle = Styles.smallText.copyWith(
       color: white, // ⬅️ walk text should be white
@@ -1903,7 +1995,7 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name (one line, ellipsis)
-                  Text(
+                  Text( //TODO display star before name if favorite. Show at top if favorite.
                     name,
                     style: nameStyle,
                     maxLines: 1,

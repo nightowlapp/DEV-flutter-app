@@ -267,7 +267,7 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
 
     // base the sizes on your logoIcon constant
     const double logoScale = 1.5;
-    final double logoSize = logoIcon * logoScale;
+    final double logoSize = logoIconSize * logoScale;
     final double sectionHeight = logoSize + 28; // room for text + spacing
 
     return Column(

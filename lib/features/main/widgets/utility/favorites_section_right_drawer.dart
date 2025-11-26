@@ -88,7 +88,7 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
 
               final slots = math.max(list.length, minSlots);
               const itemPad = horizontalSpacerSmall;
-              const logoSize = logoIcon;
+              const logoSize = logoIconSize;
 
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
