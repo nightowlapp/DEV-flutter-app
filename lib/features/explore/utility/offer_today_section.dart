@@ -1,4 +1,4 @@
-// lib/features/venues/widgets/venue_media_section.dart
+// lib/features/venues/widgets/offer_today_section.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/core/platform_config.dart';

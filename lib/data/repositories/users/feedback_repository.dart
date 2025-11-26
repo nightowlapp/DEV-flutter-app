@@ -227,7 +227,6 @@ class FeedbackRepository {
   }
   static Future<String> uploadOfferPhoto({
     required String venueId,
-    required String feedbackId,
     required File file,
   }) async {
     final user = _requireUser;
@@ -243,9 +242,9 @@ class FeedbackRepository {
       quality: 80,
     );
 
-
+    final ts = DateTime.now().millisecondsSinceEpoch;
     final path =
-        '${StoragePaths.userImages}/${user.uid}/${UserDocumentPaths.venueFeedback}/$venueId/$feedbackId.webp'; // folder structure
+        '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.offerImages}/$ts.webp'; // folder structure
     final ref = _storage.ref().child(path);
 
 
@@ -259,5 +258,48 @@ class FeedbackRepository {
     final url = await ref.getDownloadURL();
     return url;
   }
+
+  static Future<String> uploadMoodImage({
+    required String venueId,
+    required File file,
+  }) async {
+    final user = _requireUser;
+
+    // 1) Read original bytes (likely JPEG/HEIC from camera)
+    final Uint8List originalBytes = await file.readAsBytes();
+
+    // 2) Compress & re-encode as WebP
+    final Uint8List webpBytes =
+    await FlutterImageCompress.compressWithList(
+      originalBytes,
+      format: CompressFormat.webp,
+      quality: 80,
+    );
+
+    // 3) Storage path for mood images
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final path = '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.moodImages}/$ts.webp';
+    final ref = _storage.ref().child(path);
+
+    // 4) Upload WebP bytes with correct contentType
+    await ref.putData(
+      webpBytes,
+      SettableMetadata(contentType: 'image/webp'),
+    );
+
+    // 5) Get download URL
+    final url = await ref.getDownloadURL();
+
+    // 6) Append to a venue_media doc for this venue
+    //    (adjust collection/field names to match your schema if needed)
+    final mediaRef = _db.collection('venue_media').doc(venueId);
+    await mediaRef.set({
+      'mood_image_urls': FieldValue.arrayUnion(<String>[url]),
+      FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    return url;
+  }
+
 
 }

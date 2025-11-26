@@ -594,8 +594,14 @@ class EditBadge extends ConsumerWidget {
                       // 🟣 Right: photo picker / preview
                       GestureDetector(
                         onTap: () async {
+                          // Use root navigator so the sheet appears above the popup
+                          final rootCtx = Navigator.of(ctx, rootNavigator: true).context;
+
+                          final src = await _chooseOfferImageSource(rootCtx);
+                          if (src == null) return;
+
                           final picked = await picker.pickImage(
-                            source: ImageSource.camera,
+                            source: src,
                             maxWidth: 1600,
                             maxHeight: 1600,
                             imageQuality: 80,
@@ -637,6 +643,7 @@ class EditBadge extends ConsumerWidget {
                   ),
                 ];
                 break;
+
 
               case 'location':
                 body = [
@@ -788,18 +795,16 @@ class EditBadge extends ConsumerWidget {
                               extraFields['suggested_offers'] = v;
                             }
 
-                            // 👇 If user took a photo, upload it & store URL
                             if (offerPhotoPath != null) {
                               final file = File(offerPhotoPath!);
-                              final url =
-                              await FeedbackRepository.uploadOfferPhoto(
+                              final url = await FeedbackRepository.uploadOfferPhoto(
                                 venueId: venue.id,
-                                feedbackId: feedbackId,
                                 file: file,
                               );
                               extraFields['offer_photo_url'] = url;
                             }
                             break;
+
 
                           case 'name':
                             final v = mainController.text.trim();
@@ -878,6 +883,42 @@ class EditBadge extends ConsumerWidget {
       },
     );
   }
+  Future<ImageSource?> _chooseOfferImageSource(BuildContext context) {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: black,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(
+                cameraIcon,
+                size: iconSizeDefault,
+                color: owlPurple,
+              ),
+              title: Text('Take photo', style: Styles.basicText),
+              onTap: () => Navigator.of(ctx, rootNavigator: true)
+                  .pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(
+                photoLibraryIcon,
+                size: iconSizeDefault,
+                color: owlPurple,
+              ),
+              title: Text('Choose from gallery', style: Styles.basicText),
+              onTap: () => Navigator.of(ctx, rootNavigator: true)
+                  .pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class _TimeRow extends StatelessWidget {

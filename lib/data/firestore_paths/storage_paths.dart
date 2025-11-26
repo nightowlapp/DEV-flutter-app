@@ -5,6 +5,10 @@ class StoragePaths {
   // ---- Users ----
   static const userImages = 'user_images';
   static const profilePicture = 'profile_picture';
+  static const venueFeedback = 'venue_feedback';
+  static const offerImages = 'offer_images';
+  static const moodImages = 'mood_images';
+
 
   static String userImage(String userId, String fileName) =>
       '$userImages/$userId/$fileName';

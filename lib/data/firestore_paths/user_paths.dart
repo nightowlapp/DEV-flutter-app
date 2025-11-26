@@ -77,7 +77,6 @@ class UserDocumentPaths {
   static const subscriptionType = 'subscription_type';
   static const platformType = 'platform_type';
   static const currentPartyStatus = 'current_party_status';
-  static const venueFeedback = 'venue_feedback';
 
   static const createdAt = FirestoreFields.createdAt;
   static const updatedAt = FirestoreFields.updatedAt;
