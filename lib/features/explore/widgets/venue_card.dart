@@ -12,20 +12,10 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 
 import '../../../core/storage/storage_url.dart';
+import '../../../data/providers/time_ticker_provider.dart';
 import '../../../data/services/media_existence.dart';
 import '../../../navigation/nav_shortcuts.dart';
 import '../../../shared/utility/city_asset.dart';
-
-/// Global ticker so all cards can rebuild in "real time"
-final timeTickerProvider = StreamProvider<DateTime>((ref) async* {
-  // emit immediately
-  yield DateTime.now();
-  // then every 30 seconds
-  yield* Stream.periodic(
-    const Duration(seconds: 30),
-        (_) => DateTime.now(),
-  );
-});
 
 class VenueCard extends ConsumerWidget {
   const VenueCard({

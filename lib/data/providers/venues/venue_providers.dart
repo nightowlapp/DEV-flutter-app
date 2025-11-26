@@ -9,6 +9,7 @@ import '../../../core/storage/venues_sso.dart';
 import '../../../models/venues/venue.dart';
 import '../../../shared/constants/enums.dart';
 import '../other_providers.dart';
+import '../time_ticker_provider.dart';
 
 
 /// Single Source Of Truth for Venues:
@@ -34,14 +35,31 @@ final venuesByIdMapProvider = Provider.autoDispose<Map<String, Venue>>((ref) {
   return {for (final v in list) v.id: v};
 });
 
+
+
+
 typedef VenuesFc = ({String clusterable, String vip});
 
 final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
   final venues = ref.watch(allVenuesListProvider);
+
+  // ⏱ depend on time so we recompute every tick
+  final localNow = ref.watch(timeTickerProvider).maybeWhen(
+    data: (d) => d,
+    orElse: () => DateTime.now(),
+  );
+
   final clusterable = <Map<String, dynamic>>[];
   final vip = <Map<String, dynamic>>[];
 
   for (final v in venues) {
+    // per-venue time-based flags
+    final isOpenNow = v.isOpenNow(localNow);
+    final isSoon = v.isOpeningOrClosingSoon(
+      localNow,
+      thresholdMinutes: 60,
+    );
+
     final feat = {
       'type': 'Feature',
       'id': v.id,
@@ -51,20 +69,26 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
             ? v.displayName
             : Utility.formatString(v.name),
         'rating': v.rating ?? 3.4,
-        'venueType': v.type.name,
+        'venueType': v.type.name,           // "bar", "club", "wine_bar", ...
         'isVerified': v.isVerified,
         'logo_image_id':
-            'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}',
+        'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}',
         'subscription': v.subscriptionType.name,
-        'isOpenNow': v.isOpenNow(DateTime.now()),
-        'opensLaterToday': v.isOpenToday(DateTime.now()),
-        'isSoon': v.isOpeningOrClosingSoon(DateTime.now()),
+
+        // 🔥 these are what Mapbox style reads
+        'isOpenNow': isOpenNow,
+        'isSoon': isSoon,
+
+        // optional – not used by style right now, but you might want it:
+        'opensLaterToday': v.isOpenToday(localNow),
       },
       'geometry': {
         'type': 'Point',
         'coordinates': [v.entry.lng, v.entry.lat],
       },
     };
+
+    // free → clusterable source, others → VIP source
     if (v.subscriptionType == SubscriptionTypesVenue.free) {
       clusterable.add(feat);
     } else {
@@ -73,8 +97,14 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
   }
 
   return (
-    clusterable:
-        jsonEncode({'type': 'FeatureCollection', 'features': clusterable}),
-    vip: jsonEncode({'type': 'FeatureCollection', 'features': vip}),
+  clusterable: jsonEncode({
+    'type': 'FeatureCollection',
+    'features': clusterable,
+  }),
+  vip: jsonEncode({
+    'type': 'FeatureCollection',
+    'features': vip,
+  }),
   );
 });
+

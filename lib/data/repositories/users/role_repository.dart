@@ -1,9 +1,14 @@
 // lib/data/repositories/users/role_repository.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_collections%20.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/data/providers/other_providers.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
+
+final db = FirebaseFirestore.instance;
 
 class UserRoles {
   final bool isAdmin;
@@ -61,3 +66,28 @@ final currentUserIsOwnerProvider = Provider<bool>((ref) {
   return ref.watch(userRolesProvider).isOwner;
 });
 
+/// 🔥 Call this to add `reviewer` to a user's roles in Firestore.
+Future<void> addReviewerRoleToUser(String userId) async {
+  final docRef = db.collection(FirestoreCollections.users).doc(userId);
+  // If you have a UserDocumentPaths.doc(userId) helper, you can use that instead.
+
+  await db.runTransaction((tx) async {
+    final snap = await tx.get(docRef);
+    if (!snap.exists) return;
+
+    final data = snap.data() ?? <String, dynamic>{};
+
+    // Read existing roles as strings, defaulting to empty list.
+    final List<dynamic> rawRoles = (data[UserDocumentPaths.roles] as List?) ?? const [];
+    final roles = rawRoles.map((e) => e.toString()).toSet();
+
+    // Already reviewer → nothing to do.
+    if (roles.contains(UserRole.reviewer.name)) return;
+
+    // Add reviewer + write back.
+    roles.add(UserRole.reviewer.name);
+    tx.update(docRef, {
+      UserDocumentPaths.roles: roles.toList(),
+    });
+  });
+}

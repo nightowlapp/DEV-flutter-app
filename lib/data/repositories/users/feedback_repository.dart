@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nightowlcode/data/repositories/users/role_repository.dart';
 
 import '../../firestore_paths/firestore_paths.dart'; // has FeedbackDocumentPaths, VenueDocumentPaths, FirestoreFields
 
@@ -93,11 +94,11 @@ class FeedbackRepository {
     await docRef.set({
       FeedbackDocumentPaths.message: '',
       FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
-      FeedbackDocumentPaths.venueId: venueId,
+      // FeedbackDocumentPaths.venueId: venueId, // not needed.
       FeedbackDocumentPaths.category: category,
       if (extraFields != null) ...extraFields,
     });
-
+    await addReviewerRoleToUser(user.uid);
     return docRef.id;
   }
 

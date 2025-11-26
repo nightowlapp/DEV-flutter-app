@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,9 @@ void main() {
 
     // ✅ Now this is really light: prefs + "stayLoggedIn" flag only
     final bootstrapResult = await preBootLight();
+
+    final db = FirebaseFirestore.instance;
+    db.settings = const Settings(persistenceEnabled: true);
 
     runApp(
       ProviderScope(
