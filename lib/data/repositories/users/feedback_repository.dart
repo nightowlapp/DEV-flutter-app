@@ -98,7 +98,7 @@ class FeedbackRepository {
       FeedbackDocumentPaths.category: category,
       if (extraFields != null) ...extraFields,
     });
-    await addReviewerRoleToUser(user.uid);
+
     return docRef.id;
   }
 

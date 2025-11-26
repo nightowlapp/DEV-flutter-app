@@ -66,10 +66,24 @@ final currentUserIsOwnerProvider = Provider<bool>((ref) {
   return ref.watch(userRolesProvider).isOwner;
 });
 
+/// Local-first helper: only hits Firestore if reviewer is NOT in `localRoles`.
+Future<void> addReviewerRoleToUserIfMissing({
+  required String userId,
+  required Iterable<UserRole> localRoles,
+}) async {
+  // purely local check – no Firestore reads here.
+  if (localRoles.contains(UserRole.reviewer)) {
+    return; // already reviewer → skip backend call.
+  }
+
+  // Not a reviewer yet → do one transaction to add it.
+  await addReviewerRoleToUser(userId);
+}
+
 /// 🔥 Call this to add `reviewer` to a user's roles in Firestore.
+
 Future<void> addReviewerRoleToUser(String userId) async {
   final docRef = db.collection(FirestoreCollections.users).doc(userId);
-  // If you have a UserDocumentPaths.doc(userId) helper, you can use that instead.
 
   await db.runTransaction((tx) async {
     final snap = await tx.get(docRef);
@@ -78,7 +92,8 @@ Future<void> addReviewerRoleToUser(String userId) async {
     final data = snap.data() ?? <String, dynamic>{};
 
     // Read existing roles as strings, defaulting to empty list.
-    final List<dynamic> rawRoles = (data[UserDocumentPaths.roles] as List?) ?? const [];
+    final List<dynamic> rawRoles =
+        (data[UserDocumentPaths.roles] as List?) ?? const [];
     final roles = rawRoles.map((e) => e.toString()).toSet();
 
     // Already reviewer → nothing to do.

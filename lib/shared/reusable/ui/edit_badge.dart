@@ -1,6 +1,7 @@
 // lib/shared/reusable/ui/edit_badge.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
@@ -8,7 +9,9 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/constants/enums.dart'; // VenueType, DressCodeType
 import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
+import '../../../data/providers/other_providers.dart';
 import '../../../data/repositories/users/feedback_repository.dart';
+import '../../../data/repositories/users/role_repository.dart';
 import '../../../models/venues/venue.dart';
 import '../../utility/utility.dart';
 import 'owl_snack.dart';
@@ -79,7 +82,7 @@ InputDecoration _searchBarDecoration({
   );
 }
 
-class EditBadge extends StatelessWidget {
+class EditBadge extends ConsumerWidget  {
   const EditBadge({
     super.key,
     required this.venue,
@@ -88,9 +91,9 @@ class EditBadge extends StatelessWidget {
   final Venue venue;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => _showEditDialog(context),
+      onTap: () => _showEditDialog(context, ref),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
@@ -114,7 +117,7 @@ class EditBadge extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
+  void _showEditDialog(BuildContext context,WidgetRef ref) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -124,47 +127,47 @@ class EditBadge extends StatelessWidget {
           _EditOption(
             label: 'Age restriction',
             icon: Icons.child_friendly_outlined,
-            onTap: () => _handleOptionTap(context, 'age_restriction'),
+            onTap: () => _handleOptionTap(context, ref, 'age_restriction'),
           ),
           _EditOption(
             label: 'Venue type',
             icon: venuesIcon,
-            onTap: () => _handleOptionTap(context, 'venue_type'),
+            onTap: () => _handleOptionTap(context, ref,'venue_type'),
           ),
           _EditOption(
             label: 'Tags',
             icon: Icons.tag_outlined,
-            onTap: () => _handleOptionTap(context, 'tags'),
+            onTap: () => _handleOptionTap(context,ref, 'tags'),
           ),
           _EditOption(
             label: 'Opening hours',
             icon: Icons.schedule_outlined,
-            onTap: () => _handleOptionTap(context, 'opening_hours'),
+            onTap: () => _handleOptionTap(context,ref, 'opening_hours'),
           ),
           _EditOption(
             label: 'Entry price',
             icon: Icons.attach_money_outlined,
-            onTap: () => _handleOptionTap(context, 'entry_price'),
+            onTap: () => _handleOptionTap(context,ref, 'entry_price'),
           ),
           _EditOption(
             label: 'Dress code',
             icon: Icons.checkroom_outlined,
-            onTap: () => _handleOptionTap(context, 'dress_code'),
+            onTap: () => _handleOptionTap(context,ref, 'dress_code'),
           ),
           _EditOption(
             label: 'Offers',
             icon: Icons.local_offer_outlined,
-            onTap: () => _handleOptionTap(context, 'offers'),
+            onTap: () => _handleOptionTap(context, ref,'offers'),
           ),
           _EditOption(
             label: 'Name',
             icon: Icons.signpost_outlined,
-            onTap: () => _handleOptionTap(context, 'name'),
+            onTap: () => _handleOptionTap(context, ref,'name'),
           ),
           _EditOption(
             label: 'Location',
             icon: Icons.place_outlined,
-            onTap: () => _handleOptionTap(context, 'location'),
+            onTap: () => _handleOptionTap(context,ref, 'location'),
           ),
         ],
       ),
@@ -174,11 +177,11 @@ class EditBadge extends StatelessWidget {
   /// 1) Close the list dialog
   /// 2) Create a stub feedback doc (ONE per suggestion)
   /// 3) Optionally show a follow-up dialog that updates the same doc
-  Future<void> _handleOptionTap(BuildContext context, String category) async {
+  Future<void> _handleOptionTap(BuildContext context,  WidgetRef ref, String category) async {
     Navigator.of(context, rootNavigator: true).pop(); // close first popup
 
     // Step 1: create stub & get its id
-    final feedbackId = await _submitQuick(context, category);
+    final feedbackId = await _submitQuick(context, ref, category);
     if (feedbackId == null) return;
 
     // Step 2: show optional follow-up UI (day-specific)
@@ -187,7 +190,7 @@ class EditBadge extends StatelessWidget {
 
   /// Creates the stub doc and shows the first snack.
   /// Returns docId or null on error.
-  Future<String?> _submitQuick(BuildContext context, String category) async {
+  Future<String?> _submitQuick(BuildContext context,  WidgetRef ref, String category) async {
     try {
       final now = DateTime.now(); // later: convert to venue-local using timeZoneId
       final weekdayIndex =
@@ -206,13 +209,25 @@ class EditBadge extends StatelessWidget {
         extraFields: extra.isEmpty ? null : extra,
       );
 
+      // 🔥 LOCAL ROLE CHECK – *before* hitting Firestore
+      final authUserAsync = ref.read(authUserProvider);
+      final user = authUserAsync.asData?.value;
+      if (user != null) {
+        final roles = user.roles ?? const <UserRole>{};
+
+        await addReviewerRoleToUserIfMissing(
+          userId: user.id,              // or user.uid, depending on your model
+          localRoles: roles,
+        );
+      }
+
       OwlSnack.show(
         context,
         title: 'Hoot hoot! Edit sent 🦉',
         message:
         'Thanks for looking out for the NightOwl community! We\'ll review your ${Utility.formatString(category)} suggestion soon.',
         variant: OwlSnackVariant.success,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 10),
       );
 
       return feedbackId;
