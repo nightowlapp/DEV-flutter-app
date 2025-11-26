@@ -1,7 +1,10 @@
 // lib/shared/reusable/ui/edit_badge.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
@@ -13,14 +16,15 @@ import '../../../data/providers/other_providers.dart';
 import '../../../data/repositories/users/feedback_repository.dart';
 import '../../../data/repositories/users/role_repository.dart';
 import '../../../models/venues/venue.dart';
+import '../../utility/tag_actions.dart';
 import '../../utility/utility.dart';
 import 'owl_snack.dart';
 
 /// Simple ISO date: 2025-01-02
 String _formatDateIso(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-        '${d.month.toString().padLeft(2, '0')}-'
-        '${d.day.toString().padLeft(2, '0')}';
+'${d.year.toString().padLeft(4, '0')}-'
+'${d.month.toString().padLeft(2, '0')}-'
+'${d.day.toString().padLeft(2, '0')}';
 
 InputDecoration _editFieldDecoration({
   required String label,
@@ -35,7 +39,7 @@ InputDecoration _editFieldDecoration({
   return InputDecoration(
     labelText: label,
     hintText: hint,
-    labelStyle: Styles.smallText.copyWith(color: grey),
+    labelStyle: Styles.mediumSmallText,
     hintStyle: Styles.greyedOutPopupText,
     isDense: true,
     filled: true,
@@ -45,8 +49,8 @@ InputDecoration _editFieldDecoration({
       borderSide: const BorderSide(color: owlPurple, width: 0.9),
     ),
     contentPadding: multiline
-        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
-        : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
+      : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
   );
 }
 
@@ -74,11 +78,11 @@ InputDecoration _searchBarDecoration({
       borderSide: const BorderSide(color: owlPurple, width: 0.9),
     ),
     prefixIcon: prefixIcon == null
-        ? null
-        : Icon(prefixIcon, color: white, size: 20),
+      ? null
+      : Icon(prefixIcon, color: white, size: 20),
     contentPadding: multiline
-        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
-        : const EdgeInsets.symmetric(vertical: 0),
+      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
+      : const EdgeInsets.symmetric(vertical: 0),
   );
 }
 
@@ -117,7 +121,7 @@ class EditBadge extends ConsumerWidget  {
     );
   }
 
-  void _showEditDialog(BuildContext context,WidgetRef ref) {
+  void _showEditDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -132,42 +136,49 @@ class EditBadge extends ConsumerWidget  {
           _EditOption(
             label: 'Venue type',
             icon: venuesIcon,
-            onTap: () => _handleOptionTap(context, ref,'venue_type'),
+            onTap: () => _handleOptionTap(context, ref, 'venue_type'),
           ),
           _EditOption(
             label: 'Tags',
             icon: Icons.tag_outlined,
-            onTap: () => _handleOptionTap(context,ref, 'tags'),
+            onTap: () async {
+              // Close the "Suggest an edit" popup
+              Navigator.of(context, rootNavigator: true).pop();
+
+              // Open the tag picker flow
+              await handleAddTagPressed(context, ref, venue);
+            },
           ),
+
           _EditOption(
             label: 'Opening hours',
             icon: Icons.schedule_outlined,
-            onTap: () => _handleOptionTap(context,ref, 'opening_hours'),
+            onTap: () => _handleOptionTap(context, ref, 'opening_hours'),
           ),
           _EditOption(
             label: 'Entry price',
             icon: Icons.attach_money_outlined,
-            onTap: () => _handleOptionTap(context,ref, 'entry_price'),
+            onTap: () => _handleOptionTap(context, ref, 'entry_price'),
           ),
           _EditOption(
             label: 'Dress code',
             icon: Icons.checkroom_outlined,
-            onTap: () => _handleOptionTap(context,ref, 'dress_code'),
+            onTap: () => _handleOptionTap(context, ref, 'dress_code'),
           ),
           _EditOption(
             label: 'Offers',
             icon: Icons.local_offer_outlined,
-            onTap: () => _handleOptionTap(context, ref,'offers'),
+            onTap: () => _handleOptionTap(context, ref, 'offers'),
           ),
           _EditOption(
             label: 'Name',
             icon: Icons.signpost_outlined,
-            onTap: () => _handleOptionTap(context, ref,'name'),
+            onTap: () => _handleOptionTap(context, ref, 'name'),
           ),
           _EditOption(
             label: 'Location',
             icon: Icons.place_outlined,
-            onTap: () => _handleOptionTap(context,ref, 'location'),
+            onTap: () => _handleOptionTap(context, ref, 'location'),
           ),
         ],
       ),
@@ -177,7 +188,7 @@ class EditBadge extends ConsumerWidget  {
   /// 1) Close the list dialog
   /// 2) Create a stub feedback doc (ONE per suggestion)
   /// 3) Optionally show a follow-up dialog that updates the same doc
-  Future<void> _handleOptionTap(BuildContext context,  WidgetRef ref, String category) async {
+  Future<void> _handleOptionTap(BuildContext context, WidgetRef ref, String category) async {
     Navigator.of(context, rootNavigator: true).pop(); // close first popup
 
     // Step 1: create stub & get its id
@@ -190,11 +201,11 @@ class EditBadge extends ConsumerWidget  {
 
   /// Creates the stub doc and shows the first snack.
   /// Returns docId or null on error.
-  Future<String?> _submitQuick(BuildContext context,  WidgetRef ref, String category) async {
+  Future<String?> _submitQuick(BuildContext context, WidgetRef ref, String category) async {
     try {
       final now = DateTime.now(); // later: convert to venue-local using timeZoneId
       final weekdayIndex =
-          (now.weekday + 6) % 7; // 0=Mon, 1=Tue, ..., 6=Sun – matches OpeningHours
+        (now.weekday + 6) % 7; // 0=Mon, 1=Tue, ..., 6=Sun – matches OpeningHours
 
       // Extra fields for specific categories
       final extra = <String, dynamic>{};
@@ -231,7 +242,8 @@ class EditBadge extends ConsumerWidget  {
       );
 
       return feedbackId;
-    } catch (e) {
+    }
+    catch (e) {
       OwlSnack.show(
         context,
         title: 'Could not send suggestion',
@@ -242,17 +254,16 @@ class EditBadge extends ConsumerWidget  {
     }
   }
 
-
   Future<void> _showFollowUpDialog(
-      BuildContext context,
-      String category, {
-        required String feedbackId,
-      }) async {
+
+    BuildContext context,
+    String category, {
+      required String feedbackId,
+    }) async {
     final prettyCategory = Utility.formatString(category);
 
     // Use "now" as venue-local time; if you later wire timeZoneId into a
     // timezone library, replace this with venue-local DateTime.
-
 
     String _formatDateWithWeekday(DateTime d) {
       const weekdayNames = <String>[
@@ -267,7 +278,8 @@ class EditBadge extends ConsumerWidget  {
 
       final weekday = weekdayNames[d.weekday - 1]; // DateTime.weekday: 1 = Monday
       final iso = _formatDateIso(d);
-      return '$weekday $iso';
+      return weekday;
+      // ' $iso';
     }
 
     final now = DateTime.now();
@@ -278,6 +290,8 @@ class EditBadge extends ConsumerWidget  {
     final todayPrice = venue.effectiveEntryPrice(now);
     final todayDressCode = venue.effectiveDressCode(now);
     final todayHoursLabel = venue.openingHoursTodayLabel(venueLocalNow: now);
+    String? offerPhotoPath;        // local file path
+    final picker = ImagePicker();
 
     await showDialog(
       context: context,
@@ -288,27 +302,28 @@ class EditBadge extends ConsumerWidget  {
         // Prefill for some categories (not used for age anymore)
         if (category == 'entry_price' && todayPrice > 0) {
           mainController.text = todayPrice
-              .toStringAsFixed(
-            todayPrice.truncateToDouble() == todayPrice ? 0 : 2,
-          );
-        } else if (category == 'name') {
+            .toStringAsFixed(
+              todayPrice.truncateToDouble() == todayPrice ? 0 : 2,
+            );
+        }
+        else if (category == 'name') {
           final display = (venue.displayName.isNotEmpty
-              ? venue.displayName
-              : venue.name)
-              .trim();
+            ? venue.displayName
+            : venue.name)
+            .trim();
           mainController.text = display;
         }
 
         // Enums that may vary day-by-day
         VenueType? selectedVenueType =
-        venue.type == VenueType.unknown ? null : venue.type;
+          venue.type == VenueType.unknown ? null : venue.type;
         DressCodeType? selectedDressCode = todayDressCode;
 
         // Age restriction dropdown: 18–25
         int? selectedAge;
         if (category == 'age_restriction' &&
-            todayAge >= 18 &&
-            todayAge <= 25) {
+          todayAge >= 18 &&
+          todayAge <= 25) {
           selectedAge = todayAge;
         }
         // For opening_hours UI: prefill from today's range
@@ -321,8 +336,8 @@ class EditBadge extends ConsumerWidget  {
         int? closeMinute;
 
         if (!todayRange.isClosed &&
-            todayRange.open.isNotEmpty &&
-            todayRange.close.isNotEmpty) {
+          todayRange.open.isNotEmpty &&
+          todayRange.close.isNotEmpty) {
           // parse "HH:mm"
           final openParts = todayRange.open.split(':');
           final closeParts = todayRange.close.split(':');
@@ -337,7 +352,6 @@ class EditBadge extends ConsumerWidget  {
           }
         }
 
-
         // Optional free message text (same for all categories)
         String freeMessage = '';
 
@@ -346,19 +360,14 @@ class EditBadge extends ConsumerWidget  {
             List<Widget> body = [];
 
             switch (category) {
-            // 🔹 age restriction dropdown 18–25, no free text value
+              // 🔹 age restriction dropdown 18–25, no free text value
               case 'age_restriction':
                 body = [
                   Text(
-                    'What should the age restriction be today ($dateStr)?',
-                    style: Styles.smallText.copyWith(color: grey),
+                    'What is the correct age restriction for ${venue.displayName} today ($dateStr)?',
+                    style: Styles.smallText,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently shown for today: ${todayAge}+',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     value: selectedAge,
                     dropdownColor: black,
@@ -366,22 +375,23 @@ class EditBadge extends ConsumerWidget  {
                     decoration: _editFieldDecoration(
                       label: 'Correct age',
                     ),
-                    items: List<int>.generate(25 - 18 + 1, (i) => 18 + i)
-                        .map(
-                          (age) => DropdownMenuItem<int>(
-                        value: age,
-                        child: Text(
-                          '$age+',
-                          style:
-                          Styles.smallText.copyWith(color: white),
+                    items: List<int>.generate(25 - 18 + 1, (i) => 18 + i) //TODO soft code so age cannot be the same as age today/now.
+                      .map(
+                        (age) => DropdownMenuItem<int>(
+                          value: age,
+                          child: Text(
+                            '$age+',
+                            style:
+                            Styles.basicText,
+                          ),
                         ),
-                      ),
-                    )
-                        .toList(),
+                      )
+                      .toList(),
                     onChanged: (age) {
                       setState(() {
-                        selectedAge = age;
-                      });
+                          selectedAge = age;
+                        }
+                      );
                     },
                   ),
                 ];
@@ -390,15 +400,11 @@ class EditBadge extends ConsumerWidget  {
               case 'venue_type':
                 body = [
                   Text(
-                    'What best describes this place in general?',
-                    style: Styles.mediumSmallText,
+                    'Which type of venue is ${venue.displayName}?',
+                    style: Styles.smallText,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently type: ${Utility.formatString(venue.type.name)}',
-                    style: Styles.mediumSmallText,
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
                   Align(
                     alignment: Alignment.centerLeft,
                     child: ConstrainedBox(
@@ -408,33 +414,34 @@ class EditBadge extends ConsumerWidget  {
                         dropdownColor: black,
                         iconEnabledColor: white,
                         items: VenueType.values
-                            .map(
-                              (v) => DropdownMenuItem<VenueType>(
-                            value: v,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  v.icon,
-                                  color: white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text( v.name == 'unknown' ? 'Other':
-                                  Utility.formatString(v.name),
-                                  style: Styles.smallText.copyWith(
+                          .map(
+                            (v) => DropdownMenuItem<VenueType>(
+                              value: v,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    v.icon,
                                     color: white,
+                                    size: 18,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Text(v.name == 'unknown' ? 'Other' :
+                                      Utility.formatString(v.name),
+                                    style: Styles.smallText.copyWith(
+                                      color: white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        )
-                            .toList(),
+                          )
+                          .toList(),
                         onChanged: (v) {
                           setState(() {
-                            selectedVenueType = v;
-                          });
+                              selectedVenueType = v;
+                            }
+                          );
                         },
                       ),
                     ),
@@ -442,25 +449,22 @@ class EditBadge extends ConsumerWidget  {
                 ];
                 break;
 
+
+
               case 'entry_price':
                 body = [
                   Text(
-                    'What is the typical entry price today ($dateStr)?',
-                    style: Styles.smallText.copyWith(color: grey),
+                    'What is the correct entry price for ${venue.displayName} today ($dateStr)?',
+                    style: Styles.smallText,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently shown for today: '
-                        '${todayPrice > 0 ? '${todayPrice.toStringAsFixed(0)} €' : '0 €'}',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
                   TextField(
                     controller: mainController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    style: Styles.smallText.copyWith(color: white),
+                    style: Styles.smallText,
                     decoration: _editFieldDecoration(
                       label: 'Correct entry price (€)',
                     ),
@@ -471,16 +475,11 @@ class EditBadge extends ConsumerWidget  {
               case 'dress_code':
                 body = [
                   Text(
-                    'What is the dress code today ($dateStr)?',
-                    style: Styles.smallText.copyWith(color: grey),
+                    'What is the correct dress code for ${venue.displayName} today ($dateStr)?',
+                    style: Styles.smallText,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently shown for today: '
-                        '${Utility.formatString(todayDressCode.name)}',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
                   DropdownButtonFormField<DressCodeType>(
                     value: selectedDressCode,
                     dropdownColor: black,
@@ -489,72 +488,81 @@ class EditBadge extends ConsumerWidget  {
                       label: 'Correct dress code',
                     ),
                     items: DressCodeType.values
-                        .map(
-                          (d) => DropdownMenuItem<DressCodeType>(
-                        value: d,
-                        child: Text(
-                          Utility.formatString(d.name),
-                          style: Styles.smallText.copyWith(color: white),
+                      .map(
+                        (d) => DropdownMenuItem<DressCodeType>(
+                          value: d,
+                          child: Text(
+                            Utility.formatString(d.name),
+                            style: Styles.smallText.copyWith(color: white),
+                          ),
                         ),
-                      ),
-                    )
-                        .toList(),
+                      )
+                      .toList(),
                     onChanged: (d) {
                       setState(() {
-                        selectedDressCode = d;
-                      });
+                          selectedDressCode = d;
+                        }
+                      );
                     },
                   ),
                 ];
                 break;
 
               case 'opening_hours':
-              // local state for this case
+                // local state for this case
                 bool isClosed = openingIsClosed;
 
                 body = [
-                  Text(
-                    'Set the opening hours for today ($dateStr).',
-                    style: Styles.smallText.copyWith(color: grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently shown for today: $todayHoursLabel',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Closed toggle
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Switch(
-                        value: isClosed,
-                        activeColor: owlPurple,
-                        onChanged: (v) {
-                          setState(() {
-                            openingIsClosed = v;
-                          });
-                        },
+                      // 🟣 Left: question text, wraps nicely
+                      Expanded(
+                        child: Text(
+                          'What are the correct opening hours for ${venue.displayName} today ($dateStr)?',
+                          style: Styles.smallText,
+                        ),
                       ),
+
                       const SizedBox(width: 8),
-                      Text(
-                        'Closed all day',
-                        style: Styles.smallText.copyWith(color: white),
+
+                      // 🟣 Right: switch + label, no overflow
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Switch(
+                            value: isClosed,
+                            activeColor: owlPurple,
+                            onChanged: (v) {
+                              setState(() {
+                                openingIsClosed = v;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Closed today',
+                            style: Styles.smallText,
+                          ),
+                        ],
                       ),
                     ],
                   ),
 
+                  const SizedBox(height: 12),
+
                   if (!openingIsClosed) ...[
-                    const SizedBox(height: 8),
                     _TimeRow(
                       label: 'Opens',
                       initialHour: openHour,
                       initialMinute: openMinute,
                       onChanged: (h, m) {
                         setState(() {
-                          openHour = h;
-                          openMinute = m;
-                        });
+                            openHour = h;
+                            openMinute = m;
+                          }
+                        );
                       },
                     ),
                     const SizedBox(height: 8),
@@ -564,83 +572,78 @@ class EditBadge extends ConsumerWidget  {
                       initialMinute: closeMinute,
                       onChanged: (h, m) {
                         setState(() {
-                          closeHour = h;
-                          closeMinute = m;
-                        });
+                            closeHour = h;
+                            closeMinute = m;
+                          }
+                        );
                       },
                     ),
                   ],
                 ];
                 break;
 
-
-              case 'tags':
-                body = [
-                  Text(
-                    'Which tags are wrong or missing for this place?',
-                    style: Styles.smallText.copyWith(color: grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Example: "Should also have Techno, LGBT friendly".',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: mainController,
-                    maxLines: 3,
-                    style: Styles.smallText.copyWith(color: white),
-                    decoration: _editFieldDecoration(
-                      label: 'Tag suggestions (today: $dateStr)',
-                      multiline: true,
-                    ),
-                  ),
-                ];
-                break;
-
               case 'offers':
                 body = [
-                  Text(
-                    'What offers are wrong or missing today ($dateStr)?',
-                    style: Styles.smallText.copyWith(color: grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Example: "2-for-1 cocktails until 23:00 on Fridays".',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: mainController,
-                    maxLines: 4,
-                    style: Styles.smallText.copyWith(color: white),
-                    decoration: _editFieldDecoration(
-                      label: 'Describe the correct offers for today',
-                      multiline: true,
-                    ),
-                  ),
-                ];
-                break;
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 🟣 Left: text box
+                      Expanded(
+                        child: TextField(
+                          controller: mainController,
+                          maxLines: 4,
+                          style: Styles.smallText.copyWith(color: white),
+                          decoration: _editFieldDecoration(
+                            label: 'What are the correct offers for ${venue.displayName} today ($dateStr)?',
+                            multiline: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
 
-              case 'name':
-                body = [
-                  Text(
-                    'Is the venue name shown incorrectly?',
-                    style: Styles.smallText.copyWith(color: grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Currently shown: '
-                        '${(venue.displayName.isNotEmpty ? venue.displayName : venue.name).trim()}',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: mainController,
-                    style: Styles.smallText.copyWith(color: white),
-                    decoration: _editFieldDecoration(
-                      label: 'Correct name',
-                    ),
+                      // 🟣 Right: photo picker / preview
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await picker.pickImage(
+                            source: ImageSource.camera,
+                            maxWidth: 1600,
+                            maxHeight: 1600,
+                            imageQuality: 80,
+                          );
+                          if (picked == null) return;
+
+                          setState(() {
+                            offerPhotoPath = picked.path;
+                          });
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: black,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: offerPhotoPath == null
+                                  ? const Icon(
+                                Icons.camera_alt_outlined,
+                                color: white,
+                                size: iconSizeDefault,
+                              )
+                                  : ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(offerPhotoPath!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ];
                 break;
@@ -648,19 +651,14 @@ class EditBadge extends ConsumerWidget  {
               case 'location':
                 body = [
                   Text(
-                    'What is wrong with the location today ($dateStr)?',
-                    style: Styles.smallText.copyWith(color: grey),
+                    'What is the correct location for ${venue.displayName}?',
+                    style: Styles.smallText,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'You can paste a Google Maps link, address or coordinates.',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: mainController,
                     maxLines: 4,
-                    style: Styles.smallText.copyWith(color: white),
+                    style: Styles.smallText,
                     decoration: _editFieldDecoration(
                       label: 'Correct location',
                       multiline: true,
@@ -670,22 +668,22 @@ class EditBadge extends ConsumerWidget  {
                 break;
 
               default:
-                body = [
-                  Text(
-                    'Tell us what is wrong with $prettyCategory today ($dateStr).',
-                    style: Styles.smallText.copyWith(color: grey),
+              body = [
+                Text(
+                  'What is the correct name of ${venue.displayName}?.',
+                  style: Styles.smallText,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: mainController,
+                  maxLines: 3,
+                  style: Styles.smallText.copyWith(color: white),
+                  decoration: _editFieldDecoration(
+                    label: 'Correct name',
+                    multiline: true,
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: mainController,
-                    maxLines: 3,
-                    style: Styles.smallText.copyWith(color: white),
-                    decoration: _editFieldDecoration(
-                      label: 'Details (optional)',
-                      multiline: true,
-                    ),
-                  ),
-                ];
+                ),
+              ];
             }
 
             // 🔹 Add optional free-text message for ALL categories
@@ -707,7 +705,7 @@ class EditBadge extends ConsumerWidget  {
             ];
 
             return OwlPopup(
-              title: 'Add details – $prettyCategory',
+              title: '$prettyCategory correction',
               children: [
                 ...body,
                 const SizedBox(height: verticalSpacerSmall),
@@ -740,9 +738,9 @@ class EditBadge extends ConsumerWidget  {
 
                           case 'venue_type':
                             if (selectedVenueType != null &&
-                                selectedVenueType != VenueType.unknown) {
+                              selectedVenueType != VenueType.unknown) {
                               extraFields['suggested_venue_type'] =
-                                  selectedVenueType!.name;
+                              selectedVenueType!.name;
                             }
                             break;
 
@@ -750,10 +748,11 @@ class EditBadge extends ConsumerWidget  {
                             final v = mainController.text.trim();
                             if (v.isNotEmpty) {
                               final parsed =
-                              double.tryParse(v.replaceAll(',', '.'));
+                                double.tryParse(v.replaceAll(',', '.'));
                               if (parsed != null) {
                                 extraFields['suggested_entry_price'] = parsed;
-                              } else {
+                              }
+                              else {
                                 extraFields['suggested_entry_price_raw'] = v;
                               }
                             }
@@ -762,20 +761,21 @@ class EditBadge extends ConsumerWidget  {
                           case 'dress_code':
                             if (selectedDressCode != null) {
                               extraFields['suggested_dress_code'] =
-                                  selectedDressCode!.name;
+                              selectedDressCode!.name;
                             }
                             break;
 
                           case 'opening_hours':
-                          // If marked closed
+                            // If marked closed
                             if (openingIsClosed) {
                               extraFields['suggested_is_closed'] = true;
-                            } else {
+                            }
+                            else {
                               // Need valid times
                               if (openHour != null &&
-                                  openMinute != null &&
-                                  closeHour != null &&
-                                  closeMinute != null) {
+                                openMinute != null &&
+                                closeHour != null &&
+                                closeMinute != null) {
                                 final openM = openHour! * 60 + openMinute!;
                                 final closeM = closeHour! * 60 + closeMinute!;
                                 // 0..1439, DaySchedule handles overnight when close <= open
@@ -785,7 +785,6 @@ class EditBadge extends ConsumerWidget  {
                               }
                             }
                             break;
-
 
                           case 'tags':
                             final v = mainController.text.trim();
@@ -799,7 +798,20 @@ class EditBadge extends ConsumerWidget  {
                             if (v.isNotEmpty) {
                               extraFields['suggested_offers'] = v;
                             }
+
+                            // 👇 If user took a photo, upload it & store URL
+                            if (offerPhotoPath != null) {
+                              final file = File(offerPhotoPath!);
+                              final url =
+                              await FeedbackRepository.uploadOfferPhoto(
+                                venueId: venue.id,
+                                feedbackId: feedbackId,
+                                file: file,
+                              );
+                              extraFields['offer_photo_url'] = url;
+                            }
                             break;
+
 
                           case 'name':
                             final v = mainController.text.trim();
@@ -816,14 +828,14 @@ class EditBadge extends ConsumerWidget  {
                             break;
 
                           default:
-                            final v = mainController.text.trim();
-                            if (v.isNotEmpty) {
-                              extraFields['suggested_value'] = v;
-                            }
+                          final v = mainController.text.trim();
+                          if (v.isNotEmpty) {
+                            extraFields['suggested_value'] = v;
+                          }
                         }
 
                         final hasStructured =
-                            suggestedAge != null || extraFields.isNotEmpty;
+                          suggestedAge != null || extraFields.isNotEmpty;
                         final hasMessage = trimmedMessage.isNotEmpty;
 
                         if (!hasStructured && !hasMessage) {
@@ -853,7 +865,8 @@ class EditBadge extends ConsumerWidget  {
                             variant: OwlSnackVariant.success,
                             duration: const Duration(seconds: 5),
                           );
-                        } catch (e) {
+                        }
+                        catch (e) {
                           Navigator.of(ctx, rootNavigator: true).pop();
                           OwlSnack.show(
                             context,
@@ -903,7 +916,7 @@ class _TimeRow extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 60,
+          width: 30,
           child: Text(
             label,
             style: Styles.smallText.copyWith(color: greyLighter),
@@ -923,17 +936,17 @@ class _TimeRow extends StatelessWidget {
                     label: 'HH',
                   ),
                   items: hours
-                      .map(
-                        (h) => DropdownMenuItem<int>(
-                      value: h,
-                      child: Text(
-                        h.toString().padLeft(2, '0'),
-                        style:
-                        Styles.smallText.copyWith(color: white),
+                    .map(
+                      (h) => DropdownMenuItem<int>(
+                        value: h,
+                        child: Text(
+                          h.toString().padLeft(2, '0'),
+                          style:
+                          Styles.smallText.copyWith(color: white),
+                        ),
                       ),
-                    ),
-                  )
-                      .toList(),
+                    )
+                    .toList(),
                   onChanged: (h) {
                     selectedHour = h;
                     if (selectedMinute == null) {
@@ -954,17 +967,17 @@ class _TimeRow extends StatelessWidget {
                     label: 'MM',
                   ),
                   items: minutes
-                      .map(
-                        (m) => DropdownMenuItem<int>(
-                      value: m,
-                      child: Text(
-                        m.toString().padLeft(2, '0'),
-                        style:
-                        Styles.smallText.copyWith(color: white),
+                    .map(
+                      (m) => DropdownMenuItem<int>(
+                        value: m,
+                        child: Text(
+                          m.toString().padLeft(2, '0'),
+                          style:
+                          Styles.smallText.copyWith(color: white),
+                        ),
                       ),
-                    ),
-                  )
-                      .toList(),
+                    )
+                    .toList(),
                   onChanged: (m) {
                     selectedMinute = m;
                     if (selectedHour == null) {

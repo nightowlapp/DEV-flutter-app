@@ -1,14 +1,19 @@
 // lib/data/repositories/users/feedback_repository.dart
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:nightowlcode/data/repositories/users/role_repository.dart';
-
+import 'dart:typed_data';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../firestore_paths/firestore_paths.dart'; // has FeedbackDocumentPaths, VenueDocumentPaths, FirestoreFields
 
 class FeedbackRepository {
   static FirebaseFirestore get _db => FirebaseFirestore.instance;
   static FirebaseAuth get _auth => FirebaseAuth.instance;
+  static FirebaseStorage get _storage => FirebaseStorage.instance;
 
   static User get _requireUser {
     final user = _auth.currentUser;
@@ -220,4 +225,39 @@ class FeedbackRepository {
       FeedbackDocumentPaths.errorString: error.toString(),
     });
   }
+  static Future<String> uploadOfferPhoto({
+    required String venueId,
+    required String feedbackId,
+    required File file,
+  }) async {
+    final user = _requireUser;
+
+    // 1) Read original bytes (likely JPEG/HEIC from camera)
+    final Uint8List originalBytes = await file.readAsBytes();
+
+    // 2) Compress & re-encode as WebP
+    final Uint8List webpBytes =
+    await FlutterImageCompress.compressWithList(
+      originalBytes,
+      format: CompressFormat.webp,
+      quality: 80,
+    );
+
+
+    final path =
+        '${StoragePaths.userImages}/${user.uid}/${UserDocumentPaths.venueFeedback}/$venueId/$feedbackId.webp'; // folder structure
+    final ref = _storage.ref().child(path);
+
+
+    // 4) Upload WebP bytes with correct contentType
+    await ref.putData(
+      webpBytes,
+      SettableMetadata(contentType: 'image/webp'),
+    );
+
+    // 5) Return URL
+    final url = await ref.getDownloadURL();
+    return url;
+  }
+
 }

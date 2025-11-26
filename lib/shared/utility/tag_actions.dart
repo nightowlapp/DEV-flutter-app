@@ -18,6 +18,8 @@ import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:nightowlcode/shared/reusable/ui/owl_snack.dart';
 
+import '../../data/providers/other_providers.dart';
+
 InputDecoration _searchBarDecoration({
   required String hint,
   IconData? prefixIcon,
@@ -126,7 +128,19 @@ Future<void> handleAddTagPressed(
       tagId: tagId,
       isAdmin: isAdmin,
       message: message,
-      conflictingTagIds: conflicts, // 🔹 NEW
+      conflictingTagIds: conflicts,
+    );
+  }
+
+  // 🔥 Local-first role upgrade (no extra read if already reviewer)
+  final authUserAsync = ref.read(authUserProvider);
+  final user = authUserAsync.asData?.value;
+  if (user != null) {
+    final roles = user.roles;
+
+    await addReviewerRoleToUserIfMissing(
+      userId: user.id,
+      localRoles: roles,
     );
   }
 

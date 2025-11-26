@@ -96,10 +96,10 @@ enum DressCodeType {
   formal, // Dark suit / dressy attire
 
   upscale,
-  streetwear, // Fashion sneakers, hoodies, caps (style-forward)
+  // streetwear, // Fashion sneakers, hoodies, caps (style-forward)
   rave, // Neon/UV, eccentric, functional party wear
   theme,
-  outdoor,
+  // outdoor,
 }
 
 enum SubscriptionTypesVenue {

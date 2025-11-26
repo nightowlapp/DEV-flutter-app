@@ -197,7 +197,7 @@ class VenueCard extends ConsumerWidget {
 
                           if (closingSoon) {
                             leftLabel = 'Closing soon';
-                            leftFg = orange;
+                            leftFg = yellow;
                           } else if (openingSoon) {
                             leftLabel = 'Opening soon';
                             leftFg = blue;
