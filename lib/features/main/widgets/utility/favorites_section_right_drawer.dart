@@ -109,8 +109,12 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                         tooltip:
                             v.displayName.isNotEmpty ? v.displayName : v.name,
                         onTap: () async {
-                          await context.goToMapAndFocusVenue(ref, v, zoom: 16);
+                          await context.goToMapFocusAndOpenVenue(
+                            ref,
+                            v,
+                          );
                         },
+
                       ),
                     );
                   }),

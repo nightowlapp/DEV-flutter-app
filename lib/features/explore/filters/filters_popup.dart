@@ -98,18 +98,25 @@ class _FiltersCard extends ConsumerWidget {
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Pro Tip: ',
-                  style: Styles.smallText.copyWith(color: owlPurple),
-                ),
-                Text(
-                  'You can change your default filters in settings',
-                  style: Styles.smallText,
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 0, 6, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Pro Tip: ',
+                        style: Styles.smallText.copyWith(color: owlPurple),
+                      ),
+                      Text(
+                        'You can change your default filters in settings',
+                        style: Styles.smallText,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const Divider(color: grey),
 
@@ -120,19 +127,19 @@ class _FiltersCard extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(
                     vertical: verticalSpacerDefault,
                   ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        DistanceFilterSection(),
-                        RatingFilterSection(),
-                        AgeRestrictionFilterSection(),
-                        VenueTypeFilterSection(),
-                        //TODO Other filters like entry price, dresscode, tags, most people right now / empty
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DistanceFilterSection(),
+                      RatingFilterSection(),
+                      AgeRestrictionFilterSection(),
+                      VenueTypeFilterSection(),
+                      //TODO Other filters like entry price, dresscode, tags, most people right now / empty
+                    ],
                   ),
                 ),
               ),
+            ),
             // FOOTER
             Padding(
               padding: const EdgeInsets.fromLTRB(

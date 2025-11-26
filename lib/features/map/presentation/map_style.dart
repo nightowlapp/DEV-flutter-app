@@ -279,11 +279,19 @@ class MapStyle {
         'circle-stroke-color',
         jsonEncode([
           'case',
+          // soon → yellow
+          ['==', ['get', 'isSoon'], true],
+          yellow.toHex(),
+
+          // open → green
           ['==', ['get', 'isOpenNow'], true],
           green.toHex(),
+
+          // else → red
           red.toHex(),
         ]),
       );
+
     }
 
     // === VIP foreground icon ================================================
@@ -426,14 +434,22 @@ class MapStyle {
       // Verified are hidden here so no need to branch on isVerified.
       await style.setStyleLayerProperty(
         lyrUnclustered,
-        'icon-color',
+        'icon-image',
         jsonEncode([
-          'case',
-          ['==', ['get', 'isOpenNow'], true],
-          green.toHex(),  // open
-          red.toHex(),    // closed
+          'concat',
+          // base id: venueType or "unknown"
+          ['coalesce', ['get', 'venueType'], 'unknown'],
+          // suffix: _isSoon / _open / _closed
+          [
+            'case',
+            ['==', ['get', 'isSoon'], true], '_isSoon',
+            ['==', ['get', 'isOpenNow'], true], '_open',
+            '_closed',
+          ],
         ]),
       );
+
+
 
       // Always draw the icon wherever the dot is visible
       await style.setStyleLayerProperty(lyrUnclustered, 'icon-allow-overlap', true);
@@ -865,6 +881,7 @@ class MapStyle {
         required String baseClusterableFc,
         required String baseVipFc,
         required Set<String> favoriteVenueIds,
+        bool onlyFavorites = false,
       }) async {
     final style = map.style;
 
@@ -874,7 +891,7 @@ class MapStyle {
         return true; // all types ON
       }
       if (allowedTypes.contains('__none__')) {
-        return false; // all OFF
+        return false; // all OFF sentinel (unless overridden for favorites)
       }
       if (type == null) return false;
       return allowedTypes.contains(type);
@@ -901,24 +918,45 @@ class MapStyle {
 
       for (final f in original) {
         if (f is! Map) continue;
+
         final rawProps = f['properties'];
         final props = rawProps is Map
             ? rawProps.cast<String, dynamic>()
             : <String, dynamic>{};
 
-        if (_typeAllowed(props) && _openAllowed(props)) {
-          // Figure out the venue ID from properties
-          final rawId = props['id'] ?? props['venue_id'] ?? props['venueId'];
-          final id = rawId?.toString();
+        // ----- figure out favorite first -----
+        final dynamic rawId =
+            props['id'] ?? props['venue_id'] ?? props['venueId'];
+        final String? id = rawId == null ? null : rawId.toString();
+        final bool isFavorite =
+            id != null && favoriteVenueIds.contains(id);
 
-          // Mark favorites
-          props['isFavorite'] = id != null && favoriteVenueIds.contains(id);
-
-          // Write props back into the feature
-          f['properties'] = props;
-
-          filtered.add(f);
+        // ----- type filter (special rules in favorites-only mode) -----
+        bool passType;
+        if (onlyFavorites) {
+          // If user turned ALL types off (we send "__none__"),
+          // still allow favorites of ANY type.
+          if (allowedTypes.contains('__none__') || allowedTypes.isEmpty) {
+            passType = true;
+          } else {
+            passType = _typeAllowed(props);
+          }
+        } else {
+          passType = _typeAllowed(props);
         }
+        if (!passType) continue;
+
+        // ----- open/closed filter -----
+        if (!_openAllowed(props)) continue;
+
+        // ----- favorites-only filter -----
+        if (onlyFavorites && !isFavorite) continue;
+
+        // mark favorites for styling
+        props['isFavorite'] = isFavorite;
+        f['properties'] = props;
+
+        filtered.add(f);
       }
 
       root['features'] = filtered;
@@ -944,4 +982,6 @@ class MapStyle {
       );
     }
   }
+
+
 }

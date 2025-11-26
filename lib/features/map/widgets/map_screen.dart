@@ -78,7 +78,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Timer? _flameTimer;
   double _flamePhase = 0.0; // 0..2π loop for the sine wave
 
-
   LatLng? _userLocation;
 
   // ---- navigation services
@@ -90,6 +89,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
 
   bool _showClosed = true;
+  bool _favoritesOnly = false;
 
   Future<void> _ensureUserLocation() async {
     if (_userLocation != null) return;
@@ -147,59 +147,60 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     _flameTimer = Timer.periodic(const Duration(milliseconds: 80), (_) {
-      final map = _map;
-      if (map == null || !_styleReady) return;
+        final map = _map;
+        if (map == null || !_styleReady) return;
 
-      // advance phase
-      _flamePhase += 0.25; // tweak speed here
-      if (_flamePhase > math.pi * 2) {
-        _flamePhase -= math.pi * 2;
+        // advance phase
+        _flamePhase += 0.25; // tweak speed here
+        if (_flamePhase > math.pi * 2) {
+          _flamePhase -= math.pi * 2;
+        }
+
+        // 0..1 pulse value
+        final t = (math.sin(_flamePhase) + 1) / 2.0;
+
+        double lerp(double a, double b, double t) => a + (b - a) * t;
+
+        // Radii + opacities
+        final outerRadius = lerp(16.0, 28.0, t);
+        final innerRadius = lerp(6.0, 16.0, t);
+        final outerOpacity = lerp(0.15, 0.55, t);
+        final innerOpacity = lerp(0.4, 0.9, t);
+
+        // Flame icon size (subtle pulse)
+        final iconSize = lerp(16.0, 22.0, t);
+
+        final style = map.style;
+
+        style.setStyleLayerProperty(
+          MapStyle.lyrHotGlowOuter,
+          'circle-radius',
+          outerRadius,
+        );
+        style.setStyleLayerProperty(
+          MapStyle.lyrHotGlowOuter,
+          'circle-opacity',
+          outerOpacity,
+        );
+
+        style.setStyleLayerProperty(
+          MapStyle.lyrHotGlowInner,
+          'circle-radius',
+          innerRadius,
+        );
+        style.setStyleLayerProperty(
+          MapStyle.lyrHotGlowInner,
+          'circle-opacity',
+          innerOpacity,
+        );
+
+        style.setStyleLayerProperty(
+          MapStyle.lyrHotFlameIcon,
+          'text-size',
+          iconSize,
+        );
       }
-
-      // 0..1 pulse value
-      final t = (math.sin(_flamePhase) + 1) / 2.0;
-
-      double lerp(double a, double b, double t) => a + (b - a) * t;
-
-      // Radii + opacities
-      final outerRadius = lerp(16.0, 28.0, t);
-      final innerRadius = lerp(6.0, 16.0, t);
-      final outerOpacity = lerp(0.15, 0.55, t);
-      final innerOpacity = lerp(0.4, 0.9, t);
-
-      // Flame icon size (subtle pulse)
-      final iconSize = lerp(16.0, 22.0, t);
-
-      final style = map.style;
-
-      style.setStyleLayerProperty(
-        MapStyle.lyrHotGlowOuter,
-        'circle-radius',
-        outerRadius,
-      );
-      style.setStyleLayerProperty(
-        MapStyle.lyrHotGlowOuter,
-        'circle-opacity',
-        outerOpacity,
-      );
-
-      style.setStyleLayerProperty(
-        MapStyle.lyrHotGlowInner,
-        'circle-radius',
-        innerRadius,
-      );
-      style.setStyleLayerProperty(
-        MapStyle.lyrHotGlowInner,
-        'circle-opacity',
-        innerOpacity,
-      );
-
-      style.setStyleLayerProperty(
-        MapStyle.lyrHotFlameIcon,
-        'text-size',
-        iconSize,
-      );
-    });
+    );
 
   }
 
@@ -396,7 +397,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       orElse: () => <String>{},
     );
 
-    final visibleOnMapCount = _visibleVenuesOnMap(allVenues);
+    final visibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds);
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
         final map = _map;
@@ -428,6 +429,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           baseClusterableFc: next.clusterable,
           baseVipFc: next.vip,
           favoriteVenueIds: favoriteIds,
+          onlyFavorites: _favoritesOnly,
         );
 
         final venues = ref.read(allVenuesListProvider);
@@ -483,7 +485,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     ref.listen<AsyncValue<List<String>>>(
       favoriteVenueIdsProvider,
-          (prev, next) async {
+      (prev, next) async {
         final map = _map;
         if (map == null || !_styleReady) return;
 
@@ -501,6 +503,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           baseClusterableFc: fcNow.clusterable,
           baseVipFc: fcNow.vip,
           favoriteVenueIds: ids,
+          onlyFavorites: _favoritesOnly,
         );
       },
     );
@@ -653,11 +656,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 userLocation: _userLocation,
                 favoriteVenueIds: favoriteIds,
 
-                // NEW: "Is open" toggle (true => only open venues)
                 showOnlyOpen: !_showClosed,
                 onShowOnlyOpenChanged: (value) async {
-                  // value == true  → show only open
-                  // value == false → show open + closed
                   final map = _map;
                   if (map == null || !_styleReady) return;
 
@@ -675,6 +675,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     baseClusterableFc: fcNow.clusterable,
                     baseVipFc: fcNow.vip,
                     favoriteVenueIds: favoriteIds,
+                    onlyFavorites: _favoritesOnly,
                   );
                 },
 
@@ -698,6 +699,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     baseClusterableFc: fcNow.clusterable,
                     baseVipFc: fcNow.vip,
                     favoriteVenueIds: favoriteIds,
+                    onlyFavorites: _favoritesOnly,
+                  );
+                },
+
+                favoritesOnly: _favoritesOnly,
+                onFavoritesOnlyChanged: (value) async {
+                  final map = _map;
+                  if (map == null || !_styleReady) return;
+
+                  setState(() {
+                      _favoritesOnly = value;
+                    }
+                  );
+
+                  final fcNow = ref.read(venuesGeoJsonProvider);
+
+                  await _style.applyFilters(
+                    map,
+                    showClosed: _showClosed,
+                    allowedTypes: _allowedTypeNamesForStyle(),
+                    baseClusterableFc: fcNow.clusterable,
+                    baseVipFc: fcNow.vip,
+                    favoriteVenueIds: favoriteIds,
+                    onlyFavorites: _favoritesOnly,
                   );
                 },
 
@@ -728,7 +753,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   /// - All OFF → sentinel '__none__' → hide everything
   /// - Mixed   → the selected type names.
   Set<String> _allowedTypeNamesForStyle() {
+    // Special case: favorites-only + no type filters
     if (_allowedTypes.isEmpty) {
+      if (_favoritesOnly) {
+        // Show all types, but MapStyle will still filter to favorites only.
+        return {};
+      }
+
       // Hide everything – no venue has this type
       return {'__none__'};
     }
@@ -740,6 +771,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return _allowedTypes.map((e) => e.name).toSet();
   }
+
 
   Future<void> _onStyleLoaded(mb.StyleLoadedEventData _) async {
     final map = _map;
@@ -766,6 +798,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       baseClusterableFc: fcNow.clusterable,
       baseVipFc: fcNow.vip,
       favoriteVenueIds: favIds,
+      onlyFavorites: _favoritesOnly,
     );
 
     final venues = ref.read(allVenuesListProvider);
@@ -993,8 +1026,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
           return; // skip hidden types
         }
 
-        // Respect open/closed filter if you ever set _showClosed = false
-        if (!_isVenueOpenNow(v)) return;
+        // Respect open/closed filter only when _showClosed == false
+        if (!_showClosed && !_isVenueOpenNow(v)) {
+          return;
+        }
 
         final d = Distance.metersLatLng(tap, v.entry);
         if (d < best) {
@@ -1223,19 +1258,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  int _visibleVenuesOnMap(List<Venue> allVenues) {
-    if (_allowedTypes.isEmpty) return 0;
-
+  int _visibleVenuesOnMap(List<Venue> allVenues, Set<String> favoriteIds) {
     int total = 0;
 
     for (final v in allVenues) {
       final type = v.type;
-      if (type == null || !_allowedTypes.contains(type)) continue;
+      final isFavorite = favoriteIds.contains(v.id);
 
-      // OLD:
-      // if (!_showClosed && v.isOpenNow != true) continue;
+      // Favorites-only → drop non-favorites
+      if (_favoritesOnly && !isFavorite) continue;
 
-      // NEW:
+      // Type filter
+      if (_allowedTypes.isEmpty) {
+        // All type switches OFF:
+        // - if not favorites-only → nothing visible
+        if (!_favoritesOnly) continue;
+        // - if favorites-only → allow favorites of ANY type
+      }
+      else {
+        if (type == null || !_allowedTypes.contains(type)) continue;
+      }
+
+      // Open / closed
       if (!_showClosed && !_isVenueOpenNow(v)) continue;
 
       total++;
@@ -1273,7 +1317,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
           'visits': visits,
           'capacity': cap,
         },
-      });
+      }
+      );
 
     }
 
@@ -1293,9 +1338,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
 bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());
 
-
-// ======= FILTER PANEL + EXPANDABLE TILES ===================================
-
 // ======= FILTER PANEL + EXPANDABLE TILES ===================================
 
 class _VenueTypeFilterPanel extends StatefulWidget {
@@ -1310,6 +1352,8 @@ class _VenueTypeFilterPanel extends StatefulWidget {
     required this.showOnlyOpen,
     required this.onShowOnlyOpenChanged,
     required this.favoriteVenueIds,
+    required this.favoritesOnly,
+    required this.onFavoritesOnlyChanged,
   });
 
   final Set<VenueType> selected;
@@ -1318,6 +1362,9 @@ class _VenueTypeFilterPanel extends StatefulWidget {
   final Map<VenueType, List<Venue>> venuesByType;
   final LatLng? userLocation;
   final Set<String> favoriteVenueIds;
+
+  final bool favoritesOnly;
+  final ValueChanged<bool> onFavoritesOnlyChanged;
 
   final bool showOnlyOpen;
   final ValueChanged<bool> onShowOnlyOpenChanged;
@@ -1331,6 +1378,9 @@ class _VenueTypeFilterPanel extends StatefulWidget {
 
 class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
   late Set<VenueType> _selected = Set<VenueType>.from(widget.selected);
+
+  Set<VenueType>? _savedSelectionBeforeFavorites;
+  bool? _savedShowOnlyOpenBeforeFavorites;
 
   String _labelFor(VenueType t) {
     final name = t.name.replaceAll('_', ' ');
@@ -1346,18 +1396,34 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
   /// How many venues are currently actually visible on the map,
   /// given the selected types + "Open now" toggle.
   int _visibleOnMapCount() {
-    if (_selected.isEmpty) return 0;
-
     int total = 0;
-    widget.venuesByType.forEach((type, venues) {
-        if (!_selected.contains(type)) return;
 
+    widget.venuesByType.forEach((type, venues) {
         for (final v in venues) {
+          final isFavorite = widget.favoriteVenueIds.contains(v.id);
+
+          // Open-now filter
           if (widget.showOnlyOpen && !_isVenueOpenNow(v)) continue;
+
+          // Favorites-only filter
+          if (widget.favoritesOnly && !isFavorite) continue;
+
+          // Type filter based on local selection
+          if (_selected.isEmpty) {
+            // No types selected:
+            // - if not favorites-only → nothing on map
+            if (!widget.favoritesOnly) continue;
+            // - if favorites-only → allow favorites of ANY type
+          }
+          else {
+            if (!_selected.contains(type)) continue;
+          }
+
           total++;
         }
       }
     );
+
     return total;
   }
 
@@ -1373,6 +1439,11 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
     // 2) Reset "Open now" to off (show open + closed)
     if (widget.showOnlyOpen) {
       widget.onShowOnlyOpenChanged(false);
+    }
+
+    // 3) Reset "Favorites only" to off
+    if (widget.favoritesOnly) {
+      widget.onFavoritesOnlyChanged(false);
     }
   }
 
@@ -1428,6 +1499,23 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
 
     final visibleOnMap = _visibleOnMapCount();
 
+    // ===== FAVORITES CATEGORY (new) =========================================
+    // All favorites from all types. We respect "Open now" for the list,
+    // but type filters only affect whether they're active/visible on map.
+    final List<Venue> favoriteVenues = widget.venuesByType.values
+      .expand((v) => v)
+      .where((v) => widget.favoriteVenueIds.contains(v.id))
+      .toList();
+
+    if (widget.showOnlyOpen) {
+      favoriteVenues.removeWhere((v) => !_isVenueOpenNow(v));
+    }
+
+    final bool hasFavorites = favoriteVenues.isNotEmpty;
+
+    // Header rows: "All" + optional "Favorites"
+    final int headerRows = hasFavorites ? 2 : 1;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
@@ -1473,25 +1561,45 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                   ),
                 ),
 
-                // ===== TOP CENTER INFO (replaces "Pro tip") ================
+                // ===== TOP CENTER INFO (your updated version) ===============
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   switchInCurve: Curves.easeOut,
                   switchOutCurve: Curves.easeIn,
-                  child: Row(
-                    key: ValueKey<int>(visibleOnMap),
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$visibleOnMap ',
-                        style:
-                        Styles.smallText.copyWith(color: owlPurple),
-                      ),
-                      Text(
-                        'venues shown on map',
-                        style: Styles.smallText,
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 0, 6, 0),
+                    child: Row(
+                      key: ValueKey<int>(visibleOnMap),
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row( // Todo add when possible to change in settings.
+                          children: [
+                          // Text(
+                          //   'Pro Tip: ',
+                          //   style: Styles.smallText.copyWith(color: owlPurple),
+                          // ),
+                          // Text(
+                          //   'You can change your default filters in settings',
+                          //   style: Styles.smallText,
+                          // ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              '$visibleOnMap ',
+                              style: Styles.smallText.copyWith(
+                                color: owlPurple,
+                              ),
+                            ),
+                            Text(
+                              'on map',
+                              style: Styles.smallText,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -1505,8 +1613,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                       ? Center( //TODO Make sadfaceOwl to show when errors/isempty
                         child: Text(
                           'No venues match your filters',
-                          style: Styles.smallText
-                            .copyWith(color: grey),
+                          style: Styles.smallText.copyWith(color: grey),
                         ),
                       )
                       : ListView.separated(
@@ -1514,14 +1621,123 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                           horizontal: horizontalSpacerDefault,
                           vertical: verticalSpacerDefault,
                         ),
-                        itemCount: 1 + visibleTypes.length,
+                        itemCount: headerRows + visibleTypes.length,
                         separatorBuilder: (_, __) => Divider(
                           height: 1,
                           color: white.withOpacity(0.06),
                         ),
                         itemBuilder: (context, index) {
-                          // First row = "All"
-                          if (index == 0) {
+                          // Types start after all header rows:
+                          //   with favorites:  0=fav, 1=all, types from index 2
+                          //   without favorites: 0=all, types from index 1
+                          final int typeOffset = headerRows;
+                          final int allIndex = hasFavorites ? 1 : 0;
+
+                          // 0: "Favorites" row (if any favorites exist)
+                          if (hasFavorites && index == 0) {
+                            return _VenueFilterExpandableTile(
+                              label: 'Favorites',
+                              icon: filledStarIcon,
+                              isOn: widget.favoritesOnly, // highlight when active
+                              count: favoriteVenues.length,
+                              venues: favoriteVenues,
+                              userLocation: widget.userLocation,
+                              favoriteVenueIds: widget.favoriteVenueIds,
+                              showSwitch: true,
+                              // A venue is "active" if it would be visible on map
+                              isVenueActive: (venue) {
+                                final type = venue.type;
+                                final isFavorite = widget.favoriteVenueIds.contains(venue.id);
+
+                                // Respect "Open now"
+                                if (widget.showOnlyOpen && !_isVenueOpenNow(venue)) {
+                                  return false;
+                                }
+
+                                // Respect "Favorites only"
+                                if (widget.favoritesOnly && !isFavorite) {
+                                  return false;
+                                }
+
+                                // Type filter (local selection in panel)
+                                if (_selected.isEmpty) {
+                                  // No types selected:
+                                  // - if not favorites-only → nothing on map
+                                  if (!widget.favoritesOnly) return false;
+                                  // - if favorites-only → allow favorites of ANY type
+                                } else {
+                                  if (type == null || !_selected.contains(type)) {
+                                    return false;
+                                  }
+                                }
+
+                                return true;
+                              },
+
+                              // When favorites are toggled ON:
+                              // - clear all type selections (so "All" is OFF)
+                              // - turn "Open now" OFF
+                              // Then propagate to parent.
+                              onToggleChanged: (value) async {
+                                final bool wasOn = widget.favoritesOnly;
+
+                                // ── Turning Favorites ON ─────────────────────────────────────────
+                                if (!wasOn && value) {
+                                  // Snapshot current filters
+                                  _savedSelectionBeforeFavorites =
+                                  Set<VenueType>.from(_selected);
+                                  _savedShowOnlyOpenBeforeFavorites = widget.showOnlyOpen;
+
+                                  // 1) Turn OFF all types (All off)
+                                  await _updateSelection(() {
+                                    _selected.clear();
+                                  });
+
+                                  // 2) Turn OFF "Open now"
+                                  if (widget.showOnlyOpen) {
+                                    widget.onShowOnlyOpenChanged(false);
+                                  }
+
+                                  // 3) Enable favorites-only mode
+                                  widget.onFavoritesOnlyChanged(true);
+                                  return;
+                                }
+
+                                // ── Turning Favorites OFF ────────────────────────────────────────
+                                if (wasOn && !value) {
+                                  // Restore previous type selection (or fallback to "all on")
+                                  final prevSelection =
+                                      _savedSelectionBeforeFavorites ?? Set<VenueType>.from(widget.allTypes);
+
+                                  await _updateSelection(() {
+                                    _selected
+                                      ..clear()
+                                      ..addAll(prevSelection);
+                                  });
+
+                                  // Restore previous "Open now" state if we had one
+                                  final prevShowOnlyOpen = _savedShowOnlyOpenBeforeFavorites;
+                                  if (prevShowOnlyOpen != null &&
+                                      prevShowOnlyOpen != widget.showOnlyOpen) {
+                                    widget.onShowOnlyOpenChanged(prevShowOnlyOpen);
+                                  }
+
+                                  // Clear snapshot
+                                  _savedSelectionBeforeFavorites = null;
+                                  _savedShowOnlyOpenBeforeFavorites = null;
+
+                                  // Disable favorites-only mode
+                                  widget.onFavoritesOnlyChanged(false);
+                                }
+                              },
+
+                              onVenueTap: widget.onVenueTap,
+                            );
+                          }
+
+
+                          // "All" row (index 1 when we have favorites, otherwise 0)
+                          if (index == allIndex) {
                             return _VenueFilterExpandableTile(
                               label: 'All',
                               icon: Icons.all_inclusive_outlined,
@@ -1530,6 +1746,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                               venues: allVenues,
                               userLocation: widget.userLocation,
                               favoriteVenueIds: widget.favoriteVenueIds,
+                              showSwitch: true,
                               // active per venue if its type is selected
                               isVenueActive: (venue) {
                                 final type = venue.type;
@@ -1556,11 +1773,10 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                           }
 
                           // Other rows = each type
-                          final t = visibleTypes[index - 1];
+                          final t = visibleTypes[index - typeOffset];
                           final isOn = _selected.contains(t);
                           final count = effectiveCounts[t] ?? 0;
-                          final venues =
-                            effectiveByType[t] ?? const <Venue>[];
+                          final venues = effectiveByType[t] ?? const <Venue>[];
 
                           return _VenueFilterExpandableTile(
                             label: _labelFor(t) == 'Unknown' ? 'Other' : _labelFor(t),
@@ -1570,6 +1786,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                             venues: venues,
                             userLocation: widget.userLocation,
                             favoriteVenueIds: widget.favoriteVenueIds,
+                            showSwitch: true,
                             onToggleChanged: (value) {
                               _updateSelection(() {
                                   if (value) {
@@ -1599,8 +1816,7 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                     horizontalSpacerSmall,
                   ),
                   child: Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
                         onPressed: () {
@@ -1608,8 +1824,8 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                         },
                         child: Text(
                           'Reset Filters',
-                          style: Styles.smallText
-                            .copyWith(color: red),
+                          style:
+                          Styles.smallText.copyWith(color: red),
                         ),
                       ),
                       TextButton(
@@ -1618,14 +1834,13 @@ class _VenueTypeFilterPanelState extends State<_VenueTypeFilterPanel> {
                         },
                         child: Text(
                           'Reset Filters',
-                          style: Styles.smallText
-                            .copyWith(color: red),
+                          style:
+                          Styles.smallText.copyWith(color: red),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ),        ],
             ),
           ),
         ),
@@ -1646,6 +1861,7 @@ class _VenueFilterExpandableTile extends StatefulWidget {
     required this.onVenueTap,
     required this.favoriteVenueIds,
     this.isVenueActive,
+    this.showSwitch = true,
   });
 
   final String label;
@@ -1658,14 +1874,19 @@ class _VenueFilterExpandableTile extends StatefulWidget {
   final Future<void> Function(Venue) onVenueTap;
   final Set<String> favoriteVenueIds;
 
-  /// Optional per-venue active check (used by "All" row).
+  /// Optional per-venue active check (used by "All" and "Favorites" rows).
   /// If null, `isOn` is used for all venues in this tile.
   final bool Function(Venue v)? isVenueActive;
+
+  /// Whether to show the filter switch in the header.
+  /// For "Favorites" we hide it.
+  final bool showSwitch;
 
   @override
   State<_VenueFilterExpandableTile> createState() =>
   _VenueFilterExpandableTileState();
 }
+
 
 
 class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> {
@@ -1728,17 +1949,33 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     );
   }
 
+  /// Sort:
+  ///  1) Favorites first (even if they are further away)
+  ///  2) Within favorites / non-favorites, sort by distance (if userLocation is known)
   List<Venue> _sortedVenues() {
     final list = List<Venue>.from(widget.venues);
     final user = widget.userLocation;
-    if (user == null) return list;
+
+    int favRank(Venue v) => widget.favoriteVenueIds.contains(v.id) ? 0 : 1;
 
     list.sort((a, b) {
+        final fa = favRank(a);
+        final fb = favRank(b);
+        if (fa != fb) {
+          return fa.compareTo(fb); // favorites (0) before non-favorites (1)
+        }
+
+        if (user == null) {
+          // No distance info – keep original relative order between same favness
+          return 0;
+        }
+
         final da = Distance.metersLatLng(user, a.entry);
         final db = Distance.metersLatLng(user, b.entry);
         return da.compareTo(db);
       }
     );
+
     return list;
   }
 
@@ -1767,9 +2004,9 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     final List<Venue> visibleVenues = venues.take(visible).toList();
     final int remaining = venues.length - visible; // still used for sizing
 
-    final TextStyle headerLabelStyle = headerActive
-      ? Styles.basicText
-      : Styles.basicText.copyWith(color: greyLighter);
+    final TextStyle headerLabelStyle = widget.icon == filledStarIcon ? Styles.basicText : headerActive
+        ? Styles.basicText
+        : Styles.basicText.copyWith(color: greyLighter);
 
     return Column(
       children: [
@@ -1786,7 +2023,7 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: headerActive
+                    color: widget.icon == filledStarIcon ? owlPurple.withOpacity(0.18): headerActive
                       ? owlPurple.withOpacity(0.18)
                       : white.withOpacity(0.04),
                     shape: BoxShape.circle,
@@ -1794,7 +2031,7 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                   alignment: Alignment.center,
                   child: Icon(
                     widget.icon,
-                    color: headerActive ? owlPurple : greyLighter,
+                    color: widget.icon == filledStarIcon ? owlPurple : headerActive ? owlPurple : greyLighter,
                     size: iconSizeSmall,
                   ),
                 ),
@@ -1819,26 +2056,28 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
 
                 const SizedBox(width: 8),
 
-                // Toggle (still only toggles filter, not expansion)
-                Switch.adaptive(
-                  value: widget.isOn,
-                  onChanged: widget.onToggleChanged,
-                  activeColor: owlPurple,
-                  activeTrackColor: owlPurple.withOpacity(0.4),
-                  inactiveThumbColor: grey,
-                  inactiveTrackColor: white.withOpacity(0.12),
-                ),
 
-                const SizedBox(width: 4),
+
+                if (widget.showSwitch) ...[
+                  Switch.adaptive(
+                    value: widget.isOn,
+                    onChanged: widget.onToggleChanged,
+                    activeColor: owlPurple,
+                    activeTrackColor: owlPurple.withOpacity(0.4),
+                    inactiveThumbColor: grey,
+                    inactiveTrackColor: white.withOpacity(0.12),
+                  ),
+                  const SizedBox(width: 4),
+                ],
 
                 // Chevron (purely visual now – row InkWell handles tap)
                 AnimatedRotation(
                   turns: _expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 150),
+                  duration: const Duration(milliseconds: 250),
                   child: Icon(
                     chevronUpIcon,
                     color: white,
-                    size: 18,
+                    size: iconSizeDefault,
                   ),
                 ),
               ],
@@ -1860,7 +2099,6 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
               final int visible = visibleVenues.length;
 
               // We still use `remaining` only to approximate needed height,
-              // but there is no "Show more" row any more.
               final double neededHeight =
                 visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
 
@@ -1875,7 +2113,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                   thickness: 1,
                   child: ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.only(right: 3), // space for scrollbar
+                    padding:
+                    const EdgeInsets.only(right: 3), // space for scrollbar
                     itemCount: visibleVenues.length,
                     itemBuilder: (context, index) {
                       final v = visibleVenues[index];
@@ -1895,41 +2134,51 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
     final user = widget.userLocation;
     final now = DateTime.now();
 
-    final name = v.displayName.isNotEmpty ? v.displayName : v.name;
+    final rawName =
+      v.displayName.isNotEmpty ? v.displayName : v.name;
 
-// Active under current filters? (used by "All" tile)
-    final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
+    // Active under current filters? (used by "All" & "Favorites" tile)
+    final bool venueActive =
+      widget.isVenueActive?.call(v) ?? widget.isOn;
 
-// Is this venue one of my favorites?
+    // Is this venue one of my favorites?
     final bool isFavorite = widget.favoriteVenueIds.contains(v.id);
 
+    // === NAME STYLE + STAR PREFIX =====================================
     TextStyle nameStyle;
     if (!venueActive) {
       // Dim everything that’s filtered out, even favorites
       nameStyle = Styles.basicText.copyWith(color: greyLighter);
-    } else if (isFavorite) {
+    }
+    else if (isFavorite) {
       // Highlight favorites in owlPurple
       nameStyle = Styles.basicText.copyWith(color: owlPurple);
-    } else {
+    }
+    else {
       nameStyle = Styles.basicText;
     }
 
+    // Text-only star prefix for favorites
+    final String name = isFavorite ? '★ $rawName' : rawName;
 
     final TextStyle walkStyle = Styles.smallText.copyWith(
-      color: white, // ⬅️ walk text should be white
+      color: white, // walk text is white
       fontSize: fontSizeSmaller,
     );
 
     // Walking distance text like "🚶 5 min"
     final String walk = Distance.walkText(user, v);
     final String dist = Distance.normalDistanceText(user, v);
-    final String? walkLabel = walk.isEmpty && dist.isEmpty ? null : '$walk - $dist';
+    final String? walkLabel =
+      walk.isEmpty && dist.isEmpty ? null : '$walk - $dist';
 
     // Opening-hours display info (range + +1 flag)
-    final _OpeningDisplayRow opening = _openingDisplayForVenue(v, now);
+    final _OpeningDisplayRow opening =
+      _openingDisplayForVenue(v, now);
 
     // Age restriction, e.g. "21+"
-    final String? ageLabel = _ageRestrictionLabelFor(v, now);
+    final String? ageLabel =
+      _ageRestrictionLabelFor(v, now);
 
     // Right side top: only the time range, or nothing.
     Widget openingTop;
@@ -1992,10 +2241,11 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
                   // Name (one line, ellipsis)
-                  Text( //TODO display star before name if favorite. Show at top if favorite.
+                  Text(
                     name,
                     style: nameStyle,
                     maxLines: 1,
@@ -2034,7 +2284,8 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
                 Text(
                   ageLabel,
                   style: Styles.smallText.copyWith(
-                    color: venueActive ? white : greyLighter,
+                    color:
+                    venueActive ? white : greyLighter,
                     fontSize: fontSizeSmaller,
                   ),
                 ),
@@ -2045,7 +2296,6 @@ class _VenueFilterExpandableTileState extends State<_VenueFilterExpandableTile> 
       ),
     );
   }
-
 }
 
 /// Data needed to render the right-side opening-hours block.

@@ -58,6 +58,7 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
         'subscription': v.subscriptionType.name,
         'isOpenNow': v.isOpenNow(DateTime.now()),
         'opensLaterToday': v.isOpenToday(DateTime.now()),
+        'isSoon': v.isOpeningOrClosingSoon(DateTime.now()),
       },
       'geometry': {
         'type': 'Point',

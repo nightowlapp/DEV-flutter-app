@@ -99,7 +99,11 @@ class MapTypeIconRegistry {
         color: const ui.Color(0xFFFFFFFF),
       );
 
-      //TODO purple if open/close soon
+      await _ensureVariant(
+        id: '${baseId}_isSoon',
+        iconData: iconData,
+        color: yellow, // from your colors.dart
+      );
 
       // green = open
       await _ensureVariant(

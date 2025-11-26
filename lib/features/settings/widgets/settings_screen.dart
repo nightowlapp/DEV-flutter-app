@@ -359,6 +359,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ---------------- PREFERENCES ----------------
           _sectionHeader("Preferences"),
+
+          // Text('Explore', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),), // Todo activate when needed.
           // SwitchListTile(
           //   value: _shareLocation,
           //   onChanged: (v) => setState(() => _shareLocation = v),
@@ -393,6 +395,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 }
               },
             ),
+
+            // Text('Map', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),),
+
+            // Text('Social', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),),
+
+
+            // Text('Profile', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),),
 
           ],
 

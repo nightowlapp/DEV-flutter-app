@@ -1102,3 +1102,36 @@
       return null;
     }
   }
+
+  extension VenueOpeningSoon on Venue {
+    /// True if the venue opens OR closes within [thresholdMinutes] from now.
+    bool isOpeningOrClosingSoon(
+        DateTime venueLocalNow, {
+          int thresholdMinutes = 60,
+        }) {
+      final now = venueLocalNow.toLocal();
+      final status = openingHours.statusAt(now);
+      final nowM = _toMinutes(now.hour, now.minute);
+
+      int _deltaMinutes(int from, int to) {
+        var diff = to - from;
+        if (diff < 0) diff += 24 * 60; // wrap across midnight
+        return diff;
+      }
+
+      // 🔸 Closing soon?
+      if (status.phase == OpeningPhase.open && status.closeMinutes != null) {
+        final d = _deltaMinutes(nowM, status.closeMinutes!);
+        if (d > 0 && d <= thresholdMinutes) return true;
+      }
+
+      // 🔸 Opening soon?
+      if (status.phase == OpeningPhase.opensLaterToday &&
+          status.openMinutes != null) {
+        final d = _deltaMinutes(nowM, status.openMinutes!);
+        if (d > 0 && d <= thresholdMinutes) return true;
+      }
+
+      return false;
+    }
+  }

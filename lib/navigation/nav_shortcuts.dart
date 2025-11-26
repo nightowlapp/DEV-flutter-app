@@ -64,28 +64,35 @@ extension NavShortcuts on BuildContext {
   Future<void> goToMapFocusAndOpenVenue(
       WidgetRef ref,
       Venue v, {
-        double zoom = 16,
+        double zoom = 15,
         double popupInitialSize = 0.55,
       }) async {
+    // 👇 Capture root navigator BEFORE closing drawer / awaiting.
+    final rootNavigator = Navigator.of(this, rootNavigator: true);
+
     final scaffold = Scaffold.maybeOf(this);
     scaffold?.closeEndDrawer();
     scaffold?.closeDrawer();
 
+    // Switch to the Map tab
     goScreen(MainScreenName.map);
 
+    // Let the map screen mount and its listeners attach
     await SchedulerBinding.instance.endOfFrame;
     await Future.delayed(const Duration(milliseconds: 1));
 
+    // Tell the map nav controller to fly to the venue
     ref.read(mapNavControllerProvider.notifier).flyToVenue(v, zoom: zoom);
 
+    // Give the camera a bit of time to animate before showing popup
     await Future.delayed(const Duration(milliseconds: 320));
 
-    final root = Navigator.of(this, rootNavigator: true).context;
+    // Use the *root* navigator we captured earlier – no more dead context.
     await showVenuePopupSheet(
-      root,
+      rootNavigator.context,
       venue: v,
       initialSize: popupInitialSize,
-      onClose: () => Navigator.of(root, rootNavigator: true).maybePop(),
+      onClose: () => rootNavigator.maybePop(),
     );
   }
 
