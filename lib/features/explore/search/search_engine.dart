@@ -336,13 +336,21 @@ class VenueSearchEngine {
   }
 
   int? _parseNumberWithPlus(String t, {required List<String> prefixes}) {
-    // age:18+, age>=18, 18+, 21+
-    final prefixRx = prefixes.isEmpty ? '' : '(?:${prefixes.join('|')})';
-    final rx = RegExp('^(?:$prefixRx)?[:=<>]*\\s*(\\d{1,2})(\\+)?\$');
-    final m = rx.firstMatch(t);
-    if (m == null) return null;
-    return int.tryParse(m.group(1)!);
+    // Require a prefix (age|a|alder) OR a trailing plus (e.g., 18+).
+    final s = t.toLowerCase().trim();
+    final prefixRx = '(?:${prefixes.join('|')})';
+
+    // age:18 / age>=18 / a18 / alder:18
+    final m1 = RegExp('^$prefixRx[:=<>]*\\s*(\\d{1,2})(\\+)?\$').firstMatch(s);
+    if (m1 != null) return int.tryParse(m1.group(1)!);
+
+    // bare with plus: 18+
+    final m2 = RegExp('^(\\d{1,2})\\+\$').firstMatch(s);
+    if (m2 != null) return int.tryParse(m2.group(1)!);
+
+    return null; // plain "18" or "80" is NOT age
   }
+
 
   VenueType? _parseType(String t) {
     final norm = _normalize(t);
@@ -350,15 +358,28 @@ class VenueSearchEngine {
   }
 
   double? _parsePriceMax(String t) {
-    // price<=10 / p<=10 / €10 / $10 / 10kr / 10,5
-    var s = t.toLowerCase();
-    s = s.replaceAll(',', '.');
+    // Only parse if there's a price hint: prefix, currency symbol, or 'kr' suffix.
+    var s = t.toLowerCase().replaceAll(',', '.').trim();
 
-    final rx = RegExp(
-      r'^(?:price|pris|p)?\s*(?:<=|=|:)?\s*(?:€|\$)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:kr)?$',
-    );
-    final m = rx.firstMatch(s);
-    return m == null ? null : double.tryParse(m.group(1)!);
+    // price<=10 / p:10 / pris 10
+    final m1 = RegExp(
+        r'^(?:price|pris|p)\s*(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:kr)?$'
+    ).firstMatch(s);
+    if (m1 != null) return double.tryParse(m1.group(1)!);
+
+    // $10 or €10 (with optional comparator)
+    final m2 = RegExp(
+        r'^(?:<=|=|:)?\s*(?:€|\$)\s*([0-9]+(?:\.[0-9]+)?)\s*$'
+    ).firstMatch(s);
+    if (m2 != null) return double.tryParse(m2.group(1)!);
+
+    // 10kr (with optional comparator)
+    final m3 = RegExp(
+        r'^(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*kr$'
+    ).firstMatch(s);
+    if (m3 != null) return double.tryParse(m3.group(1)!);
+
+    return null; // plain "80" becomes a text term
   }
 
   double? _parseDistanceKm(String t) {
