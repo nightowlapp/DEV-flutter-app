@@ -340,8 +340,16 @@ Widget _tinyIconButton({
 }
 
 Widget _displayOpeningHours(Venue v) {
-  final r = v.todayRangeParts24h();
-  final supStyle = Styles.smallText;
+  // Uses the extension: final info = v.todayOpeningInfo();
+  final info = v.todayOpeningInfo();
+
+  final baseStyle = Styles.smallText.copyWith(
+    fontSize: fontSizeSmaller,
+    letterSpacing: 1.5,
+  );
+  final supStyle = baseStyle.copyWith(
+    fontSize: (baseStyle.fontSize ?? fontSizeSmaller) * 0.7,
+  );
 
   return SizedBox(
     child: Material(
@@ -354,26 +362,33 @@ Widget _displayOpeningHours(Venue v) {
             borderRadius: BorderRadius.circular(borderRadiusSmall),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: r.isClosed || !v.isOpenNow(DateTime.now())
-            ? Text('Closed today', style: Styles.smallText.copyWith(color: red))
-            : RichText(
-              text: TextSpan(
-                style: Styles.smallText
-                  .copyWith(fontSize: fontSizeSmaller, letterSpacing: 1.5),
-                children: [
-                  TextSpan(text: '${r.open} - ${r.close}'),
-                  if (r.nextDay)
+          child: info.isClosedForDisplay
+              ? Text(
+            'Closed today',
+            style: baseStyle.copyWith(color: red),
+          )
+              : RichText(
+            text: TextSpan(
+              style: baseStyle,
+              children: [
+                TextSpan(
+                  text: '${info.openLabel} - ${info.closeLabel}',
+                ),
+                if (info.goesPastMidnight)
                   WidgetSpan(
                     alignment: PlaceholderAlignment.baseline,
                     baseline: TextBaseline.alphabetic,
                     child: Transform.translate(
                       offset: const Offset(2, -5),
-                      child: Text('+1', style: supStyle),
+                      child: Text(
+                        '+1',
+                        style: supStyle,
+                      ),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
         ),
       ),
     ),

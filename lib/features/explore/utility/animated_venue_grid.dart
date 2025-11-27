@@ -21,6 +21,7 @@ class AnimatedVenuesGrid extends StatefulWidget {
     this.pageSize = 12,
     this.onEndReached,
     this.datasetKey, // optional: parent can force-reset paging by changing this
+    this.onRefresh,  // 👈 NEW
   });
 
   final List<Venue> venues; // already ranked
@@ -30,6 +31,9 @@ class AnimatedVenuesGrid extends StatefulWidget {
   final int pageSize;
   final VoidCallback? onEndReached;
   final String? datasetKey;
+
+  /// Optional pull-to-refresh callback. If non-null, a RefreshIndicator is shown.
+  final Future<void> Function()? onRefresh; // 👈 NEW
 
   @override
   State<AnimatedVenuesGrid> createState() => _AnimatedVenuesGridState();
@@ -90,7 +94,8 @@ class _AnimatedVenuesGridState extends State<AnimatedVenuesGrid> {
     final visibleVenues = widget.venues.take(_visible).toList();
     final rows = _toRows(visibleVenues);
 
-    return NotificationListener<ScrollNotification>(
+    // The actual scrollable list
+    final list = NotificationListener<ScrollNotification>(
       onNotification: (n) {
         _maybeGrow(n);
         return false;
@@ -144,10 +149,25 @@ class _AnimatedVenuesGridState extends State<AnimatedVenuesGrid> {
         insertDuration: const Duration(milliseconds: 500),
         removeDuration: const Duration(milliseconds: 500),
         updateDuration: const Duration(milliseconds: 500),
+        // Optional: ensures pull-to-refresh works even with few items
+        physics: const AlwaysScrollableScrollPhysics(),
       ),
+    );
+
+    // If no onRefresh is provided, just return the list
+    if (widget.onRefresh == null) return list;
+
+    // Otherwise wrap in a RefreshIndicator to get the small spinner on pull
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh!,
+      color: Colors.white, // customise if you want
+      backgroundColor: Colors.black87,
+      child: list,
     );
   }
 }
+
+// --- below unchanged ---
 
 class _RowOfTwo extends StatelessWidget {
   const _RowOfTwo({
@@ -199,8 +219,8 @@ class _AnimatedVenueCell extends StatelessWidget {
       transitionBuilder: (child, anim) {
         final fade = CurvedAnimation(parent: anim, curve: Curves.easeOut);
         final slide =
-            Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero)
-                .animate(fade);
+        Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero)
+            .animate(fade);
         return FadeTransition(
             opacity: fade,
             child: SlideTransition(position: slide, child: child));
@@ -208,18 +228,18 @@ class _AnimatedVenueCell extends StatelessWidget {
       child: venue == null
           ? const SizedBox(key: ValueKey('__empty__'), height: 0)
           : VenueCard(
-              key: ValueKey(switchKey),
-              venue: venue!,
-              userLocation: userLoc,
-              media: mediaById[venue!.id],
-              onTap: () {
-                context.pushVenue(
-                  venue!,
-                  media: mediaById[venue!.id],
-                  userLoc: userLoc,
-                );
-              },
-            ),
+        key: ValueKey(switchKey),
+        venue: venue!,
+        userLocation: userLoc,
+        media: mediaById[venue!.id],
+        onTap: () {
+          context.pushVenue(
+            venue!,
+            media: mediaById[venue!.id],
+            userLoc: userLoc,
+          );
+        },
+      ),
     );
   }
 }

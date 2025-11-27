@@ -1,5 +1,9 @@
+// lib/features/explore/presentation/screens/explore_screen.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading/error_screen.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_screen.dart';
 
@@ -31,6 +35,20 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     super.dispose();
   }
 
+  Future<void> _refreshVenues() async {
+    // Force recompute on next build
+    ref.invalidate(exploreRankedVenuesProvider);
+    ref.invalidate(exploreVisibleVenuesProvider);
+
+    // If your venues come from other providers that cache data,
+    // you can invalidate those too, e.g.:
+    // ref.invalidate(allVenuesListProvider);
+    // ref.invalidate(venuesLocalBootDoneProvider);
+
+    // Small delay so the RefreshIndicator has time to show + rebuild
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+  }
+
   @override
   Widget build(BuildContext context) {
     // ranked → search → filters
@@ -51,6 +69,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 venues: venues,
                 mediaById: const {},
                 userLoc: locAv.maybeWhen(data: (p) => p, orElse: () => null),
+                onRefresh: _refreshVenues, // 👈 pull-to-refresh hook
               ),
               loading: () => const LoadingScreen(),
               error: (e, _) => const ErrorScreen(),
@@ -61,3 +80,4 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
   }
 }
+

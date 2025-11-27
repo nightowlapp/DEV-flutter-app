@@ -1135,3 +1135,61 @@
       return false;
     }
   }
+
+  // models/venues/venue.dart (at the bottom, after class Venue)
+
+  class VenueTodayOpeningInfo {
+    /// Is the venue currently open (according to OpeningHours.statusAt(now))?
+    final bool isOpenNow;
+
+    /// If true, UI should show “Closed today”.
+    /// This mirrors the old `isClosedForDisplay` logic.
+    final bool isClosedForDisplay;
+
+    /// Human–readable times for today’s range (already formatted).
+    /// Null when [isClosedForDisplay] == true.
+    final String? openLabel;
+    final String? closeLabel;
+
+    /// True when the range goes past midnight (“+1” in your UI).
+    final bool goesPastMidnight;
+
+    const VenueTodayOpeningInfo({
+      required this.isOpenNow,
+      required this.isClosedForDisplay,
+      this.openLabel,
+      this.closeLabel,
+      this.goesPastMidnight = false,
+    });
+  }
+
+  extension VenueOpeningExtensions on Venue {
+    /// Generic helper you can call from anywhere:
+    /// - decides if we should show “Closed today”
+    /// - gives you today's open/close strings and whether it spills into tomorrow.
+    VenueTodayOpeningInfo todayOpeningInfo({DateTime? now}) {
+      final ts = now ?? DateTime.now(); // use venue-local TZ if you have one
+
+      // Whatever you already use:
+      final status = openingHours.statusAt(ts);
+      final r = openingHoursToday(); // your existing helper (with .isClosed, .open, .close, .nextDay)
+
+      final isOpenNow = status.phase == OpeningPhase.open;
+      final isClosedForDisplay = !isOpenNow && r.isClosed;
+
+      if (isClosedForDisplay) {
+        return const VenueTodayOpeningInfo(
+          isOpenNow: false,
+          isClosedForDisplay: true,
+        );
+      }
+
+      return VenueTodayOpeningInfo(
+        isOpenNow: isOpenNow,
+        isClosedForDisplay: false,
+        openLabel: r.open,
+        closeLabel: r.close,
+        goesPastMidnight: r.nextDay,
+      );
+    }
+  }

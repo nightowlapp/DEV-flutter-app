@@ -292,17 +292,12 @@ class VenueScreenContent extends ConsumerWidget {
   // Replace your _displayOpeningHours(Venue v) with this version.
   // It shows yesterday's range if the venue is currently open due to yesterday's overnight window.
   Widget _displayOpeningHours(Venue v) {
-    final now = DateTime.now(); // venue-local if you use TZs
-    final status = v.openingHours.statusAt(now);
-    final r = v.openingHoursToday();
+    final info = v.todayOpeningInfo();
 
     final baseStyle = Styles.boldText.copyWith(letterSpacing: 1.2);
     final supStyle = baseStyle.copyWith(
       fontSize: (baseStyle.fontSize ?? 14) * 0.7, // smaller superscript
     );
-
-    final isOpenNow = status.phase == OpeningPhase.open;
-    final isClosedForDisplay = !isOpenNow && r.isClosed;
 
     return SizedBox(
       width: 130,
@@ -317,7 +312,7 @@ class VenueScreenContent extends ConsumerWidget {
               borderRadius: BorderRadius.circular(borderRadiusSmall),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: isClosedForDisplay
+            child: info.isClosedForDisplay
                 ? Text(
               'Closed today',
               style: baseStyle.copyWith(color: red),
@@ -329,13 +324,12 @@ class VenueScreenContent extends ConsumerWidget {
                 children: [
                   // base time range
                   Text(
-                    '${r.open} - ${r.close}',
+                    '${info.openLabel} - ${info.closeLabel}',
                     style: baseStyle,
                   ),
-                  if (r.nextDay) //TODO only show if after 00:01
-                  // "+1" sits slightly above and to the right
+                  if (info.goesPastMidnight)
                     Positioned(
-                      right: -10, // negative so it overlaps instead of widening
+                      right: -10, // overlaps instead of widening
                       top: -8,
                       child: Text(
                         '+1',
@@ -350,7 +344,6 @@ class VenueScreenContent extends ConsumerWidget {
       ),
     );
   }
-
 
 
 }

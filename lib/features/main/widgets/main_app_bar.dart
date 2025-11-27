@@ -126,7 +126,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     } else {
       defaultActions.add(ProfilePictureAvatar(
+          useAuthUserAsFallback: true,
         onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
+
       ));
     }
 

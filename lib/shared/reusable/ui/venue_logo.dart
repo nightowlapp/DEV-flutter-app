@@ -38,6 +38,7 @@ Widget VenueLogo({
   // Auto border based on "is open"
   bool autoBorderByOpen = true,
   Color openBorderColor = green,
+  Color isSooColor = yellow,
   Color closedBorderColor = red,
   DateTime? nowForOpenCheck,
 
@@ -47,10 +48,20 @@ Widget VenueLogo({
   VoidCallback? onTap,
   VoidCallback? onLongPress,
 }) {
-  final DateTime _now = nowForOpenCheck ?? DateTime.now();
-  final Color _effectiveBorder = autoBorderByOpen
-      ? (venue.isOpenNow(_now) ? openBorderColor : closedBorderColor)
-      : borderColor;
+  final DateTime now = nowForOpenCheck ?? DateTime.now();
+
+  final bool isOpen = venue.isOpenNow(now);
+  final bool isSoon = venue.isOpeningOrClosingSoon(now); // opens OR closes within 60 min
+
+  final Color effectiveBorder = !autoBorderByOpen
+      ? borderColor
+      : isSoon
+      ? isSooColor          // opening OR closing soon  -> yellow
+      : isOpen
+      ? openBorderColor // open                     -> green
+      : closedBorderColor; // closed, not soon      -> red
+
+
 
   Widget _fallbackBadge() {
     // Only use the type icon if we *want* to and the type isn't unknown
@@ -71,12 +82,12 @@ Widget VenueLogo({
         ? BoxDecoration(
       shape: BoxShape.circle,
       color: backgroundColor ?? fallbackBgColor,
-      border: Border.all(color: _effectiveBorder, width: borderWidth),
+      border: Border.all(color: effectiveBorder, width: borderWidth),
     )
         : BoxDecoration(
       color: backgroundColor ?? fallbackBgColor,
       borderRadius: borderRadius,
-      border: Border.all(color: _effectiveBorder, width: borderWidth),
+      border: Border.all(color: effectiveBorder, width: borderWidth),
     );
 
     final child = useTypeIcon
@@ -120,7 +131,7 @@ Widget VenueLogo({
       size: size,
       shape: shape,
       borderWidth: borderWidth,
-      borderColor: _effectiveBorder,
+      borderColor: effectiveBorder,
       borderRadius: borderRadius,
       backgroundColor: backgroundColor ?? Colors.black12,
       padding: padding,

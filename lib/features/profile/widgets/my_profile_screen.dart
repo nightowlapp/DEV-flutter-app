@@ -72,6 +72,8 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                           ProfilePictureAvatar(
                             size: PlatformConfig.width(context) * 0.25,
                             disablePrompt: false,
+                            useAuthUserAsFallback: true,
+
                           ),
                           const SizedBox(width: horizontalSpacerMedium),
 

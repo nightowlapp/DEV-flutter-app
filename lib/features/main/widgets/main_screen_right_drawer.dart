@@ -54,6 +54,7 @@ class MainScreenRightDrawer extends StatelessWidget {
 
                       return ProfilePictureAvatar(
                         size: PlatformConfig.width(context) * 0.15,
+                        useAuthUserAsFallback: true,
 
                         // Let the avatar show its prompt only when there is NO picture:
                         // (disablePrompt == true => no prompt)

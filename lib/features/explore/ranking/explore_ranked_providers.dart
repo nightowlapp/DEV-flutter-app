@@ -7,6 +7,7 @@ import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 
 import '../../../core/storage/venues_sso.dart';
+import '../../../data/providers/time_ticker_provider.dart';
 import '../../../data/providers/users/user_providers.dart';
 import '../../../data/providers/venues/venue_providers.dart';
 import '../../../data/services/location/location_providers.dart';
@@ -46,25 +47,12 @@ final firstFixOrNullProvider = FutureProvider<dynamic>((ref) async {
 
 /// Base ranked list (no text search / filters yet).
 final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
+  ref.watch(timeTickerProvider);
+
   final bootDone = ref.watch(venuesLocalBootDoneProvider);
   final all = bootDone ? ref.watch(allVenuesListProvider) : const <Venue>[];
 
   final rankerAv = ref.watch(_rankerAvProvider);
-
-  // 👇 DEBUG: log prefs whenever ranker is ready (debug builds only)
-  assert(() {
-    rankerAv.whenData((ranker) {
-      debugPrint(
-        'RANKER PREFS -> '
-            'types=${ranker.prefs?.preferredVenueTypes} '
-            'maxKm=${ranker.prefs?.maxDistanceKm} '
-            'age=${ranker.prefs?.age} '
-            'status=${ranker.prefs?.partyStatus} '
-            'gender=${ranker.prefs?.gender}',
-      );
-    });
-    return true;
-  }());
 
   if (rankerAv.isLoading) return AsyncData(all.take(24).toList());
   if (rankerAv.hasError) {
@@ -148,4 +136,7 @@ Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
     loading: () => const AsyncLoading(),
     error: (e, s) => AsyncError(e, s),
   );
+
+
 }, name: 'exploreVisibleVenuesProvider');
+

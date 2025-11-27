@@ -31,25 +31,26 @@ class ProfilePictureAvatar extends StatelessWidget {
     this.showOnlyInitials = false,
     this.initials,
     this.disablePrompt = true,
+    this.useAuthUserAsFallback = false, // 👈 NEW
   });
 
-  // ---- Inputs / overrides ---------------------------------------------------
   final String? imageUrl;
   final ImageProvider? imageProvider;
   final double size;
   final Color? borderColor;
   final double borderWidth;
   final Color? backgroundColor;
-
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onAddImage;
   final String? semanticLabel;
-
-  // Fallback options
   final bool showOnlyInitials;
   final String? initials;
   final bool disablePrompt;
+
+  /// If true, when [imageUrl] is null/empty we use the auth user's photo.
+  /// If false, we just show the placeholder.
+  final bool useAuthUserAsFallback;
 
   @override
   Widget build(BuildContext context) {
@@ -57,31 +58,27 @@ class ProfilePictureAvatar extends StatelessWidget {
 
     return Consumer(
       builder: (context, ref, _) {
-        // 1) Read current user photo
         final userAsync = ref.watch(authUserProvider);
         final userPhotoUrl = userAsync.maybeWhen(
           data: (u) => u?.profilePictureUrl,
           orElse: () => null,
         );
 
-        // 2) Border color from party status (unless overridden)
         final autoColor = ref.watch(partyStatusColorProvider);
         final effectiveBorderColor = borderColor ?? autoColor;
         final hasBorder =
             borderWidth > 0 && effectiveBorderColor != transparent;
 
-        // 3) Choose the image url: explicit override > user photo
-        final effectiveImageUrl =
-            (imageUrl?.trim().isNotEmpty == true) ? imageUrl : userPhotoUrl;
+        final effectiveImageUrl = (imageUrl?.trim().isNotEmpty == true)
+            ? imageUrl
+            : (useAuthUserAsFallback ? userPhotoUrl : null);
 
-        // 4) Build avatar core
         Widget avatar = _buildAvatar(
           radius: radius,
           context: context,
           effectiveImageUrl: effectiveImageUrl,
         );
 
-        // 5) Taps: always start change flow when not disabled
         avatar = Material(
           color: Colors.transparent,
           shape: const CircleBorder(),
@@ -101,7 +98,6 @@ class ProfilePictureAvatar extends StatelessWidget {
           ),
         );
 
-        // 6) Optional border ring
         if (hasBorder) {
           avatar = Container(
             width: size,
@@ -111,7 +107,7 @@ class ProfilePictureAvatar extends StatelessWidget {
               shape: BoxShape.circle,
               color: backgroundColor,
               border:
-                  Border.all(color: effectiveBorderColor, width: borderWidth),
+              Border.all(color: effectiveBorderColor, width: borderWidth),
             ),
             child: avatar,
           );
