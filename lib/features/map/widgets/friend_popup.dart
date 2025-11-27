@@ -4,6 +4,8 @@ import 'package:nightowlcode/models/users/live_location.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
+import 'package:nightowlcode/shared/constants/values.dart';
+import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
 String _formatStatusDurationFrom(DateTime since) {
@@ -15,6 +17,26 @@ String _formatStatusDurationFrom(DateTime since) {
 
   final days = d.inDays;
   return '$days day${days == 1 ? '' : 's'}';
+}
+
+String _formatPartyStatus(String? rawStatus) {
+  final status = rawStatus ?? 'still_planning';
+
+  switch (status) {
+  // TODO mappings you wanted
+    case 'out_tonight':
+      return 'Out';
+    case 'pregame':
+      return 'Pregaming';
+    case 'house_party':
+      return 'House partying';
+    case 'still_planning':
+      return 'Planning';
+    case 'recovering':
+      return 'Recovering';
+    default:
+      return Utility.formatString(status.replaceAll('_', ' ')) ?? status;
+  }
 }
 
 /// Helper: show the friend popup as a bottom sheet.
@@ -69,17 +91,16 @@ class FriendPopup extends StatelessWidget {
         : uid;
 
     // "Active XXXX"
-    final lastActiveAgo = Utility.formatTimeAgo(loc.timestamp);
+    final lastActiveAgo =
+    Utility.formatString(Utility.formatTimeAgo(loc.timestamp));
 
     // Pretty party status
-    final rawStatus = profile.partyStatus?.name ?? 'still_planning';
-    final prettyStatus =
-        Utility.formatString(rawStatus.replaceAll('_', ' ')) ?? rawStatus;
+    final prettyStatus = _formatPartyStatus(profile.partyStatus?.name);
 
     // "been partyStatus for XXXX time"
-    // (using loc.timestamp as "since" – if you have a dedicated
-    //  partyStatusSince field, swap it in here)
-    final statusFor = _formatStatusDurationFrom(loc.timestamp);
+    final statusFor = _formatStatusDurationFrom(
+      loc.timestamp,
+    ); // todo find und users/id/party_status_days/todayOrYesterday/entries/entryid/created_at
 
     return SafeArea(
       top: false,
@@ -89,7 +110,7 @@ class FriendPopup extends StatelessWidget {
           decoration: BoxDecoration(
             color: black,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: blue),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -98,68 +119,75 @@ class FriendPopup extends StatelessWidget {
             children: [
               // Header row
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white10,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      profileIcon,
-                      color: white,
-                      size: 18,
-                    ),
+                  const ProfilePictureAvatar(
+                    // imageUrl: friend.url
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 6),
+
+                  // Name + Active + Been status + Close X
                   Expanded(
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          name,
-                          style: Styles.basicText,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        // 👉 "Active XXXX"
-                        Text(
-                          'Active $lastActiveAgo',
-                          style: Styles.smallText.copyWith(
-                            color: greyLighter,
+                        // Left side: name + "Active ..."
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: Styles.usernameDisplay,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Active $lastActiveAgo',
+                                style: Styles.smallText.copyWith(
+                                  color: greyLighter,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+
+
+                        // Right side: X above "Been ... for ..."
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Been $prettyStatus for $statusFor',
+                              style: Styles.smallText.copyWith(
+                                color: greyLighter,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 18,
-                      color: Colors.white70,
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: InkWell(
+                      onTap: onClose,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Icon(closeIcon,
+                          color: greyLighter, size: iconSizeDefault),
                     ),
-                    onPressed: onClose,
                   ),
                 ],
               ),
 
               const SizedBox(height: 12),
 
-              // Status + duration
-              Text(
-                'Status: $prettyStatus',
-                style: Styles.smallText,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Been $prettyStatus for $statusFor',
-                style: Styles.smallText.copyWith(color: greyLighter),
-              ),
-
-              const SizedBox(height: 12),
-
+              // TODO invite to venue - venue + day time?
+              // TODO "profile"
+              // TODO message
               // Actions row
               // Row(
               //   children: [

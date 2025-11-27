@@ -1138,15 +1138,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final root = Navigator.of(context, rootNavigator: true).context;
 
-    await showFriendPopupSheet(
-      root,
-      uid: uid,
-      profile: profile,
-      loc: loc,
-      onMessage: () {
-        // TODO: open chat / profile screen
-      },
-    );
+    // await showFriendPopupSheet( //TODO implement
+    //   root,
+    //   uid: uid,
+    //   profile: profile,
+    //   loc: loc,
+    //   onMessage: () {
+    //     // TODO: open chat / profile screen
+    //   },
+    // );
   }
 
 
