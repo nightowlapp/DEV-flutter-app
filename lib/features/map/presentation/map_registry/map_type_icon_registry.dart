@@ -96,7 +96,7 @@ class MapTypeIconRegistry {
       await _ensureVariant(
         id: baseId,
         iconData: iconData,
-        color: const ui.Color(0xFFFFFFFF),
+        color: black,
       );
 
       await _ensureVariant(

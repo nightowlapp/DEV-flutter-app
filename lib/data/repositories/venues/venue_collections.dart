@@ -2,7 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
-import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
+
+import '../../../features/map/presentation/venues_fc.dart';
 
 class VenueCollections {
   VenueCollections({FirebaseFirestore? db})

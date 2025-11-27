@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_collections%20.dart';
+import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import '../../../core/storage/app_storage.dart';
@@ -152,12 +154,3 @@ final partyStatusPulsePaletteProvider = Provider<List<Color>>((ref) {
   ];
 });
 
-final partyStatusForUserProvider =
-    StreamProvider.family<PartyStatusTypes, String>((ref, uid) {
-  final db = ref.watch(firestoreProvider);
-  return db.collection('party_status').doc(uid).snapshots().map((snap) {
-    if (!snap.exists) return PartyStatusTypes.still_planning;
-    final data = snap.data()!;
-    return parsePartyStatus(data['status'] as String?);
-  });
-});

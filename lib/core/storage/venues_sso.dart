@@ -6,12 +6,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
-import 'package:nightowlcode/data/repositories/venues/venue_converters.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/data/providers/other_providers.dart';
 import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 import '../../data/services/location/location_providers.dart';
+import '../../features/map/presentation/venues_fc.dart';
 import '../../shared/utility/distance.dart';
 import '../../shared/utility/lat_lng.dart';
 import '../app_config.dart';

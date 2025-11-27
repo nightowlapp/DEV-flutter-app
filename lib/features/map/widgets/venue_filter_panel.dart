@@ -358,6 +358,41 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                             onVenueTap: widget.onVenueTap,
                           );
                         }
+
+                        // if (hasFriends && index == 1) { //TODO soon toggle friends on map and go to their logacion on press.
+                        //   return VenueFilterExpandableTile(
+                        //     label: 'Friends',
+                        //     icon: Icons.all_inclusive_outlined,
+                        //     isOn: allOn,
+                        //     count: totalCount,
+                        //     venues: allVenues,
+                        //     userLocation: widget.userLocation,
+                        //     favoriteVenueIds: widget.favoriteVenueIds,
+                        //     showSwitch: true,
+                        //     // active per venue if its type is selected
+                        //     isVenueActive: (venue) {
+                        //       final type = venue.type;
+                        //       if (type == null) return false;
+                        //       if (!_selected.contains(type)) return false;
+                        //       if (widget.showOnlyOpen && !_isVenueOpenNow(venue)) return false;
+                        //       return true;
+                        //     },
+                        //     onToggleChanged: (value) {
+                        //       _updateSelection(() {
+                        //         if (value) {
+                        //           _selected
+                        //             ..clear()
+                        //             ..addAll(widget.allTypes);
+                        //         } else {
+                        //           _selected.clear();
+                        //         }
+                        //       });
+                        //     },
+                        //     onVenueTap: widget.onVenueTap,
+                        //   );
+                        // }
+
+
                         // "All" row (index 1 when we have favorites, otherwise 0)
                         if (index == allIndex) {
                           return VenueFilterExpandableTile(

@@ -25,8 +25,8 @@ class MapStyle {
   static const lyrVip = 'lyr_vip';
   static const lyrVipLabels = 'lyr_vip_labels'; // VIP names
   static const lyrFriendDots = 'lyr_friend_dots';
+  static const lyrFriendIcons  = 'lyr_friend_icons';
   static const lyrFriendLabels = 'lyr_friend_labels';
-
   static const lyrHotGlowOuter = 'lyr_hot_glow_outer';
   static const lyrHotGlowInner = 'lyr_hot_glow_inner';
   static const lyrHotFlameIcon = 'lyr_hot_flame_icon';
@@ -831,7 +831,7 @@ class MapStyle {
           'case',
           ['==', ['get', 'isFavorite'], true],
           owlPurple.toHex(),
-          blue.toHex(),
+          white.toHex(),
         ]),
       );
 
@@ -909,56 +909,107 @@ class MapStyle {
   // PRIVATE HELPERS – FRIENDS
   // ======================================================================
 
+
+  //TODO friends cluster together like venues. When clicked small popup to see names and interactions.
   Future<void> _ensureFriendLayers(MapboxMap map) async {
-    final style = map.style;
-    // --- friends -----------------------------------------------------------
-    const friendPartyStatusColor = green;
+      final style = map.style;
 
-    if (!await style.styleLayerExists(lyrFriendDots)) {
-      await style.addLayer(
-        CircleLayer(id: lyrFriendDots, sourceId: srcFriends),
-      );
-      await style.setStyleLayerProperty(
-          lyrFriendDots, 'circle-color', friendColor.toHex());
-      await style.setStyleLayerProperty(
-          lyrFriendDots, 'circle-radius', 10.0);
-      await style.setStyleLayerProperty(
-          lyrFriendDots, 'circle-opacity', 1.0);
-      await style.setStyleLayerProperty(lyrFriendDots,
-          'circle-stroke-color', friendPartyStatusColor.toHex());
-      await style.setStyleLayerProperty(
-          lyrFriendDots, 'circle-stroke-width', 1.5);
-    }
+      // ----- Avatar icon on top of circle -----
+      if (!await style.styleLayerExists(lyrFriendIcons)) {
+        await style.addLayer(
+          SymbolLayer(id: lyrFriendIcons, sourceId: srcFriends),
+        );
 
-    if (!await style.styleLayerExists(lyrFriendLabels)) {
-      await style.addLayer(
-        SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends),
-      );
-      await style.setStyleLayerProperty(
-        lyrFriendLabels,
-        'text-field',
-        jsonEncode([
-          'coalesce',
-          ['get', 'name'],
-          'Friend',
-        ]),
-      );
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-size', 12.0);
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-color', white.toHex());
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-halo-color', black.toHex());
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-halo-width', 1.2);
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-offset', const [0.0, -1.5]);
-      await style.setStyleLayerProperty(
-          lyrFriendLabels, 'text-allow-overlap', false);
-    }
+        await style.setStyleLayerProperty(
+          lyrFriendIcons,
+          'icon-image',
+          jsonEncode([
+            'get',
+            'avatar_image_id',
+          ]),
+        );
+
+        await style.setStyleLayerProperty(
+          lyrFriendIcons,
+          'icon-size',
+          1.6,
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendIcons,
+          'icon-allow-overlap',
+          true,
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendIcons,
+          'icon-ignore-placement',
+          true,
+        );
+      }
+
+      // ----- Label: name + time ago -----
+      if (!await style.styleLayerExists(lyrFriendLabels)) {
+        await style.addLayer(
+          SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends),
+        );
+
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-field',
+          jsonEncode([
+            'format',
+
+            // 1) Name (normal size)
+            ['get', 'name'],
+            {
+              'font-scale': 1.0,
+            },
+
+            '\n',
+            {},
+
+            // 2) Timestamp (smaller)
+            ['get', 'timestamp_pretty'],
+            {
+              'font-scale': 0.7, // 👈 smaller than name
+            },
+          ]),
+        );
+
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-size',
+          12.0, // base size → name ~12, timestamp ~8.4
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-color',
+          blue.toHex(),
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-halo-color',
+          black.toHex(),
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-halo-width',
+          1.1,
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-offset',
+          const [0.0, 3.4],
+        );
+        await style.setStyleLayerProperty(
+          lyrFriendLabels,
+          'text-allow-overlap',
+          false,
+        );
+      }
   }
 
-  // ======================================================================
+
+    // ======================================================================
   // PRIVATE HELPERS – PITCH ALIGNMENT
   // ======================================================================
 

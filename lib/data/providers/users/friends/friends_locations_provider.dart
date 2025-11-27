@@ -1,3 +1,4 @@
+// lib/data/providers/users/friends/friends_locations_provider.dart
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,8 +8,7 @@ import '../../../../models/users/live_location.dart';
 import '../../../firestore_paths/firestore_paths.dart';
 import '../../other_providers.dart';
 
-/// Map<friendUid, LiveLocation> for all friends that have a recent
-/// locations/{uid} document.
+/// For now: show **all users** in `locations` (except myself).
 final friendsLocationsProvider =
 StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
@@ -19,98 +19,47 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
 
   final db = FirebaseFirestore.instance;
 
-  final controller = StreamController<Map<String, LiveLocation>>();
-  final locations = <String, LiveLocation>{};
-  final locSubs =
-  <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? friendsSub;
+  final snapshots =
+  db.collection(FirestoreCollections.locations).snapshots();
 
-  void emit() {
-    if (!controller.isClosed) {
-      controller.add(Map.unmodifiable(locations));
-    }
-  }
+  return snapshots.map((qs) {
+    final now = DateTime.now();
+    final out = <String, LiveLocation>{};
 
-  Future<void> unwatchLocation(String friendUid) async {
-    final sub = locSubs.remove(friendUid);
-    await sub?.cancel();
-    final removed = locations.remove(friendUid) != null;
-    if (removed) emit();
-  }
+    // 👇 debug
+    // ignore: avoid_print
+    print(
+        '[friendsLocationsProvider] locations snapshot: ${qs.docs.length} docs');
 
-  void watchLocation(String friendUid) {
-    if (locSubs.containsKey(friendUid)) return;
+    for (final doc in qs.docs) {
+      final uid = doc.id;
 
-    final sub = db
-        .collection(FirestoreCollections.locations)
-        .doc(friendUid)
-        .snapshots()
-        .listen((doc) {
-      if (!doc.exists) {
-        final removed = locations.remove(friendUid) != null;
-        if (removed) emit();
-        return;
-      }
+      // Skip myself (so you see "everyone else")
+      if (uid == me.uid) continue;
 
-      final data = doc.data() ?? const <String, dynamic>{};
-      final loc = LiveLocation.fromDoc(friendUid, data);
-
-      // Hide locations older than 24 hours
-      final age = DateTime.now().difference(loc.timestamp);
-      if (age > const Duration(hours: 24)) {
-        final removed = locations.remove(friendUid) != null;
-        if (removed) emit();
-        return;
-      }
-
-      locations[friendUid] = loc;
-      emit();
-    }, onError: controller.addError);
-
-    locSubs[friendUid] = sub;
-  }
-
-  // Listen to my friends subcollection: users/{me}/friends/{friendUid}
-  friendsSub = db
-      .collection('users')
-      .doc(me.uid)
-      .collection('friends')
-      .snapshots()
-      .listen((snap) async {
-    final activeFriendIds = <String>{};
-
-    for (final doc in snap.docs) {
       final data = doc.data();
-      final friendUid = doc.id;
-      activeFriendIds.add(friendUid);
 
-      // Optional: respect i_can_see_them if you use FriendEdge
-      final canSee = (data['i_can_see_them'] as bool?) ?? true;
-      if (canSee) {
-        watchLocation(friendUid);
-      } else {
-        await unwatchLocation(friendUid);
+      try {
+        final loc = LiveLocation.fromAny(uid, data);
+
+        // // Hide locations older than 7 days hours
+        // if (now.difference(loc.timestamp) > const Duration(days: 7)) {
+        //   continue;
+        // }
+
+        out[uid] = loc;
+      } catch (e) {
+        // ignore malformed doc but log once
+        // ignore: avoid_print
+        print(
+            '[friendsLocationsProvider] failed to parse $uid: $e, data=$data');
       }
     }
 
-    // Remove listeners for friends that disappeared from the list
-    final toRemove = locSubs.keys
-        .where((uid) => !activeFriendIds.contains(uid))
-        .toList();
-    for (final uid in toRemove) {
-      await unwatchLocation(uid);
-    }
-  }, onError: controller.addError);
+    // ignore: avoid_print
+    print(
+        '[friendsLocationsProvider] emitting ${out.length} live locations');
 
-  ref.onDispose(() async {
-    await friendsSub?.cancel();
-    for (final s in locSubs.values) {
-      await s.cancel();
-    }
-    if (!controller.isClosed) {
-      await controller.close();
-    }
+    return out;
   });
-
-  return controller.stream;
 });

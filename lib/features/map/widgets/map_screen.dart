@@ -22,6 +22,8 @@ import 'package:nightowlcode/shared/utility/utility.dart';
 import '../../../data/providers/favorite_venues/favorite_venues_provider.dart';
 import '../../../data/providers/map_nav_providers.dart';
 import '../../../data/providers/real_time_database_providers.dart';
+import '../../../data/providers/time_ticker_provider.dart';
+import '../../../data/providers/users/friends/friend_profiles_provider.dart';
 import '../../../data/providers/users/friends/friends_locations_provider.dart';
 import '../../../data/providers/venues/venue_providers.dart';
 import '../../../data/services/location/live_location_sharing_provider.dart';
@@ -29,16 +31,18 @@ import '../../../data/services/navigation/nav_tts.dart';
 import '../../../data/services/navigation/navigation_service.dart';
 import '../../../data/services/navigation/route_renderer.dart';
 import '../../../models/navigation/nav_models.dart';
+import '../../../models/users/friend.dart';
 import '../../../models/users/live_location.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/utility/distance.dart';
 import '../presentation/friends_fc.dart';
 import '../presentation/initial_camera_provider.dart';
-import '../presentation/map_logo_registry.dart';
+import '../presentation/map_registry/map_images_registry.dart';
 import '../presentation/map_style.dart';
-import '../presentation/map_type_icon_registry.dart';
-import '../presentation/navigation_banner.dart'; // NEW import
+import '../presentation/map_registry/map_type_icon_registry.dart';
+import '../presentation/navigation_banner.dart';
+import 'friend_popup.dart'; // NEW import
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -52,6 +56,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _mapCreated = false;
   bool _loading = true;
   bool _styleReady = false;
+
+  String? _lastFriendsFc;
+  Map<String, LiveLocation> _latestFriendLocs = const {};
+  Map<String, FriendProfile> _latestFriendProfiles = const {};
+
   int _lastNavId = 0;
   bool _navigating = false;
   NavProfile _navProfile = NavProfile.walking;
@@ -250,7 +259,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _onMapTap(mb.MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
+
     Map<String, dynamic>? _asMap(Object? o) => (o is Map) ? o.cast<String, dynamic>() : null;
+
     String? _firstId(List<mb.QueriedRenderedFeature?> items) {
       for (final r in items) {
         if (r == null) continue;
@@ -270,6 +281,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
         max: mb.ScreenCoordinate(x: p.x + half, y: p.y + half),
       ),
     );
+
+    // 0) 👥 FRIEND ICONS + LABELS
+    final friendsHits = await map.queryRenderedFeatures(
+      box,
+      mb.RenderedQueryOptions(layerIds: [
+          MapStyle.lyrFriendIcons,
+          MapStyle.lyrFriendLabels,
+        ]),
+    );
+    debugPrint('tap: friend hits = ${friendsHits.length}');
+    final friendId = _firstId(friendsHits);
+    if (friendId != null) {
+      debugPrint('tap -> friend id: $friendId');
+      _openFriendById(friendId);
+      return;
+    }
+
     // 1) symbols (VIP + regular) + their labels (you might be tapping text)
     final sym = await map.queryRenderedFeatures(
       box,
@@ -396,7 +424,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           idToPath2['${baseId}_closed'] = path;
         }
         final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
-        await MapLogoRegistry.instance.syncIdToUrl(
+        await MapImageRegistry.instance.syncIdToUrl(
           map: map,
           images: idToPath2, // or idToPath2
           maxSize: 46, // logical diameter on the map (same as before)
@@ -404,18 +432,39 @@ class _MapScreenState extends ConsumerState<MapScreen>
         );
       }
     );
+    // 1) When locations change
+    // 1) When locations change
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
-      (prev, next) async {
-        final map = _map;
-        if (map == null || !_styleReady) return;
-        next.whenData((m) async {
-            final fc = friendsToFeatureCollection(m);
-            await _style.setFriendsData(map, fc);
+      (prev, next) {
+        next.whenData((locs) {
+            _latestFriendLocs = locs;
+            _refreshFriendsOnMap();
           }
         );
       },
     );
+
+    // 2) When user profiles change (names / party status)
+    ref.listen<Map<String, FriendProfile>>(
+      friendProfilesProvider,
+      (prev, next) {
+        _latestFriendProfiles = next;
+        _refreshFriendsOnMap();
+      },
+    );
+
+    ref.listen<AsyncValue<DateTime>>(
+      timeTickerProvider,
+      (prev, next) {
+        next.whenData((_) {
+            // Only recompute labels, not locations themselves.
+            _refreshFriendsOnMap();
+          }
+        );
+      },
+    );
+
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
         _venuesById
         ..clear()
@@ -692,7 +741,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _onStyleLoaded(mb.StyleLoadedEventData _) async {
     final map = _map;
     if (map == null || _styleReady) return;
-    MapLogoRegistry.instance.clear();
+    MapImageRegistry.instance.clear();
     await _style.ensure(map);
     // style + hot source exist now
     _styleReady = true;
@@ -720,7 +769,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       idToPath['${baseId}_closed'] = path;
     }
     final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
-    await MapLogoRegistry.instance.syncIdToUrl(
+    await MapImageRegistry.instance.syncIdToUrl(
       map: map,
       images: idToPath,
       maxSize: 46,
@@ -731,10 +780,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       logicalSize: 24.0,
       pixelRatio: dpr.toDouble(),
     );
+
     // 🔥 IMPORTANT: once the style & src_hot_venues exist,
     // push in whatever counts we already saw (or empty map if none).
     final counts = _lastLiveCounts ?? const <String, int>{};
     await _updateHotVenuesFromCounts(counts);
+
+    await _refreshFriendsOnMap();
+
     if (mounted) setState(() => _loading = false);
     if (_pendingNav != null) {
       final cmd = _pendingNav!;
@@ -1027,6 +1080,81 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
     await _style.setHotVenuesData(map, fc);
   }
+
+  Future<void> _refreshFriendsOnMap() async {
+    final map = _map;
+    if (map == null || !_styleReady) return;
+
+    final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
+
+    // 1) Build spriteId → path (photo or placeholder)
+    final idToPath = <String, String>{};
+
+    _latestFriendProfiles.forEach((uid, profile) {
+        final statusName = profile.partyStatus?.name ?? 'still_planning';
+        final spriteId = 'friend_avatar_${uid}_$statusName';
+
+        final url = profile.photoUrl?.trim();
+        if (url != null && url.isNotEmpty) {
+          idToPath[spriteId] = url;
+        }
+        else {
+          // 👇 sentinel handled inside MapLogoRegistry._loadAsMbxImage
+          idToPath[spriteId] = 'placeholder://friend';
+        }
+      }
+    );
+
+    if (idToPath.isNotEmpty) {
+      await MapImageRegistry.instance.syncIdToUrl(
+        map: map,
+        images: idToPath,
+        maxSize: 32,
+        pixelRatio: dpr.toDouble(),
+      );
+    }
+
+    // 2) Push updated GeoJSON
+    final fc = friendsToFeatureCollection(
+      _latestFriendLocs,
+      _latestFriendProfiles,
+    );
+    _lastFriendsFc = fc;
+
+    await _style.setFriendsData(map, fc);
+  }
+
+  Future<void> _openFriendById(String uid) async {
+    final profile = _latestFriendProfiles[uid];
+    final loc = _latestFriendLocs[uid];
+
+    if (profile == null || loc == null || !mounted) {
+      debugPrint('tap friend "$uid": no profile or location yet');
+      return;
+    }
+
+    // 👉 auto-center on friend
+    await _navigateTo(LatLng(loc.lat, loc.lng), zoom: 16);
+
+    final root = Navigator.of(context, rootNavigator: true).context;
+
+    await showFriendPopupSheet(
+      root,
+      uid: uid,
+      profile: profile,
+      loc: loc,
+      onMessage: () {
+        // TODO: open chat / profile screen
+      },
+    );
+  }
+
+
 }
+
+
+
+
+
 
 bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());
