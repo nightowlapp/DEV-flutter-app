@@ -182,7 +182,7 @@ class NavigationBanner extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 110,
+                left: 106,
                 right: 40,
                 top: 20,
                 child: LinearProgressIndicator(
@@ -195,7 +195,7 @@ class NavigationBanner extends StatelessWidget {
               ),
               Positioned(
                 bottom: 10,
-                right: 10,
+                left: 106,
                 child: Row(
                   children: [
                     Text('To ', style: Styles.basicText),
