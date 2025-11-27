@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+import '../../../models/users/friend.dart';
 import '../../../models/users/friend_request.dart';
 import '../../firestore_paths/firestore_paths.dart';
 
@@ -27,6 +28,7 @@ class FriendRequestsRepository {
     return _db
         .collection(FriendRequestDocumentPaths.collection)
         .where(FriendRequestDocumentPaths.toUid, isEqualTo: uid)
+        .where(FriendRequestDocumentPaths.status, isEqualTo: FriendRequestStatus.pending.name)
         .orderBy(FriendRequestDocumentPaths.timestamp, descending: true)
         .snapshots()
         .map((q) => q.docs.map(FriendRequest.fromDoc).toList());
@@ -72,7 +74,8 @@ class FriendRequestsRepository {
       await a.set({
         FriendRequestDocumentPaths.fromUid: me,
         FriendRequestDocumentPaths.toUid: toUid,
-        FriendRequestDocumentPaths.timestamp: FieldValue.serverTimestamp(),
+        FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+        FirestoreFields.createdAt: FieldValue.serverTimestamp(),
         FriendRequestDocumentPaths.status: FriendRequestStatus.pending.name,
       });
 
@@ -82,33 +85,42 @@ class FriendRequestsRepository {
     }
   }
 
+// in FriendRequestsRepository.approve
   Future<void> approve(FriendRequest req) async {
     final batch = _db.batch();
 
+    final now = FieldValue.serverTimestamp();
+
+    // create edges
     final a = _db
         .doc(UserDocumentPaths.doc(req.toUid))
         .collection(UserDocumentPaths.friends)
         .doc(req.fromUid);
+
     final b = _db
         .doc(UserDocumentPaths.doc(req.fromUid))
         .collection(UserDocumentPaths.friends)
         .doc(req.toUid);
 
-    final r1 = _db
+    final baseEdgeData = {
+      FriendEdgeFields.iCanSeeThem: true,
+      FriendEdgeFields.isCloseFriend: false,
+      UserDocumentPaths.createdAt: now,
+      UserDocumentPaths.updatedAt: now,
+    };
+
+    batch.set(a, baseEdgeData);
+    batch.set(b, baseEdgeData);
+
+    // update request status instead of deleting
+    final r = _db
         .collection(FriendRequestDocumentPaths.collection)
         .doc(req.id);
-    final r2 = _db
-        .collection(FriendRequestDocumentPaths.collection)
-        .doc('${req.toUid}_${req.fromUid}');
 
-    batch.set(a, {
+    batch.update(r, {
+      FriendRequestDocumentPaths.status: FriendRequestStatus.accepted.name,
       UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     });
-    batch.set(b, {
-      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-    });
-    batch.delete(r1);
-    batch.delete(r2);
 
     await batch.commit();
   }
@@ -117,6 +129,10 @@ class FriendRequestsRepository {
     await _db
         .collection(FriendRequestDocumentPaths.collection)
         .doc(req.id)
-        .delete();
+        .update({
+      FriendRequestDocumentPaths.status: FriendRequestStatus.rejected.name,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+    });
   }
+
 }

@@ -26,6 +26,7 @@ import '../../../data/providers/real_time_database_providers.dart';
 import '../../../data/providers/time_ticker_provider.dart';
 import '../../../data/providers/users/friends/friend_profiles_provider.dart';
 import '../../../data/providers/users/friends/friends_locations_provider.dart';
+import '../../../data/providers/users/friends/friends_provider.dart';
 import '../../../data/providers/venues/venue_providers.dart';
 import '../../../data/services/location/live_location_sharing_provider.dart';
 import '../../../data/services/navigation/nav_tts.dart';
@@ -34,6 +35,7 @@ import '../../../data/services/navigation/route_renderer.dart';
 import '../../../models/navigation/nav_models.dart';
 import '../../../models/users/friend.dart';
 import '../../../models/users/live_location.dart';
+import '../../../models/users/location_audience.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
 import '../../../shared/utility/distance.dart';
@@ -421,6 +423,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
       orElse: () => <String>{},
     );
     final visibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds);
+
+    final friendCountsAsync = ref.watch(friendCountsProvider);
+
+    final friendsCount = friendCountsAsync.maybeWhen(
+      data: (c) => c.total,
+      orElse: () => 0,
+    );
+
+    final closeFriendsCount = friendCountsAsync.maybeWhen(
+      data: (c) => c.closeFriends,
+      orElse: () => 0,
+    );
+
+
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
         final map = _map;
         if (next == null || next.id <= _lastNavId) return;
@@ -552,7 +568,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     };
     // Current audience from provider
     final shareAudience = ref.watch(shareAudienceProvider);
-    final sharingPosition = shareAudience != ShareAudience.none;
+    final sharingPosition = shareAudience != LocationAudience.none;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Stack(
@@ -664,12 +681,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
             child: FloatingActionButton(
               mini: true,
               onPressed: () async {
+
                 final currentAudience = ref.read(shareAudienceProvider);
                 final selected = await showShareLocationPopup(
                   context,
                   initial: currentAudience,
-                  friendsCount: 123, //TODO
-                  closeFriendsCount: 21,
+                  friendsCount: friendsCount,
+                  closeFriendsCount: closeFriendsCount,
                 );
                 if (!mounted || selected == null) return;
                 await ref.read(shareAudienceProvider.notifier).setAudience(selected);

@@ -1,4 +1,4 @@
-import 'package:nightowlcode/data/firestore_paths/user_paths.dart';
+// lib/data/firestore_paths/firestore_collections.dart
 
 /// Pure strings. No Firebase imports here.
 class FirestoreCollections {
@@ -21,7 +21,6 @@ class FirestoreCollections {
 
   // live people count (shared name for Firestore + RTDB)
   static const String liveCounts = 'live_counts';
-
 }
 
 /// Very common field names reused across multiple collections.
@@ -59,7 +58,6 @@ class TagDocumentPaths {
 
   static String doc(String tagId) => '$collection/$tagId';
 }
-
 
 class NotificationDocumentPaths {
   NotificationDocumentPaths._();
@@ -150,13 +148,32 @@ class VisitDocumentPaths {
   static const collection = 'visits';
 
   static String collectionForUser(String uid) =>
-      '${UserDocumentPaths.collection}/$uid/$collection';
+      '${FirestoreCollections.users}/$uid/$collection';
 
   // fields
   static const venueId = 'venue_id';
   static const enteredAt = 'entered_at';
   static const exitedAt = 'exited_at';
   static const source = 'source';
+}
+
+/// Paths + fields for party status day + entries subcollections.
+///
+/// users/{uid}/party_status_days/{dayId}/entries/{entryId}
+class PartyStatusDayDocumentPaths {
+  PartyStatusDayDocumentPaths._();
+
+  static const collection = 'party_status_days';
+  static const entries = 'entries';
+
+  static String collectionForUser(String uid) =>
+      '${FirestoreCollections.users}/$uid/$collection';
+
+  static String entriesCollection(String uid, String dayId) =>
+      '${collectionForUser(uid)}/$dayId/$entries';
+
+  static String entryDoc(String uid, String dayId, String entryId) =>
+      '${entriesCollection(uid, dayId)}/$entryId';
 }
 
 class PartyStatusEntryDocumentPaths {
@@ -170,4 +187,12 @@ class PartyStatusEntryDocumentPaths {
   static const createdAt = FirestoreFields.createdAt;
   static const location = 'location';
   static const accuracy = 'accuracy';
+}
+
+class FriendEdgeFields {
+  FriendEdgeFields._();
+
+  static const iCanSeeThem = 'i_can_see_them';
+  static const isCloseFriend = 'is_close_friend';
+
 }

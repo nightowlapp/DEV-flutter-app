@@ -24,14 +24,6 @@ class VenueFilters {
   bool get hasType => (types?.isNotEmpty ?? false);
 }
 
-abstract class AbstractVenueRepository {
-  Stream<List<Venue>> watchViewport(Viewport vp, {VenueFilters? filters});
-}
-
-abstract class AbstractFriendRepository {
-  Stream<List<Friend>> watchFriends(Viewport vp);
-}
-
 class MapRepository {
   // implements AbstractVenueRepository, AbstractFriendRepository { //TODO
   MapRepository({

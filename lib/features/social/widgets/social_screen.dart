@@ -28,7 +28,7 @@ class SocialScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (friends.isNotEmpty) ...[
-                MyFriendsSection(),
+                const MyFriendsSection(),
               ],
 
               const FriendRequestsSection(),

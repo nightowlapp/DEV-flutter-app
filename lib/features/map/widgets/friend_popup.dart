@@ -190,6 +190,7 @@ class FriendPopup extends StatelessWidget {
               // TODO invite to venue - venue + day time?
               // TODO "profile"
               // TODO message
+              // TODO last visits - timestamp
               // Actions row
               // Row(
               //   children: [

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nightowlcode/data/providers/users/friends/active_friends_count_provider.dart';
-import 'package:nightowlcode/data/providers/users/sorted_friends_provider.dart';
+import 'package:nightowlcode/data/providers/users/friends/sorted_friends_provider.dart';
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
 import 'package:nightowlcode/data/providers/users/user_providers.dart';
 

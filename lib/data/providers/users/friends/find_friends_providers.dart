@@ -5,7 +5,7 @@ import 'package:nightowlcode/models/users/user.dart' as model;
 import '../../../../shared/party_priority.dart';
 import '../../../repositories/users/user_repository.dart';
 import 'friends_provider.dart';
-import '../sorted_friends_provider.dart' show authUserIdProvider;
+import 'sorted_friends_provider.dart' show authUserIdProvider;
 import 'friend_request_provider.dart';
 
 // Search text (local UI state)

@@ -6,13 +6,13 @@ import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
+import 'package:nightowlcode/shared/reusable/ui/loading/error_screen.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../data/providers/users/friends/friend_request_provider.dart';
 import '../../../data/providers/users/user_providers.dart';
-import '../../../data/repositories/users/friend_requests_repository.dart';
 import '../../../models/users/friend_request.dart';
 
 class FriendRequestsSection extends ConsumerWidget {
@@ -27,8 +27,13 @@ final incomingCount = incoming.maybeWhen(
 );
 
     return incoming.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => const SizedBox.shrink(), // keep this simple for now
+      error: (e, st) {
+        // 👇 This is the important part
+        debugPrint('incomingFriendRequestsProvider error: $e');
+        debugPrintStack(stackTrace: st);
+        return const SizedBox.shrink();
+      },
       data: (list) {
         if (list.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -61,7 +66,7 @@ class _RequestRow extends ConsumerWidget {
 
     return userAv.when(
       loading: () => const LoadingIndicator(),
-      error: (_, __) => const LoadingIndicator(),
+      error: (_, __) => const ErrorScreen(),
       data: (u) {
         if (u == null) {
           return const SizedBox.shrink();
@@ -118,7 +123,7 @@ class _RequestRow extends ConsumerWidget {
               ],
               const SizedBox(height: 4),
               Text(
-                Utility.formatTimeAgo(req.timestamp),
+                Utility.formatTimeAgo(req.createdAt),
                 style: Styles.smallText,
               ),
             ],

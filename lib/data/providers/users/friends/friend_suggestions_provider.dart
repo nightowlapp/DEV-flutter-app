@@ -7,7 +7,7 @@ import '../../../../models/users/user.dart' as model;
 import '../../../firestore_paths/firestore_paths.dart';
 import 'find_friends_providers.dart';
 import 'friends_provider.dart';
-import '../sorted_friends_provider.dart';
+import 'sorted_friends_provider.dart';
 
 final userSearchQueryProvider = StateProvider<String>((_) => '');
 

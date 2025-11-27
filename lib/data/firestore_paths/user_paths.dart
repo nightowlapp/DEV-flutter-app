@@ -1,4 +1,4 @@
-
+// lib/data/firestore_paths/user_paths.dart
 import 'firestore_collections .dart';
 
 /// Firestore paths & fields for the top-level `users` collection.

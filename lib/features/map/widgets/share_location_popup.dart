@@ -1,22 +1,21 @@
+// lib/features/map/widgets/share_location_popup.dart
 import 'package:flutter/material.dart';
+import 'package:nightowlcode/models/users/location_audience.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
-/// Audience options for location sharing (visuals only)
-enum ShareAudience { friends, closeFriends, none }
-
 /// Call this to show the popup. Returns the selected audience (or null on dismiss).
-Future<ShareAudience?> showShareLocationPopup(
-  BuildContext context, {
-    ShareAudience initial = ShareAudience.none,
+Future<LocationAudience?> showShareLocationPopup(
+    BuildContext context, {
+      LocationAudience initial = LocationAudience.none,
 
-    /// purely visual counters to mirror the mock
-    int friendsCount = 123,
-    int closeFriendsCount = 21,
-  }) {
-  return showDialog<ShareAudience>(
+      /// purely visual counters to mirror the mock
+      int friendsCount = 0,
+      int closeFriendsCount = 0,
+    }) {
+  return showDialog<LocationAudience>(
     context: context,
     barrierDismissible: true,
     builder: (_) => _ShareLocationPopup(
@@ -34,7 +33,7 @@ class _ShareLocationPopup extends StatefulWidget {
     required this.closeFriendsCount,
   });
 
-  final ShareAudience initial;
+  final LocationAudience initial;
   final int friendsCount;
   final int closeFriendsCount;
 
@@ -43,31 +42,25 @@ class _ShareLocationPopup extends StatefulWidget {
 }
 
 class _ShareLocationPopupState extends State<_ShareLocationPopup> {
-  late ShareAudience _selected = widget.initial;
+  late LocationAudience _selected = widget.initial;
 
   @override
   Widget build(BuildContext context) {
-    final captionStyle =
-      Styles.smallText.copyWith(color: greyLighter, height: 1.35, fontSize: fontSizeSmaller);
+    final captionStyle = Styles.smallText.copyWith(
+      color: greyLighter,
+      height: 1.35,
+      fontSize: fontSizeSmaller,
+    );
 
     return OwlPopup(
       title: 'Share Location',
       maxWidth: 520,
       maxHeightFraction: 0.86,
       children: [
-        // description
-        // Padding(
-        //   padding: const EdgeInsets.only(bottom: 10),
-        //   child: Text(
-        //     'If you share, your precise location updates every time you open the app, '
-        //         'but disappears if you don’t open it for 24 hours.',
-        //     style: captionStyle,
-        //   ),
-        // ),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton(
-            onPressed: () {}, // visuals only
+            onPressed: () {}, // TODO: open info page
             style: TextButton.styleFrom(
               foregroundColor: owlPurple,
               padding: EdgeInsets.zero,
@@ -79,12 +72,11 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
         ),
         const SizedBox(height: 6),
 
-        // options
         _ChoiceTile(
           title: 'Friends',
           subtitle: '${widget.friendsCount} followers you follow back',
           icon: Icons.group_rounded,
-          value: ShareAudience.friends,
+          value: LocationAudience.friends,
           groupValue: _selected,
           onChanged: (v) => setState(() => _selected = v),
         ),
@@ -92,7 +84,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
           title: 'Close Friends',
           subtitle: '${widget.closeFriendsCount} people',
           icon: Icons.star_rounded,
-          value: ShareAudience.closeFriends,
+          value: LocationAudience.closeFriends,
           groupValue: _selected,
           onChanged: (v) => setState(() => _selected = v),
         ),
@@ -100,14 +92,13 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
           title: 'No one',
           subtitle: "Don't share location",
           icon: Icons.flight_rounded,
-          value: ShareAudience.none,
+          value: LocationAudience.none,
           groupValue: _selected,
           onChanged: (v) => setState(() => _selected = v),
         ),
 
         const SizedBox(height: 18),
 
-        // primary button (visuals)
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -122,10 +113,10 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
               ),
             ),
             child: Text(
-              _selected == ShareAudience.none ? 'Do not share location' : 'Share location',
-              style:
-              // _selected == ShareAudience.none ? Styles.smallText :
-              Styles.basicText,
+              _selected == LocationAudience.none
+                  ? 'Do not share location'
+                  : 'Share location',
+              style: Styles.basicText,
             ),
           ),
         ),
@@ -147,9 +138,9 @@ class _ChoiceTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final ShareAudience value;
-  final ShareAudience groupValue;
-  final ValueChanged<ShareAudience> onChanged;
+  final LocationAudience value;
+  final LocationAudience groupValue;
+  final ValueChanged<LocationAudience> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +153,6 @@ class _ChoiceTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            // big leading icon in a soft circle
             Container(
               width: 42,
               height: 42,
@@ -178,8 +168,6 @@ class _ChoiceTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-
-            // labels
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,15 +184,14 @@ class _ChoiceTile extends StatelessWidget {
                 ],
               ),
             ),
-
-            // trailing radio
-            Radio<ShareAudience>(
+            Radio<LocationAudience>(
               value: value,
               groupValue: groupValue,
               onChanged: (v) => onChanged(v!),
               activeColor: owlPurple,
               fillColor: MaterialStateProperty.resolveWith(
-                (states) => states.contains(MaterialState.selected) ? owlPurple : grey,
+                    (states) =>
+                states.contains(MaterialState.selected) ? owlPurple : grey,
               ),
             ),
           ],

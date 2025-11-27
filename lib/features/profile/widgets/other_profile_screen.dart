@@ -25,6 +25,7 @@ import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/data/providers/users/user_providers.dart';
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
 
+import '../../../models/users/friend.dart';
 import 'emblems_section.dart';
 import 'level_indicator.dart';
 import 'visits_section.dart';
@@ -47,6 +48,7 @@ class OtherProfileScreen extends ConsumerWidget {
       orElse: () => false,
     );
 
+    final edgeAv = ref.watch(friendEdgeWithUserProvider(uid));
 
     return userAv.when(
       loading: () => const Scaffold(
@@ -91,12 +93,13 @@ class OtherProfileScreen extends ConsumerWidget {
         final borderColor =
           ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
-        // Are we already friends with this user?
-        final friendsAv = ref.watch(friendsProvider);
-        final isFriend = friendsAv.maybeWhen(
-          data: (list) => list.any((f) => f.id == u.id),
-          orElse: () => false,
+        // friend status
+        final FriendEdge? edge = edgeAv.maybeWhen(
+          data: (e) => e,
+          orElse: () => null,
         );
+        final bool isFriend = edge != null;
+        final bool isCloseFriend = edge?.isCloseFriend ?? false;
 
         return Scaffold(
           backgroundColor: black,
@@ -164,33 +167,112 @@ class OtherProfileScreen extends ConsumerWidget {
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: isFriend
-                            ? Icon(
+                              ? IconButton(
+                            icon: Icon(
                               profileIcon,
-                              color: green,
+                              color: isCloseFriend ? owlPurple : blue,
                               size: 26,
-                            )
-                            : IconButton( // TODO make best friend a possibility. Just simple
-                              icon: Icon(
-                                Icons.person_add_alt_1_outlined,
-                                color: owlPurple,
-                                size: 24,
-                              ),
-                              tooltip: 'Add friend',
-                              onPressed: () async {
-                                final repo = ref.read(friendRequestsRepositoryProvider);
-                                final res = await repo.send(toUid: u.id);
-
-                                final (msg, ok) = _msgForResult(res, u.userName);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(msg),
-                                    backgroundColor:
-                                    ok ? green : red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              },
                             ),
+                            tooltip: isCloseFriend
+                                ? 'Remove close friend'
+                                : 'Make close friend',
+                            onPressed: () async {
+                              final makeClose = !isCloseFriend;
+
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  backgroundColor: black,
+                                  title: Text(
+                                    makeClose
+                                        ? 'Make close friend?'
+                                        : 'Remove close friend?',
+                                    style: Styles.basicText,
+                                  ),
+                                  content: Text(
+                                    makeClose
+                                        ? 'Are you sure you want to make ${u.userName} a close friend?'
+                                        : 'Are you sure you want to remove ${u.userName} from your close friends?',
+                                    style: Styles.smallText,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('Yes'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed != true) return;
+
+                              final friendsRepo =
+                              ref.read(friendsRepositoryProvider);
+                              await friendsRepo.setCloseFriend(
+                                friendUid: u.id,
+                                isClose: makeClose,
+                              );
+                            },
+                          )
+                              : IconButton(
+                            icon: const Icon(
+                              Icons.person_add_alt_1_outlined,
+                              color: red, // not friends → red
+                              size: 24,
+                            ),
+                            tooltip: 'Add friend',
+                            onPressed: () async {
+                              // "Are you sure" before sending request
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  backgroundColor: black,
+                                  title: Text(
+                                    'Add friend?',
+                                    style: Styles.basicText,
+                                  ),
+                                  content: Text(
+                                    'Are you sure you want to send a friend request to ${u.userName}?',
+                                    style: Styles.smallText,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('Send'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed != true) return;
+
+                              final repo =
+                              ref.read(friendRequestsRepositoryProvider);
+                              final res = await repo.send(toUid: u.id);
+
+                              final (msg, ok) =
+                              _msgForResult(res, u.userName);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(msg),
+                                  backgroundColor: ok ? green : red,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],

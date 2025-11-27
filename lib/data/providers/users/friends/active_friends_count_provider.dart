@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 
-import '../sorted_friends_provider.dart';
+import 'sorted_friends_provider.dart';
 import '../user_providers.dart'; // userByUidProvider
 
 /// Per-user reactive flag, driven by the same user stream as the status ring.

@@ -87,6 +87,8 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
     return total;
   }
 
+
+
   Future<void> _resetFilters() async {
     // 1) Reset types to "all on"
     await _updateSelection(() {

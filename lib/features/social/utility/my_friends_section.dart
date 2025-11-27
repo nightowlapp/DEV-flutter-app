@@ -10,7 +10,7 @@ import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
 
 import '../../../core/platform_config.dart';
-import '../../../data/providers/users/sorted_friends_provider.dart';
+import '../../../data/providers/users/friends/sorted_friends_provider.dart';
 import '../../../data/providers/party_status/party_status_provider.dart';
 import '../../../data/providers/users/user_providers.dart';
 

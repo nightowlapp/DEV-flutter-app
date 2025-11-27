@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
-import 'friends/friends_provider.dart';
+import 'friends_provider.dart';
 
 final _authStateProvider =
 StreamProvider<fb.User?>((ref) => fb.FirebaseAuth.instance.authStateChanges());
