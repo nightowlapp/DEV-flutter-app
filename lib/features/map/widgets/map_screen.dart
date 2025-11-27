@@ -11,6 +11,7 @@ import 'package:nightowlcode/features/map/widgets/share_location_popup.dart';
 import 'package:nightowlcode/features/map/widgets/venue_filter_panel.dart';
 import 'package:nightowlcode/features/map/widgets/venue_popup.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
+import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/icons.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
@@ -60,6 +61,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   String? _lastFriendsFc;
   Map<String, LiveLocation> _latestFriendLocs = const {};
   Map<String, FriendProfile> _latestFriendProfiles = const {};
+
+  String? _activeFriendId;
+  Offset? _activeFriendScreenPos;
 
   int _lastNavId = 0;
   bool _navigating = false;
@@ -298,6 +302,39 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return;
     }
 
+    // 0b) 👥 FRIEND CLUSTERS → zoom in
+    final friendClusterHits = await map.queryRenderedFeatures(
+      box,
+      mb.RenderedQueryOptions(layerIds: [
+        MapStyle.lyrFriendClusters,
+        MapStyle.lyrFriendClusterCount,
+      ]),
+    );
+    debugPrint('tap: friend cluster hits = ${friendClusterHits.length}');
+    for (final r in friendClusterHits) {
+      if (r == null) continue;
+      final feat = r.queriedFeature.feature as Map?;
+      final props = _asMap(feat?['properties']);
+      if (props?['point_count'] != null) {
+        final coords =
+        (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
+        if (coords != null && coords.length >= 2) {
+          final lon = coords[0].toDouble();
+          final lat = coords[1].toDouble();
+          final cs = await map.getCameraState();
+          map.easeTo(
+            mb.CameraOptions(
+              center: mb.Point(coordinates: mb.Position(lon, lat)),
+              zoom: (cs.zoom + 1.6).clamp(3.0, 20.0),
+            ),
+            mb.MapAnimationOptions(duration: 500),
+          );
+        }
+        return;
+      }
+    }
+
+
     // 1) symbols (VIP + regular) + their labels (you might be tapping text)
     final sym = await map.queryRenderedFeatures(
       box,
@@ -527,7 +564,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
             onMapCreated: _onMapCreated,
             onStyleLoadedListener: _onStyleLoaded,
             onTapListener: _onMapTap,
+            onLongTapListener: _onMapLongTap,
           ),
+
+          if (_activeFriendId != null && _activeFriendScreenPos != null)
+            Positioned(
+              left: _activeFriendScreenPos!.dx - 140, // tweak to center horizontally
+              top: _activeFriendScreenPos!.dy - 80,   // already moved up a bit above
+              child: FriendMapBubble(
+                uid: _activeFriendId!,
+                profile: _latestFriendProfiles[_activeFriendId!]!,
+                loc: _latestFriendLocs[_activeFriendId!]!,
+                onMessage: () {
+                  // TODO: open chat
+                },
+                onOpenProfile: () {
+                  // TODO: push friend profile screen
+                  // e.g. context.push('/friends/${_activeFriendId!}');
+                },
+                onClose: () {
+                  setState(() {
+                    _activeFriendId = null;
+                    _activeFriendScreenPos = null;
+                  });
+                },
+              ),
+            ),
+
           if (_navigating) NavigationBanner(
             activeRoute: _activeRoute,
             navDest: _navDest,
@@ -1148,6 +1211,62 @@ class _MapScreenState extends ConsumerState<MapScreen>
     //   },
     // );
   }
+
+
+
+  Future<void> _onMapLongTap(mb.MapContentGestureContext ctx) async {
+    final map = _map;
+    if (map == null) return;
+
+    Map<String, dynamic>? _asMap(Object? o) =>
+        (o is Map) ? o.cast<String, dynamic>() : null;
+
+    String? _firstId(List<mb.QueriedRenderedFeature?> items) {
+      for (final r in items) {
+        if (r == null) continue;
+        final feat = r.queriedFeature.feature as Map?;
+        final props = _asMap(feat?['properties']);
+        final rawId =
+            props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+        if (rawId != null) return rawId.toString();
+      }
+      return null;
+    }
+
+    const half = 22.0;
+    final p = ctx.touchPosition;
+    final box = mb.RenderedQueryGeometry.fromScreenBox(
+      mb.ScreenBox(
+        min: mb.ScreenCoordinate(x: p.x - half, y: p.y - half),
+        max: mb.ScreenCoordinate(x: p.x + half, y: p.y + half),
+      ),
+    );
+
+    // 👥 Only check friend icons / labels on long-press
+    final friendsHits = await map.queryRenderedFeatures(
+      box,
+      mb.RenderedQueryOptions(layerIds: [
+        MapStyle.lyrFriendIcons,
+        MapStyle.lyrFriendLabels,
+      ]),
+    );
+
+    final friendId = _firstId(friendsHits);
+    if (friendId != null) {
+      debugPrint('long tap -> friend id: $friendId');
+      _goToFriendProfile(friendId);
+    }
+  }
+
+  void _goToFriendProfile(String uid) {
+    if (!mounted) return;
+
+    context.pushNamedPage(
+      'otherProfile',
+      extra: uid,
+    );
+  }
+
 
 
 }

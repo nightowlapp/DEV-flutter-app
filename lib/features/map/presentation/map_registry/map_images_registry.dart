@@ -216,8 +216,6 @@ class MapImageRegistry {
 // it already draws black fill + colored ring + image.
 
 
-
-
 /// Load bytes for `path`:
   /// - normalize storage paths / gs:// → HTTPS when possible
   /// - use DefaultCacheManager for HTTP (disk cached)
@@ -498,7 +496,7 @@ class MapImageRegistry {
       style: TextStyle(
         fontFamily: profileIcon.fontFamily,
         package: profileIcon.fontPackage,
-        fontSize: edge * 0.3,
+        fontSize: edge * 0.45,
         color: white,
       ),
     );

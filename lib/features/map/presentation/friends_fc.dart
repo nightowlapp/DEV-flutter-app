@@ -24,7 +24,7 @@ String friendsToFeatureCollection(
 
     final avatarImageId = 'friend_avatar_${uid}_$partyStatus';
 
-    final pretty = Utility.formatTimeAgo(loc.timestamp);
+    final pretty = Utility.formatString(Utility.formatTimeAgo(loc.timestamp));
 
     final props = <String, dynamic>{
       'id': uid,

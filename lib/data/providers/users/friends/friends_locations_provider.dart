@@ -23,13 +23,8 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
   db.collection(FirestoreCollections.locations).snapshots();
 
   return snapshots.map((qs) {
-    final now = DateTime.now();
-    final out = <String, LiveLocation>{};
 
-    // 👇 debug
-    // ignore: avoid_print
-    print(
-        '[friendsLocationsProvider] locations snapshot: ${qs.docs.length} docs');
+    final out = <String, LiveLocation>{};
 
     for (final doc in qs.docs) {
       final uid = doc.id;
@@ -42,10 +37,6 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       try {
         final loc = LiveLocation.fromAny(uid, data);
 
-        // // Hide locations older than 7 days hours
-        // if (now.difference(loc.timestamp) > const Duration(days: 7)) {
-        //   continue;
-        // }
 
         out[uid] = loc;
       } catch (e) {

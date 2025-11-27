@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/models/users/friend.dart';
 import 'package:nightowlcode/models/users/live_location.dart';
@@ -203,6 +205,132 @@ class FriendPopup extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+class FriendMapBubble extends StatelessWidget {
+  final String uid;
+  final FriendProfile profile;
+  final LiveLocation loc;
+  final VoidCallback? onOpenProfile;
+  final VoidCallback? onMessage;
+  final VoidCallback? onClose;
+
+  const FriendMapBubble({
+    super.key,
+    required this.uid,
+    required this.profile,
+    required this.loc,
+    this.onOpenProfile,
+    this.onMessage,
+    this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final name = profile.displayName?.isNotEmpty == true
+        ? profile.displayName!
+        : uid;
+
+    final rawStatus = profile.partyStatus?.name ?? 'still_planning';
+    final prettyStatus = Utility.formatString(
+      rawStatus.replaceAll('_', ' '),
+    ) ??
+        rawStatus;
+
+    // For now we reuse the location timestamp for the “been XYZ for …”
+    final prettyTime = Utility.formatTimeAgo(loc.timestamp);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ===== bubble =====
+        Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: black,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white10,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    profileIcon,
+                    color: white,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      style: Styles.basicText,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Active $prettyStatus',
+                      style: Styles.smallText,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Been $prettyStatus for $prettyTime',
+                      style: Styles.smallText.copyWith(color: greyLighter),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                if (onMessage != null)
+                  IconButton(
+                    icon: const Icon(Icons.message, size: 18, color: white),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: onMessage,
+                  ),
+                if (onOpenProfile != null)
+                  IconButton(
+                    icon: const Icon(Icons.person, size: 18, color: white),
+                    padding: const EdgeInsets.only(left: 4),
+                    constraints: const BoxConstraints(),
+                    onPressed: onOpenProfile,
+                  ),
+                if (onClose != null)
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+                    padding: const EdgeInsets.only(left: 4),
+                    constraints: const BoxConstraints(),
+                    onPressed: onClose,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        // ===== small arrow pointing to marker =====
+        Transform.rotate(
+          angle: math.pi, // upside-down arrow_drop_up → arrow pointing down
+          child: const Icon(
+            Icons.arrow_drop_up,
+            size: 20,
+            color: black,
+          ),
+        ),
+      ],
     );
   }
 }

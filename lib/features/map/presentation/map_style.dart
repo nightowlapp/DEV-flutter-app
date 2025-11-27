@@ -24,9 +24,13 @@ class MapStyle {
   static const lyrLabels = 'lyr_labels'; // non-VIP names
   static const lyrVip = 'lyr_vip';
   static const lyrVipLabels = 'lyr_vip_labels'; // VIP names
+
   static const lyrFriendDots = 'lyr_friend_dots';
   static const lyrFriendIcons  = 'lyr_friend_icons';
   static const lyrFriendLabels = 'lyr_friend_labels';
+  static const lyrFriendClusters = 'lyr_friend_clusters';
+  static const lyrFriendClusterCount = 'lyr_friend_cluster_count';
+
   static const lyrHotGlowOuter = 'lyr_hot_glow_outer';
   static const lyrHotGlowInner = 'lyr_hot_glow_inner';
   static const lyrHotFlameIcon = 'lyr_hot_flame_icon';
@@ -249,8 +253,10 @@ class MapStyle {
       await style.addSource(
         GeoJsonSource(
           id: srcFriends,
+          cluster: true,
+          clusterRadius: 100,
+          clusterMaxZoom: 10,
           data: _emptyFC(),
-          cluster: false,
         ),
       );
     }
@@ -911,105 +917,214 @@ class MapStyle {
 
 
   //TODO friends cluster together like venues. When clicked small popup to see names and interactions.
+  //TODO Clusters should indicate what friends are doing - border color of majority? Bordercolor changeing as circle diagram?
   Future<void> _ensureFriendLayers(MapboxMap map) async {
-      final style = map.style;
+    final style = map.style;
 
-      // ----- Avatar icon on top of circle -----
-      if (!await style.styleLayerExists(lyrFriendIcons)) {
-        await style.addLayer(
-          SymbolLayer(id: lyrFriendIcons, sourceId: srcFriends),
-        );
+    // ----- 1) Friend cluster circles -----
+    if (!await style.styleLayerExists(lyrFriendClusters)) {
+      await style.addLayer(
+        CircleLayer(id: lyrFriendClusters, sourceId: srcFriends),
+      );
+    }
 
-        await style.setStyleLayerProperty(
-          lyrFriendIcons,
-          'icon-image',
-          jsonEncode([
-            'get',
-            'avatar_image_id',
-          ]),
-        );
+    // always re-apply properties (hot-reload / Studio layers safe)
+    await style.setStyleLayerProperty(
+      lyrFriendClusters,
+      'filter',
+      jsonEncode(['has', 'point_count']),
+    );
 
-        await style.setStyleLayerProperty(
-          lyrFriendIcons,
-          'icon-size',
-          1.6,
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendIcons,
-          'icon-allow-overlap',
-          true,
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendIcons,
-          'icon-ignore-placement',
-          true,
-        );
-      }
+    // 🔵 BLUE friend clusters
+    await style.setStyleLayerProperty(
+      lyrFriendClusters,
+      'circle-color',
+      blue.toHex(),
+    );
 
-      // ----- Label: name + time ago -----
-      if (!await style.styleLayerExists(lyrFriendLabels)) {
-        await style.addLayer(
-          SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends),
-        );
+    // 📏 make them big
+    await style.setStyleLayerProperty(
+      lyrFriendClusters,
+      'circle-radius',
+      jsonEncode([
+        'step',
+        ['get', 'point_count'],
+        28,   // 1–4 friends
+        5,  36, // 5–9
+        10, 44, // 10–19
+        20, 52, // 20+
+      ]),
+    );
 
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-field',
-          jsonEncode([
-            'format',
+    await style.setStyleLayerProperty(
+      lyrFriendClusters,
+      'circle-opacity',
+      1.0,
+    );
 
-            // 1) Name (normal size)
-            ['get', 'name'],
-            {
-              'font-scale': 1.0,
-            },
+    await style.setStyleLayerProperty(
+      lyrFriendClusters,
+      'circle-stroke-width',
+      0.0,
+    );
 
-            '\n',
-            {},
+    // ----- 2) Friend cluster count -----
+    if (!await style.styleLayerExists(lyrFriendClusterCount)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrFriendClusterCount, sourceId: srcFriends),
+      );
+    }
 
-            // 2) Timestamp (smaller)
-            ['get', 'timestamp_pretty'],
-            {
-              'font-scale': 0.7, // 👈 smaller than name
-            },
-          ]),
-        );
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'filter',
+      jsonEncode(['has', 'point_count']),
+    );
 
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-size',
-          12.0, // base size → name ~12, timestamp ~8.4
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-color',
-          blue.toHex(),
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-halo-color',
-          black.toHex(),
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-halo-width',
-          1.1,
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-offset',
-          const [0.0, 3.4],
-        );
-        await style.setStyleLayerProperty(
-          lyrFriendLabels,
-          'text-allow-overlap',
-          false,
-        );
-      }
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-field',
+      jsonEncode(['get', 'point_count']),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-size',
+      20.0,
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-color',
+      white.toHex(),  // white numbers on blue
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-halo-color',
+      blue.toHex(),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-halo-width',
+      1.1,
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-allow-overlap',
+      true,
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendClusterCount,
+      'text-ignore-placement',
+      true,
+    );
+
+    // ----- 3) Avatar icon on top of circle (UNCLUSTERED friends) -----
+    if (!await style.styleLayerExists(lyrFriendIcons)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrFriendIcons, sourceId: srcFriends),
+      );
+    }
+
+    await style.setStyleLayerProperty(
+      lyrFriendIcons,
+      'filter',
+      jsonEncode([
+        'all',
+        ['!', ['has', 'point_count']],
+      ]),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendIcons,
+      'icon-image',
+      jsonEncode(['get', 'avatar_image_id']),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendIcons,
+      'icon-size',
+      1.6,
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendIcons,
+      'icon-allow-overlap',
+      true,
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendIcons,
+      'icon-ignore-placement',
+      true,
+    );
+
+    // ----- 4) Label: name + time ago (UNCLUSTERED friends) -----
+    if (!await style.styleLayerExists(lyrFriendLabels)) {
+      await style.addLayer(
+        SymbolLayer(id: lyrFriendLabels, sourceId: srcFriends),
+      );
+    }
+
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'filter',
+      jsonEncode([
+        'all',
+        ['!', ['has', 'point_count']],
+      ]),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-field',
+      jsonEncode([
+        'format',
+        ['get', 'name'],
+        {'font-scale': 1.0},
+        '\n',
+        {},
+        ['get', 'timestamp_pretty'],
+        {'font-scale': 0.7},
+      ]),
+    );
+
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-size',
+      12.0,
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-color',
+      blue.toHex(),
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-halo-color',
+      black.toHex(),
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-halo-width',
+      1.1,
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-offset',
+      const [0.0, 3.4],
+    );
+    await style.setStyleLayerProperty(
+      lyrFriendLabels,
+      'text-allow-overlap',
+      false,
+    );
   }
 
 
-    // ======================================================================
+
+  // ======================================================================
   // PRIVATE HELPERS – PITCH ALIGNMENT
   // ======================================================================
 

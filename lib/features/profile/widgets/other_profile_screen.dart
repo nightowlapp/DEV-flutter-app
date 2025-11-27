@@ -37,10 +37,16 @@ class OtherProfileScreen extends ConsumerWidget {
 
   final String uid;
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAv = ref.watch(userByUidProvider(uid));
+    final venuesAsync = ref.watch(favoriteVenuesForUserProvider(uid));
+
+    final hasFavorites = venuesAsync.maybeWhen(
+      data: (venues) => venues.isNotEmpty,
+      orElse: () => false,
+    );
+
 
     return userAv.when(
       loading: () => const Scaffold(
@@ -83,14 +89,14 @@ class OtherProfileScreen extends ConsumerWidget {
         );
 
         final borderColor =
-            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+          ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
-  // Are we already friends with this user?
-  final friendsAv = ref.watch(friendsProvider);
-  final isFriend = friendsAv.maybeWhen(
-    data: (list) => list.any((f) => f.id == u.id),
-    orElse: () => false,
-  );
+        // Are we already friends with this user?
+        final friendsAv = ref.watch(friendsProvider);
+        final isFriend = friendsAv.maybeWhen(
+          data: (list) => list.any((f) => f.id == u.id),
+          orElse: () => false,
+        );
 
         return Scaffold(
           backgroundColor: black,
@@ -106,103 +112,103 @@ class OtherProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ---------- TOP ROW: avatar + names + status ----------
-            // ---------- TOP ROW: avatar + names + friend status ----------
-Row(
-  children: [
-    // LEFT: avatar + names
-    Expanded(
-      child: SizedBox(
-        height: PlatformConfig.height(context) * 0.12,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Other user's avatar (NO edit prompt)
-            ProfilePictureAvatar(
-              size: PlatformConfig.width(context) * 0.25,
-              imageUrl: u.profilePictureUrl,
-              backgroundColor: borderColor,
-              disablePrompt: true, // don't let you change *their* picture
-            ),
-            const SizedBox(width: horizontalSpacerMedium),
+                  // ---------- TOP ROW: avatar + names + friend status ----------
+                  Row(
+                    children: [
+                      // LEFT: avatar + names
+                      Expanded(
+                        child: SizedBox(
+                          height: PlatformConfig.height(context) * 0.12,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Other user's avatar (NO edit prompt)
+                              ProfilePictureAvatar(
+                                size: PlatformConfig.width(context) * 0.25,
+                                imageUrl: u.profilePictureUrl,
+                                backgroundColor: borderColor,
+                                disablePrompt: true, // don't let you change *their* picture
+                              ),
+                              const SizedBox(width: horizontalSpacerMedium),
 
-            // Names
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Full name
-                  AutoSizeText(
-                    u.displayFullName.isNotEmpty
-                        ? u.displayFullName
-                        : u.userName,
-                    maxLines: 1,
+                              // Names
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Full name
+                                    AutoSizeText(
+                                      u.displayFullName.isNotEmpty
+                                        ? u.displayFullName
+                                        : u.userName,
+                                      maxLines: 1,
+                                    ),
+                                    const SizedBox(height: verticalSpacerVerySmall),
+                                    // Username
+                                    AutoSizeText(
+                                      u.userName,
+                                      maxLines: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // RIGHT: friend icon (far right)
+                      SizedBox(
+                        width: 44,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: isFriend
+                            ? Icon(
+                              profileIcon,
+                              color: green,
+                              size: 26,
+                            )
+                            : IconButton( // TODO make best friend a possibility. Just simple
+                              icon: Icon(
+                                Icons.person_add_alt_1_outlined,
+                                color: owlPurple,
+                                size: 24,
+                              ),
+                              tooltip: 'Add friend',
+                              onPressed: () async {
+                                final repo = ref.read(friendRequestsRepositoryProvider);
+                                final res = await repo.send(toUid: u.id);
+
+                                final (msg, ok) = _msgForResult(res, u.userName);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(msg),
+                                    backgroundColor:
+                                    ok ? green : red,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                            ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: verticalSpacerVerySmall),
-                  // Username
-                  AutoSizeText(
-                    u.userName,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
 
-    // RIGHT: friend icon (far right)
-    SizedBox(
-      width: 44,
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: isFriend
-            ? Icon(
-                profileIcon,
-                color: green,
-                size: 26,
-              )
-            : IconButton( // TODO make best friend a possibility. Just simple
-                icon: Icon(
-                  Icons.person_add_alt_1_outlined,
-                  color: owlPurple,
-                  size: 24,
-                ),
-                tooltip: 'Add friend',
-                onPressed: () async {
-                  final repo = ref.read(friendRequestsRepositoryProvider);
-                  final res = await repo.send(toUid: u.id);
-
-                  final (msg, ok) = _msgForResult(res, u.userName);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(msg),
-                      backgroundColor:
-                          ok ? green : red,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-      ),
-    ),
-  ],
-),
-
- const SizedBox(height: verticalSpacerDefault),
+                  const SizedBox(height: verticalSpacerDefault),
 
                   // ---------- LEVEL INDICATOR (same style) ----------
                   LevelIndicator(
                     levelLabel: u.level.toInt() == 1337
-                        ? 'Level 1337'
-                        : 'Level ${p.level.toInt()}',
+                      ? 'Level 1337'
+                      : 'Level ${p.level.toInt()}',
                     current: u.level.toInt() == 1337
-                        ? 69
-                        : currentXp.toInt(),
+                      ? 69
+                      : currentXp.toInt(),
                     total: u.level.toInt() == 1337
-                        ? 420
-                        : xpThisLevel.toInt(),
+                      ? 420
+                      : xpThisLevel.toInt(),
                     height: PlatformConfig.height(context) * 0.05,
                     gradient: const LinearGradient(
                       colors: [owlPurple, purple, owlPurple, purple],
@@ -215,11 +221,10 @@ Row(
                   // ---------- EMblems / Achievements ----------
                   const EmblemsSection(achieved: 37, total: 113, title: 'Emblems',),
 
+                  if (hasFavorites)
+                  _OtherUserFavoritesSection(uid: u.id), // TODO Show x / X as in other places.
 
-
-_OtherUserFavoritesSection(uid: u.id), // TODO Show x / X as in other places.
-
-                 if(isFriend)
+                  if(isFriend)
                   const Expanded(
                     child: VisitsSection(
                       maxHeight: null,
@@ -235,25 +240,25 @@ _OtherUserFavoritesSection(uid: u.id), // TODO Show x / X as in other places.
       },
     );
   }
-// make sure this import is at the top
+  // make sure this import is at the top
 
-(String, bool) _msgForResult(FriendRequestSendResult r, String name) {
-  switch (r) {
-    case FriendRequestSendResult.sent:
-      return ('Friend request sent to $name', true);
-    case FriendRequestSendResult.notAuthenticated:
-      return ('You need to sign in first.', false);
-    case FriendRequestSendResult.selfRequest:
-      return ('You cannot add yourself.', false);
-    case FriendRequestSendResult.alreadyFriends:
-      return ('You are already friends.', false);
-    case FriendRequestSendResult.alreadyPending:
-      return ('Request already pending.', false);
-    case FriendRequestSendResult.error:
-    default:
+  (String, bool) _msgForResult(FriendRequestSendResult r, String name) {
+    switch (r) {
+      case FriendRequestSendResult.sent:
+        return ('Friend request sent to $name', true);
+      case FriendRequestSendResult.notAuthenticated:
+        return ('You need to sign in first.', false);
+      case FriendRequestSendResult.selfRequest:
+        return ('You cannot add yourself.', false);
+      case FriendRequestSendResult.alreadyFriends:
+        return ('You are already friends.', false);
+      case FriendRequestSendResult.alreadyPending:
+        return ('Request already pending.', false);
+      case FriendRequestSendResult.error:
+      default:
       return ('Could not send request. Try again.', false);
+    }
   }
-}
 }
 
 class _OtherUserFavoritesSection extends ConsumerWidget {
@@ -284,11 +289,8 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
             error: (_, __) => const SizedBox.shrink(),
             data: (venues) {
               if (venues.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No favorites',
-                    style: Styles.smallText.copyWith(color: greyLighter),
-                  ),
+                return const Center(
+                  child: SizedBox.shrink(),
                 );
               }
 
@@ -310,8 +312,8 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
                               shape: VenueLogoShape.circle,
                               showTypeIfNoLogo: true,
                               tooltip: v.displayName.isNotEmpty
-                                  ? v.displayName
-                                  : v.name,
+                                ? v.displayName
+                                : v.name,
                               // onTap: () async {
                               //   await context.goToMapAndFocusVenue(
                               //     ref,
@@ -325,8 +327,8 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
                               width: logoSize, // keep names from stretching
                               child: AutoSizeText(
                                 v.displayName.isNotEmpty
-                                    ? v.displayName
-                                    : v.name,
+                                  ? v.displayName
+                                  : v.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
