@@ -99,10 +99,11 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final canSee = (data['i_can_see_them'] as bool?) ?? true;
       final isCloseFriend = (data['is_close_friend'] as bool?) ?? false;
 
+      // 👇 always recreate the watcher so isCloseFriend is up-to-date
+      await unwatchLocation(friendUid);
+
       if (canSee) {
         watchLocation(friendUid, isCloseFriend: isCloseFriend);
-      } else {
-        await unwatchLocation(friendUid);
       }
     }
 
