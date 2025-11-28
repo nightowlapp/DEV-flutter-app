@@ -1,8 +1,11 @@
 // lib/features/profile/widgets/other_profile_screen.dart
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/data/firestore_paths/user_paths.dart';
 import 'package:nightowlcode/data/providers/favorite_venues/favorite_venues_provider.dart';
+import 'package:nightowlcode/data/providers/other_providers.dart';
 import 'package:nightowlcode/data/providers/users/friends/friend_request_provider.dart';
 import 'package:nightowlcode/data/providers/users/friends/friends_provider.dart';
 import 'package:nightowlcode/data/repositories/users/friend_requests_repository.dart';
@@ -26,7 +29,9 @@ import 'package:nightowlcode/data/providers/users/user_providers.dart';
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
 
 import '../../../models/users/friend.dart';
+import '../../../shared/reusable/ui/owl_snack.dart';
 import 'emblems_section.dart';
+import 'friend_status_popup.dart';
 import 'level_indicator.dart';
 import 'visits_section.dart';
 
@@ -91,7 +96,7 @@ class OtherProfileScreen extends ConsumerWidget {
         );
 
         final borderColor =
-          ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+        ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
         // friend status
         final FriendEdge? edge = edgeAv.maybeWhen(
@@ -130,7 +135,8 @@ class OtherProfileScreen extends ConsumerWidget {
                                 size: PlatformConfig.width(context) * 0.25,
                                 imageUrl: u.profilePictureUrl,
                                 backgroundColor: borderColor,
-                                disablePrompt: true, // don't let you change *their* picture
+                                disablePrompt:
+                                true, // don't let you change *their* picture
                               ),
                               const SizedBox(width: horizontalSpacerMedium),
 
@@ -143,11 +149,12 @@ class OtherProfileScreen extends ConsumerWidget {
                                     // Full name
                                     AutoSizeText(
                                       u.displayFullName.isNotEmpty
-                                        ? u.displayFullName
-                                        : u.userName,
+                                          ? u.displayFullName
+                                          : u.userName,
                                       maxLines: 1,
                                     ),
-                                    const SizedBox(height: verticalSpacerVerySmall),
+                                    const SizedBox(
+                                        height: verticalSpacerVerySmall),
                                     // Username
                                     AutoSizeText(
                                       u.userName,
@@ -170,54 +177,95 @@ class OtherProfileScreen extends ConsumerWidget {
                               ? IconButton(
                             icon: Icon(
                               profileIcon,
-                              color: isCloseFriend ? owlPurple : blue,
+                              color:
+                              isCloseFriend ? owlPurple : blue,
                               size: 26,
                             ),
-                            tooltip: isCloseFriend
-                                ? 'Remove close friend'
-                                : 'Make close friend',
+                            tooltip: 'Friend status',
                             onPressed: () async {
-                              final makeClose = !isCloseFriend;
-
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  backgroundColor: black,
-                                  title: Text(
-                                    makeClose
-                                        ? 'Make close friend?'
-                                        : 'Remove close friend?',
-                                    style: Styles.basicText,
-                                  ),
-                                  content: Text(
-                                    makeClose
-                                        ? 'Are you sure you want to make ${u.userName} a close friend?'
-                                        : 'Are you sure you want to remove ${u.userName} from your close friends?',
-                                    style: Styles.smallText,
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Yes'),
-                                    ),
-                                  ],
-                                ),
+                              // Bottom popup for friend status
+                              final choice =
+                              await FriendStatusPopup.show(
+                                context,
+                                userName: u.userName,
+                                isCloseFriend: isCloseFriend,
                               );
 
-                              if (confirmed != true) return;
+                              if (choice == null) return;
 
                               final friendsRepo =
                               ref.read(friendsRepositoryProvider);
-                              await friendsRepo.setCloseFriend(
-                                friendUid: u.id,
-                                isClose: makeClose,
-                              );
+
+                              switch (choice) {
+                                case FriendStatusChoice.closeFriend:
+                                  await friendsRepo.setCloseFriend(
+                                    friendUid: u.id,
+                                    isClose: true,
+                                  );
+                                  OwlSnack.show(
+                                    context,
+                                    title:
+                                    '${u.userName} is now a close friend',
+                                    variant:
+                                    OwlSnackVariant.success,
+                                  );
+                                  break;
+
+                                case FriendStatusChoice.normalFriend:
+                                  await friendsRepo.setCloseFriend(
+                                    friendUid: u.id,
+                                    isClose: false,
+                                  );
+                                  OwlSnack.show(
+                                    context,
+                                    title:
+                                    '${u.userName} is now a normal friend',
+                                    variant: OwlSnackVariant.info,
+                                  );
+                                  break;
+
+                                case FriendStatusChoice.unfriend:
+                                // Just remove that frienduid.
+                                  final auth =
+                                  ref.read(firebaseAuthProvider);
+                                  final me = auth.currentUser;
+                                  if (me != null) {
+                                    final db =
+                                        FirebaseFirestore.instance;
+                                    final batch = db.batch();
+
+                                    // my view of them: users/{me}/friends/{friendUid}
+                                    final myFriendsCol = db
+                                        .collection(
+                                        UserDocumentPaths.collection)
+                                        .doc(me.uid)
+                                        .collection(
+                                        UserDocumentPaths.friends);
+                                    batch.delete(
+                                        myFriendsCol.doc(u.id));
+
+                                    // their view of me (safe even if doc doesn't exist)
+                                    final theirFriendsCol = db
+                                        .collection(
+                                        UserDocumentPaths.collection)
+                                        .doc(u.id)
+                                        .collection(
+                                        UserDocumentPaths.friends);
+                                    batch.delete(
+                                        theirFriendsCol.doc(me.uid));
+
+                                    await batch.commit();
+                                  }
+
+                                  OwlSnack.show(
+                                    context,
+                                    title:
+                                    'You are no longer friends with ${u.userName}',
+                                    variant:
+                                    OwlSnackVariant.warning,
+                                  );
+                                  break;
+                              }
                             },
                           )
                               : IconButton(
@@ -229,7 +277,8 @@ class OtherProfileScreen extends ConsumerWidget {
                             tooltip: 'Add friend',
                             onPressed: () async {
                               // "Are you sure" before sending request
-                              final confirmed = await showDialog<bool>(
+                              final confirmed =
+                              await showDialog<bool>(
                                 context: context,
                                 builder: (_) => AlertDialog(
                                   backgroundColor: black,
@@ -244,12 +293,14 @@ class OtherProfileScreen extends ConsumerWidget {
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
-                                          Navigator.of(context).pop(false),
+                                          Navigator.of(context)
+                                              .pop(false),
                                       child: const Text('Cancel'),
                                     ),
                                     TextButton(
                                       onPressed: () =>
-                                          Navigator.of(context).pop(true),
+                                          Navigator.of(context)
+                                              .pop(true),
                                       child: const Text('Send'),
                                     ),
                                   ],
@@ -258,18 +309,21 @@ class OtherProfileScreen extends ConsumerWidget {
 
                               if (confirmed != true) return;
 
-                              final repo =
-                              ref.read(friendRequestsRepositoryProvider);
-                              final res = await repo.send(toUid: u.id);
+                              final repo = ref.read(
+                                  friendRequestsRepositoryProvider);
+                              final res =
+                              await repo.send(toUid: u.id);
 
                               final (msg, ok) =
                               _msgForResult(res, u.userName);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: ok ? green : red,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
+
+                              // Use OwlSnack instead of raw SnackBar
+                              OwlSnack.show(
+                                context,
+                                title: msg,
+                                variant: ok
+                                    ? OwlSnackVariant.success
+                                    : OwlSnackVariant.error,
                               );
                             },
                           ),
@@ -283,14 +337,14 @@ class OtherProfileScreen extends ConsumerWidget {
                   // ---------- LEVEL INDICATOR (same style) ----------
                   LevelIndicator(
                     levelLabel: u.level.toInt() == 1337
-                      ? 'Level 1337'
-                      : 'Level ${p.level.toInt()}',
+                        ? 'Level 1337'
+                        : 'Level ${p.level.toInt()}',
                     current: u.level.toInt() == 1337
-                      ? 69
-                      : currentXp.toInt(),
+                        ? 69
+                        : currentXp.toInt(),
                     total: u.level.toInt() == 1337
-                      ? 420
-                      : xpThisLevel.toInt(),
+                        ? 420
+                        : xpThisLevel.toInt(),
                     height: PlatformConfig.height(context) * 0.05,
                     gradient: const LinearGradient(
                       colors: [owlPurple, purple, owlPurple, purple],
@@ -301,19 +355,24 @@ class OtherProfileScreen extends ConsumerWidget {
                   const SizedBox(height: verticalSpacerDefault),
 
                   // ---------- EMblems / Achievements ----------
-                  const EmblemsSection(achieved: 37, total: 113, title: 'Emblems',),
+                  const EmblemsSection(
+                    achieved: 37,
+                    total: 113,
+                    title: 'Emblems',
+                  ),
 
                   if (hasFavorites)
-                  _OtherUserFavoritesSection(uid: u.id), // TODO Show x / X as in other places.
+                    _OtherUserFavoritesSection(
+                        uid: u.id), // TODO Show x / X as in other places.
 
-                  if(isFriend)
-                  const Expanded(
-                    child: VisitsSection(
-                      maxHeight: null,
-                      title: 'Visits',
-                      seeAllEnabled: false,
+                  if (isFriend)
+                    const Expanded(
+                      child: VisitsSection(
+                        maxHeight: null,
+                        title: 'Visits',
+                        seeAllEnabled: false,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -322,6 +381,7 @@ class OtherProfileScreen extends ConsumerWidget {
       },
     );
   }
+
   // make sure this import is at the top
 
   (String, bool) _msgForResult(FriendRequestSendResult r, String name) {
@@ -338,7 +398,7 @@ class OtherProfileScreen extends ConsumerWidget {
         return ('Request already pending.', false);
       case FriendRequestSendResult.error:
       default:
-      return ('Could not send request. Try again.', false);
+        return ('Could not send request. Try again.', false);
     }
   }
 }
@@ -394,8 +454,8 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
                               shape: VenueLogoShape.circle,
                               showTypeIfNoLogo: true,
                               tooltip: v.displayName.isNotEmpty
-                                ? v.displayName
-                                : v.name,
+                                  ? v.displayName
+                                  : v.name,
                               // onTap: () async {
                               //   await context.goToMapAndFocusVenue(
                               //     ref,
@@ -409,8 +469,8 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
                               width: logoSize, // keep names from stretching
                               child: AutoSizeText(
                                 v.displayName.isNotEmpty
-                                  ? v.displayName
-                                  : v.name,
+                                    ? v.displayName
+                                    : v.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,

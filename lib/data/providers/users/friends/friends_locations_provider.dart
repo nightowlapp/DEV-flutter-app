@@ -39,7 +39,10 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
     if (removed) emit();
   }
 
-  void watchLocation(String friendUid, {required bool isCloseFriend}) {
+  void watchLocation(
+      String friendUid, {
+        required bool maySeeWhenCloseOnly,
+      }) {
     if (locSubs.containsKey(friendUid)) return;
 
     final sub = db
@@ -58,11 +61,14 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final audienceRaw = data['audience'] as String?;
       final audience = LocationAudience.fromRaw(audienceRaw);
 
-      final bool visibleForMe = switch (audience) {
-        LocationAudience.none => false,
-        LocationAudience.friends => true, // already a friend if we listen
-        LocationAudience.closeFriends => isCloseFriend,
-      };
+      final bool visibleForMe =
+          maySeeWhenCloseOnly && // 👈 they_can_see_me gate
+              switch (audience) {
+                LocationAudience.none         => false,
+                LocationAudience.friends      => true, // allowed + sharing with friends
+                LocationAudience.closeFriends => true, // allowed + sharing with close friends
+              };
+
 
       if (!visibleForMe) {
         final removed = locations.remove(friendUid) != null;
@@ -74,13 +80,14 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
         final loc = LiveLocation.fromAny(friendUid, data);
         locations[friendUid] = loc;
         emit();
-      } catch (e) {
-        // ignore / log if you want
+      } catch (_) {
+        // ignore
       }
     }, onError: controller.addError);
 
     locSubs[friendUid] = sub;
   }
+
 
   // Listen to my friends subcollection: users/{me}/friends/{friendUid}
   friendsSub = db
@@ -96,14 +103,15 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final friendUid = doc.id;
       activeFriendIds.add(friendUid);
 
+      // inside friendsSub listener
       final canSee = (data['i_can_see_them'] as bool?) ?? true;
-      final isCloseFriend = (data['is_close_friend'] as bool?) ?? false;
+      final theyCanSeeMe = (data['they_can_see_me'] as bool?) ?? true;
 
-      // 👇 always recreate the watcher so isCloseFriend is up-to-date
+// 👇 always recreate watcher so the flag is up-to-date
       await unwatchLocation(friendUid);
 
       if (canSee) {
-        watchLocation(friendUid, isCloseFriend: isCloseFriend);
+        watchLocation(friendUid, maySeeWhenCloseOnly: theyCanSeeMe);
       }
     }
 
