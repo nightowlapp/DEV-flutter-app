@@ -41,7 +41,7 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
 
   void watchLocation(
       String friendUid, {
-        required bool maySeeWhenCloseOnly,
+        required bool isCloseFriend,
       }) {
     if (locSubs.containsKey(friendUid)) return;
 
@@ -61,14 +61,11 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final audienceRaw = data['audience'] as String?;
       final audience = LocationAudience.fromRaw(audienceRaw);
 
-      final bool visibleForMe =
-          maySeeWhenCloseOnly && // 👈 they_can_see_me gate
-              switch (audience) {
-                LocationAudience.none         => false,
-                LocationAudience.friends      => true, // allowed + sharing with friends
-                LocationAudience.closeFriends => true, // allowed + sharing with close friends
-              };
-
+      final bool visibleForMe = switch (audience) {
+        LocationAudience.none         => false,
+        LocationAudience.friends      => true,          // any friend
+        LocationAudience.closeFriends => isCloseFriend, // only if I marked them close
+      };
 
       if (!visibleForMe) {
         final removed = locations.remove(friendUid) != null;
@@ -89,6 +86,7 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
   }
 
 
+
   // Listen to my friends subcollection: users/{me}/friends/{friendUid}
   friendsSub = db
       .collection('users')
@@ -103,15 +101,16 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final friendUid = doc.id;
       activeFriendIds.add(friendUid);
 
-      // inside friendsSub listener
       final canSee = (data['i_can_see_them'] as bool?) ?? true;
-      final theyCanSeeMe = (data['they_can_see_me'] as bool?) ?? true;
+      final isCloseFriend = (data['is_close_friend'] as bool?) ?? false;
 
-// 👇 always recreate watcher so the flag is up-to-date
       await unwatchLocation(friendUid);
 
       if (canSee) {
-        watchLocation(friendUid, maySeeWhenCloseOnly: theyCanSeeMe);
+        watchLocation(
+          friendUid,
+          isCloseFriend: isCloseFriend,
+        );
       }
     }
 

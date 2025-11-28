@@ -693,11 +693,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '$venuesVisibleOnMapCount + ',
+                          '$venuesVisibleOnMapCount',
                           style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount>999? 5:6),
                         ),
-                        Text(
-                          '$_friendsVisibleOnMapCount',
+                        Text(_friendsVisibleOnMapCount > 0 ?
+                          ' + ' :'',
+                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount>999? 5:6),
+                        ),
+                        Text( _friendsVisibleOnMapCount > 0 ?
+                          '$_friendsVisibleOnMapCount' : '',
                           style: Styles.smallText.copyWith(
                             fontSize: venuesVisibleOnMapCount>999? 5:6,
                             color: blue, // 👈 friends number stays blue

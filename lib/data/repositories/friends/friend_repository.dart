@@ -21,40 +21,21 @@ class FriendsRepository {
     if (me == null) return;
 
     final myFriendDoc = _db
-        .doc(UserDocumentPaths.doc(me))
-        .collection(UserDocumentPaths.friends)
-        .doc(friendUid);
+      .doc(UserDocumentPaths.doc(me))
+      .collection(UserDocumentPaths.friends)
+      .doc(friendUid);
 
-    // 👇 this is the doc THEIR app listens to when deciding if they can see YOU
-    final theirFriendDoc = _db
-        .doc(UserDocumentPaths.doc(friendUid))
-        .collection(UserDocumentPaths.friends)
-        .doc(me);
-
-    final batch = _db.batch();
-
-    // My view: I mark them as close friend (for UI, etc.)
-    batch.set(
-      myFriendDoc,
-      {
-        FriendEdgeFields.isCloseFriend: isClose,
-        UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
+    await myFriendDoc.set(
+    {
+      FriendEdgeFields.isCloseFriend: isClose,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+    },
+    SetOptions(merge: true),
     );
-
-    // Their view of me: they may / may not see me when my audience is closeFriends
-    batch.set(
-      theirFriendDoc,
-      {
-        'they_can_see_me': isClose, // 👈 key field
-        UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-
-    await batch.commit();
   }
+
+  /// (For later) “This friend may / may not ever see my location”.
+  /// Still only writes *my* doc.
   Future<void> setTheyCanSeeMe({
     required String friendUid,
     required bool allow,
@@ -62,20 +43,18 @@ class FriendsRepository {
     final me = _me;
     if (me == null) return;
 
-    // Write into *their* friends/{me} doc:
-    final theirFriendDoc = _db
-        .doc(UserDocumentPaths.doc(friendUid))
-        .collection(UserDocumentPaths.friends)
-        .doc(me);
+    final myFriendDoc = _db
+      .doc(UserDocumentPaths.doc(me))
+      .collection(UserDocumentPaths.friends)
+      .doc(friendUid);
 
-    await theirFriendDoc.set(
-      {
-        'they_can_see_me': allow,
-        UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
+    await myFriendDoc.set(
+    {
+      'they_can_see_me': allow,
+      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+    },
+    SetOptions(merge: true),
     );
   }
-
 
 }
