@@ -8,13 +8,11 @@ import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 /// Call this to show the popup. Returns the selected audience (or null on dismiss).
 Future<LocationAudience?> showShareLocationPopup(
-    BuildContext context, {
-      LocationAudience initial = LocationAudience.none,
-
-      /// purely visual counters to mirror the mock
-      int friendsCount = 0,
-      int closeFriendsCount = 0,
-    }) {
+BuildContext context, {
+required LocationAudience initial,
+int friendsCount = 0,
+int closeFriendsCount = 0,
+}){
   return showDialog<LocationAudience>(
     context: context,
     barrierDismissible: true,
@@ -51,6 +49,21 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
       height: 1.35,
       fontSize: fontSizeSmaller,
     );
+    final friends = widget.friendsCount == 1 ? 'person' : 'people';
+    final closeFriends = widget.closeFriendsCount == 1 ? 'person' : 'people';
+
+    final buttonLabel = () {
+      if (_selected == LocationAudience.none) {
+        return 'Do not share location';
+      }
+      if (_selected == LocationAudience.friends) {
+        return 'Share location with ${widget.friendsCount} $friends';
+      }
+      if (_selected == LocationAudience.closeFriends) {
+        return 'Share location with ${widget.closeFriendsCount} $closeFriends';
+      }
+      return 'Share location';
+    }();
 
     return OwlPopup(
       title: 'Share Location',
@@ -74,7 +87,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
 
         _ChoiceTile(
           title: 'Friends',
-          subtitle: '${widget.friendsCount} followers you follow back',
+          subtitle: '${widget.friendsCount} $friends',
           icon: Icons.group_rounded,
           value: LocationAudience.friends,
           groupValue: _selected,
@@ -82,7 +95,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
         ),
         _ChoiceTile(
           title: 'Close Friends',
-          subtitle: '${widget.closeFriendsCount} people',
+          subtitle:  '${widget.closeFriendsCount} $closeFriends',
           icon: Icons.star_rounded,
           value: LocationAudience.closeFriends,
           groupValue: _selected,
@@ -112,10 +125,9 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
                 borderRadius: BorderRadius.circular(borderRadiusDefault),
               ),
             ),
+
             child: Text(
-              _selected == LocationAudience.none
-                  ? 'Do not share location'
-                  : 'Share location',
+              buttonLabel,
               style: Styles.basicText,
             ),
           ),

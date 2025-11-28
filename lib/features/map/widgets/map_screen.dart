@@ -569,6 +569,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Current audience from provider
     final shareAudience = ref.watch(shareAudienceProvider);
     final sharingPosition = shareAudience != LocationAudience.none;
+    final sharingFriends = shareAudience == LocationAudience.friends;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -693,7 +694,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 await ref.read(shareAudienceProvider.notifier).setAudience(selected);
               },
               child: Icon(
-                sharingPosition ? distanceIcon : distanceDisabledIcon,
+                sharingPosition ? sharingFriends ? Icons.group_rounded : Icons.star_rounded : distanceDisabledIcon,
                 color: sharingPosition ? blue : red,
               ),
             ),
