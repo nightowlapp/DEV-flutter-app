@@ -90,6 +90,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
   bool _showClosed = true;
   bool _favoritesOnly = false;
+  bool _showFriendsOnMap = true;
   double? _initialDistance;
   Future<void> _ensureUserLocation() async {
     if (_userLocation != null) return;
@@ -308,9 +309,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final friendClusterHits = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-        MapStyle.lyrFriendClusters,
-        MapStyle.lyrFriendClusterCount,
-      ]),
+          MapStyle.lyrFriendClusters,
+          MapStyle.lyrFriendClusterCount,
+        ]),
     );
     debugPrint('tap: friend cluster hits = ${friendClusterHits.length}');
     for (final r in friendClusterHits) {
@@ -319,7 +320,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final props = _asMap(feat?['properties']);
       if (props?['point_count'] != null) {
         final coords =
-        (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
+          (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
         if (coords != null && coords.length >= 2) {
           final lon = coords[0].toDouble();
           final lat = coords[1].toDouble();
@@ -335,7 +336,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
         return;
       }
     }
-
 
     // 1) symbols (VIP + regular) + their labels (you might be tapping text)
     final sym = await map.queryRenderedFeatures(
@@ -422,7 +422,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
       data: (ids) => ids.toSet(),
       orElse: () => <String>{},
     );
-    final visibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds);
+    final venuesVisibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds);
+
+    // Friends "on map" = have a location AND toggle is on
+    final friendsVisibleOnMapCount =
+      _showFriendsOnMap ? _latestFriendLocs.length : 0;
 
     final friendCountsAsync = ref.watch(friendCountsProvider);
 
@@ -436,6 +440,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
       orElse: () => 0,
     );
 
+    // Build friend list for the filter panel (only those with a location)
+    final List<FriendFilterItem> friendFilterItems = [];
+    _latestFriendLocs.forEach((uid, loc) {
+        final profile = _latestFriendProfiles[uid];
+        if (profile == null) return;
+
+        final name = profile.displayName!.trim();
+
+        friendFilterItems.add(
+          FriendFilterItem(
+            uid: uid,
+            title: name,
+            lat: loc.lat,
+            lng: loc.lng,
+            avatarUrl: profile.photoUrl, // 👈 real profile picture
+          ),
+        );
+      }
+    );
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
         final map = _map;
@@ -586,28 +609,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
 
           if (_activeFriendId != null && _activeFriendScreenPos != null)
-            Positioned(
-              left: _activeFriendScreenPos!.dx - 140, // tweak to center horizontally
-              top: _activeFriendScreenPos!.dy - 80,   // already moved up a bit above
-              child: FriendMapBubble(
-                uid: _activeFriendId!,
-                profile: _latestFriendProfiles[_activeFriendId!]!,
-                loc: _latestFriendLocs[_activeFriendId!]!,
-                onMessage: () {
-                  // TODO: open chat
-                },
-                onOpenProfile: () {
-                  // TODO: push friend profile screen
-                  // e.g. context.push('/friends/${_activeFriendId!}');
-                },
-                onClose: () {
-                  setState(() {
+          Positioned(
+            left: _activeFriendScreenPos!.dx - 140, // tweak to center horizontally
+            top: _activeFriendScreenPos!.dy - 80,   // already moved up a bit above
+            child: FriendMapBubble(
+              uid: _activeFriendId!,
+              profile: _latestFriendProfiles[_activeFriendId!]!,
+              loc: _latestFriendLocs[_activeFriendId!]!,
+              onMessage: () {
+                // TODO: open chat
+              },
+              onOpenProfile: () {
+                // TODO: push friend profile screen
+                // e.g. context.push('/friends/${_activeFriendId!}');
+              },
+              onClose: () {
+                setState(() {
                     _activeFriendId = null;
                     _activeFriendScreenPos = null;
-                  });
-                },
-              ),
+                  }
+                );
+              },
             ),
+          ),
 
           if (_navigating) NavigationBanner(
             activeRoute: _activeRoute,
@@ -665,11 +689,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     duration: const Duration(milliseconds: 200),
                     switchInCurve: Curves.easeOut,
                     switchOutCurve: Curves.easeIn,
-                    child: Text(
-                      '$visibleOnMapCount',
-                      key: ValueKey<int>(visibleOnMapCount),
-                      style: Styles.smallText,
-                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$venuesVisibleOnMapCount + ',
+                          key: ValueKey<int>(venuesVisibleOnMapCount),
+                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount > 999 ? 5: 6),
+                        ),
+                        Text(
+                          '$friendsVisibleOnMapCount',
+                          key: ValueKey<int>(friendsVisibleOnMapCount),
+                          style: Styles.smallText.copyWith(fontSize:venuesVisibleOnMapCount > 999 ? 5: 6, color: blue),
+                        ),
+                      ],
+                    )
                   ),
                 ],
               ),
@@ -790,7 +824,32 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   setState(() => _filtersOpen = false);
                   _openVenue(venue);
                 },
-              ),
+                friends: friendFilterItems,
+                showFriends: _showFriendsOnMap,
+                onShowFriendsChanged: (value) async {
+                  setState(() {
+                      _showFriendsOnMap = value;
+                    }
+                  );
+                  await _refreshFriendsOnMap();
+                },
+                onFriendTap: (friend) async {
+                  // Close the panel
+                  setState(() => _filtersOpen = false);
+
+                  // Center the map on friend
+                  await _navigateTo(
+                    LatLng(friend.lat, friend.lng),
+                    zoom: 16,
+                  );
+
+                  // Optional: you could also show the FriendMapBubble for that uid here
+                  // setState(() {
+                  //   _activeFriendId = friend.uid;
+                  //   _activeFriendScreenPos = null; // you'll need to compute screen pos if you want it
+                  // });
+                },
+              ), 
             ),
           ],
         ],
@@ -1167,6 +1226,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final map = _map;
     if (map == null || !_styleReady) return;
 
+    // NEW: if friends are toggled off, send an empty FC
+    if (!_showFriendsOnMap) {
+      final empty = friendsToFeatureCollection(
+        const <String, LiveLocation>{},
+        const <String, FriendProfile>{},
+      );
+      _lastFriendsFc = empty;
+      await _style.setFriendsData(map, empty);
+      return;
+    }
+
     final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
 
     // 1) Build spriteId → path (photo or placeholder)
@@ -1181,7 +1251,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
           idToPath[spriteId] = url;
         }
         else {
-          // 👇 sentinel handled inside MapLogoRegistry._loadAsMbxImage
           idToPath[spriteId] = 'placeholder://friend';
         }
       }
@@ -1231,14 +1300,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // );
   }
 
-
-
   Future<void> _onMapLongTap(mb.MapContentGestureContext ctx) async {
     final map = _map;
     if (map == null) return;
 
     Map<String, dynamic>? _asMap(Object? o) =>
-        (o is Map) ? o.cast<String, dynamic>() : null;
+    (o is Map) ? o.cast<String, dynamic>() : null;
 
     String? _firstId(List<mb.QueriedRenderedFeature?> items) {
       for (final r in items) {
@@ -1246,7 +1313,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         final feat = r.queriedFeature.feature as Map?;
         final props = _asMap(feat?['properties']);
         final rawId =
-            props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+          props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
         if (rawId != null) return rawId.toString();
       }
       return null;
@@ -1265,9 +1332,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final friendsHits = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-        MapStyle.lyrFriendIcons,
-        MapStyle.lyrFriendLabels,
-      ]),
+          MapStyle.lyrFriendIcons,
+          MapStyle.lyrFriendLabels,
+        ]),
     );
 
     final friendId = _firstId(friendsHits);
