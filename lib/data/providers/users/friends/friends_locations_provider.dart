@@ -64,7 +64,7 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
       final bool visibleForMe = switch (audience) {
         LocationAudience.none         => false,
         LocationAudience.friends      => true,          // any friend
-        LocationAudience.closeFriends => isCloseFriend, // only if I marked them close
+        LocationAudience.closeFriends => isCloseFriend, // todo not working.
       };
 
       if (!visibleForMe) {

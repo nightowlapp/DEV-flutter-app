@@ -224,7 +224,7 @@ class OtherProfileScreen extends ConsumerWidget {
                                   );
                                   break;
 
-                                case FriendStatusChoice.unfriend:
+                                case FriendStatusChoice.unfriend: //TODO remove friend request
                                 // Just remove that frienduid.
                                   final auth =
                                   ref.read(firebaseAuthProvider);
