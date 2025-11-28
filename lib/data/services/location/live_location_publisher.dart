@@ -32,7 +32,7 @@ class LiveLocationPublisher {
     );
   }
 
-  Future<void> start() async {
+  Future<void> start() async { //Todo needs to know when this fires. Should be correct location.
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 

@@ -92,6 +92,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _favoritesOnly = false;
   bool _showFriendsOnMap = true;
   double? _initialDistance;
+
+  int _friendsVisibleOnMapCount = 0;
   Future<void> _ensureUserLocation() async {
     if (_userLocation != null) return;
     try {
@@ -423,11 +425,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       orElse: () => <String>{},
     );
     final venuesVisibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds) ?? 0;
-
-    // Friends "on map" = have a location AND toggle is on
-    final friendsVisibleOnMapCount =
-      _showFriendsOnMap ? _latestFriendLocs.length : 0;
-
     final friendCountsAsync = ref.watch(friendCountsProvider);
 
     final friendsCount = friendCountsAsync.maybeWhen(
@@ -690,24 +687,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     switchInCurve: Curves.easeOut,
                     switchOutCurve: Curves.easeIn,
                     child: Row(
-                      key: ValueKey('${venuesVisibleOnMapCount}_$friendsVisibleOnMapCount'),
+                      key: ValueKey(
+                        '${venuesVisibleOnMapCount}_$_friendsVisibleOnMapCount',
+                      ), // 👈 single unique key
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '$venuesVisibleOnMapCount + ',
-                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount > 999 ? 5:6),
+                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount>999? 5:6),
                         ),
                         Text(
-                          '$friendsVisibleOnMapCount',
+                          '$_friendsVisibleOnMapCount',
                           style: Styles.smallText.copyWith(
-                            fontSize: venuesVisibleOnMapCount > 999 ? 5:6,
-                            color: blue, // 👈 friends in blue
+                            fontSize: venuesVisibleOnMapCount>999? 5:6,
+                            color: blue, // 👈 friends number stays blue
                           ),
                         ),
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -1229,7 +1227,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final map = _map;
     if (map == null || !_styleReady) return;
 
-    // NEW: if friends are toggled off, send an empty FC
+    // If friends are toggled off → clear layer + set counter to 0
     if (!_showFriendsOnMap) {
       final empty = friendsToFeatureCollection(
         const <String, LiveLocation>{},
@@ -1237,6 +1235,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
       _lastFriendsFc = empty;
       await _style.setFriendsData(map, empty);
+
+      if (mounted) {
+        setState(() {
+          _friendsVisibleOnMapCount = 0;
+        });
+      }
       return;
     }
 
@@ -1246,18 +1250,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final idToPath = <String, String>{};
 
     _latestFriendProfiles.forEach((uid, profile) {
-        final statusName = profile.partyStatus?.name ?? 'still_planning';
-        final spriteId = 'friend_avatar_${uid}_$statusName';
+      final statusName = profile.partyStatus?.name ?? 'still_planning';
+      final spriteId = 'friend_avatar_${uid}_$statusName';
 
-        final url = profile.photoUrl?.trim();
-        if (url != null && url.isNotEmpty) {
-          idToPath[spriteId] = url;
-        }
-        else {
-          idToPath[spriteId] = 'placeholder://friend';
-        }
+      final url = profile.photoUrl?.trim();
+      if (url != null && url.isNotEmpty) {
+        idToPath[spriteId] = url;
+      } else {
+        idToPath[spriteId] = 'placeholder://friend';
       }
-    );
+    });
 
     if (idToPath.isNotEmpty) {
       await MapImageRegistry.instance.syncIdToUrl(
@@ -1276,7 +1278,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _lastFriendsFc = fc;
 
     await _style.setFriendsData(map, fc);
+
+    // 3) Update the small counter + rebuild
+    if (mounted) {
+      setState(() {
+        _friendsVisibleOnMapCount =
+        _showFriendsOnMap ? _latestFriendLocs.length : 0;
+      });
+    }
   }
+
 
   Future<void> _openFriendById(String uid) async {
     final profile = _latestFriendProfiles[uid];
