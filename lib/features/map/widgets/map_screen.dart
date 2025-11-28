@@ -422,7 +422,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       data: (ids) => ids.toSet(),
       orElse: () => <String>{},
     );
-    final venuesVisibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds);
+    final venuesVisibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds) ?? 0;
 
     // Friends "on map" = have a location AND toggle is on
     final friendsVisibleOnMapCount =
@@ -690,21 +690,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     switchInCurve: Curves.easeOut,
                     switchOutCurve: Curves.easeIn,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      key: ValueKey('${venuesVisibleOnMapCount}_$friendsVisibleOnMapCount'),
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '$venuesVisibleOnMapCount + ',
-                          key: ValueKey<int>(venuesVisibleOnMapCount),
-                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount > 999 ? 5: 6),
+                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount > 999 ? 5:6),
                         ),
                         Text(
                           '$friendsVisibleOnMapCount',
-                          key: ValueKey<int>(friendsVisibleOnMapCount),
-                          style: Styles.smallText.copyWith(fontSize:venuesVisibleOnMapCount > 999 ? 5: 6, color: blue),
+                          style: Styles.smallText.copyWith(
+                            fontSize: venuesVisibleOnMapCount > 999 ? 5:6,
+                            color: blue, // 👈 friends in blue
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ),
+
                 ],
               ),
             ),
