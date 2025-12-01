@@ -302,11 +302,11 @@ class FeedbackRepository {
 
     // 6) Append to a venue_media doc for this venue
     //    (adjust collection/field names to match your schema if needed)
-    final mediaRef = _db.collection('venue_media').doc(venueId);
-    await mediaRef.set({
-      'mood_image_urls': FieldValue.arrayUnion(<String>[url]),
-      FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    // final mediaRef = _db.collection('venue_media').doc(venueId);
+    // await mediaRef.set({
+    //   'mood_image_urls': FieldValue.arrayUnion(<String>[url]),
+    //   FirestoreFields.updatedAt: FieldValue.serverTimestamp(),
+    // }, SetOptions(merge: true));
 
     return url;
   }

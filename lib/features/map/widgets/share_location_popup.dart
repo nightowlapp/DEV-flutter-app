@@ -8,11 +8,11 @@ import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 /// Call this to show the popup. Returns the selected audience (or null on dismiss).
 Future<LocationAudience?> showShareLocationPopup(
-BuildContext context, {
-required LocationAudience initial,
-int friendsCount = 0,
-int closeFriendsCount = 0,
-}){
+    BuildContext context, {
+      required LocationAudience initial,
+      int friendsCount = 0,
+      int closeFriendsCount = 0,
+    }) {
   return showDialog<LocationAudience>(
     context: context,
     barrierDismissible: true,
@@ -73,14 +73,13 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton(
-            onPressed: () {}, // TODO: open info page
+            onPressed: () => showLocationSharingInfoPopup(context),
             style: TextButton.styleFrom(
-              foregroundColor: owlPurple,
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Learn more'),
+            child: Text('Learn more', style: Styles.smallText.copyWith(color: blue),),
           ),
         ),
         const SizedBox(height: 6),
@@ -95,7 +94,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
         ),
         _ChoiceTile(
           title: 'Close Friends',
-          subtitle:  '${widget.closeFriendsCount} $closeFriends',
+          subtitle: '${widget.closeFriendsCount} $closeFriends',
           icon: Icons.star_rounded,
           value: LocationAudience.closeFriends,
           groupValue: _selected,
@@ -125,9 +124,88 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
                 borderRadius: BorderRadius.circular(borderRadiusDefault),
               ),
             ),
-
             child: Text(
               buttonLabel,
+              style: Styles.basicText,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Small info popup for "Learn more"
+Future<void> showLocationSharingInfoPopup(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (_) => const _LocationInfoPopup(),
+  );
+}
+
+class _LocationInfoPopup extends StatelessWidget {
+  const _LocationInfoPopup({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyStyle = Styles.smallText.copyWith(
+      color: greyLighter,
+      fontSize: fontSizeSmaller,
+      height: 1.4,
+    );
+
+    return OwlPopup(
+      title: 'How location sharing works',
+      maxWidth: 520,
+      maxHeightFraction: 0.86,
+      children: [
+        const SizedBox(height: 4),
+        Text(
+          'NightOwl only shares your location with the audience you pick here.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '• Friends – everyone you\'ve added as a friend can see you on the map.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '• Close Friends – only people you\'ve marked as close friends can see you.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '• No one – your location is hidden from everyone.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Your location visibility resets every day. After it resets you\'ll need to '
+              'choose again if you want to keep sharing.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'You can change or turn off sharing at any time from this popup.',
+          style: bodyStyle,
+        ),
+        const SizedBox(height: 18),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: white,
+              side: BorderSide(color: grey),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(borderRadiusDefault),
+              ),
+            ),
+            child: Text(
+              'Got it',
               style: Styles.basicText,
             ),
           ),
