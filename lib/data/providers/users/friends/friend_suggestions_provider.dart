@@ -1,37 +1,52 @@
 // lib/data/providers/users/friends/friend_suggestions_provider.dart
+
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nightowlcode/features/social/utility/friend_requests_section.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
+
 import '../../../../models/users/user.dart' as model;
 import '../../../firestore_paths/firestore_paths.dart';
+import 'friend_request_provider.dart';
 import 'friends_provider.dart';
-import 'sorted_friends_provider.dart';   // authUserIdProvider
-import 'find_friends_providers.dart';   // incoming/outgoing providers
+import 'sorted_friends_provider.dart' show authUserIdProvider;
+import '../../../../shared/party_priority.dart';       // partyPriority()
 
-// search text from the TextField
-final userSearchQueryProvider = StateProvider<String>((_) => '');
+// ----------------------------------------------------------------------------
+// Search text from the "Find Friends" TextField
+// ----------------------------------------------------------------------------
 
-// optional: your own location → ranking
+final userSearchQueryProvider = StateProvider.autoDispose<String>((_) => '');
+
+// Optional: your own location → ranking by distance
 final myLocationProvider = Provider<GeoPoint?>((_) => null);
 
-// ---- Ranking key ------------------------------------------------------------
+// Users that should NEVER appear in Find Friends
+const Set<String> _neverSuggestUserIds = {
+  'NaguneV9N3eFZr6S1gKxuzSnNSl1', // Test
+  'aTGWCoqqmXT5ijqTbntWEuFWWvh2', // Nightowl
+};
+
+// ----------------------------------------------------------------------------
+// Ranking key
+// ----------------------------------------------------------------------------
 
 class _RankKey implements Comparable<_RankKey> {
   const _RankKey({
     required this.searchRank,
     required this.distanceM,
     required this.noImageFirst,
-    required this.partyRank,
+    required this.partyPriorityRank,
     required this.missingFields,
   });
 
-  final int searchRank;   // lower = better match to query
-  final double distanceM; // closer first
-  final int noImageFirst; // 0 if has image, 1 otherwise
-  final int partyRank;    // lower = better
-  final int missingFields;
+  final int searchRank;        // lower = better match to query
+  final double distanceM;      // closer first
+  final int noImageFirst;      // 0 if has image, 1 otherwise
+  final int partyPriorityRank; // lower = better (out tonight > ...)
+  final int missingFields;     // fewer missing profile fields is better
 
   @override
   int compareTo(_RankKey other) {
@@ -44,14 +59,16 @@ class _RankKey implements Comparable<_RankKey> {
     final c2 = noImageFirst.compareTo(other.noImageFirst);
     if (c2 != 0) return c2;
 
-    final c3 = partyRank.compareTo(other.partyRank);
+    final c3 = partyPriorityRank.compareTo(other.partyPriorityRank);
     if (c3 != 0) return c3;
 
     return missingFields.compareTo(other.missingFields);
   }
 }
 
-// ---- Helpers ----------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
 
 double _toRad(double deg) => deg * math.pi / 180.0;
 
@@ -62,15 +79,12 @@ double _haversine(GeoPoint a, GeoPoint b) {
   final la1 = _toRad(a.latitude);
   final la2 = _toRad(b.latitude);
   final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(la1) * math.cos(la2) * math.sin(dLon / 2) * math.sin(dLon / 2);
+      math.cos(la1) * math.cos(la2) *
+          math.sin(dLon / 2) * math.sin(dLon / 2);
   return 2 * r * math.atan2(math.sqrt(h), math.sqrt(1 - h));
 }
 
 double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
-  final server = (data['distance_m'] as num?)?.toDouble() ??
-      (data['distance'] as num?)?.toDouble();
-  if (server != null) return server;
-
   GeoPoint? gp;
 
   if (data['location'] is GeoPoint) {
@@ -87,41 +101,6 @@ double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
 
   if (gp == null || myOrigin == null) return double.infinity;
   return _haversine(myOrigin, gp);
-}
-
-int _partyRank(dynamic raw) {
-  PartyStatusTypes? status;
-
-  if (raw is String) {
-    final s = raw.toLowerCase();
-    for (final v in PartyStatusTypes.values) {
-      if (v.name.toLowerCase() == s) {
-        status = v;
-        break;
-      }
-    }
-  } else if (raw is int) {
-    if (raw >= 0 && raw < PartyStatusTypes.values.length) {
-      status = PartyStatusTypes.values[raw];
-    }
-  } else if (raw is PartyStatusTypes) {
-    status = raw;
-  }
-
-  switch (status) {
-    case PartyStatusTypes.out_tonight:
-      return 0;
-    case PartyStatusTypes.house_party:
-      return 1;
-    case PartyStatusTypes.pregame:
-      return 2;
-    case PartyStatusTypes.still_planning:
-      return 3;
-    case PartyStatusTypes.recovering:
-      return 400;
-    default:
-      return 9;
-  }
 }
 
 int _missingProfileFields(Map<String, dynamic> data) {
@@ -169,12 +148,17 @@ int _searchRank(String q, String usernameLc, String fullNameLc) {
   return 4;
 }
 
-// ---- Main provider ----------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Main provider
+// ----------------------------------------------------------------------------
 
-const _maxDocsPerQuery = 60; // 60 reads max per search
+const _maxDocsPerQuery = 60; // cap Firestore reads per search
 
-final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
+final suggestedUsersProvider =
+StreamProvider.autoDispose<List<model.User>>((ref) {
   final me = ref.watch(authUserIdProvider);
+  if (me == null) return const Stream.empty();
+
   final qRaw = ref.watch(userSearchQueryProvider);
   final db = FirebaseFirestore.instance;
 
@@ -186,7 +170,7 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
   final incomingPending =
   ref.watch(incomingFriendRequestsProvider).maybeWhen(
     data: (reqs) => reqs
-        .where((r) => r.status == FriendRequestStatus.pending)
+        .where((r) => r.statusIsPending)
         .map((r) => r.fromUid)
         .toSet(),
     orElse: () => <String>{},
@@ -195,7 +179,7 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
   final outgoingPending =
   ref.watch(outgoingFriendRequestsProvider).maybeWhen(
     data: (reqs) => reqs
-        .where((r) => r.status == FriendRequestStatus.pending)
+        .where((r) => r.statusIsPending)
         .map((r) => r.toUid)
         .toSet(),
     orElse: () => <String>{},
@@ -203,31 +187,35 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
 
   final myOrigin = ref.watch(myLocationProvider);
 
-  if (me == null) return const Stream.empty();
-
   final q = qRaw.trim();
   final s = q.toLowerCase();
 
   Query<Map<String, dynamic>> base =
   db.collection(UserDocumentPaths.collection);
 
+  // Optional length gate to save reads — uncomment if you want it:
   // if (s.length < 2 && q.isNotEmpty) {
-  //   // no Firestore reads at all
   //   return const Stream<List<model.User>>.empty();
   // }
 
-// actual search:
-  final bool looksLikeName = s.contains(' ');
-  final field = looksLikeName
-      ? UserDocumentPaths.displayFullNameLower
-      : UserDocumentPaths.userNameLower;
+  if (s.isEmpty) {
+    // "Discovery" mode – newest users
+    base = base
+        .orderBy(UserDocumentPaths.createdAt, descending: true)
+        .limit(_maxDocsPerQuery);
+  } else {
+    // If query has a space, treat as full name search, else username search
+    final bool looksLikeName = s.contains(' ');
+    final field = looksLikeName
+        ? UserDocumentPaths.displayFullNameLower
+        : UserDocumentPaths.userNameLower;
 
-  base = base
-      .orderBy(field)
-      .startAt([s])
-      .endAt(['$s\uf8ff'])
-      .limit(_maxDocsPerQuery);
-
+    base = base
+        .orderBy(field)
+        .startAt([s])
+        .endAt(['$s\uf8ff'])
+        .limit(_maxDocsPerQuery);
+  }
 
   return base.snapshots().map((snap) {
     final items = <(_RankKey, model.User)>[];
@@ -235,7 +223,8 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
     for (final d in snap.docs) {
       final data = d.data();
 
-      // basic exclusions
+      // Hard excludes
+      if (_neverSuggestUserIds.contains(d.id)) continue;
       if (d.id == me) continue;
       if (friends.contains(d.id)) continue;
       if (incomingPending.contains(d.id)) continue;
@@ -250,9 +239,7 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
         searchRank: _searchRank(s, usernameLc, fullNameLc),
         distanceM: _distanceForUser(data, myOrigin),
         noImageFirst: _hasImage(data) ? 0 : 1,
-        partyRank: _partyRank(
-          data[UserDocumentPaths.currentPartyStatus],
-        ),
+        partyPriorityRank: partyPriority(user.currentPartyStatus),
         missingFields: _missingProfileFields(data),
       );
 

@@ -37,7 +37,8 @@ class MyFriendsSection extends ConsumerWidget {
     final currentText = '$activeCount';
     final limitText = '${friends.length}';
     final Color brand = owlPurple;
-    final Color currentColor = activeCount <= friends.length/2.floor() ? red : brand;
+    final Color currentColor =
+      activeCount <= friends.length ~/ 2 ? red : brand;
     final Color limitColor = brand;
 
     return Column(
@@ -46,7 +47,7 @@ class MyFriendsSection extends ConsumerWidget {
         SizedBox(height: h * 0.01),
         Stack(
           children: [
-               Text('My Friends', style: Styles.basicTextHeader),
+            Text('My Friends', style: Styles.basicTextHeader),
             Positioned(
               right: 0,
               child: RichText(
@@ -78,7 +79,8 @@ class MyFriendsSection extends ConsumerWidget {
         ),
         SizedBox(height: h * 0.01),
         SizedBox(
-          height: h * 0.1,
+          // slightly taller to fit avatar + username
+          height: h * 0.14,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: friends.length,
@@ -105,11 +107,13 @@ class MyFriendsSection extends ConsumerWidget {
     try {
       final uid = (f as dynamic).uid as String?;
       if (uid != null && uid.isNotEmpty) return uid;
-    } catch (_) {}
+    }
+    catch (_) {}
     try {
       final id = (f as dynamic).id as String?;
       if (id != null && id.isNotEmpty) return id;
-    } catch (_) {}
+    }
+    catch (_) {}
     return '';
   }
 }
@@ -133,51 +137,59 @@ class _FriendAvatar extends ConsumerWidget {
       loading: () => const LoadingIndicator(),
       error: (_, __) => const LoadingIndicator(),
       data: (u) {
-        if (u == null) {
-          return const SizedBox.shrink();
-        }
+        if (u == null) return const SizedBox.shrink();
 
         final borderColor =
-            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+        ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
         final imageUrl = (u.profilePictureUrl?.isNotEmpty ?? false)
             ? u.profilePictureUrl!
             : null;
 
-        final avatar = Stack(
-          clipBehavior: Clip.none,
+        // userName + full name – both are non-nullable in your model
+        final displayName = u.userName.isNotEmpty
+            ? u.userName
+            : (u.displayFullName.isNotEmpty
+            ? u.displayFullName
+            : 'Friend');
+
+        void _openProfile() {
+          if (onTap != null) {
+            onTap!(uid);
+          } else {
+            context.pushNamedPage('otherProfile', extra: uid);
+          }
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              padding: EdgeInsets.zero,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: ProfilePictureAvatar(
-                size: 66,
-                imageUrl: imageUrl,
-                backgroundColor: borderColor,
+            // Avatar itself (handles tap via its own InkWell)
+            ProfilePictureAvatar(
+              size: 66,
+              imageUrl: imageUrl,
+              backgroundColor: borderColor,
+              onTap: _openProfile,
+              onLongPress:
+              onLongPress == null ? null : () => onLongPress!(uid),
+              semanticLabel: displayName,
+            ),
+            const SizedBox(height: 6),
+            // Username underneath, also tappable
+            SizedBox(
+              width: 70,
+              child: GestureDetector(
+                onTap: _openProfile,
+                child: Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: Styles.smallText.copyWith(color: blue),
+                ),
               ),
             ),
           ],
-        );
-
-        return GestureDetector(
-           onTap: () {
-                // 2) default: push otherProfile
-                context.pushNamedPage(
-                  'otherProfile',
-                  extra: uid,
-                );
-            },
-          onLongPress: onLongPress == null ? null : () => onLongPress!(uid),
-          child: Semantics(
-            label: u.displayFullName?.isNotEmpty == true
-                ? u.displayFullName
-                : (u.userName?.isNotEmpty == true ? u.userName : 'Friend'),
-            child: avatar,
-          ),
         );
       },
     );

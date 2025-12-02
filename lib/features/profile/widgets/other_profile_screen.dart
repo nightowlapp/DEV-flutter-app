@@ -21,15 +21,16 @@ import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/shared/reusable/ui/loading_indicator.dart';
 import 'package:nightowlcode/shared/reusable/ui/venue_logo.dart';
 import 'package:nightowlcode/shared/reusable/users/profile_picture_avatar.dart';
-import 'package:nightowlcode/shared/reusable/users/party_status_indicator.dart'; // only if you want same widget
-import 'package:nightowlcode/shared/utility/level_logic.dart';
+import 'package:nightowlcode/shared/reusable/users/party_status_indicator.dart';
 
 import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/data/providers/users/user_providers.dart';
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
+import 'package:nightowlcode/shared/utility/utility.dart';
 
 import '../../../models/users/friend.dart';
 import '../../../shared/reusable/ui/owl_snack.dart';
+import '../../../shared/utility/level_logic.dart';
 import 'emblems_section.dart';
 import 'friend_status_popup.dart';
 import 'level_indicator.dart';
@@ -82,7 +83,7 @@ class OtherProfileScreen extends ConsumerWidget {
           );
         }
 
-        // ---- Level / XP logic (same as MyProfileScreen, but for this user) ----
+        // ---- Level / XP logic ----
         final totalXp = u.xp.toDouble();
         final p = LevelLogic.progress(totalXp);
 
@@ -106,6 +107,9 @@ class OtherProfileScreen extends ConsumerWidget {
         final bool isFriend = edge != null;
         final bool isCloseFriend = edge?.isCloseFriend ?? false;
 
+        // typed-out party status label
+        final String partyStatusLabel = Utility.formatString(u.currentPartyStatus.name);
+
         return Scaffold(
           backgroundColor: black,
           appBar: const MainAppBar(
@@ -119,8 +123,7 @@ class OtherProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---------- TOP ROW: avatar + names + status ----------
-                  // ---------- TOP ROW: avatar + names + friend status ----------
+                  // ---------- TOP ROW ----------
                   Row(
                     children: [
                       // LEFT: avatar + names
@@ -130,23 +133,19 @@ class OtherProfileScreen extends ConsumerWidget {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Other user's avatar (NO edit prompt)
                               ProfilePictureAvatar(
                                 size: PlatformConfig.width(context) * 0.25,
                                 imageUrl: u.profilePictureUrl,
                                 backgroundColor: borderColor,
-                                disablePrompt:
-                                true, // don't let you change *their* picture
+                                disablePrompt: true,
+                                borderColor: borderColor,
                               ),
                               const SizedBox(width: horizontalSpacerMedium),
-
-                              // Names
                               Expanded(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Full name
                                     AutoSizeText(
                                       u.displayFullName.isNotEmpty
                                           ? u.displayFullName
@@ -155,7 +154,6 @@ class OtherProfileScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(
                                         height: verticalSpacerVerySmall),
-                                    // Username
                                     AutoSizeText(
                                       u.userName,
                                       maxLines: 1,
@@ -168,165 +166,295 @@ class OtherProfileScreen extends ConsumerWidget {
                         ),
                       ),
 
-                      // RIGHT: friend icon (far right)
+                      // RIGHT: party status text + friend icon
                       SizedBox(
-                        width: 44,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: isFriend
-                              ? IconButton(
-                            icon: Icon(
-                              profileIcon,
-                              color:
-                              isCloseFriend ? owlPurple : blue,
-                              size: 26,
+                        width: 150,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            // typed-out party status above icon
+                            Text(
+                              partyStatusLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.right,
+                              style: Styles.smallText.copyWith(
+                                color: borderColor,
+                                fontSize: 11,
+                              ),
                             ),
-                            tooltip: 'Friend status',
-                            onPressed: () async {
-                              // Bottom popup for friend status
-                              final choice =
-                              await FriendStatusPopup.show(
-                                context,
-                                userName: u.userName,
-                                isCloseFriend: isCloseFriend,
-                              );
-
-                              if (choice == null) return;
-
-                              final friendsRepo =
-                              ref.read(friendsRepositoryProvider);
-
-                              switch (choice) {
-                                case FriendStatusChoice.closeFriend:
-                                  await friendsRepo.setCloseFriend(
-                                    friendUid: u.id,
-                                    isClose: true,
-                                  );
-                                  OwlSnack.show(
-                                    context,
-                                    title:
-                                    '${u.userName} is now a close friend',
-                                    variant:
-                                    OwlSnackVariant.success,
-                                  );
-                                  break;
-
-                                case FriendStatusChoice.normalFriend:
-                                  await friendsRepo.setCloseFriend(
-                                    friendUid: u.id,
-                                    isClose: false,
-                                  );
-                                  OwlSnack.show(
-                                    context,
-                                    title:
-                                    '${u.userName} is now a normal friend',
-                                    variant: OwlSnackVariant.info,
-                                  );
-                                  break;
-
-                                case FriendStatusChoice.unfriend: //TODO remove friend request
-                                // Just remove that frienduid.
-                                  final auth =
-                                  ref.read(firebaseAuthProvider);
-                                  final me = auth.currentUser;
-                                  if (me != null) {
-                                    final db =
-                                        FirebaseFirestore.instance;
-                                    final batch = db.batch();
-
-                                    // my view of them: users/{me}/friends/{friendUid}
-                                    final myFriendsCol = db
-                                        .collection(
-                                        UserDocumentPaths.collection)
-                                        .doc(me.uid)
-                                        .collection(
-                                        UserDocumentPaths.friends);
-                                    batch.delete(
-                                        myFriendsCol.doc(u.id));
-
-                                    // their view of me (safe even if doc doesn't exist)
-                                    final theirFriendsCol = db
-                                        .collection(
-                                        UserDocumentPaths.collection)
-                                        .doc(u.id)
-                                        .collection(
-                                        UserDocumentPaths.friends);
-                                    batch.delete(
-                                        theirFriendsCol.doc(me.uid));
-
-                                    await batch.commit();
-                                  }
-
-                                  OwlSnack.show(
-                                    context,
-                                    title:
-                                    'You are no longer friends with ${u.userName}',
-                                    variant:
-                                    OwlSnackVariant.warning,
-                                  );
-                                  break;
-                              }
-                            },
-                          )
-                              : IconButton(
-                            icon: const Icon(
-                              Icons.person_add_alt_1_outlined,
-                              color: white,
-                              size: 24,
-                            ),
-                            tooltip: 'Add friend',
-                            onPressed: () async {
-                              // "Are you sure" before sending request
-                              final confirmed =
-                              await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  backgroundColor: black,
-                                  title: Text(
-                                    'Add friend?',
-                                    style: Styles.basicText,
-                                  ),
-                                  content: Text(
-                                    'Are you sure you want to send a friend request to ${u.userName}?',
-                                    style: Styles.smallText,
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context)
-                                              .pop(false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context)
-                                              .pop(true),
-                                      child: const Text('Send'),
-                                    ),
-                                  ],
+                            const SizedBox(height: 4),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: isFriend
+                                  ? IconButton(
+                                icon: Icon(
+                                  profileIcon,
+                                  color: isCloseFriend
+                                      ? owlPurple
+                                      : blue,
+                                  size: 26,
                                 ),
-                              );
+                                tooltip: 'Friend status',
+                                onPressed: () async {
+                                  // Bottom popup for friend status
+                                  final choice =
+                                  await FriendStatusPopup.show(
+                                    context,
+                                    userName: u.userName,
+                                    isCloseFriend: isCloseFriend,
+                                  );
 
-                              if (confirmed != true) return;
+                                  if (choice == null) return;
 
-                              final repo = ref.read(
-                                  friendRequestsRepositoryProvider);
-                              final res =
-                              await repo.send(toUid: u.id);
+                                  final friendsRepo = ref.read(
+                                      friendsRepositoryProvider);
 
-                              final (msg, ok) =
-                              _msgForResult(res, u.userName);
+                                  switch (choice) {
+                                    case FriendStatusChoice.closeFriend:
+                                    // Confirm "make close friend"
+                                      final confirmed =
+                                      await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          backgroundColor: black,
+                                          title: Text(
+                                            'Make close friend?',
+                                            style: Styles.basicText,
+                                          ),
+                                          content: Text(
+                                            'Make ${u.userName} a close friend?',
+                                            style: Styles.smallText,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx)
+                                                      .pop(false),
+                                              child:
+                                              const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx)
+                                                      .pop(true),
+                                              child:
+                                              const Text('Confirm'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
 
-                              // Use OwlSnack instead of raw SnackBar
-                              OwlSnack.show(
-                                context,
-                                title: msg,
-                                variant: ok
-                                    ? OwlSnackVariant.success
-                                    : OwlSnackVariant.error,
-                              );
-                            },
-                          ),
+                                      if (confirmed != true) return;
+
+                                      await friendsRepo.setCloseFriend(
+                                        friendUid: u.id,
+                                        isClose: true,
+                                      );
+                                      OwlSnack.show(
+                                        context,
+                                        title:
+                                        '${u.userName} is now a close friend 😍',
+                                        variant:
+                                        OwlSnackVariant.success,
+                                      );
+                                      break;
+
+                                    case FriendStatusChoice.friend:
+                                    // If they were a close friend, confirm demotion
+                                      if (isCloseFriend) {
+                                        final confirmed =
+                                        await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) =>
+                                              AlertDialog(
+                                                backgroundColor: black,
+                                                title: Text(
+                                                  'Remove close friend?',
+                                                  style: Styles.basicText,
+                                                ),
+                                                content: Text(
+                                                  'Are you sure you want to remove ${u.userName} from your close friends?',
+                                                  style: Styles.smallText,
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(ctx)
+                                                            .pop(false),
+                                                    child: const Text(
+                                                        'Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(ctx)
+                                                            .pop(true),
+                                                    child: const Text(
+                                                        'Remove'),
+                                                  ),
+                                                ],
+                                              ),
+                                        );
+
+                                        if (confirmed != true) return;
+                                      }
+
+                                      await friendsRepo.setCloseFriend(
+                                        friendUid: u.id,
+                                        isClose: false,
+                                      );
+                                      OwlSnack.show(
+                                        context,
+                                        title:
+                                        '${u.userName} is now a friend 😊',
+                                        variant: OwlSnackVariant.info,
+                                      );
+                                      break;
+
+                                    case FriendStatusChoice.unfriend:
+                                    // Confirm unfriend
+                                      final confirmed =
+                                      await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          backgroundColor: black,
+                                          title: Text(
+                                            'Remove friend?',
+                                            style: Styles.basicText,
+                                          ),
+                                          content: Text(
+                                            'Are you sure you want to remove ${u.userName} as a friend?',
+                                            style: Styles.smallText,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx)
+                                                      .pop(false),
+                                              child:
+                                              const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx)
+                                                      .pop(true),
+                                              child:
+                                              const Text('Remove'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirmed != true) return;
+
+                                      final auth = ref.read(
+                                          firebaseAuthProvider);
+                                      final me = auth.currentUser;
+                                      if (me != null) {
+                                        final db =
+                                            FirebaseFirestore.instance;
+                                        final batch = db.batch();
+
+                                        // my view of them
+                                        final myFriendsCol = db
+                                            .collection(
+                                            UserDocumentPaths
+                                                .collection)
+                                            .doc(me.uid)
+                                            .collection(
+                                            UserDocumentPaths
+                                                .friends);
+                                        batch.delete(
+                                            myFriendsCol.doc(u.id));
+
+                                        // their view of me
+                                        final theirFriendsCol = db
+                                            .collection(
+                                            UserDocumentPaths
+                                                .collection)
+                                            .doc(u.id)
+                                            .collection(
+                                            UserDocumentPaths
+                                                .friends);
+                                        batch.delete(
+                                            theirFriendsCol.doc(me.uid));
+
+                                        await batch.commit();
+                                      }
+
+                                      OwlSnack.show(
+                                        context,
+                                        title:
+                                        'You are no longer friends with ${u.userName}',
+                                        variant:
+                                        OwlSnackVariant.warning,
+                                      );
+                                      break;
+                                  }
+                                },
+                              )
+                                  : IconButton(
+                                icon: const Icon(
+                                  Icons.person_add_alt_1_outlined,
+                                  color: white,
+                                  size: 24,
+                                ),
+                                tooltip: 'Add friend',
+                                onPressed: () async {
+                                  // "Are you sure" before sending request
+                                  final confirmed =
+                                  await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      backgroundColor: black,
+                                      title: Text(
+                                        'Add friend?',
+                                        style: Styles.basicText,
+                                      ),
+                                      content: Text(
+                                        'Are you sure you want to send a friend request to ${u.userName}?',
+                                        style: Styles.smallText,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context)
+                                                  .pop(false),
+                                          child:
+                                          const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context)
+                                                  .pop(true),
+                                          child: const Text('Send'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmed != true) return;
+
+                                  final repo = ref.read(
+                                      friendRequestsRepositoryProvider);
+                                  final res =
+                                  await repo.send(toUid: u.id);
+
+                                  final (msg, ok) =
+                                  _msgForResult(res, u.userName);
+
+                                  OwlSnack.show(
+                                    context,
+                                    title: msg,
+                                    variant: ok
+                                        ? OwlSnackVariant.success
+                                        : OwlSnackVariant.error,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -334,14 +462,13 @@ class OtherProfileScreen extends ConsumerWidget {
 
                   const SizedBox(height: verticalSpacerDefault),
 
-                  // ---------- LEVEL INDICATOR (same style) ----------
+                  // ---------- LEVEL INDICATOR ----------
                   LevelIndicator(
                     levelLabel: u.level.toInt() == 1337
                         ? 'Level 1337'
                         : 'Level ${p.level.toInt()}',
-                    current: u.level.toInt() == 1337
-                        ? 69
-                        : currentXp.toInt(),
+                    current:
+                    u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
                     total: u.level.toInt() == 1337
                         ? 420
                         : xpThisLevel.toInt(),
@@ -354,7 +481,7 @@ class OtherProfileScreen extends ConsumerWidget {
 
                   const SizedBox(height: verticalSpacerDefault),
 
-                  // ---------- EMblems / Achievements ----------
+                  // ---------- Emblems ----------
                   const EmblemsSection(
                     achieved: 37,
                     total: 113,
@@ -362,8 +489,7 @@ class OtherProfileScreen extends ConsumerWidget {
                   ),
 
                   if (hasFavorites)
-                    _OtherUserFavoritesSection(
-                        uid: u.id), // TODO Show x / X as in other places.
+                    _OtherUserFavoritesSection(uid: u.id),
 
                   if (isFriend)
                     const Expanded(
@@ -381,8 +507,6 @@ class OtherProfileScreen extends ConsumerWidget {
       },
     );
   }
-
-  // make sure this import is at the top
 
   (String, bool) _msgForResult(FriendRequestSendResult r, String name) {
     switch (r) {
@@ -412,10 +536,9 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final venuesAsync = ref.watch(favoriteVenuesForUserProvider(uid));
 
-    // base the sizes on your logoIcon constant
     const double logoScale = 1.5;
     final double logoSize = logoIconSize * logoScale;
-    final double sectionHeight = logoSize + 28; // room for text + spacing
+    final double sectionHeight = logoSize + 28;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -423,7 +546,6 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
         const SizedBox(height: verticalSpacerDefault),
         Center(child: Text('Favorite Venues', style: Styles.basicText)),
         const SizedBox(height: verticalSpacerSmall),
-
         SizedBox(
           height: sectionHeight,
           child: venuesAsync.when(
@@ -456,17 +578,10 @@ class _OtherUserFavoritesSection extends ConsumerWidget {
                               tooltip: v.displayName.isNotEmpty
                                   ? v.displayName
                                   : v.name,
-                              // onTap: () async {
-                              //   await context.goToMapAndFocusVenue(
-                              //     ref,
-                              //     v,
-                              //     zoom: 16,
-                              //   );
-                              // },
                             ),
                             const SizedBox(height: 4),
                             SizedBox(
-                              width: logoSize, // keep names from stretching
+                              width: logoSize,
                               child: AutoSizeText(
                                 v.displayName.isNotEmpty
                                     ? v.displayName

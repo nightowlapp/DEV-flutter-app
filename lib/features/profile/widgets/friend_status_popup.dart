@@ -5,7 +5,7 @@ import '../../../shared/constants/icons.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/constants/values.dart';
 
-enum FriendStatusChoice { closeFriend, normalFriend, unfriend }
+enum FriendStatusChoice { closeFriend, friend, unfriend }
 
 class FriendStatusPopup extends StatelessWidget {
   final String userName;
@@ -19,10 +19,10 @@ class FriendStatusPopup extends StatelessWidget {
 
   /// Bottom popup (modal sheet) styled similarly to OwlSnack.
   static Future<FriendStatusChoice?> show(
-      BuildContext context, {
-        required String userName,
-        required bool isCloseFriend,
-      }) {
+    BuildContext context, {
+      required String userName,
+      required bool isCloseFriend,
+    }) {
     return showModalBottomSheet<FriendStatusChoice>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -65,7 +65,7 @@ class FriendStatusPopup extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon:  Icon(
+                    icon: Icon(
                       closeIcon,
                       size: iconSizeDefault,
                     ),
@@ -75,9 +75,19 @@ class FriendStatusPopup extends StatelessWidget {
               const Divider(color: owlPurple),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Choose how you want to classify $userName.',
-                  style: Styles.popupText.copyWith(color: greyLighter),
+                child: Row(
+                  children: [
+                    Text(
+                      'Choose how you want to classify ',
+                      style: Styles.popupText.copyWith(color: greyLighter),
+                    ), Text(
+                      userName,
+                      style: Styles.popupText.copyWith(color: owlPurple),
+                    ), Text(
+                      '.',
+                      style: Styles.popupText.copyWith(color: greyLighter),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -97,11 +107,11 @@ class FriendStatusPopup extends StatelessWidget {
               // Normal friend
               _buildOption(
                 context,
-                label: 'Normal friend',
+                label: 'Friend',
                 description: 'Keep $userName as a regular friend.',
                 selected: !isCloseFriend,
                 color: blue,
-                result: FriendStatusChoice.normalFriend,
+                result: FriendStatusChoice.friend,
               ),
               const SizedBox(height: 8),
 
@@ -128,16 +138,16 @@ class FriendStatusPopup extends StatelessWidget {
   }
 
   Widget _buildOption(
-      BuildContext context, {
-        required String label,
-        required String description,
-        required bool selected,
-        required Color color,
-        required FriendStatusChoice result,
-      }) {
+    BuildContext context, {
+      required String label,
+      required String description,
+      required bool selected,
+      required Color color,
+      required FriendStatusChoice result,
+    }) {
     return InkWell(
       onTap: () => Navigator.of(context).pop(result),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(borderRadiusSmall),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -153,13 +163,13 @@ class FriendStatusPopup extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Styles.basicText,
+                  style: Styles.basicText.copyWith(color: color),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: Styles.smallText.copyWith(color: greyLighter),
-                ),
+                // Text(
+                // description,
+                // style: Styles.smallText.copyWith(color: greyLighter),
+                // ),
               ],
             ),
           ),

@@ -85,7 +85,7 @@ class FriendRequestsSection extends ConsumerWidget {
           Row(
             children: [
               Text(
-                'Sent Requests',
+                'Sent Friend Requests',
                 style: Styles.basicText.copyWith(color: greyLighter),
               ),
               const Spacer(),
@@ -149,6 +149,12 @@ class _IncomingRequestRow extends ConsumerWidget {
                 ProfilePictureAvatar(
                   imageUrl: u.profilePictureUrl,
                   borderColor: borderColor,
+                  onTap: () {
+                    context.pushNamedPage(
+                      'otherProfile',
+                      extra: u.id,
+                    );
+                  },
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -236,6 +242,12 @@ class _OutgoingRequestRow extends ConsumerWidget {
                 ProfilePictureAvatar(
                   imageUrl: u.profilePictureUrl,
                   borderColor: borderColor,
+                  onTap: () {
+                    context.pushNamedPage(
+                      'otherProfile',
+                      extra: u.id,
+                    );
+                  },
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -253,7 +265,7 @@ class _OutgoingRequestRow extends ConsumerWidget {
                       ],
                       const SizedBox(height: 4),
                       Text(
-                        Utility.formatString(Utility.formatTimeAgo(req.createdAt)),
+                        'Sent ${Utility.formatString(Utility.formatTimeAgo(req.createdAt))}',
                         style: Styles.smallText,
                       ),
                     ],

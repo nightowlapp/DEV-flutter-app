@@ -56,7 +56,7 @@ class OwlSnack {
               Expanded(
                 child: Text(
                   Utility.formatString(title),
-                  style: Styles.popupHeader.copyWith(color: fg),
+                  style: Styles.mediumSmallText.copyWith(color: fg),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

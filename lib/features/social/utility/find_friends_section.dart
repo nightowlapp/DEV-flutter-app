@@ -25,7 +25,7 @@ class FindFriendsSection extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<FindFriendsSection> createState() =>
-      _FindFriendsSectionState();
+  _FindFriendsSectionState();
 }
 
 class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
@@ -37,9 +37,9 @@ class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
     // Only pending outgoing
     final outgoing = ref.watch(outgoingFriendRequestsProvider).maybeWhen(
       data: (l) => l
-          .where((r) => r.status == FriendRequestStatus.pending)
-          .map((e) => e.toUid)
-          .toSet(),
+        .where((r) => r.status == FriendRequestStatus.pending)
+        .map((e) => e.toUid)
+        .toSet(),
       orElse: () => <String>{},
     );
 
@@ -188,11 +188,15 @@ class _UserRowState extends ConsumerState<_UserRow> {
         ),
         child: Row(
           children: [
-            widget.user.profilePictureUrl == null
-                ? ProfilePictureAvatar()
-                : ProfilePictureAvatar(
+            ProfilePictureAvatar(
               borderColor: borderColor,
               imageUrl: widget.user.profilePictureUrl,
+              onTap: () {
+                context.pushNamedPage(
+                  'otherProfile',
+                  extra: widget.user.id,
+                );
+              },
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -204,11 +208,11 @@ class _UserRowState extends ConsumerState<_UserRow> {
                     maxLines: 1,
                   ),
                   widget.user.displayFullName.isNotEmpty
-                      ? Text(
-                    Utility.formatString(widget.user.displayFullName),
-                    style: Styles.smallText,
-                  )
-                      : const SizedBox.shrink(),
+                    ? Text(
+                      Utility.formatString(widget.user.displayFullName),
+                      style: Styles.smallText,
+                    )
+                    : const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -233,7 +237,7 @@ class _UserRowState extends ConsumerState<_UserRow> {
         return ('Request already pending.', false);
       case FriendRequestSendResult.error:
       default:
-        return ('Could not send request. Try again.', false);
+      return ('Could not send request. Try again.', false);
     }
   }
 }
@@ -262,7 +266,7 @@ class _RequestedChip extends StatelessWidget {
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.initial, required this.onChanged,  required this.matchCount,});
+  const _SearchField({required this.initial, required this.onChanged, required this.matchCount,});
   final String initial;
   final ValueChanged<String> onChanged;
   final int? matchCount;
@@ -299,8 +303,9 @@ class _SearchFieldState extends State<_SearchField> {
   void _onChangedDebounced(String v) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      widget.onChanged(v);
-    });
+        widget.onChanged(v);
+      }
+    );
   }
 
   @override
@@ -353,24 +358,26 @@ class _SearchFieldState extends State<_SearchField> {
               ),
             ),
             if (hasText)
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 0),
-                constraints: const BoxConstraints(),
-                icon: const Icon(Icons.clear, color: white),
-                onPressed: () {
-                  _c.clear();
-                  _onChangedDebounced('');
-                  setState(() {});
-                },
-              ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              constraints: const BoxConstraints(),
+              icon: const Icon(Icons.clear, color: white),
+              onPressed: () {
+                _c.clear();
+                _onChangedDebounced('');
+                setState(() {}
+                );
+              },
+            ),
           ],
         ),
         contentPadding: const EdgeInsets.symmetric(vertical: 0),
       ),
       onChanged: (v) {
         _onChangedDebounced(v);
-        setState(() {}); // update suffix (hasText + label)
+        setState(() {}
+        ); // update suffix (hasText + label)
       },
     );
   }
@@ -399,12 +406,13 @@ class _FriendCountText extends StatelessWidget {
         label: semanticsLabelWhenUnknown,
         child: const SizedBox.shrink(),
       );
-    } else {
+    }
+    else {
       final isMatchesLabel =
-          label.trim() == 'matches' || label.contains('matches');
+        label.trim() == 'matches' || label.contains('matches');
       final plural = isMatchesLabel
-          ? (count == 1 ? ' match' : ' matches')
-          : label; // e.g. ' nearby'
+        ? (count == 1 ? ' match' : ' matches')
+        : label; // e.g. ' nearby'
       final numColor = (count == 0) ? red : owlPurple;
 
       child = Semantics(
