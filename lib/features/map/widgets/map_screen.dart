@@ -601,7 +601,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             cameraOptions: cam,
             onMapCreated: _onMapCreated,
             onStyleLoadedListener: _onStyleLoaded,
-            onTapListener: _onMapTap,
+            onTapListener: _onMapLongTap,
+            // TODO Make popup soon - _onMapTap,
             onLongTapListener: _onMapLongTap,
           ),
 
