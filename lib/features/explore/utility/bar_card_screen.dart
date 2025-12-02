@@ -37,7 +37,7 @@ class BarCardScreen extends ConsumerWidget {
           titleText: "${args.venueName}'s Bar Card",
           actions: const []),
       body: async.when(
-        loading: () => const Center(child: LoadingIndicator()),
+        loading: () => const LoadingIndicator(),
         error: (e, _) => Center(
             child: Text('Error: $e', style: const TextStyle(color: white))),
         data: (bundle) {

@@ -49,6 +49,7 @@ class UserDocumentPaths {
   static const email = 'email';
   static const userName = 'user_name';
   static const userNameLower = 'user_name_lc'; // search index / usernames
+  static const displayFullNameLower = 'display_full_name_lc';
   static const birthDate = 'birth_date';
   static const gender = 'gender';
 

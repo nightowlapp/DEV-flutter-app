@@ -271,7 +271,7 @@ class OtherProfileScreen extends ConsumerWidget {
                               : IconButton(
                             icon: const Icon(
                               Icons.person_add_alt_1_outlined,
-                              color: red, // not friends → red
+                              color: white,
                               size: 24,
                             ),
                             tooltip: 'Add friend',

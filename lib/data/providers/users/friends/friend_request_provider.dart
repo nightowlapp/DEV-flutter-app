@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nightowlcode/features/social/utility/friend_requests_section.dart';
 import '../../../../models/users/friend_request.dart';
 import '../../../repositories/users/friend_requests_repository.dart';
 
@@ -19,7 +20,7 @@ final outgoingFriendRequestsProvider = StreamProvider<List<FriendRequest>>(
 
 final pendingRequestsCountProvider = Provider<int>((ref) {
   final list = ref.watch(incomingFriendRequestsProvider).maybeWhen(
-    data: (v) => v,
+    data: (v) => v.where((r) => r.statusIsPending).toList(),
     orElse: () => const <FriendRequest>[],
   );
   return list.length;

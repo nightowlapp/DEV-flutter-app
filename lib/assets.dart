@@ -14,7 +14,6 @@ class ImagePaths {
   static const String logoRightBackground = '$root/logo_right_background.png';
   static const String logoDownBackground = '$root/logo_down_background.png';
 
-
   static const String logoTextWide = '$root/logo_text_wide.png';
   static const String logoTextCompact = '$root/logo_text_compact.png';
 

@@ -1,37 +1,43 @@
+// lib/data/providers/users/friends/friend_suggestions_provider.dart
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nightowlcode/shared/constants/enums.dart'; // PartyStatusTypes
+import 'package:nightowlcode/shared/constants/enums.dart';
 import '../../../../models/users/user.dart' as model;
 import '../../../firestore_paths/firestore_paths.dart';
-import 'find_friends_providers.dart';
 import 'friends_provider.dart';
-import 'sorted_friends_provider.dart';
+import 'sorted_friends_provider.dart';   // authUserIdProvider
+import 'find_friends_providers.dart';   // incoming/outgoing providers
 
+// search text from the TextField
 final userSearchQueryProvider = StateProvider<String>((_) => '');
 
-/// You can provide the signed-in user’s current location here (if you have it).
-/// If null, distances fall back to server-provided `distance_m` or become
-/// `infinity` (sorted last).
+// optional: your own location → ranking
 final myLocationProvider = Provider<GeoPoint?>((_) => null);
 
-/// Composite ranking key. Lower wins.
+// ---- Ranking key ------------------------------------------------------------
+
 class _RankKey implements Comparable<_RankKey> {
   const _RankKey({
+    required this.searchRank,
     required this.distanceM,
     required this.noImageFirst,
     required this.partyRank,
-    required this.missingFields, // completeness: fewer missing = better
+    required this.missingFields,
   });
 
-  final double distanceM; // ascending
+  final int searchRank;   // lower = better match to query
+  final double distanceM; // closer first
   final int noImageFirst; // 0 if has image, 1 otherwise
-  final int partyRank; // lower = better (see mapping below)
-  final int missingFields; // lower = better
+  final int partyRank;    // lower = better
+  final int missingFields;
 
   @override
   int compareTo(_RankKey other) {
+    final c0 = searchRank.compareTo(other.searchRank);
+    if (c0 != 0) return c0;
+
     final c1 = distanceM.compareTo(other.distanceM);
     if (c1 != 0) return c1;
 
@@ -45,7 +51,7 @@ class _RankKey implements Comparable<_RankKey> {
   }
 }
 
-/// ---- Helpers ----------------------------------------------------------------
+// ---- Helpers ----------------------------------------------------------------
 
 double _toRad(double deg) => deg * math.pi / 180.0;
 
@@ -60,8 +66,6 @@ double _haversine(GeoPoint a, GeoPoint b) {
   return 2 * r * math.atan2(math.sqrt(h), math.sqrt(1 - h));
 }
 
-/// Best-effort distance: prefers server-provided `distance_m`,
-/// then tries GeoPoint / last_known_lat|lon; otherwise Infinity.
 double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
   final server = (data['distance_m'] as num?)?.toDouble() ??
       (data['distance'] as num?)?.toDouble();
@@ -69,7 +73,6 @@ double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
 
   GeoPoint? gp;
 
-  // Common schemas:
   if (data['location'] is GeoPoint) {
     gp = data['location'] as GeoPoint;
   } else {
@@ -86,12 +89,9 @@ double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
   return _haversine(myOrigin, gp);
 }
 
-/// Returns party ranking score (lower = better) based on your order:
-/// out_tonight (best), house_party, pregame, still_planning, recovering, else.
 int _partyRank(dynamic raw) {
   PartyStatusTypes? status;
 
-  // Firestore may store as string name or as index. Handle both.
   if (raw is String) {
     final s = raw.toLowerCase();
     for (final v in PartyStatusTypes.values) {
@@ -108,7 +108,6 @@ int _partyRank(dynamic raw) {
     status = raw;
   }
 
-  // Map to rank (lower = better). Unspecified → large number (worst).
   switch (status) {
     case PartyStatusTypes.out_tonight:
       return 0;
@@ -121,24 +120,20 @@ int _partyRank(dynamic raw) {
     case PartyStatusTypes.recovering:
       return 400;
     default:
-      return 9; // not_tonight / heading_home / null / unknown
+      return 9;
   }
 }
 
-/// How “complete” the public profile looks: count how many important fields are
-/// missing or empty. Fewer missing → better.
 int _missingProfileFields(Map<String, dynamic> data) {
-  // Curate this list to what you actually show in profile UI.
   const fields = <String>[
-    'display_full_name',
+    'first_name',
+    'last_name',
     UserDocumentPaths.userName,
-    'bio',
-    'gender',
-    'birthday',
+    'biography',
     UserDocumentPaths.profilePictureUrl,
-    'home_city',
-    'interests', // List or map
-    'favorite_venue_ids', // List
+    'home_town',
+    'interests',
+    'favorite_venue_ids',
     'instagram',
     'tiktok',
     'snapchat',
@@ -163,23 +158,46 @@ bool _hasImage(Map<String, dynamic> data) {
       ((data['profilePictureUrl'] as String?)?.isNotEmpty ?? false);
 }
 
-/// ---- Provider ----------------------------------------------------------------
+/// lower = better match
+int _searchRank(String q, String usernameLc, String fullNameLc) {
+  if (q.isEmpty) return 5;
+
+  if (usernameLc.startsWith(q)) return 0;
+  if (fullNameLc.startsWith(q)) return 1;
+  if (usernameLc.contains(q)) return 2;
+  if (fullNameLc.contains(q)) return 3;
+  return 4;
+}
+
+// ---- Main provider ----------------------------------------------------------
+
+const _maxDocsPerQuery = 60; // 60 reads max per search
 
 final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
   final me = ref.watch(authUserIdProvider);
-  final q = ref.watch(userSearchQueryProvider);
+  final qRaw = ref.watch(userSearchQueryProvider);
   final db = FirebaseFirestore.instance;
 
   final friends = ref.watch(friendUidsProvider).maybeWhen(
     data: (ids) => ids.toSet(),
     orElse: () => <String>{},
   );
-  final incoming = ref.watch(incomingFriendRequestsProvider).maybeWhen(
-    data: (l) => l.map((e) => e.fromUid).toSet(),
+
+  final incomingPending =
+  ref.watch(incomingFriendRequestsProvider).maybeWhen(
+    data: (reqs) => reqs
+        .where((r) => r.status == FriendRequestStatus.pending)
+        .map((r) => r.fromUid)
+        .toSet(),
     orElse: () => <String>{},
   );
-  final outgoing = ref.watch(outgoingFriendRequestsProvider).maybeWhen(
-    data: (l) => l.map((e) => e.toUid).toSet(),
+
+  final outgoingPending =
+  ref.watch(outgoingFriendRequestsProvider).maybeWhen(
+    data: (reqs) => reqs
+        .where((r) => r.status == FriendRequestStatus.pending)
+        .map((r) => r.toUid)
+        .toSet(),
     orElse: () => <String>{},
   );
 
@@ -187,20 +205,29 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
 
   if (me == null) return const Stream.empty();
 
+  final q = qRaw.trim();
+  final s = q.toLowerCase();
+
   Query<Map<String, dynamic>> base =
   db.collection(UserDocumentPaths.collection);
 
-  if (q.trim().length >= 2) {
-    final s = q.trim().toLowerCase();
-    base = base
-        .orderBy(UserDocumentPaths.userNameLower) // 'user_name_lc'
-        .startAt([s])
-        .endAt(['$s\uf8ff'])
-        .limit(25);
-  } else {
-    base =
-        base.orderBy(UserDocumentPaths.createdAt, descending: true).limit(25);
-  }
+  // if (s.length < 2 && q.isNotEmpty) {
+  //   // no Firestore reads at all
+  //   return const Stream<List<model.User>>.empty();
+  // }
+
+// actual search:
+  final bool looksLikeName = s.contains(' ');
+  final field = looksLikeName
+      ? UserDocumentPaths.displayFullNameLower
+      : UserDocumentPaths.userNameLower;
+
+  base = base
+      .orderBy(field)
+      .startAt([s])
+      .endAt(['$s\uf8ff'])
+      .limit(_maxDocsPerQuery);
+
 
   return base.snapshots().map((snap) {
     final items = <(_RankKey, model.User)>[];
@@ -208,13 +235,19 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
     for (final d in snap.docs) {
       final data = d.data();
 
-      // Exclusions you already had
+      // basic exclusions
       if (d.id == me) continue;
       if (friends.contains(d.id)) continue;
-      if (incoming.contains(d.id)) continue;
-      if (outgoing.contains(d.id)) continue;
+      if (incomingPending.contains(d.id)) continue;
+      if (outgoingPending.contains(d.id)) continue;
+
+      final user = model.User.fromJson({'id': d.id, ...data});
+
+      final usernameLc = user.userName.toLowerCase();
+      final fullNameLc = user.displayFullName.toLowerCase();
 
       final rank = _RankKey(
+        searchRank: _searchRank(s, usernameLc, fullNameLc),
         distanceM: _distanceForUser(data, myOrigin),
         noImageFirst: _hasImage(data) ? 0 : 1,
         partyRank: _partyRank(
@@ -223,7 +256,6 @@ final suggestedUsersProvider = StreamProvider<List<model.User>>((ref) {
         missingFields: _missingProfileFields(data),
       );
 
-      final user = model.User.fromJson({'id': d.id, ...data});
       items.add((rank, user));
     }
 

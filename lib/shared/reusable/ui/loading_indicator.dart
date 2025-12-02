@@ -1,25 +1,42 @@
 // bottom_logo_spinner.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nightowlcode/assets.dart';
 
-/// Bottom-aligned spinner that uses your logo as the rotating circle.
-/// Place it anywhere; it overlays and pins itself to the bottom.
+/// Bottom-aligned spinner that uses your logo(s) as a rotating circle.
+///
+/// Spins sideways (around Y axis) to the right and swaps between your icons.
+/// By default it cycles through:
+///   - ImagePaths.logoLeft
+///   - ImagePaths.logoUp
+///   - ImagePaths.logoRight
+///   - ImagePaths.logoDown
 ///
 /// Example:
-/// BottomLogoSpinner(logoAsset: ImagePaths.logo)
+/// LoadingIndicator()
+/// LoadingIndicator(logoSequence: [ImagePaths.logoLeft, ImagePaths.logoRight])
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     super.key,
     this.logoAsset = ImagePaths.logo,
-    this.size = 50.0,
-    this.duration = const Duration(milliseconds: 1000),
+    this.logoSequence = const [
+      ImagePaths.logoLeftBackground,
+      ImagePaths.logoUpBackground,
+      ImagePaths.logoRightBackground,
+      ImagePaths.logoDownBackground,
+    ],
+    this.size = 85.0,
+    this.duration = const Duration(milliseconds: 2500),
     this.bottomPadding = 0,
     this.borderWidth = 0,
     this.enableGlow = true,
   });
 
+  /// Fallback single logo (used if [logoSequence] is empty).
   final String logoAsset;
+
+  /// Sequence of logos to cycle through as it spins sideways.
+  final List<String> logoSequence;
+
   final double size;
   final Duration duration;
   final double bottomPadding;
@@ -30,11 +47,10 @@ class LoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSecondary;
 
-    return SpinKitRotatingCircle(
-      color: color,
-      duration: const Duration(seconds: 2),
-    );
-    IgnorePointer(
+    final logos = (logoSequence.isNotEmpty) ? logoSequence : <String>[logoAsset];
+
+    return IgnorePointer(
+      ignoring: true,
       child: SafeArea(
         top: false,
         child: Align(
@@ -45,36 +61,20 @@ class LoadingIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: enableGlow
                     ? [
-                        BoxShadow(
-                          color: color.withOpacity(0.28),
-                          blurRadius: 12,
-                          spreadRadius: 3,
-                        )
-                      ]
+                  BoxShadow(
+                    color: color.withOpacity(0.28),
+                    blurRadius: 12,
+                    spreadRadius: 3,
+                  ),
+                ]
                     : const [],
               ),
               child: _RotatingCircle(
                 duration: duration,
                 size: size,
-                child: Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: color, width: borderWidth),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    logoAsset,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
-                    errorBuilder: (_, __, ___) => Icon(
-                      Icons.circle,
-                      color: color,
-                      size: size,
-                    ),
-                  ),
-                ),
+                color: color,
+                borderWidth: borderWidth,
+                logoAssets: logos,
               ),
             ),
           ),
@@ -84,18 +84,21 @@ class LoadingIndicator extends StatelessWidget {
   }
 }
 
-/// Minimal rotating circle (SpinKit-like) used internally.
-/// Mimics SpinKitRotatingCircle's alternating X/Y 3D tilt.
+/// Spins the logo(s) sideways (Y-axis) and switches the asset along the way.
 class _RotatingCircle extends StatefulWidget {
   const _RotatingCircle({
-    required this.child,
     required this.duration,
     required this.size,
+    required this.color,
+    required this.borderWidth,
+    required this.logoAssets,
   });
 
-  final Widget child;
   final Duration duration;
   final double size;
+  final Color color;
+  final double borderWidth;
+  final List<String> logoAssets;
 
   @override
   State<_RotatingCircle> createState() => _RotatingCircleState();
@@ -104,37 +107,54 @@ class _RotatingCircle extends StatefulWidget {
 class _RotatingCircleState extends State<_RotatingCircle>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.duration)..repeat();
+  AnimationController(vsync: this, duration: widget.duration)..repeat();
 
-  late final Animation<double> _animX = Tween(begin: 0.0, end: 180.0).animate(
-    CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-    ),
-  );
-
-  late final Animation<double> _animY = Tween(begin: 0.0, end: 180.0).animate(
-    CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-    ),
-  );
+  static const double _twoPi = 6.283185307179586; // 2 * pi
 
   @override
   Widget build(BuildContext context) {
+    final assets = widget.logoAssets.isEmpty
+        ? <String>[ImagePaths.logo]
+        : widget.logoAssets;
+
     return AnimatedBuilder(
       animation: _controller,
-      child: SizedBox.square(dimension: widget.size, child: widget.child),
-      builder: (context, child) {
-        final radX = -_animX.value * 0.0174533;
-        final radY = -_animY.value * 0.0174533;
+      builder: (context, _) {
+        final t = _controller.value; // 0..1
+        // Spin sideways to the right:
+        final angle = -t * _twoPi;
+
+        // Decide which logo to show based on where we are in the turn.
+        final segmentCount = assets.length;
+        final segment = (t * segmentCount).floor() % segmentCount;
+        final currentAsset = assets[segment];
 
         return Transform(
           alignment: Alignment.center,
-          transform: Matrix4.identity()
-            ..rotateX(radX)
-            ..rotateY(radY),
-          child: child,
+          transform: Matrix4.identity()..rotateY(angle),
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: widget.borderWidth > 0
+                    ? Border.all(color: widget.color, width: widget.borderWidth)
+                    : null,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                currentAsset,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.circle,
+                  color: widget.color,
+                  size: widget.size,
+                ),
+              ),
+            ),
+          ),
         );
       },
     );

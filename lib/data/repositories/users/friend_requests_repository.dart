@@ -1,6 +1,7 @@
 // lib/data/repositories/users/friend_requests_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import '../../../models/users/friend.dart';
 import '../../../models/users/friend_request.dart';
@@ -25,24 +26,35 @@ class FriendRequestsRepository {
   Stream<List<FriendRequest>> incomingForMe() {
     final uid = _me;
     if (uid == null) return const Stream.empty();
+
     return _db
         .collection(FriendRequestDocumentPaths.collection)
         .where(FriendRequestDocumentPaths.toUid, isEqualTo: uid)
-        .where(FriendRequestDocumentPaths.status, isEqualTo: FriendRequestStatus.pending.name)
-        .orderBy(FriendRequestDocumentPaths.timestamp, descending: true)
         .snapshots()
-        .map((q) => q.docs.map(FriendRequest.fromDoc).toList());
+        .map((q) {
+      debugPrint('incomingForMe docs=${q.docs.length}');
+      for (final d in q.docs) {
+        debugPrint('incoming doc: ${d.id} -> ${d.data()}');
+      }
+      return q.docs.map(FriendRequest.fromDoc).toList();
+    });
   }
 
   Stream<List<FriendRequest>> outgoingFromMe() {
     final uid = _me;
     if (uid == null) return const Stream.empty();
+
     return _db
         .collection(FriendRequestDocumentPaths.collection)
         .where(FriendRequestDocumentPaths.fromUid, isEqualTo: uid)
-        .orderBy(FriendRequestDocumentPaths.timestamp, descending: true)
         .snapshots()
-        .map((q) => q.docs.map(FriendRequest.fromDoc).toList());
+        .map((q) {
+      debugPrint('outgoingFromMe docs=${q.docs.length}');
+      for (final d in q.docs) {
+        debugPrint('outgoing doc: ${d.id} -> ${d.data()}');
+      }
+      return q.docs.map(FriendRequest.fromDoc).toList();
+    });
   }
 
   Future<FriendRequestSendResult> send({required String toUid}) async {
@@ -133,6 +145,15 @@ class FriendRequestsRepository {
       FriendRequestDocumentPaths.status: FriendRequestStatus.rejected.name,
       UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Cancel an outgoing request that *I* sent.
+  /// We delete the doc so I can send again later if I want.
+  Future<void> cancelOutgoing(FriendRequest req) async {
+    await _db
+        .collection(FriendRequestDocumentPaths.collection)
+        .doc(req.id)
+        .delete();
   }
 
 }

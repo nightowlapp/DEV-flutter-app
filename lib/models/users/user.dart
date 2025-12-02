@@ -196,36 +196,54 @@ class User {
     );
   }
 
-  Map<String, dynamic> toJson() => <String, dynamic>{
-    // NOTE: 'id' is intentionally NOT included here; repo injects it on read only
-    'email': email,
-    'user_name': userName,
-    'birth_date': birthDate.toIso8601String(),
-    'gender': _enumToString(gender),
-    'first_name': firstName,
-    'middle_name': middleName,
-    'last_name': lastName,
-    'phone_number': phoneNumber?.toJson(),
-    'biography': biography,
-    'profile_picture_url': profilePictureUrl,
-    'home_country': homeCountryCode,
-    'home_town': homeTown,
-    'home_location_locked': homeLocationLocked,     // <— NEW
-    'app_version': appVersion,
-    'is_verified': isVerified,
-    'level': level,
-    'xp': xp,
-    'preferred_venue_types':
-    preferredVenueTypes.map(_enumToString).toList(),
-    'max_distance_km': maxDistanceKm,
-    'roles': roles.map(_enumToString).toList(),
-    'subscription_type': _enumToString(subscriptionType),
-    'platform_type': _enumToString(platformType),
-    'current_party_status': _enumToString(currentPartyStatus),
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'email': email,
+      'user_name': userName,
+      'birth_date': birthDate.toIso8601String(),
+      'gender': _enumToString(gender),
+      'first_name': firstName,
+      'middle_name': middleName,
+      'last_name': lastName,
+      'phone_number': phoneNumber?.toJson(),
+      'biography': biography,
+      'profile_picture_url': profilePictureUrl,
+      'home_country': homeCountryCode,
+      'home_town': homeTown,
+      'home_location_locked': homeLocationLocked,
+      'app_version': appVersion,
+      'is_verified': isVerified,
+      'level': level,
+      'xp': xp,
+      'preferred_venue_types':
+      preferredVenueTypes.map(_enumToString).toList(),
+      'max_distance_km': maxDistanceKm,
+      'roles': roles.map(_enumToString).toList(),
+      'subscription_type': _enumToString(subscriptionType),
+      'platform_type': _enumToString(platformType),
+      'current_party_status': _enumToString(currentPartyStatus),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+
+    // ---- search helper fields (cheap but important) ----------------------
+
+    final userNameLc = userName.trim().toLowerCase();
+    if (userNameLc.isNotEmpty) {
+      map['user_name_lc'] = userNameLc;
+    }
+
+    // uses your getter, so whatever you do with first/middle/last stays the source of truth
+    final fullName = displayFullName.trim();
+    if (fullName.isNotEmpty) {
+      map['display_full_name_lc'] = fullName.toLowerCase();
+    }
+
+    map.removeWhere((_, v) => v == null);
+    return map;
   }
-  ..removeWhere((_, v) => v == null);
+
+
 
   factory User.fromJson(Map<String, dynamic> json) {
     dynamic _v(String k1, [String? k2]) =>
