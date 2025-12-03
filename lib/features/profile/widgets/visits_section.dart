@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/providers/venues/venue_status_color_provider.dart';
 import '../../../data/providers/visits/visits_provider.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/constants/values.dart';
@@ -41,7 +40,7 @@ class VisitsSection extends ConsumerWidget {
     // Row height: at least 44 for touch + pill content.
     final rowH = math.max(avatarRadius * 2, 44.0);
     final contentH =
-    data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
+      data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
 
     // Header height (title + spacing below)
     const headerH = 32.0 + verticalSpacerSmall;
@@ -50,13 +49,13 @@ class VisitsSection extends ConsumerWidget {
       builder: (context, constraints) {
         final hasBounded = constraints.hasBoundedHeight;
         final parentCap = hasBounded
-            ? math.max(0.0, constraints.maxHeight - headerH)
-            : double.infinity;
+          ? math.max(0.0, constraints.maxHeight - headerH)
+          : double.infinity;
 
         // If maxHeight is null → fill as much as possible (use parentCap).
         // If maxHeight is set → clamp to min(parentCap, maxHeight).
         final targetCap =
-        maxHeight == null ? parentCap : math.min(parentCap, maxHeight!);
+          maxHeight == null ? parentCap : math.min(parentCap, maxHeight!);
 
         final listHeight = hasBounded ? targetCap : (maxHeight ?? contentH);
 
@@ -80,104 +79,102 @@ class VisitsSection extends ConsumerWidget {
                     child: Text(title, style: Styles.basicText),
                   ),
                   if (seeAllEnabled)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: onRightTap,
-                        child: Text(rightCaption, style: Styles.basicText),
-                      ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      onTap: onRightTap,
+                      child: Text(rightCaption, style: Styles.basicText),
                     ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: verticalSpacerSmall),
 
             if (data.isEmpty)
-              SizedBox(
-                height: listHeight,
-                child: Center(
-                  child: Text(
-                    'No visits',
-                    style: Styles.basicText.copyWith(color: red),
-                  ),
-                ),
-              )
-            else
-              SizedBox(
-                height: listHeight,
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  primary: false,
-                  physics: needsScroll
-                      ? const ClampingScrollPhysics()
-                      : const NeverScrollableScrollPhysics(),
-                  itemCount: data.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 6),
-                  itemBuilder: (_, i) {
-                    final v = data[i].venue;
-                    final visits = data[i].visits;
-                    final dim = avatarRadius * 2;
-
-                    final borderColor = ref.watch(venueStatusColorProvider(v));
-
-                    return SizedBox(
-                      height: rowH,
-                      child: Row(
-                        children: [
-                          VenueLogo(
-                            venue: v,
-                            size: dim,
-                            showTypeIfNoLogo: true,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  v.displayName.isNotEmpty
-                                      ? v.displayName
-                                      : v.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Styles.boldText
-                                      .copyWith(fontSize: fontSizeSmall),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  Utility.formatString(v.city),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Styles.smallText.copyWith(
-                                    color: blue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white10,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: badgeColor, width: 1),
-                            ),
-                            child: Text(
-                              '${visits}x',
-                              style: Styles.basicText.copyWith(
-                                color: badgeColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+            SizedBox(
+              height: listHeight,
+              child: Center(
+                child: Text(
+                  'No visits',
+                  style: Styles.basicText.copyWith(color: red),
                 ),
               ),
+            )
+            else
+            SizedBox(
+              height: listHeight,
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                primary: false,
+                physics: needsScroll
+                  ? const ClampingScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+                itemCount: data.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (_, i) {
+                  final v = data[i].venue;
+                  final visits = data[i].visits;
+                  final dim = avatarRadius * 2;
+
+                  return SizedBox(
+                    height: rowH,
+                    child: Row(
+                      children: [
+                        VenueLogo(
+                          venue: v,
+                          size: dim,
+                          showTypeIfNoLogo: true,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                v.displayName.isNotEmpty
+                                  ? v.displayName
+                                  : v.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Styles.boldText
+                                  .copyWith(fontSize: fontSizeSmall),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                Utility.formatString(v.city),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Styles.smallText.copyWith(
+                                  color: blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6,),
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: badgeColor, width: 0.5),
+                          ),
+                          child: Text(
+                            '${visits}x',
+                            style: Styles.basicText.copyWith(
+                              color: badgeColor, fontSize: fontSizeSmall,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         );
       },
