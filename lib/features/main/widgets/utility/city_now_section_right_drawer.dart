@@ -23,13 +23,13 @@ class _CityNowSectionRightDrawerState extends State<CityNowSectionRightDrawer> {
             children: [
               SizedBox(
                 width: PlatformConfig.width(context) * 0.25,
-                child: Text('Copenhagen Now', style: Styles.boldText),
+                child: Text('Copenhagen Now', style: Styles.smallText),
               ),
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   "91002",
-                  style: Styles.basicText.copyWith(color: owlPurple),
+                  style: Styles.smallText.copyWith(color: owlPurple),
                 ),
               )
             ],

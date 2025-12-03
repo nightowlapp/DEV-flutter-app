@@ -286,7 +286,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             }
           ),
 
-          _userTile("First Name", _firstName, onTap: () async {
+          _userTile("First Name", _firstName, onTap: () async { //TODO the user should be able to remove all optional fields. According to law.
               final v = await _editTextSheet(context, title: "First Name", initial: _firstName, validator: _nonEmpty);
               if (v != null) await _saveNames(first: v);
             }
@@ -409,7 +409,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ---------------- NOTIFICATIONS ----------------
           _sectionHeader("Notifications"),
-          const FavoriteVenuesSection(),
+          // const NightOwlNotifications(), //TODO Notifications from nightowl need to be toggleable.
+          const FavoriteVenuesSection(), //TODO should be able to unfavorite venues from in here.
 
           const Divider(color: owlPurple, height: 30),
 

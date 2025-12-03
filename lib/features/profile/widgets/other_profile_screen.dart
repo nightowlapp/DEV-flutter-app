@@ -385,8 +385,8 @@ class OtherProfileScreen extends ConsumerWidget {
 
                                       OwlSnack.show(
                                         context,
-                                        title:
-                                        'You are no longer friends with ${u.userName}',
+                                        title: 'Friends Updated',
+                                        message: 'You are no longer friends with ${u.userName}',
                                         variant:
                                         OwlSnackVariant.warning,
                                       );

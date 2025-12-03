@@ -100,7 +100,7 @@ class MainScreenRightDrawer extends StatelessWidget {
               const SizedBox(height: verticalSpacerSmall),
 
               // const SocialMedias(), // TODO Discord server. Other?
-              // const CityNowSectionRightDrawer(), TODO after events are made.
+              const CityNowSectionRightDrawer(), //TODO after events are made.
             ],
           ),
         ),

@@ -137,11 +137,11 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                 gradient: const LinearGradient(
                     colors: [owlPurple, purple, owlPurple, purple]),
                 trackColor: grey,
+                // onTap: _openLevelPopup, //TODO
               ),
 
-              const SizedBox(height: verticalSpacerDefault),
-
-              const EmblemsSection(achieved: 37, total: 113,title:  'My Emblems'),
+              // const SizedBox(height: verticalSpacerDefault),
+              // const EmblemsSection(achieved: 37, total: 113,title:  'My Emblems'),
 
               const SizedBox(height: verticalSpacerDefault),
 
@@ -164,4 +164,5 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
   void _openStats() {}
   void _openSeeAllEmblems() {}
   void _openSeeAllVisits() {}
+  void _openLevelPopup() {}
 }
