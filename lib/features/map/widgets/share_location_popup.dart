@@ -8,11 +8,11 @@ import 'package:nightowlcode/shared/reusable/ui/owl_popup.dart';
 
 /// Call this to show the popup. Returns the selected audience (or null on dismiss).
 Future<LocationAudience?> showShareLocationPopup(
-    BuildContext context, {
-      required LocationAudience initial,
-      int friendsCount = 0,
-      int closeFriendsCount = 0,
-    }) {
+  BuildContext context, {
+  required LocationAudience initial,
+  int friendsCount = 0,
+  int closeFriendsCount = 0,
+}) {
   return showDialog<LocationAudience>(
     context: context,
     barrierDismissible: true,
@@ -79,11 +79,13 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text('Learn more', style: Styles.smallText.copyWith(color: blue),),
+            child: Text(
+              'Learn more',
+              style: Styles.smallText.copyWith(color: blue),
+            ),
           ),
         ),
         const SizedBox(height: 6),
-
         _ChoiceTile(
           title: 'Friends',
           subtitle: '${widget.friendsCount} $friends',
@@ -108,9 +110,7 @@ class _ShareLocationPopupState extends State<_ShareLocationPopup> {
           groupValue: _selected,
           onChanged: (v) => setState(() => _selected = v),
         ),
-
         const SizedBox(height: 18),
-
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -183,7 +183,7 @@ class _LocationInfoPopup extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Your location visibility resets every day. After it resets you\'ll need to '
-              'choose again if you want to keep sharing.',
+          'choose again if you want to keep sharing.',
           style: bodyStyle,
         ),
         const SizedBox(height: 8),
@@ -280,8 +280,8 @@ class _ChoiceTile extends StatelessWidget {
               onChanged: (v) => onChanged(v!),
               activeColor: owlPurple,
               fillColor: MaterialStateProperty.resolveWith(
-                    (states) =>
-                states.contains(MaterialState.selected) ? owlPurple : grey,
+                (states) =>
+                    states.contains(MaterialState.selected) ? owlPurple : grey,
               ),
             ),
           ],

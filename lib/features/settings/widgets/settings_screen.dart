@@ -64,11 +64,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double _maxDistanceKm = 50;
 
   List<VenueType> get _allVenueTypes =>
-  VenueType.values.where((t) => t != VenueType.unknown).toList();
+      VenueType.values.where((t) => t != VenueType.unknown).toList();
 
   final _mapper = EuropeanLocationMapper();
   // final Map<String, dynamic>? phoneMap = (json['phone'] ?? json['phone_number']) as Map<String, dynamic>?;
-
 
   void _kickoffBestEffortHomeAutofill(model.User? appUser) {
     if (appUser == null) return;
@@ -79,9 +78,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     // Run after first layout; do NOT await -> won't block UI
     SchedulerBinding.instance.addPostFrameCallback((_) {
-        _bestEffortHomeAutofill(); // intentionally not awaited
-      }
-    );
+      _bestEffortHomeAutofill(); // intentionally not awaited
+    });
   }
 
   Future<void> _bestEffortHomeAutofill() async {
@@ -100,18 +98,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (r == null || r.countryCode == null || r.cityName == null) return;
 
       await ref.read(personalSettingsRepositoryProvider).setHomeLocation(
-        uid: uid,
-        countryIso2: r.countryCode!,            // <— was countryIso2
-        town: r.cityName!.toLowerCase(),
-        locked: false,
-        lastLat: loc.lat,                       // gets written to locations/{uid}
-        lastLon: loc.lng,
-      );
+            uid: uid,
+            countryIso2: r.countryCode!, // <— was countryIso2
+            town: r.cityName!.toLowerCase(),
+            locked: false,
+            lastLat: loc.lat, // gets written to locations/{uid}
+            lastLon: loc.lng,
+          );
 
       // Refresh local state from DB if still mounted
       if (mounted) ref.invalidate(authUserProvider);
-    }
-    catch (_) {
+    } catch (_) {
       // silent best-effort
     }
   }
@@ -121,6 +118,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final selected = _prefTypes.length;
     return (selected == total) ? 'All' : '$selected';
   }
+
   // Hydrate once from providers
   void _maybeHydrate(model.User? appUser, fb.User? fbUser) {
     if (_hydrated) return;
@@ -128,90 +126,89 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     phone.PhoneNumber? phoneObj = appUser?.phoneNumber;
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+      if (!mounted) return;
 
-        // locals
-        String email = '';
-        String userName = '';
-        String first = '';
-        String middle = '';
-        String last = '';
-        DateTime? birth;
-        String? phoneStr;
-        String? genderLetter;
+      // locals
+      String email = '';
+      String userName = '';
+      String first = '';
+      String middle = '';
+      String last = '';
+      DateTime? birth;
+      String? phoneStr;
+      String? genderLetter;
 
-        if (phoneObj == null) {
-          final e164 = fbUser?.phoneNumber;
-          if (e164 != null && e164.trim().isNotEmpty) {
-            phoneObj = _fromE164(e164, iso2Hint: appUser?.homeCountryCode);
-          }
+      if (phoneObj == null) {
+        final e164 = fbUser?.phoneNumber;
+        if (e164 != null && e164.trim().isNotEmpty) {
+          phoneObj = _fromE164(e164, iso2Hint: appUser?.homeCountryCode);
         }
+      }
 
-        // Preferred types & distance (from appUser if present)
-        _prefTypes = {
-          if (appUser != null)
+      // Preferred types & distance (from appUser if present)
+      _prefTypes = {
+        if (appUser != null)
           ...appUser.preferredVenueTypes.where((t) => t != VenueType.unknown),
-        };
-        if (_prefTypes.isEmpty) _prefTypes = {..._allVenueTypes};
+      };
+      if (_prefTypes.isEmpty) _prefTypes = {..._allVenueTypes};
 
-        _maxDistanceKm = (appUser?.maxDistanceKm ?? 50).clamp(_minKm, _maxKm).toDouble();
+      _maxDistanceKm =
+          (appUser?.maxDistanceKm ?? 50).clamp(_minKm, _maxKm).toDouble();
 
-        if (appUser != null) {
-          email = appUser.email;
-          userName = appUser.userName;
+      if (appUser != null) {
+        email = appUser.email;
+        userName = appUser.userName;
 
-          first = (appUser.firstName ?? '').trim();
-          middle = (appUser.middleName ?? '').trim();
-          last = (appUser.lastName ?? '').trim();
+        first = (appUser.firstName ?? '').trim();
+        middle = (appUser.middleName ?? '').trim();
+        last = (appUser.lastName ?? '').trim();
 
-          birth = appUser.birthDate;
-          _phoneObj = appUser.phoneNumber;
-          phoneStr = _phoneObj?.e164;
+        birth = appUser.birthDate;
+        _phoneObj = appUser.phoneNumber;
+        phoneStr = _phoneObj?.e164;
 
-          genderLetter = _genderLetterFromEnum(appUser.gender);
+        genderLetter = _genderLetterFromEnum(appUser.gender);
 
-          if (first.isEmpty && last.isEmpty) {
-            final dn = appUser.displayFullName.trim();
-            if (dn.isNotEmpty) {
-              final parts = dn.split(RegExp(r'\s+'));
-              first = parts.isNotEmpty ? parts.first : '';
-              last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-            }
-          }
-        }
-
-        // Fallbacks from Firebase Auth
-        email = _firstNonEmpty(email, fbUser?.email, _email);
-// phoneNumber =
-        // If phone still empty, try FB user
-        if ((phoneStr ?? '').trim().isEmpty) {
-          phoneStr = fbUser?.phoneNumber ?? _phoneObj?.e164;
-        }
-
-        // If still no names, try FB displayName
-        if ((first + last).trim().isEmpty) {
-          final dn = (fbUser?.displayName ?? '').trim();
+        if (first.isEmpty && last.isEmpty) {
+          final dn = appUser.displayFullName.trim();
           if (dn.isNotEmpty) {
             final parts = dn.split(RegExp(r'\s+'));
             first = parts.isNotEmpty ? parts.first : '';
             last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
           }
         }
-
-        setState(() {
-            _email = email;
-            _userName = userName;
-            _firstName = first;
-            _middleName = middle;
-            _lastName = last;
-            _birthday = birth;
-            _phoneObj = phoneObj;
-            _gender = genderLetter;
-            _hydrated = true;
-          }
-        );
       }
-    );
+
+      // Fallbacks from Firebase Auth
+      email = _firstNonEmpty(email, fbUser?.email, _email);
+// phoneNumber =
+      // If phone still empty, try FB user
+      if ((phoneStr ?? '').trim().isEmpty) {
+        phoneStr = fbUser?.phoneNumber ?? _phoneObj?.e164;
+      }
+
+      // If still no names, try FB displayName
+      if ((first + last).trim().isEmpty) {
+        final dn = (fbUser?.displayName ?? '').trim();
+        if (dn.isNotEmpty) {
+          final parts = dn.split(RegExp(r'\s+'));
+          first = parts.isNotEmpty ? parts.first : '';
+          last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        }
+      }
+
+      setState(() {
+        _email = email;
+        _userName = userName;
+        _firstName = first;
+        _middleName = middle;
+        _lastName = last;
+        _birthday = birth;
+        _phoneObj = phoneObj;
+        _gender = genderLetter;
+        _hydrated = true;
+      });
+    });
 
     _kickoffBestEffortHomeAutofill(appUser);
   }
@@ -224,17 +221,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final g = _gender.asGender;
 
     final birthdayStr = _birthday == null
-      ? ''
-      : '${_two(_birthday!.day)}-${_two(_birthday!.month)}-${_birthday!.year}';
+        ? ''
+        : '${_two(_birthday!.day)}-${_two(_birthday!.month)}-${_birthday!.year}';
 
-    final countryName = _mapper.countries[(appUser?.homeCountryCode ?? '').toUpperCase()]?.name ?? '';
+    final countryName = _mapper
+            .countries[(appUser?.homeCountryCode ?? '').toUpperCase()]?.name ??
+        '';
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: black,
         title: const Text('Settings'),
         centerTitle: true,
-        actions: const[
+        actions: const [
           Padding(
             padding: EdgeInsets.only(right: 8),
             child: LanguageSwitcher(),
@@ -256,53 +255,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
 
+          if (appUser?.isVerified == true) _kv('Verified', 'Yes'),
+
+          if (appUser!.roles.length > 1 ||
+              !appUser.roles.contains(UserRole.user))
+            _kv('Roles', appUser.roles.map((e) => e.name).join(', ')),
+
+          if (appUser?.subscriptionType.name != SubscriptionTypesUser.free.name)
+            _kv('Subscription', appUser?.subscriptionType.name ?? ''),
+
           if (appUser?.isVerified == true)
-          _kv('Verified', 'Yes'),
-
-          if(appUser!.roles.length > 1 || !appUser.roles.contains(UserRole.user))
-          _kv('Roles', appUser.roles.map((e) => e.name).join(', ')),
-
-          if(appUser?.subscriptionType.name != SubscriptionTypesUser.free.name)
-          _kv('Subscription', appUser?.subscriptionType.name ?? ''),
-
-          if(appUser?.isVerified == true)
-          _kv('Verified', (appUser?.isVerified ?? false).toString()),
+            _kv('Verified', (appUser?.isVerified ?? false).toString()),
 
           _userTile("Username", _userName, onTap: () async {
-              final v = await _editUsernameSheet(context, _userName);
-              if (v != null) await _onEditUsernameWithValue(v);
-            }
-          ),
+            final v = await _editUsernameSheet(context, _userName);
+            if (v != null) await _onEditUsernameWithValue(v);
+          }),
 
           _userTile("Email", _email, onTap: () async {
-              final v = await _editTextSheet(
-                context,
-                title: "Email",
-                initial: _email,
-                keyboardType: TextInputType.emailAddress,
-                validator: _emailValidator,
-              );
-              if (v != null) await _saveEmail(v);   // 👈 persist
-            }
-          ),
+            final v = await _editTextSheet(
+              context,
+              title: "Email",
+              initial: _email,
+              keyboardType: TextInputType.emailAddress,
+              validator: _emailValidator,
+            );
+            if (v != null) await _saveEmail(v); // 👈 persist
+          }),
 
-          _userTile("First Name", _firstName, onTap: () async { //TODO the user should be able to remove all optional fields. According to law.
-              final v = await _editTextSheet(context, title: "First Name", initial: _firstName, validator: _nonEmpty);
-              if (v != null) await _saveNames(first: v);
-            }
-          ),
+          _userTile("First Name", _firstName, onTap: () async {
+            //TODO the user should be able to remove all optional fields. According to law.
+            final v = await _editTextSheet(context,
+                title: "First Name", initial: _firstName, validator: _nonEmpty);
+            if (v != null) await _saveNames(first: v);
+          }),
 
           _userTile("Middle Name", _middleName, onTap: () async {
-              final v = await _editTextSheet(context, title: "Middle Name", initial: _middleName);
-              if (v != null) await _saveNames(middle: v);
-            }
-          ),
+            final v = await _editTextSheet(context,
+                title: "Middle Name", initial: _middleName);
+            if (v != null) await _saveNames(middle: v);
+          }),
 
           _userTile("Last Name", _lastName, onTap: () async {
-              final v = await _editTextSheet(context, title: "Last Name", initial: _lastName, validator: _nonEmpty);
-              if (v != null) await _saveNames(last: v);
-            }
-          ),
+            final v = await _editTextSheet(context,
+                title: "Last Name", initial: _lastName, validator: _nonEmpty);
+            if (v != null) await _saveNames(last: v);
+          }),
 
           _userTile(
             "Phone",
@@ -313,10 +311,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               if (picked == null) return;
               final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
               if (uid == null) return;
-              await ref.read(userRepositoryProvider).updateNamesAndPhone(uid: uid, phone: picked);
+              await ref
+                  .read(userRepositoryProvider)
+                  .updateNamesAndPhone(uid: uid, phone: picked);
               if (!mounted) return;
               setState(() => _phoneObj = picked);
-              OwlSnack.show(context, title: 'Phone saved', variant: OwlSnackVariant.success);
+              OwlSnack.show(context,
+                  title: 'Phone saved', variant: OwlSnackVariant.success);
             },
           ),
 
@@ -324,8 +325,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           _userTile(
             "Gender",
-            g.label,                    // from your GenderX extension
-            valueIcon: g.icon,          // from your GenderX extension
+            g.label, // from your GenderX extension
+            valueIcon: g.icon, // from your GenderX extension
             enabled: false,
           ),
 
@@ -336,7 +337,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () async {
               final picked = await _pickHomeLocationBottomSheet(appUser);
               if (picked == true && mounted) {
-                OwlSnack.show(context, title: 'Home location saved', variant: OwlSnackVariant.success);
+                OwlSnack.show(context,
+                    title: 'Home location saved',
+                    variant: OwlSnackVariant.success);
                 ref.invalidate(authUserProvider);
               }
             },
@@ -344,12 +347,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _kvClickable(
             'Home town',
             (appUser?.homeTown ?? '').trim().isEmpty
-              ? 'Set'
-              : Utility.formatString(appUser!.homeTown!),
+                ? 'Set'
+                : Utility.formatString(appUser!.homeTown!),
             onTap: () async {
               final picked = await _pickHomeLocationBottomSheet(appUser);
               if (picked == true && mounted) {
-                OwlSnack.show(context, title: 'Home location saved', variant: OwlSnackVariant.success);
+                OwlSnack.show(context,
+                    title: 'Home location saved',
+                    variant: OwlSnackVariant.success);
                 ref.invalidate(authUserProvider);
               }
             },
@@ -400,9 +405,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // Text('Social', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),),
 
-
             // Text('Profile', style: Styles.basicTextHeader.copyWith(fontWeight: FontWeight.w600),),
-
           ],
 
           const Divider(color: owlPurple, height: 30),
@@ -439,12 +442,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final ok = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(v);
     return ok ? null : 'Enter a valid email';
   }
+
   String? _nonEmpty(String v) => v.trim().isEmpty ? 'Required' : null;
 
   Widget _sectionHeader(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8, top: 0),
-    child: Text(text, style: Styles.basicTextHeader),
-  );
+        padding: const EdgeInsets.only(bottom: 8, top: 0),
+        child: Text(text, style: Styles.basicTextHeader),
+      );
 
   Widget _kv(String k, String v) {
     return Padding(
@@ -470,22 +474,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _userTile(
     String label,
     String value, {
-      IconData? icon,
-      IconData? valueIcon,
-      Color? valueIconColor,
-      bool valueIconOnRight = false,
-      Widget? valueLeading,           // 👈 NEW
-      VoidCallback? onTap,
-      bool enabled = true,
-    }) {
+    IconData? icon,
+    IconData? valueIcon,
+    Color? valueIconColor,
+    bool valueIconOnRight = false,
+    Widget? valueLeading, // 👈 NEW
+    VoidCallback? onTap,
+    bool enabled = true,
+  }) {
     final shown = value.trim().isEmpty ? 'Tap to set' : value.trim();
     final textColor = enabled ? white : greyLighter;
 
     Widget valueIconWidget() => Icon(
-      valueIcon,
-      size: 16,
-      color: (valueIconColor ?? textColor).withOpacity(enabled ? 1 : 0.7),
-    );
+          valueIcon,
+          size: 16,
+          color: (valueIconColor ?? textColor).withOpacity(enabled ? 1 : 0.7),
+        );
 
     return InkWell(
       onTap: enabled ? onTap : null,
@@ -546,8 +550,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(width: 8),
                   Icon(
                     onTap != null && enabled
-                      ? Icons.chevron_right
-                      : Icons.do_not_disturb_on_outlined,
+                        ? Icons.chevron_right
+                        : Icons.do_not_disturb_on_outlined,
                     size: 18,
                     color: enabled ? grey : grey.withOpacity(0.6),
                   ),
@@ -578,7 +582,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (info.flagImage != null)
-        SizedBox(width: 22, height: 16, child: FittedBox(fit: BoxFit.cover, child: info.flagImage)),
+          SizedBox(
+              width: 22,
+              height: 16,
+              child: FittedBox(fit: BoxFit.cover, child: info.flagImage)),
         if (info.flagImage != null) const SizedBox(width: 6),
 
         // +45 (for example)
@@ -599,35 +606,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<String?> _editTextField(
     BuildContext context, {
-      required String fieldLabel,
-      required String initial,
-      TextInputType keyboardType = TextInputType.text,
-    }) async {
+    required String fieldLabel,
+    required String initial,
+    TextInputType keyboardType = TextInputType.text,
+  }) async {
     final controller = TextEditingController(text: initial);
     final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        title: Text('Edit $fieldLabel'),
-        content: TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: const InputDecoration(border: OutlineInputBorder()),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF1C1C1E),
+            title: Text('Edit $fieldLabel'),
+            content: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              autofocus: true,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Save'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    ) ??
-      false;
+        ) ??
+        false;
 
     if (ok) return controller.text.trim();
     return null;
@@ -635,13 +642,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<String?> _editTextSheet(
     BuildContext context, {
-      required String title,
-      required String initial,
-      String? hint,
-      TextInputType keyboardType = TextInputType.text,
-      String? Function(String value)? validator,
-      int? maxLength,
-    }) async {
+    required String title,
+    required String initial,
+    String? hint,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String value)? validator,
+    int? maxLength,
+  }) async {
     final controller = TextEditingController(text: initial);
     String error = '';
     bool changed = false;
@@ -658,78 +665,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: const Color(0xFF1C1C1E),
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setSt) {
-            final bottom = MediaQuery.of(ctx).viewInsets.bottom;
-            final v = controller.text.trim();
-            final isValid = validNow(v);
+          final bottom = MediaQuery.of(ctx).viewInsets.bottom;
+          final v = controller.text.trim();
+          final isValid = validNow(v);
 
-            return AnimatedPadding(
-              padding: EdgeInsets.only(bottom: bottom),
-              duration: const Duration(milliseconds: 180),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Text(title, style: Styles.basicTextHeader),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: grey),
-                          onPressed: () => Navigator.pop(ctx),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: controller,
-                      maxLength: maxLength,
-                      keyboardType: keyboardType,
-                      decoration: InputDecoration(
-                        hintText: hint,
-                        counterText: '',
-                        border: const OutlineInputBorder(),
-                        errorText: (changed && !isValid) ? (error.isEmpty ? 'Invalid' : error) : null,
+          return AnimatedPadding(
+            padding: EdgeInsets.only(bottom: bottom),
+            duration: const Duration(milliseconds: 180),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(title, style: Styles.basicTextHeader),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: grey),
+                        onPressed: () => Navigator.pop(ctx),
                       ),
-                      onChanged: (_) => setSt(() => changed = true),
-                      autofocus: true,
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controller,
+                    maxLength: maxLength,
+                    keyboardType: keyboardType,
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      counterText: '',
+                      border: const OutlineInputBorder(),
+                      errorText: (changed && !isValid)
+                          ? (error.isEmpty ? 'Invalid' : error)
+                          : null,
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OwlButton(
-                            label: 'Cancel',
-                            onPressed: () => Navigator.pop(ctx),
-                            backgroundColor: transparent,
-                            textColor: grey,
-                            borderColor: grey,
-                            borderRadius: borderRadiusSmall,
-                            fullWidth: true,
-                          ),
+                    onChanged: (_) => setSt(() => changed = true),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OwlButton(
+                          label: 'Cancel',
+                          onPressed: () => Navigator.pop(ctx),
+                          backgroundColor: transparent,
+                          textColor: grey,
+                          borderColor: grey,
+                          borderRadius: borderRadiusSmall,
+                          fullWidth: true,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: OwlButton(
-                            label: 'Save',
-                            onPressed: (!changed || !isValid) ? null : () {
-                                Navigator.pop(ctx, controller.text.trim());
-                              },
-                            backgroundColor: owlPurple,
-                            textColor: white,
-                            borderColor: transparent,
-                            borderRadius: borderRadiusSmall,
-                            fullWidth: true,
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OwlButton(
+                          label: 'Save',
+                          onPressed: (!changed || !isValid)
+                              ? null
+                              : () {
+                                  Navigator.pop(ctx, controller.text.trim());
+                                },
+                          backgroundColor: owlPurple,
+                          textColor: white,
+                          borderColor: transparent,
+                          borderRadius: borderRadiusSmall,
+                          fullWidth: true,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          }
-        );
+            ),
+          );
+        });
       },
     );
   }
@@ -765,7 +775,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case 'o':
         return 'Other';
       default:
-      return '';
+        return '';
     }
   }
 
@@ -783,7 +793,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case Gender.female:
         return 'f';
       default:
-      return 'o';
+        return 'o';
     }
   }
 
@@ -811,12 +821,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await ref.read(firebaseAuthProvider).signOut();
       if (!mounted) return;
-      OwlSnack.show(rootCtx, title: 'Successfully logged out', variant: OwlSnackVariant.success);
+      OwlSnack.show(rootCtx,
+          title: 'Successfully logged out', variant: OwlSnackVariant.success);
       context.goNamed('loginOrCreate');
-    }
-    catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      OwlSnack.show(rootCtx, title: 'Log out failed', variant: OwlSnackVariant.warning);
+      OwlSnack.show(rootCtx,
+          title: 'Log out failed', variant: OwlSnackVariant.warning);
     }
   }
 
@@ -824,7 +835,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = ref.read(firebaseAuthProvider).currentUser;
     if (user == null) {
       if (!mounted) return;
-      OwlSnack.show(context, title: 'No user to delete', variant: OwlSnackVariant.warning);
+      OwlSnack.show(context,
+          title: 'No user to delete', variant: OwlSnackVariant.warning);
       return;
     }
 
@@ -834,19 +846,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref.read(firebaseAuthProvider).signOut();
 
       if (!mounted) return;
-      OwlSnack.show(context, title: 'Account deleted', variant: OwlSnackVariant.success);
+      OwlSnack.show(context,
+          title: 'Account deleted', variant: OwlSnackVariant.success);
       context.goNamed('loginOrCreate');
-    }
-    on fb.FirebaseAuthException catch (e) {
+    } on fb.FirebaseAuthException catch (e) {
       if (!mounted) return;
       final msg = e.code == 'requires-recent-login'
-        ? 'Please reauthenticate and try again.'
-        : (e.message ?? 'Delete failed');
+          ? 'Please reauthenticate and try again.'
+          : (e.message ?? 'Delete failed');
       OwlSnack.show(context, title: msg, variant: OwlSnackVariant.error);
-    }
-    catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      OwlSnack.show(context, title: 'Delete failed: $e', variant: OwlSnackVariant.error);
+      OwlSnack.show(context,
+          title: 'Delete failed: $e', variant: OwlSnackVariant.error);
     }
   }
 
@@ -889,100 +901,105 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<bool> _confirmLogoutDialog() async {
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: true, // tap outside == cancel
-      builder: (ctx) => OwlPopup( //TODO when loggin out it needs to delete all cached stuff.
-        title: 'Log out?',
-        children: [
-          Text('You will be returned to the start screen.', style: Styles.popupText),
-          SizedBox(height: PlatformConfig.height(ctx) * 0.02),
-          Row(
+          context: context,
+          barrierDismissible: true, // tap outside == cancel
+          builder: (ctx) => OwlPopup(
+            //TODO when loggin out it needs to delete all cached stuff.
+            title: 'Log out?',
             children: [
-              // Cancel (purple outline)
-              Expanded(
-                child: SizedBox(
-                  height: PlatformConfig.height(ctx) * 0.04,
-                  child: OwlButton(
-                    label: 'Cancel',
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    backgroundColor: transparent,
-                    textColor: owlPurple,
-                    borderColor: owlPurple,
-                    borderRadius: borderRadiusSmall,
-                    fullWidth: true,
+              Text('You will be returned to the start screen.',
+                  style: Styles.popupText),
+              SizedBox(height: PlatformConfig.height(ctx) * 0.02),
+              Row(
+                children: [
+                  // Cancel (purple outline)
+                  Expanded(
+                    child: SizedBox(
+                      height: PlatformConfig.height(ctx) * 0.04,
+                      child: OwlButton(
+                        label: 'Cancel',
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        backgroundColor: transparent,
+                        textColor: owlPurple,
+                        borderColor: owlPurple,
+                        borderRadius: borderRadiusSmall,
+                        fullWidth: true,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: PlatformConfig.width(ctx) * 0.1),
-              // Confirm (red outline)
-              Expanded(
-                child: SizedBox(
-                  height: PlatformConfig.height(ctx) * 0.04,
-                  child: OwlButton(
-                    label: 'Log out',
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    backgroundColor: transparent,
-                    textColor: red,
-                    borderColor: red,
-                    borderRadius: borderRadiusSmall,
-                    fullWidth: true,
+                  SizedBox(width: PlatformConfig.width(ctx) * 0.1),
+                  // Confirm (red outline)
+                  Expanded(
+                    child: SizedBox(
+                      height: PlatformConfig.height(ctx) * 0.04,
+                      child: OwlButton(
+                        label: 'Log out',
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        backgroundColor: transparent,
+                        textColor: red,
+                        borderColor: red,
+                        borderRadius: borderRadiusSmall,
+                        fullWidth: true,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    ) ?? false; // outside tap returns null -> treat as cancel
+        ) ??
+        false; // outside tap returns null -> treat as cancel
   }
 
   Future<bool> _confirmDeleteDialog() async {
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: true, // tap outside == cancel
-      builder: (ctx) => OwlPopup(
-        title: 'Delete account?',
-        children: [
-          Text('This action is permanent and cannot be undone.', style: Styles.popupText),
-          SizedBox(height: PlatformConfig.height(ctx) * 0.02),
-          Row(
+          context: context,
+          barrierDismissible: true, // tap outside == cancel
+          builder: (ctx) => OwlPopup(
+            title: 'Delete account?',
             children: [
-              // Cancel (purple outline)
-              Expanded(
-                child: SizedBox(
-                  height: PlatformConfig.height(ctx) * 0.04,
-                  child: OwlButton(
-                    label: 'Cancel',
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    backgroundColor: transparent,
-                    textColor: owlPurple,
-                    borderColor: owlPurple,
-                    borderRadius: borderRadiusSmall,
-                    fullWidth: true,
+              Text('This action is permanent and cannot be undone.',
+                  style: Styles.popupText),
+              SizedBox(height: PlatformConfig.height(ctx) * 0.02),
+              Row(
+                children: [
+                  // Cancel (purple outline)
+                  Expanded(
+                    child: SizedBox(
+                      height: PlatformConfig.height(ctx) * 0.04,
+                      child: OwlButton(
+                        label: 'Cancel',
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        backgroundColor: transparent,
+                        textColor: owlPurple,
+                        borderColor: owlPurple,
+                        borderRadius: borderRadiusSmall,
+                        fullWidth: true,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: PlatformConfig.width(ctx) * 0.1),
-              // Confirm (red outline)
-              Expanded(
-                child: SizedBox(
-                  height: PlatformConfig.height(ctx) * 0.04,
-                  child: OwlButton(
-                    label: 'Delete',
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    backgroundColor: transparent,
-                    textColor: red,
-                    borderColor: red,
-                    borderRadius: borderRadiusSmall,
-                    fullWidth: true,
+                  SizedBox(width: PlatformConfig.width(ctx) * 0.1),
+                  // Confirm (red outline)
+                  Expanded(
+                    child: SizedBox(
+                      height: PlatformConfig.height(ctx) * 0.04,
+                      child: OwlButton(
+                        label: 'Delete',
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        backgroundColor: transparent,
+                        textColor: red,
+                        borderColor: red,
+                        borderRadius: borderRadiusSmall,
+                        fullWidth: true,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    ) ?? false; // outside tap returns null -> treat as cancel
+        ) ??
+        false; // outside tap returns null -> treat as cancel
   }
 
   Future<Set<VenueType>?> _pickPreferredTypes(
@@ -998,16 +1015,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
         void toggle(VenueType t, void Function(void Function()) setSt) {
           setSt(() {
-              if (sel.contains(t)) {
-                // prevent removing the last remaining selection
-                if (sel.length == 1) return;
-                sel.remove(t);
-              }
-              else {
-                sel.add(t);
-              }
+            if (sel.contains(t)) {
+              // prevent removing the last remaining selection
+              if (sel.length == 1) return;
+              sel.remove(t);
+            } else {
+              sel.add(t);
             }
-          );
+          });
         }
 
         return StatefulBuilder(
@@ -1023,39 +1038,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(width: 8),
                   // "Clear" disabled if it would go to 0
                   TextButton(
-                    onPressed: sel.length <= 1 ? null : () => setSt(() => sel = {sel.first}),
+                    onPressed: sel.length <= 1
+                        ? null
+                        : () => setSt(() => sel = {sel.first}),
                     child: const Text('Clear'),
                   ),
                   const Spacer(),
-                  Text(sel.length == all.length ? 'All' : '${sel.length}', style: Styles.popupText),
+                  Text(sel.length == all.length ? 'All' : '${sel.length}',
+                      style: Styles.popupText),
                 ],
               ),
               const SizedBox(height: 6),
-
               ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.45),
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.45),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
                       for (final t in all) ...[
-                          ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(t.icon, color: white),
-                            title: Text(Utility.formatString(t.name), style: Styles.basicText),
-                            trailing: sel.contains(t)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(t.icon, color: white),
+                          title: Text(Utility.formatString(t.name),
+                              style: Styles.basicText),
+                          trailing: sel.contains(t)
                               ? const Icon(Icons.check_circle, color: owlPurple)
                               : const SizedBox.shrink(),
-                            onTap: () => toggle(t, setSt),
-                          ),
-                          const Divider(color: owlPurple, height: 0.3),
-                        ],
+                          onTap: () => toggle(t, setSt),
+                        ),
+                        const Divider(color: owlPurple, height: 0.3),
+                      ],
                     ],
                   ),
                 ),
               ),
-
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -1089,13 +1107,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<double?> _pickMaxDistance(BuildContext context, double currentKm) async {
+  Future<double?> _pickMaxDistance(
+      BuildContext context, double currentKm) async {
     return await showDialog<double>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
         double tempKm = currentKm.clamp(_minKm, _maxKm).toDouble();
-        final controller = TextEditingController(text: tempKm.toStringAsFixed(0));
+        final controller =
+            TextEditingController(text: tempKm.toStringAsFixed(0));
 
         void _syncFromText(void Function(void Function()) setSt) {
           final v = double.tryParse(controller.text);
@@ -1133,7 +1153,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       textAlign: TextAlign.center,
                       decoration: const InputDecoration(
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         border: OutlineInputBorder(),
                       ),
                       onChanged: (_) => _syncFromText(setSt),
@@ -1158,7 +1179,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: OwlButton(
                       label: 'Save',
-                      onPressed: () => Navigator.of(ctx).pop(double.parse(tempKm.toStringAsFixed(0))),
+                      onPressed: () => Navigator.of(ctx)
+                          .pop(double.parse(tempKm.toStringAsFixed(0))),
                       backgroundColor: transparent,
                       textColor: owlPurple,
                       borderColor: owlPurple,
@@ -1180,19 +1202,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       await ref.read(preferencesRepositoryProvider).updatePreferredVenueTypes(
-        uid: uid,
-        types: sel,
-      );
+            uid: uid,
+            types: sel,
+          );
 
       // Local cache
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('pref_venue_types', sel.map((e) => e.name).toList());
+      await prefs.setStringList(
+          'pref_venue_types', sel.map((e) => e.name).toList());
 
       ref.invalidate(authUserProvider);
-      OwlSnack.show(context, title: 'Preferences updated', variant: OwlSnackVariant.success);
-    }
-    catch (e) {
-      OwlSnack.show(context, title: 'Failed to save: $e', variant: OwlSnackVariant.error);
+      OwlSnack.show(context,
+          title: 'Preferences updated', variant: OwlSnackVariant.success);
+    } catch (e) {
+      OwlSnack.show(context,
+          title: 'Failed to save: $e', variant: OwlSnackVariant.error);
     }
   }
 
@@ -1203,18 +1227,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final clamped = km.clamp(_minKm, _maxKm).toDouble();
     try {
       await ref.read(preferencesRepositoryProvider).updateMaxDistanceKm(
-        uid: uid,
-        km: clamped,
-      );
+            uid: uid,
+            km: clamped,
+          );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('pref_max_distance_km', clamped);
 
       ref.invalidate(authUserProvider);
-      OwlSnack.show(context, title: 'Max distance saved', variant: OwlSnackVariant.success);
-    }
-    catch (e) {
-      OwlSnack.show(context, title: 'Failed to save: $e', variant: OwlSnackVariant.error);
+      OwlSnack.show(context,
+          title: 'Max distance saved', variant: OwlSnackVariant.success);
+    } catch (e) {
+      OwlSnack.show(context,
+          title: 'Failed to save: $e', variant: OwlSnackVariant.error);
     }
   }
 
@@ -1227,9 +1252,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     String? selCity = appUser?.homeTown;
 
-    final countries = _mapper.countries;          // Map<String, CountryInfo>
+    final countries = _mapper.countries; // Map<String, CountryInfo>
     final countryCodes = countries.keys.toList()..sort();
-    final cityListFor = (String iso2) => _mapper.citiesInCountry(iso2); // List<CityInfo>
+    final cityListFor =
+        (String iso2) => _mapper.citiesInCountry(iso2); // List<CityInfo>
 
     String filter = '';
 
@@ -1238,97 +1264,103 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       barrierDismissible: true,
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setSt) {
-            final cities = cityListFor(selIso2)
+          final cities = cityListFor(selIso2)
               .where((c) => c.name.toLowerCase().contains(filter.toLowerCase()))
               .toList()
             ..sort((a, b) => a.name.compareTo(b.name));
 
-            return OwlPopup(
-              title: 'Choose home location',
-              children: [
-                // Country dropdown
-                DropdownButtonFormField<String>(
-                  value: selIso2,
-                  items: countryCodes.map((code) {
-                      final name = countries[code]!.name;
-                      return DropdownMenuItem(value: code, child: Text('$name ($code)'));
-                    }
-                  ).toList(),
-                  onChanged: (v) => setSt(() { selIso2 = v!;
-                      selCity = null;
-                    }
-                  ),
+          return OwlPopup(
+            title: 'Choose home location',
+            children: [
+              // Country dropdown
+              DropdownButtonFormField<String>(
+                value: selIso2,
+                items: countryCodes.map((code) {
+                  final name = countries[code]!.name;
+                  return DropdownMenuItem(
+                      value: code, child: Text('$name ($code)'));
+                }).toList(),
+                onChanged: (v) => setSt(() {
+                  selIso2 = v!;
+                  selCity = null;
+                }),
+              ),
+              const SizedBox(height: 12),
+              // City filter
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: 'Filter cities',
+                  border: OutlineInputBorder(),
+                  isDense: true,
                 ),
-                const SizedBox(height: 12),
-                // City filter
-                TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Filter cities',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (v) => setSt(() => filter = v),
+                onChanged: (v) => setSt(() => filter = v),
+              ),
+              const SizedBox(height: 8),
+              // City list
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.45),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: cities.length,
+                  separatorBuilder: (_, __) =>
+                      const Divider(color: owlPurple, height: 0.3),
+                  itemBuilder: (_, i) {
+                    final c = cities[i];
+                    final selected =
+                        selCity?.toLowerCase() == c.name.toLowerCase();
+                    return ListTile(
+                      dense: true,
+                      title: Text(c.name),
+                      trailing: selected
+                          ? const Icon(Icons.check_circle, color: owlPurple)
+                          : null,
+                      onTap: () => setSt(() => selCity = c.name.toLowerCase()),
+                    );
+                  },
                 ),
-                const SizedBox(height: 8),
-                // City list
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.45),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: cities.length,
-                    separatorBuilder: (_, __) => const Divider(color: owlPurple, height: 0.3),
-                    itemBuilder: (_, i) {
-                      final c = cities[i];
-                      final selected = selCity?.toLowerCase() == c.name.toLowerCase();
-                      return ListTile(
-                        dense: true,
-                        title: Text(c.name),
-                        trailing: selected ? const Icon(Icons.check_circle, color: owlPurple) : null,
-                        onTap: () => setSt(() => selCity = c.name.toLowerCase()),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OwlButton(
-                        label: 'Cancel',
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        backgroundColor: transparent,
-                        textColor: owlPurple,
-                        borderColor: owlPurple,
-                        borderRadius: borderRadiusSmall,
-                      ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OwlButton(
+                      label: 'Cancel',
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      backgroundColor: transparent,
+                      textColor: owlPurple,
+                      borderColor: owlPurple,
+                      borderRadius: borderRadiusSmall,
                     ),
-                    SizedBox(width: PlatformConfig.width(ctx) * 0.1),
-                    Expanded(
-                      child: OwlButton(
-                        label: 'Save',
-                        onPressed: (selCity == null)
+                  ),
+                  SizedBox(width: PlatformConfig.width(ctx) * 0.1),
+                  Expanded(
+                    child: OwlButton(
+                      label: 'Save',
+                      onPressed: (selCity == null)
                           ? null
                           : () async {
-                            await ref.read(personalSettingsRepositoryProvider).setHomeLocation(
-                              uid: uid,
-                              countryIso2: selIso2,
-                              town: selCity!,
-                              locked: true, // MANUAL -> lock forever
-                            );
-                            if (ctx.mounted) Navigator.of(ctx).pop(true);
-                          },
-                        backgroundColor: transparent,
-                        textColor: owlPurple,
-                        borderColor: owlPurple,
-                        borderRadius: borderRadiusSmall,
-                      ),
+                              await ref
+                                  .read(personalSettingsRepositoryProvider)
+                                  .setHomeLocation(
+                                    uid: uid,
+                                    countryIso2: selIso2,
+                                    town: selCity!,
+                                    locked: true, // MANUAL -> lock forever
+                                  );
+                              if (ctx.mounted) Navigator.of(ctx).pop(true);
+                            },
+                      backgroundColor: transparent,
+                      textColor: owlPurple,
+                      borderColor: owlPurple,
+                      borderRadius: borderRadiusSmall,
                     ),
-                  ],
-                ),
-              ],
-            );
-          }
-        );
+                  ),
+                ],
+              ),
+            ],
+          );
+        });
       },
     );
   }
@@ -1339,14 +1371,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     // Build once: only countries that have ≥1 city + their city counts
     final countryOptions = _mapper.countries.entries
-      .map((e) => (
-        code: e.key,
-        name: e.value.name,
-        count: _mapper.citiesInCountry(e.key).length,
-        ))
-      .where((x) => x.count > 0)
-      .toList()
-    ..sort((a, b) => a.name.compareTo(b.name));
+        .map((e) => (
+              code: e.key,
+              name: e.value.name,
+              count: _mapper.citiesInCountry(e.key).length,
+            ))
+        .where((x) => x.count > 0)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
 
     if (countryOptions.isEmpty) return false;
 
@@ -1368,12 +1400,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final bottomInset = MediaQuery.viewInsetsOf(ctx).bottom;
 
             final cities = _mapper
-              .citiesInCountry(selIso2)
-              .where((c) => c.name.toLowerCase().contains(filter.toLowerCase()))
-              .toList()
-            ..sort((a, b) => a.name.compareTo(b.name));
+                .citiesInCountry(selIso2)
+                .where(
+                    (c) => c.name.toLowerCase().contains(filter.toLowerCase()))
+                .toList()
+              ..sort((a, b) => a.name.compareTo(b.name));
 
-            final selCountry = countryOptions.firstWhere((x) => x.code == selIso2);
+            final selCountry =
+                countryOptions.firstWhere((x) => x.code == selIso2);
 
             return AnimatedPadding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -1382,14 +1416,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: FractionallySizedBox(
                 heightFactor: 0.8,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Header
                       Row(
                         children: [
-                          Text('Select home location', style: Styles.basicTextHeader),
+                          Text('Select home location',
+                              style: Styles.basicTextHeader),
                           const Spacer(),
                           IconButton(
                             icon: const Icon(Icons.close, color: grey),
@@ -1410,25 +1446,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               value: c.code,
                               child: Text(
                                 '(${c.code}) ${c.name} | ${c.count} ${c.count == 1 ? 'city' : 'cities'}',
-                                style: Styles.basicText.copyWith(letterSpacing: 1.5, wordSpacing: 1.5),
+                                style: Styles.basicText.copyWith(
+                                    letterSpacing: 1.5, wordSpacing: 1.5),
                               ),
                             ),
                         ],
                         onChanged: (v) => setSt(() {
-                            selIso2 = v!;
-                            selCity = null;
-                            filter = '';
-                          }
-                        ),
+                          selIso2 = v!;
+                          selCity = null;
+                          filter = '';
+                        }),
                         style: Styles.basicText,
-                        decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                            isDense: true, border: OutlineInputBorder()),
                       ),
                       const SizedBox(height: 12),
 
                       // City filter
                       TextField(
                         decoration: const InputDecoration(
-                          hintText: 'Search City', border: OutlineInputBorder(), isDense: true,
+                          hintText: 'Search City',
+                          border: OutlineInputBorder(),
+                          isDense: true,
                         ),
                         onChanged: (v) => setSt(() => filter = v),
                       ),
@@ -1437,34 +1476,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       // Cities
                       Expanded(
                         child: cities.isEmpty
-                          ? Center(
-                            child: Text(
-                              'No cities in ${selCountry.name} match "$filter"',
-                              style: Styles.basicText,
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                          : ListView.separated(
-                            key: ValueKey('${selIso2}_$filter'),
-                            addSemanticIndexes: false,
-                            primary: false,
-                            physics: const ClampingScrollPhysics(),
-                            itemCount: cities.length,
-                            separatorBuilder: (_, __) =>
-                            const Divider(color: owlPurple, height: 0.3),
-                            itemBuilder: (_, i) {
-                              final c = cities[i];
-                              final selected = selCity?.toLowerCase() == c.name.toLowerCase();
-                              return ListTile(
-                                dense: true,
-                                title: Text(c.name, style: Styles.basicText),
-                                trailing: selected
-                                  ? const Icon(Icons.check_circle, color: owlPurple)
-                                  : null,
-                                onTap: () => setSt(() => selCity = c.name.toLowerCase()),
-                              );
-                            },
-                          ),
+                            ? Center(
+                                child: Text(
+                                  'No cities in ${selCountry.name} match "$filter"',
+                                  style: Styles.basicText,
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                            : ListView.separated(
+                                key: ValueKey('${selIso2}_$filter'),
+                                addSemanticIndexes: false,
+                                primary: false,
+                                physics: const ClampingScrollPhysics(),
+                                itemCount: cities.length,
+                                separatorBuilder: (_, __) => const Divider(
+                                    color: owlPurple, height: 0.3),
+                                itemBuilder: (_, i) {
+                                  final c = cities[i];
+                                  final selected = selCity?.toLowerCase() ==
+                                      c.name.toLowerCase();
+                                  return ListTile(
+                                    dense: true,
+                                    title:
+                                        Text(c.name, style: Styles.basicText),
+                                    trailing: selected
+                                        ? const Icon(Icons.check_circle,
+                                            color: owlPurple)
+                                        : null,
+                                    onTap: () => setSt(
+                                        () => selCity = c.name.toLowerCase()),
+                                  );
+                                },
+                              ),
                       ),
                       const SizedBox(height: 12),
 
@@ -1490,19 +1533,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             child: OwlButton(
                               label: 'Save',
                               onPressed: (selCity == null)
-                                ? null
-                                : () async {
-                                  FocusScope.of(ctx).unfocus();
-                                  await ref
-                                    .read(personalSettingsRepositoryProvider)
-                                    .setHomeLocation(
-                                      uid: uid,
-                                      countryIso2: selIso2,
-                                      town: selCity!,
-                                      locked: true,
-                                    );
-                                  if (ctx.mounted) Navigator.of(ctx).pop(true);
-                                },
+                                  ? null
+                                  : () async {
+                                      FocusScope.of(ctx).unfocus();
+                                      await ref
+                                          .read(
+                                              personalSettingsRepositoryProvider)
+                                          .setHomeLocation(
+                                            uid: uid,
+                                            countryIso2: selIso2,
+                                            town: selCity!,
+                                            locked: true,
+                                          );
+                                      if (ctx.mounted)
+                                        Navigator.of(ctx).pop(true);
+                                    },
                               backgroundColor: owlPurple,
                               textColor: white,
                               borderColor: transparent,
@@ -1528,24 +1573,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (uid == null) return;
     try {
       await ref.read(userRepositoryProvider).updateNamesAndPhone(
-        uid: uid,
-        firstName: first ?? _firstName,
-        middleName: middle ?? _middleName,
-        lastName: last ?? _lastName,
-      );
+            uid: uid,
+            firstName: first ?? _firstName,
+            middleName: middle ?? _middleName,
+            lastName: last ?? _lastName,
+          );
       if (!mounted) return;
       setState(() {
-          if (first != null) _firstName = first;
-          if (middle != null) _middleName = middle;
-          if (last != null) _lastName = last;
-        }
-      );
-      OwlSnack.show(context, title: 'Name saved', variant: OwlSnackVariant.success);
+        if (first != null) _firstName = first;
+        if (middle != null) _middleName = middle;
+        if (last != null) _lastName = last;
+      });
+      OwlSnack.show(context,
+          title: 'Name saved', variant: OwlSnackVariant.success);
       ref.invalidate(authUserProvider);
-    }
-    catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      OwlSnack.show(context, title: 'Save failed: $e', variant: OwlSnackVariant.error);
+      OwlSnack.show(context,
+          title: 'Save failed: $e', variant: OwlSnackVariant.error);
     }
   }
 
@@ -1555,10 +1600,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ) async {
     // Try to preselect from current phone, else from user's home country, else DK
     final appUser = ref.read(authUserProvider).valueOrNull;
-    final iso2Guess = (current?.iso2 ?? appUser?.homeCountryCode ?? 'DK').toUpperCase();
+    final iso2Guess =
+        (current?.iso2 ?? appUser?.homeCountryCode ?? 'DK').toUpperCase();
 
     CountryCode selCountry =
-      _countryFromIso2(iso2Guess) ?? CountryCode.dk; // fallback
+        _countryFromIso2(iso2Guess) ?? CountryCode.dk; // fallback
     // inside _editPhoneSheet before computing selCountry:
     if ((current?.iso2 ?? appUser?.homeCountryCode) == null) {
       final loc = await LocationService().lastKnownOrCurrent();
@@ -1586,8 +1632,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
       if (bestLen > 0) {
         initialLocalDigits = withoutPlus.substring(bestLen);
-      }
-      else {
+      } else {
         // fallback: keep everything after '+'
         initialLocalDigits = withoutPlus;
       }
@@ -1598,13 +1643,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     phone.PhoneNumber? buildCandidate() {
       final info = PhoneCountryCode(selCountry);
-      final cc = (info.phoneCode ?? '').trim();          // like "+45"
+      final cc = (info.phoneCode ?? '').trim(); // like "+45"
       final nationalDigits = localCtl.text.replaceAll(RegExp(r'\D'), '');
       if (cc.isEmpty || nationalDigits.isEmpty) return null;
 
-      final e164 = '$cc$nationalDigits';                 // "+45" + "12345678"
+      final e164 = '$cc$nationalDigits'; // "+45" + "12345678"
       final iso2 = selCountry.name.toUpperCase();
-      final ccDigits = cc.replaceAll('+', '');           // "45"
+      final ccDigits = cc.replaceAll('+', ''); // "45"
 
       final minLen = info.minimumPhoneNumberLength ?? 6; // basic sanity
       if (nationalDigits.length < minLen) return null;
@@ -1631,33 +1676,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // Build dropdown menu items (flag + +code), sorted numerically by code
             List<DropdownMenuItem<CountryCode>> items() {
-              final list = PhoneCountryCode.availableCountries
-                .map((c) {
-                    final p = PhoneCountryCode(c);
-                    return DropdownMenuItem<CountryCode>(
-                      value: c,
-                      child: SizedBox(
-                        height: 26,
-                        child: Row(
-                          children: [
-                            if (p.flagImage != null)
-                            SizedBox(width: 24, height: 16, child: FittedBox(fit: BoxFit.cover, child: p.flagImage)),
-                            if (p.flagImage != null) const SizedBox(width: 8),
-                            Text(p.phoneCode ?? '', style: Styles.basicText),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                )
-                .toList();
+              final list = PhoneCountryCode.availableCountries.map((c) {
+                final p = PhoneCountryCode(c);
+                return DropdownMenuItem<CountryCode>(
+                  value: c,
+                  child: SizedBox(
+                    height: 26,
+                    child: Row(
+                      children: [
+                        if (p.flagImage != null)
+                          SizedBox(
+                              width: 24,
+                              height: 16,
+                              child: FittedBox(
+                                  fit: BoxFit.cover, child: p.flagImage)),
+                        if (p.flagImage != null) const SizedBox(width: 8),
+                        Text(p.phoneCode ?? '', style: Styles.basicText),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList();
 
               int parseCode(String? s) =>
-              int.tryParse((s ?? '').replaceAll('+', '')) ?? 99999;
+                  int.tryParse((s ?? '').replaceAll('+', '')) ?? 99999;
 
               list.sort((a, b) =>
-                parseCode(PhoneCountryCode(a.value!).phoneCode)
-                  .compareTo(parseCode(PhoneCountryCode(b.value!).phoneCode)));
+                  parseCode(PhoneCountryCode(a.value!).phoneCode).compareTo(
+                      parseCode(PhoneCountryCode(b.value!).phoneCode)));
 
               return list;
             }
@@ -1695,11 +1741,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: selCountry,
                           items: items(),
                           onChanged: (v) => setSt(() {
-                              if (v == null) return;
-                              selCountry = v;
-                              changed = true;
-                            }
-                          ),
+                            if (v == null) return;
+                            selCountry = v;
+                            changed = true;
+                          }),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -1710,36 +1755,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             border: const OutlineInputBorder(),
                             isDense: true,
                             prefixIcon: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min, // compact prefix
+                                mainAxisSize:
+                                    MainAxisSize.min, // compact prefix
                                 children: [
                                   if (info.flagImage != null)
-                                  SizedBox(width: 22, height: 16, child: FittedBox(fit: BoxFit.cover, child: info.flagImage)),
-                                  if (info.flagImage != null) const SizedBox(width: 6),
+                                    SizedBox(
+                                        width: 22,
+                                        height: 16,
+                                        child: FittedBox(
+                                            fit: BoxFit.cover,
+                                            child: info.flagImage)),
+                                  if (info.flagImage != null)
+                                    const SizedBox(width: 6),
 
                                   // +code
-                                  Text(info.phoneCode ?? '', style: Styles.basicText),
+                                  Text(info.phoneCode ?? '',
+                                      style: Styles.basicText),
 
                                   const SizedBox(width: 6),
 
                                   // (ISO2) to the right of the code
                                   Text(
                                     '(${selCountry.name.toUpperCase()})',
-                                    style: Styles.basicText.copyWith(color: greyLighter),
+                                    style: Styles.basicText
+                                        .copyWith(color: greyLighter),
                                   ),
 
                                   const SizedBox(width: 6),
-                                  Container(width: 1, height: 18, color: grey.withOpacity(0.35)),
+                                  Container(
+                                      width: 1,
+                                      height: 18,
+                                      color: grey.withOpacity(0.35)),
                                   const SizedBox(width: 6),
                                 ],
                               ),
                             ),
-                            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                            prefixIconConstraints:
+                                const BoxConstraints(minWidth: 0, minHeight: 0),
                           ),
                           onChanged: (_) => setSt(() => changed = true),
                         ),
-
                       ],
                     ),
 
@@ -1764,8 +1822,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: OwlButton(
                             label: 'Save',
                             onPressed: (!changed && current != null)
-                              ? () => Navigator.pop(ctx, current)
-                              : (valid ? () => Navigator.pop(ctx, candidate) : null),
+                                ? () => Navigator.pop(ctx, current)
+                                : (valid
+                                    ? () => Navigator.pop(ctx, candidate)
+                                    : null),
                             backgroundColor: owlPurple,
                             textColor: white,
                             borderColor: transparent,
@@ -1785,44 +1845,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<String?> _editUsernameSheet(BuildContext context, String current) async {
+  Future<String?> _editUsernameSheet(
+      BuildContext context, String current) async {
     final ctl = TextEditingController(text: current);
     bool checking = false;
     bool? available; // null = unknown
     Timer? debouncer;
 
-    Future<void> _check(String name, void Function(void Function()) setSt) async {
+    Future<void> _check(
+        String name, void Function(void Function()) setSt) async {
       final v = name.trim();
       if (v.isEmpty || v.toLowerCase() == current.trim().toLowerCase()) {
-        setSt(() { available = null;
-            checking = false;
-          }
-        );
+        setSt(() {
+          available = null;
+          checking = false;
+        });
         return;
       }
-      setSt(() { checking = true;
-          available = null;
-        }
-      );
+      setSt(() {
+        checking = true;
+        available = null;
+      });
       try {
         final repo = ref.read(userRepositoryProvider);
         bool ok;
         try {
           ok = await repo.usernameAvailableFast(v); // if you implemented it
+        } catch (_) {
+          ok = await repo.usernameAvailableFast(v); // fallback to the basic one
         }
-        catch (_) {
-          ok = await repo.usernameAvailableFast(v);     // fallback to the basic one
-        }
-        setSt(() { available = ok;
-            checking = false;
-          }
-        );
-      }
-      catch (_) {
-        setSt(() { available = null;
-            checking = false;
-          }
-        );
+        setSt(() {
+          available = ok;
+          checking = false;
+        });
+      } catch (_) {
+        setSt(() {
+          available = null;
+          checking = false;
+        });
       }
     }
 
@@ -1832,95 +1892,97 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: const Color(0xFF1C1C1E),
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setSt) {
-            final bottom = MediaQuery.of(ctx).viewInsets.bottom;
-            final v = ctl.text.trim();
-            final changed = v != current.trim();
-            final basicValid = RegExp(r'^[a-zA-Z0-9_\.]{3,20}$').hasMatch(v);
+          final bottom = MediaQuery.of(ctx).viewInsets.bottom;
+          final v = ctl.text.trim();
+          final changed = v != current.trim();
+          final basicValid = RegExp(r'^[a-zA-Z0-9_\.]{3,20}$').hasMatch(v);
 
-            return AnimatedPadding(
-              padding: EdgeInsets.only(bottom: bottom),
-              duration: const Duration(milliseconds: 180),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Text('Edit Username', style: Styles.basicTextHeader),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: grey),
-                          onPressed: () => Navigator.pop(ctx),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: ctl,
-                      maxLength: 20,
-                      decoration: InputDecoration(
-                        counterText: '',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: checking
-                          ? const Padding(
-                            padding: EdgeInsets.all(10),
-                            child: SizedBox(
-                              width: 18, height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                          : (available == true
-                            ? const Icon(Icons.check_circle, color: Colors.green)
-                            : (available == false
-                              ? const Icon(Icons.error, color: Colors.red)
-                              : null)),
+          return AnimatedPadding(
+            padding: EdgeInsets.only(bottom: bottom),
+            duration: const Duration(milliseconds: 180),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text('Edit Username', style: Styles.basicTextHeader),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: grey),
+                        onPressed: () => Navigator.pop(ctx),
                       ),
-                      onChanged: (s) {
-                        debouncer?.cancel();
-                        debouncer = Timer(const Duration(milliseconds: 150), () {
-                            _check(s, setSt);
-                          }
-                        );
-                      },
-                      autofocus: true,
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: ctl,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: checking
+                          ? const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : (available == true
+                              ? const Icon(Icons.check_circle,
+                                  color: Colors.green)
+                              : (available == false
+                                  ? const Icon(Icons.error, color: Colors.red)
+                                  : null)),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OwlButton(
-                            label: 'Cancel',
-                            onPressed: () => Navigator.pop(ctx),
-                            backgroundColor: transparent,
-                            textColor: grey,
-                            borderColor: grey,
-                            borderRadius: borderRadiusSmall,
-                            fullWidth: true,
-                          ),
+                    onChanged: (s) {
+                      debouncer?.cancel();
+                      debouncer = Timer(const Duration(milliseconds: 150), () {
+                        _check(s, setSt);
+                      });
+                    },
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OwlButton(
+                          label: 'Cancel',
+                          onPressed: () => Navigator.pop(ctx),
+                          backgroundColor: transparent,
+                          textColor: grey,
+                          borderColor: grey,
+                          borderRadius: borderRadiusSmall,
+                          fullWidth: true,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: OwlButton(
-                            label: 'Save',
-                            onPressed: (!changed || !basicValid || available == false)
-                              ? null
-                              : () => Navigator.pop(ctx, v),
-                            backgroundColor: owlPurple,
-                            textColor: white,
-                            borderColor: transparent,
-                            borderRadius: borderRadiusSmall,
-                            fullWidth: true,
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OwlButton(
+                          label: 'Save',
+                          onPressed:
+                              (!changed || !basicValid || available == false)
+                                  ? null
+                                  : () => Navigator.pop(ctx, v),
+                          backgroundColor: owlPurple,
+                          textColor: white,
+                          borderColor: transparent,
+                          borderRadius: borderRadiusSmall,
+                          fullWidth: true,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          }
-        );
+            ),
+          );
+        });
       },
     ).whenComplete(() => debouncer?.cancel());
   }
@@ -1934,8 +1996,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       // Quick pre-check (not strictly required because tx also checks)
       final free = await repo.usernameAvailableFast(desired);
-      if (!free && desired.toLowerCase() != _userName.trim().toLowerCase() || repo.resemblesNightOwl(desired) != false) {
-        OwlSnack.show(context, title: 'Username already taken', variant: OwlSnackVariant.error);
+      if (!free && desired.toLowerCase() != _userName.trim().toLowerCase() ||
+          repo.resemblesNightOwl(desired) != false) {
+        OwlSnack.show(context,
+            title: 'Username already taken', variant: OwlSnackVariant.error);
         return;
       }
 
@@ -1943,11 +2007,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (!mounted) return;
       setState(() => _userName = desired);
-      OwlSnack.show(context, title: 'Username updated', variant: OwlSnackVariant.success);
+      OwlSnack.show(context,
+          title: 'Username updated', variant: OwlSnackVariant.success);
       ref.invalidate(authUserProvider);
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().contains('taken') ? 'Username already taken' : 'Update failed: $e';
+      final msg = e.toString().contains('taken')
+          ? 'Username already taken'
+          : 'Update failed: $e';
       OwlSnack.show(context, title: msg, variant: OwlSnackVariant.error);
     }
   }
@@ -1973,7 +2040,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (bestCountry != null && iso2Hint != null) {
       final hint = _countryFromIso2(iso2Hint);
       if (hint != null &&
-          (PhoneCountryCode(hint).phoneCode ?? '').replaceAll('+', '') == bestCode) {
+          (PhoneCountryCode(hint).phoneCode ?? '').replaceAll('+', '') ==
+              bestCode) {
         bestCountry = hint;
       }
     }
@@ -1988,7 +2056,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _saveEmail(String v) async {
-    final fb.User? user = ref.read(firebaseAuthProvider).currentUser; // <-- typed
+    final fb.User? user =
+        ref.read(firebaseAuthProvider).currentUser; // <-- typed
     final String? uid = user?.uid;
     if (uid == null) return;
 
@@ -2000,11 +2069,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       // Mirror to Firestore
-      await ref.read(userRepositoryProvider).setEmail(uid: uid, email: v.trim());
+      await ref
+          .read(userRepositoryProvider)
+          .setEmail(uid: uid, email: v.trim());
 
       if (!mounted) return;
       setState(() => _email = v.trim());
-      OwlSnack.show(context, title: 'Email saved', variant: OwlSnackVariant.success);
+      OwlSnack.show(context,
+          title: 'Email saved', variant: OwlSnackVariant.success);
     } on fb.FirebaseAuthException catch (e) {
       final msg = e.code == 'requires-recent-login'
           ? 'Please reauthenticate and try again.'
@@ -2014,20 +2086,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        OwlSnack.show(context, title: 'Email save failed: $e', variant: OwlSnackVariant.error);
+        OwlSnack.show(context,
+            title: 'Email save failed: $e', variant: OwlSnackVariant.error);
       }
     }
   }
-
 }
-
 
 Widget _kvClickable(
   String label,
   String value, {
-    required VoidCallback onTap,
-    IconData? leading,
-  }) {
+  required VoidCallback onTap,
+  IconData? leading,
+}) {
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),
@@ -2056,7 +2127,6 @@ Widget _kvClickable(
   );
 }
 
-
 /* ---------- Bottom actions (left-aligned column) ---------- */
 
 class _SettingsActionsRow extends StatelessWidget {
@@ -2082,13 +2152,12 @@ class _SettingsActionsRow extends StatelessWidget {
           onTap: onOpenTos,
         ),
         _pillButton(
-          context: context,
-          icon: Icons.logout,
-          label: 'Log out',
-          onTap: onLogout,
-          color: grey,
-          danger: true
-        ),
+            context: context,
+            icon: Icons.logout,
+            label: 'Log out',
+            onTap: onLogout,
+            color: grey,
+            danger: true),
         _pillButton(
           context: context,
           icon: profileIcon,
@@ -2116,10 +2185,9 @@ class _SettingsActionsRow extends StatelessWidget {
           size: iconSizeDefault,
           color: color ?? (danger ? red : white),
         ),
-        label: Text(label, style: Styles.basicText.copyWith(color: danger ? red : white)),
+        label: Text(label,
+            style: Styles.basicText.copyWith(color: danger ? red : white)),
       ),
     );
   }
-
-
 }

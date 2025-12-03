@@ -10,7 +10,7 @@ import '../../../firestore_paths/firestore_paths.dart';
 import '../../other_providers.dart';
 
 final friendsLocationsProvider =
-StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
+    StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   final me = auth.currentUser;
   if (me == null) {
@@ -24,9 +24,9 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
 
   // Per-friend subscriptions
   final locSubs =
-  <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
+      <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
   final closeFlagSubs =
-  <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
+      <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
 
   // Last raw data used to recompute visibility
   final lastLocationDocs = <String, Map<String, dynamic>?>{};
@@ -67,9 +67,9 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
 
     final bool visibleForMe = switch (audience) {
       LocationAudience.none => false,
-    // Friends audience: all friends (including close friends)
+      // Friends audience: all friends (including close friends)
       LocationAudience.friends => true,
-    // Close friends audience: only if they marked me as close friend
+      // Close friends audience: only if they marked me as close friend
       LocationAudience.closeFriends => theyMarkedMeClose,
     };
 
@@ -160,9 +160,8 @@ StreamProvider.autoDispose<Map<String, LiveLocation>>((ref) {
     }
 
     // Unsubscribe from friends that are no longer in my list
-    final toRemove = locSubs.keys
-        .where((uid) => !activeFriendIds.contains(uid))
-        .toList();
+    final toRemove =
+        locSubs.keys.where((uid) => !activeFriendIds.contains(uid)).toList();
     for (final uid in toRemove) {
       await unwatchFriend(uid);
     }

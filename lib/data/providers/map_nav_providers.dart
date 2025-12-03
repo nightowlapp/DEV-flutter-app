@@ -8,14 +8,13 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import '../../core/app_config.dart';
 import '../services/navigation/navigation_service.dart';
 
-
 final navigationServiceProvider = Provider<NavigationService>((ref) {
   final token = AppConfig.current.accessToken;
   return NavigationService(accessToken: token);
 });
 
 final mapNavControllerProvider =
-AutoDisposeNotifierProvider<MapNavController, MapNavCommand?>(
+    AutoDisposeNotifierProvider<MapNavController, MapNavCommand?>(
   MapNavController.new,
 );
 

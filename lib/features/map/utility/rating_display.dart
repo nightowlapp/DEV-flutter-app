@@ -61,7 +61,8 @@ class RatingDisplay extends StatelessWidget {
         // Match the screenshot style: full stars until floor(rating),
         // then border (no halves). If you want halves, swap logic below.
         final icon = diff >= 0 ? Icons.star : Icons.star_border;
-        widgets.add(Icon(icon, size: starSize, color: diff >= 0 ? active : inactive));
+        widgets.add(
+            Icon(icon, size: starSize, color: diff >= 0 ? active : inactive));
       }
       return widgets;
     }
@@ -79,9 +80,8 @@ class RatingDisplay extends StatelessWidget {
         Row(children: _buildStars()),
         const SizedBox(width: 2),
         // Count in parentheses
-        Text(
-          '(${count.clamp(0, 999999)})',
-          style:Styles.smallText.copyWith(color: greyLighter)),
+        Text('(${count.clamp(0, 999999)})',
+            style: Styles.smallText.copyWith(color: greyLighter)),
       ],
     );
   }

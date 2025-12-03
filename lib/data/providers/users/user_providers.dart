@@ -46,8 +46,8 @@ final mePrefsAvProvider = Provider<AsyncValue<UserPrefs>>((ref) {
 final meUidProvider =
     Provider<String?>((ref) => ref.watch(meOptionalProvider)?.id);
 
-final meLocalStoreProvider =
-    Provider<MeLocalStore>((ref) => MeLocalStore(ref.watch(sharedPrefsProvider)));
+final meLocalStoreProvider = Provider<MeLocalStore>(
+    (ref) => MeLocalStore(ref.watch(sharedPrefsProvider)));
 
 final meSsoProvider = AsyncNotifierProvider<MeSso, model.User?>(MeSso.new);
 

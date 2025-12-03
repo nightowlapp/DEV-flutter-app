@@ -30,10 +30,8 @@ class MyFriendsSection extends ConsumerWidget {
     final friendsRaw = ref.watch(sortedFriendsProvider);
 
     // turn into list of UIDs
-    final friendIds = friendsRaw
-        .map(_friendUidOf)
-        .where((id) => id.isNotEmpty)
-        .toList();
+    final friendIds =
+        friendsRaw.map(_friendUidOf).where((id) => id.isNotEmpty).toList();
 
     if (friendIds.isEmpty) return const SizedBox.shrink();
 
@@ -61,7 +59,7 @@ class MyFriendsSection extends ConsumerWidget {
     final limitText = '${friendIds.length}';
     final Color brand = owlPurple;
     final Color currentColor =
-    activeCount <= friendIds.length ~/ 2 ? red : brand;
+        activeCount <= friendIds.length ~/ 2 ? red : brand;
     final Color limitColor = brand;
 
     return Column(
@@ -158,10 +156,11 @@ class _FriendAvatar extends ConsumerWidget {
         if (u == null) return const SizedBox.shrink();
 
         final borderColor =
-        ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
-        final imageUrl =
-        (u.profilePictureUrl?.isNotEmpty ?? false) ? u.profilePictureUrl! : null;
+        final imageUrl = (u.profilePictureUrl?.isNotEmpty ?? false)
+            ? u.profilePictureUrl!
+            : null;
 
         final displayName = u.userName.isNotEmpty
             ? u.userName
@@ -184,8 +183,7 @@ class _FriendAvatar extends ConsumerWidget {
               backgroundColor: borderColor,
               borderColor: borderColor,
               onTap: _openProfile,
-              onLongPress:
-              onLongPress == null ? null : () => onLongPress!(uid),
+              onLongPress: onLongPress == null ? null : () => onLongPress!(uid),
               semanticLabel: displayName,
             ),
             const SizedBox(height: 6),

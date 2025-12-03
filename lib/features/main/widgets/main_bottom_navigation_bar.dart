@@ -67,12 +67,10 @@ class MainBottomNavigationBar extends StatelessWidget {
           top: -4,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
-      
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: Styles.mediumSmallText.copyWith(color: red, fontWeight: FontWeight.w900)
-            ),
+            child: Text(text,
+                textAlign: TextAlign.center,
+                style: Styles.mediumSmallText
+                    .copyWith(color: red, fontWeight: FontWeight.w900)),
           ),
         ),
       ],

@@ -49,7 +49,6 @@ class VenueFilterPanel extends StatefulWidget {
     required this.onShowOnlyOpenChanged,
     required this.favoritesOnly,
     required this.onFavoritesOnlyChanged,
-
     required this.friends,
     required this.showFriends,
     required this.onShowFriendsChanged,
@@ -97,37 +96,34 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
   int _visibleOnMapCount() {
     int total = 0;
     widget.venuesByType.forEach((type, venues) {
-        for (final v in venues) {
-          final isFavorite = widget.favoriteVenueIds.contains(v.id);
-          // Open-now filter
-          if (widget.showOnlyOpen && !_isVenueOpenNow(v)) continue;
-          // Favorites-only filter
-          if (widget.favoritesOnly && !isFavorite) continue;
-          // Type filter based on local selection
-          if (_selected.isEmpty) {
-            // No types selected:
-            // - if not favorites-only → nothing on map
-            if (!widget.favoritesOnly) continue;
-            // - if favorites-only → allow favorites of ANY type
-          }
-          else {
-            if (!_selected.contains(type)) continue;
-          }
-          total++;
+      for (final v in venues) {
+        final isFavorite = widget.favoriteVenueIds.contains(v.id);
+        // Open-now filter
+        if (widget.showOnlyOpen && !_isVenueOpenNow(v)) continue;
+        // Favorites-only filter
+        if (widget.favoritesOnly && !isFavorite) continue;
+        // Type filter based on local selection
+        if (_selected.isEmpty) {
+          // No types selected:
+          // - if not favorites-only → nothing on map
+          if (!widget.favoritesOnly) continue;
+          // - if favorites-only → allow favorites of ANY type
+        } else {
+          if (!_selected.contains(type)) continue;
         }
+        total++;
       }
-    );
+    });
     return total;
   }
 
   Future<void> _resetFilters() async {
     // 1) Reset types to "all on"
     await _updateSelection(() {
-        _selected
+      _selected
         ..clear()
         ..addAll(widget.allTypes);
-      }
-    );
+    });
     // 2) Reset "Open now" to off (show open + closed)
     if (widget.showOnlyOpen) {
       widget.onShowOnlyOpenChanged(false);
@@ -149,37 +145,34 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
       for (final t in widget.allTypes) t: <Venue>[],
     };
     widget.venuesByType.forEach((type, venues) {
-        final list = widget.showOnlyOpen
+      final list = widget.showOnlyOpen
           ? venues.where(_isVenueOpenNow).toList()
           : List<Venue>.from(venues);
-        effectiveByType[type] = list;
-      }
-    );
+      effectiveByType[type] = list;
+    });
     // Counts based on the effective list (so they also respect "Open now")
     final Map<VenueType, int> effectiveCounts = {
       for (final t in widget.allTypes) t: effectiveByType[t]?.length ?? 0,
     };
     // Total venues across all types, respecting "Open now"
     final totalCount =
-      effectiveCounts.values.fold<int>(0, (prev, v) => prev + v);
+        effectiveCounts.values.fold<int>(0, (prev, v) => prev + v);
     // True when ALL types are currently enabled
     final allOn = _selected.length == widget.allTypes.length;
     // All venues aggregated (for the "All" expandable row),
     // already filtered by open/closed depending on showOnlyOpen.
     final List<Venue> allVenues =
-      effectiveByType.values.expand((v) => v).toList();
+        effectiveByType.values.expand((v) => v).toList();
     // Only show types that actually have (effective) venues,
     // sorted by amount desc
-    final visibleTypes = widget.allTypes
-      .where((t) => (effectiveCounts[t] ?? 0) > 0)
-      .toList()
-    ..sort((a, b) {
-        final ca = effectiveCounts[a] ?? 0;
-        final cb = effectiveCounts[b] ?? 0;
-        if (cb != ca) return cb.compareTo(ca); // most → first
-        return _labelFor(a).compareTo(_labelFor(b));
-      }
-    );
+    final visibleTypes =
+        widget.allTypes.where((t) => (effectiveCounts[t] ?? 0) > 0).toList()
+          ..sort((a, b) {
+            final ca = effectiveCounts[a] ?? 0;
+            final cb = effectiveCounts[b] ?? 0;
+            if (cb != ca) return cb.compareTo(ca); // most → first
+            return _labelFor(a).compareTo(_labelFor(b));
+          });
     final visibleOnMap = _visibleOnMapCount();
     final friendsOnMapCount = widget.showFriends ? widget.friends.length : 0;
 
@@ -187,9 +180,9 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
     // All favorites from all types. We respect "Open now" for the list,
     // but type filters only affect whether they're active/visible on map.
     final List<Venue> favoriteVenues = widget.venuesByType.values
-      .expand((v) => v)
-      .where((v) => widget.favoriteVenueIds.contains(v.id))
-      .toList();
+        .expand((v) => v)
+        .where((v) => widget.favoriteVenueIds.contains(v.id))
+        .toList();
     if (widget.showOnlyOpen) {
       favoriteVenues.removeWhere((v) => !_isVenueOpenNow(v));
     }
@@ -200,7 +193,7 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
 
     // Header rows: [Favorites]? + [Friends]? + [All]
     final int headerRows =
-      (hasFavorites ? 1 : 0) + (hasFriends ? 1 : 0) + 1; // +1 for "All"
+        (hasFavorites ? 1 : 0) + (hasFriends ? 1 : 0) + 1; // +1 for "All"
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -236,7 +229,8 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                       Switch.adaptive(
                         value: widget.showOnlyOpen,
                         onChanged: widget.onShowOnlyOpenChanged,
-                        activeColor: owlPurple, //TODO make circle more grey not whit.
+                        activeColor:
+                            owlPurple, //TODO make circle more grey not whit.
                         trackOutlineColor: WidgetStatePropertyAll(
                           grey.withOpacity(.5),
                         ),
@@ -257,16 +251,17 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                       key: ValueKey<int>(visibleOnMap),
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row( // Todo add when possible to change in settings.
+                        const Row(
+                          // Todo add when possible to change in settings.
                           children: [
-                          // Text(
-                          // 'Pro Tip: ',
-                          // style: Styles.smallText.copyWith(color: owlPurple),
-                          // ),
-                          // Text(
-                          // 'You can change your default filters in settings',
-                          // style: Styles.smallText,
-                          // ),
+                            // Text(
+                            // 'Pro Tip: ',
+                            // style: Styles.smallText.copyWith(color: owlPurple),
+                            // ),
+                            // Text(
+                            // 'You can change your default filters in settings',
+                            // style: Styles.smallText,
+                            // ),
                           ],
                         ),
                         Column(
@@ -285,7 +280,6 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                                 ),
                               ],
                             ),
-
                             Row(
                               children: [
                                 Text(
@@ -295,14 +289,15 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                                   ),
                                 ),
                                 Text(
-                                  friendsOnMapCount == 1 ? 'friend on map' : 'friends on map',
+                                  friendsOnMapCount == 1
+                                      ? 'friend on map'
+                                      : 'friends on map',
                                   style: Styles.smallText,
                                 ),
                               ],
                             )
                           ],
                         )
-
                       ],
                     ),
                   ),
@@ -313,200 +308,206 @@ class _VenueFilterPanelState extends State<VenueFilterPanel> {
                 Expanded(
                   child: OwlScrollbar(
                     child: totalCount == 0
-                      ? Center( //TODO Make sadfaceOwl to show when errors/isempty
-                        child: Text(
-                          'No venues match your filters',
-                          style: Styles.smallText.copyWith(color: grey),
-                        ),
-                      )
-                      : ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalSpacerDefault,
-                          vertical: verticalSpacerDefault,
-                        ),
-                        itemCount: headerRows + visibleTypes.length,
-                        separatorBuilder: (_, __) => Divider(
-                          height: 1,
-                          color: white.withOpacity(0.06),
-                        ),
-                        itemBuilder: (context, index) {
-                          // Types start after all header rows:
-                          // [Favorites]? [Friends]? [All]  → then per-type rows
-                          final int typeOffset = headerRows;
+                        ? Center(
+                            //TODO Make sadfaceOwl to show when errors/isempty
+                            child: Text(
+                              'No venues match your filters',
+                              style: Styles.smallText.copyWith(color: grey),
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: horizontalSpacerDefault,
+                              vertical: verticalSpacerDefault,
+                            ),
+                            itemCount: headerRows + visibleTypes.length,
+                            separatorBuilder: (_, __) => Divider(
+                              height: 1,
+                              color: white.withOpacity(0.06),
+                            ),
+                            itemBuilder: (context, index) {
+                              // Types start after all header rows:
+                              // [Favorites]? [Friends]? [All]  → then per-type rows
+                              final int typeOffset = headerRows;
 
-                          int cursor = 0;
+                              int cursor = 0;
 
-                          // 1) Favorites row (optional)
-                          if (hasFavorites) {
-                            if (index == cursor) {
+                              // 1) Favorites row (optional)
+                              if (hasFavorites) {
+                                if (index == cursor) {
+                                  return VenueFilterExpandableTile(
+                                    label: 'Favorites',
+                                    icon: filledStarIcon,
+                                    isOn: widget
+                                        .favoritesOnly, // highlight when active
+                                    count: favoriteVenues.length,
+                                    venues: favoriteVenues,
+                                    userLocation: widget.userLocation,
+                                    favoriteVenueIds: widget.favoriteVenueIds,
+                                    showSwitch: true,
+                                    isVenueActive: (venue) {
+                                      final type = venue.type;
+                                      final isFavorite = widget.favoriteVenueIds
+                                          .contains(venue.id);
+
+                                      // Respect "Open now"
+                                      if (widget.showOnlyOpen &&
+                                          !_isVenueOpenNow(venue)) {
+                                        return false;
+                                      }
+                                      // Respect "Favorites only"
+                                      if (widget.favoritesOnly && !isFavorite) {
+                                        return false;
+                                      }
+                                      // Type filter
+                                      if (_selected.isEmpty) {
+                                        if (!widget.favoritesOnly) return false;
+                                      } else {
+                                        if (type == null ||
+                                            !_selected.contains(type)) {
+                                          return false;
+                                        }
+                                      }
+                                      return true;
+                                    },
+                                    onToggleChanged: (value) async {
+                                      final bool wasOn = widget.favoritesOnly;
+
+                                      // Turning Favorites ON
+                                      if (!wasOn && value) {
+                                        _savedSelectionBeforeFavorites =
+                                            Set<VenueType>.from(_selected);
+                                        _savedShowOnlyOpenBeforeFavorites =
+                                            widget.showOnlyOpen;
+
+                                        await _updateSelection(() {
+                                          _selected.clear();
+                                        });
+
+                                        if (widget.showOnlyOpen) {
+                                          widget.onShowOnlyOpenChanged(false);
+                                        }
+
+                                        widget.onFavoritesOnlyChanged(true);
+                                        return;
+                                      }
+
+                                      // Turning Favorites OFF
+                                      if (wasOn && !value) {
+                                        final prevSelection =
+                                            _savedSelectionBeforeFavorites ??
+                                                Set<VenueType>.from(
+                                                    widget.allTypes);
+
+                                        await _updateSelection(() {
+                                          _selected
+                                            ..clear()
+                                            ..addAll(prevSelection);
+                                        });
+
+                                        final prevShowOnlyOpen =
+                                            _savedShowOnlyOpenBeforeFavorites;
+                                        if (prevShowOnlyOpen != null &&
+                                            prevShowOnlyOpen !=
+                                                widget.showOnlyOpen) {
+                                          widget.onShowOnlyOpenChanged(
+                                              prevShowOnlyOpen);
+                                        }
+
+                                        _savedSelectionBeforeFavorites = null;
+                                        _savedShowOnlyOpenBeforeFavorites =
+                                            null;
+                                        widget.onFavoritesOnlyChanged(false);
+                                      }
+                                    },
+                                    onVenueTap: widget.onVenueTap,
+                                  );
+                                }
+                                cursor++;
+                              }
+
+                              // 2) NEW: Friends row (optional)
+                              if (hasFriends) {
+                                if (index == cursor) {
+                                  return FriendFilterExpandableTile(
+                                    isOn: widget.showFriends,
+                                    friends: widget.friends,
+                                    userLocation: widget.userLocation,
+                                    onToggleChanged:
+                                        widget.onShowFriendsChanged,
+                                    onFriendTap: widget.onFriendTap,
+                                  );
+                                }
+                                cursor++;
+                              }
+
+                              // 3) "All" row (always present)
+                              if (index == cursor) {
+                                return VenueFilterExpandableTile(
+                                  label: 'All venues',
+                                  icon: Icons.all_inclusive_outlined,
+                                  isOn: allOn,
+                                  count: totalCount,
+                                  venues: allVenues,
+                                  userLocation: widget.userLocation,
+                                  favoriteVenueIds: widget.favoriteVenueIds,
+                                  showSwitch: true,
+                                  isVenueActive: (venue) {
+                                    final type = venue.type;
+                                    if (type == null) return false;
+                                    if (!_selected.contains(type)) return false;
+                                    if (widget.showOnlyOpen &&
+                                        !_isVenueOpenNow(venue)) {
+                                      return false;
+                                    }
+                                    return true;
+                                  },
+                                  onToggleChanged: (value) {
+                                    _updateSelection(() {
+                                      if (value) {
+                                        _selected
+                                          ..clear()
+                                          ..addAll(widget.allTypes);
+                                      } else {
+                                        _selected.clear();
+                                      }
+                                    });
+                                  },
+                                  onVenueTap: widget.onVenueTap,
+                                );
+                              }
+
+                              // 4) Type rows (bars, clubs, etc.)
+                              final t = visibleTypes[index - typeOffset];
+                              final isOn = _selected.contains(t);
+                              final count = effectiveCounts[t] ?? 0;
+                              final venues =
+                                  effectiveByType[t] ?? const <Venue>[];
+
                               return VenueFilterExpandableTile(
-                                label: 'Favorites',
-                                icon: filledStarIcon,
-                                isOn: widget.favoritesOnly, // highlight when active
-                                count: favoriteVenues.length,
-                                venues: favoriteVenues,
+                                label: _labelFor(t) == 'Unknown'
+                                    ? 'Other'
+                                    : _labelFor(t),
+                                icon: t.icon,
+                                isOn: isOn,
+                                count: count,
+                                venues: venues,
                                 userLocation: widget.userLocation,
                                 favoriteVenueIds: widget.favoriteVenueIds,
                                 showSwitch: true,
-                                isVenueActive: (venue) {
-                                  final type = venue.type;
-                                  final isFavorite =
-                                    widget.favoriteVenueIds.contains(venue.id);
-
-                                  // Respect "Open now"
-                                  if (widget.showOnlyOpen && !_isVenueOpenNow(venue)) {
-                                    return false;
-                                  }
-                                  // Respect "Favorites only"
-                                  if (widget.favoritesOnly && !isFavorite) {
-                                    return false;
-                                  }
-                                  // Type filter
-                                  if (_selected.isEmpty) {
-                                    if (!widget.favoritesOnly) return false;
-                                  }
-                                  else {
-                                    if (type == null || !_selected.contains(type)) {
-                                      return false;
+                                onToggleChanged: (value) {
+                                  _updateSelection(() {
+                                    if (value) {
+                                      _selected.add(t);
+                                    } else {
+                                      _selected.remove(t);
                                     }
-                                  }
-                                  return true;
-                                },
-                                onToggleChanged: (value) async {
-                                  final bool wasOn = widget.favoritesOnly;
-
-                                  // Turning Favorites ON
-                                  if (!wasOn && value) {
-                                    _savedSelectionBeforeFavorites =
-                                    Set<VenueType>.from(_selected);
-                                    _savedShowOnlyOpenBeforeFavorites = widget.showOnlyOpen;
-
-                                    await _updateSelection(() {
-                                        _selected.clear();
-                                      }
-                                    );
-
-                                    if (widget.showOnlyOpen) {
-                                      widget.onShowOnlyOpenChanged(false);
-                                    }
-
-                                    widget.onFavoritesOnlyChanged(true);
-                                    return;
-                                  }
-
-                                  // Turning Favorites OFF
-                                  if (wasOn && !value) {
-                                    final prevSelection =
-                                      _savedSelectionBeforeFavorites ??
-                                        Set<VenueType>.from(widget.allTypes);
-
-                                    await _updateSelection(() {
-                                        _selected
-                                        ..clear()
-                                        ..addAll(prevSelection);
-                                      }
-                                    );
-
-                                    final prevShowOnlyOpen =
-                                      _savedShowOnlyOpenBeforeFavorites;
-                                    if (prevShowOnlyOpen != null &&
-                                      prevShowOnlyOpen != widget.showOnlyOpen) {
-                                      widget.onShowOnlyOpenChanged(prevShowOnlyOpen);
-                                    }
-
-                                    _savedSelectionBeforeFavorites = null;
-                                    _savedShowOnlyOpenBeforeFavorites = null;
-                                    widget.onFavoritesOnlyChanged(false);
-                                  }
+                                  });
                                 },
                                 onVenueTap: widget.onVenueTap,
                               );
-                            }
-                            cursor++;
-                          }
-
-                          // 2) NEW: Friends row (optional)
-                          if (hasFriends) {
-                            if (index == cursor) {
-                              return FriendFilterExpandableTile(
-                                isOn: widget.showFriends,
-                                friends: widget.friends,
-                                userLocation: widget.userLocation,
-                                onToggleChanged: widget.onShowFriendsChanged,
-                                onFriendTap: widget.onFriendTap,
-                              );
-                            }
-                            cursor++;
-                          }
-
-                          // 3) "All" row (always present)
-                          if (index == cursor) {
-                            return VenueFilterExpandableTile(
-                              label: 'All venues',
-                              icon: Icons.all_inclusive_outlined,
-                              isOn: allOn,
-                              count: totalCount,
-                              venues: allVenues,
-                              userLocation: widget.userLocation,
-                              favoriteVenueIds: widget.favoriteVenueIds,
-                              showSwitch: true,
-                              isVenueActive: (venue) {
-                                final type = venue.type;
-                                if (type == null) return false;
-                                if (!_selected.contains(type)) return false;
-                                if (widget.showOnlyOpen && !_isVenueOpenNow(venue)) {
-                                  return false;
-                                }
-                                return true;
-                              },
-                              onToggleChanged: (value) {
-                                _updateSelection(() {
-                                    if (value) {
-                                      _selected
-                                      ..clear()
-                                      ..addAll(widget.allTypes);
-                                    }
-                                    else {
-                                      _selected.clear();
-                                    }
-                                  }
-                                );
-                              },
-                              onVenueTap: widget.onVenueTap,
-                            );
-                          }
-
-                          // 4) Type rows (bars, clubs, etc.)
-                          final t = visibleTypes[index - typeOffset];
-                          final isOn = _selected.contains(t);
-                          final count = effectiveCounts[t] ?? 0;
-                          final venues = effectiveByType[t] ?? const <Venue>[];
-
-                          return VenueFilterExpandableTile(
-                            label: _labelFor(t) == 'Unknown' ? 'Other' : _labelFor(t),
-                            icon: t.icon,
-                            isOn: isOn,
-                            count: count,
-                            venues: venues,
-                            userLocation: widget.userLocation,
-                            favoriteVenueIds: widget.favoriteVenueIds,
-                            showSwitch: true,
-                            onToggleChanged: (value) {
-                              _updateSelection(() {
-                                  if (value) {
-                                    _selected.add(t);
-                                  }
-                                  else {
-                                    _selected.remove(t);
-                                  }
-                                }
-                              );
                             },
-                            onVenueTap: widget.onVenueTap,
-                          );
-                        },
-
-                      ),
+                          ),
                   ),
                 ),
                 const Divider(color: grey),
@@ -568,11 +569,11 @@ class FriendFilterExpandableTile extends StatefulWidget {
 
   @override
   State<FriendFilterExpandableTile> createState() =>
-  _FriendFilterExpandableTileState();
+      _FriendFilterExpandableTileState();
 }
 
 class _FriendFilterExpandableTileState
-  extends State<FriendFilterExpandableTile> {
+    extends State<FriendFilterExpandableTile> {
   bool _expanded = false;
 
   void _toggleExpanded() {
@@ -607,15 +608,14 @@ class _FriendFilterExpandableTileState
                   height: 32,
                   decoration: BoxDecoration(
                     color: headerActive
-                      ? owlPurple.withOpacity(0.18)
-                      : white.withOpacity(0.04),
+                        ? owlPurple.withOpacity(0.18)
+                        : white.withOpacity(0.04),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.group_rounded,
-                    color:
-                    headerActive ? owlPurple : greyLighter,
+                    color: headerActive ? owlPurple : greyLighter,
                     size: iconSizeSmall,
                   ),
                 ),
@@ -624,17 +624,15 @@ class _FriendFilterExpandableTileState
                   child: Text(
                     'Friends',
                     style: headerActive
-                      ? Styles.basicText
-                      : Styles.basicText
-                        .copyWith(color: greyLighter),
+                        ? Styles.basicText
+                        : Styles.basicText.copyWith(color: greyLighter),
                   ),
                 ),
                 if (count > 0) ...[
                   const SizedBox(width: 8),
                   Text(
                     '($count)',
-                    style: Styles.smallText
-                      .copyWith(color: greyLighter),
+                    style: Styles.smallText.copyWith(color: greyLighter),
                   ),
                 ],
                 const SizedBox(width: 8),
@@ -644,8 +642,7 @@ class _FriendFilterExpandableTileState
                   activeColor: owlPurple,
                   activeTrackColor: owlPurple.withOpacity(0.4),
                   inactiveThumbColor: grey,
-                  inactiveTrackColor:
-                  white.withOpacity(0.12),
+                  inactiveTrackColor: white.withOpacity(0.12),
                 ),
                 const SizedBox(width: 4),
                 AnimatedRotation(
@@ -663,93 +660,82 @@ class _FriendFilterExpandableTileState
         ),
 
         if (_expanded && widget.friends.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: SizedBox(
-            height: math.min(
-              220.0,
-              widget.friends.length * 56.0,
-            ),
-            child: OwlScrollbar(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(right: 3),
-                itemCount: widget.friends.length,
-                itemBuilder: (context, index) {
-                  final f = widget.friends[index];
-                  final user = widget.userLocation;
-                  String distanceLabel = '';
-                  if (user != null) {
-                    final d = Distance.metersLatLng(
-                      user,
-                      LatLng(f.lat, f.lng),
-                    );
-                    distanceLabel =
-                    '${_fmtMeters(d)} away';
-                  }
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(
-                      borderRadiusSmall),
-                    onTap: () => widget.onFriendTap(f),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8),
-                      child: Row(
-                        children: [
-                          ProfilePictureAvatar(
-                            imageUrl: f.avatarUrl,
-                            size: iconSizeLarge + 2,
-                            disablePrompt: true,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  f.title,
-                                  style: Styles.basicText,
-                                  maxLines: 1,
-                                  overflow:
-                                  TextOverflow.ellipsis,
-                                ),
-                                if ((f.subtitle != null &&
-                                  f.subtitle!
-                                    .isNotEmpty) ||
-                                  distanceLabel.isNotEmpty)
-                                Padding(
-                                  padding:
-                                  const EdgeInsets.only(
-                                    top: 2),
-                                  child: Text(
-                                    [
-                                      if (f.subtitle != null &&
-                                        f.subtitle!
-                                          .isNotEmpty)
-                                      f.subtitle!,
-                                      if (distanceLabel
-                                        .isNotEmpty)
-                                      distanceLabel,
-                                    ].join(' • '),
-                                    style: Styles.smallText,
-                                    maxLines: 1,
-                                    overflow: TextOverflow
-                                      .ellipsis,
-                                  ),
-                                ),
-                              ],
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: SizedBox(
+              height: math.min(
+                220.0,
+                widget.friends.length * 56.0,
+              ),
+              child: OwlScrollbar(
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(right: 3),
+                  itemCount: widget.friends.length,
+                  itemBuilder: (context, index) {
+                    final f = widget.friends[index];
+                    final user = widget.userLocation;
+                    String distanceLabel = '';
+                    if (user != null) {
+                      final d = Distance.metersLatLng(
+                        user,
+                        LatLng(f.lat, f.lng),
+                      );
+                      distanceLabel = '${_fmtMeters(d)} away';
+                    }
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(borderRadiusSmall),
+                      onTap: () => widget.onFriendTap(f),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            ProfilePictureAvatar(
+                              imageUrl: f.avatarUrl,
+                              size: iconSizeLarge + 2,
+                              disablePrompt: true,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    f.title,
+                                    style: Styles.basicText,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if ((f.subtitle != null &&
+                                          f.subtitle!.isNotEmpty) ||
+                                      distanceLabel.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        [
+                                          if (f.subtitle != null &&
+                                              f.subtitle!.isNotEmpty)
+                                            f.subtitle!,
+                                          if (distanceLabel.isNotEmpty)
+                                            distanceLabel,
+                                        ].join(' • '),
+                                        style: Styles.smallText,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -778,15 +764,17 @@ class VenueFilterExpandableTile extends StatefulWidget {
   final ValueChanged<bool> onToggleChanged;
   final Future<void> Function(Venue) onVenueTap;
   final Set<String> favoriteVenueIds;
+
   /// Optional per-venue active check (used by "All" and "Favorites" rows).
   /// If null, `isOn` is used for all venues in this tile.
   final bool Function(Venue v)? isVenueActive;
+
   /// Whether to show the filter switch in the header.
   /// For "Favorites" we hide it.
   final bool showSwitch;
   @override
   State<VenueFilterExpandableTile> createState() =>
-  _VenueFilterExpandableTileState();
+      _VenueFilterExpandableTileState();
 }
 
 class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
@@ -812,16 +800,15 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
 
   void _toggleExpanded() {
     setState(() {
-        _expanded = !_expanded;
-        if (_expanded) {
-          // Reset page + scroll back to top when opening
-          _visibleCount = _pageSize;
-          if (_scrollController.hasClients) {
-            _scrollController.jumpTo(0);
-          }
+      _expanded = !_expanded;
+      if (_expanded) {
+        // Reset page + scroll back to top when opening
+        _visibleCount = _pageSize;
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
         }
       }
-    );
+    });
   }
 
   // Auto "show more" when scrolled to the bottom
@@ -839,9 +826,8 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
     final total = widget.venues.length;
     if (_visibleCount >= total) return; // nothing more to load
     setState(() {
-        _visibleCount = math.min(_visibleCount + _pageSize, total);
-      }
-    );
+      _visibleCount = math.min(_visibleCount + _pageSize, total);
+    });
   }
 
   /// Sort:
@@ -852,20 +838,19 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
     final user = widget.userLocation;
     int favRank(Venue v) => widget.favoriteVenueIds.contains(v.id) ? 0 : 1;
     list.sort((a, b) {
-        final fa = favRank(a);
-        final fb = favRank(b);
-        if (fa != fb) {
-          return fa.compareTo(fb); // favorites (0) before non-favorites (1)
-        }
-        if (user == null) {
-          // No distance info – keep original relative order between same favness
-          return 0;
-        }
-        final da = Distance.metersLatLng(user, a.entry);
-        final db = Distance.metersLatLng(user, b.entry);
-        return da.compareTo(db);
+      final fa = favRank(a);
+      final fb = favRank(b);
+      if (fa != fb) {
+        return fa.compareTo(fb); // favorites (0) before non-favorites (1)
       }
-    );
+      if (user == null) {
+        // No distance info – keep original relative order between same favness
+        return 0;
+      }
+      final da = Distance.metersLatLng(user, a.entry);
+      final db = Distance.metersLatLng(user, b.entry);
+      return da.compareTo(db);
+    });
     return list;
   }
 
@@ -888,9 +873,11 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
     final int visible = math.min(_visibleCount, venues.length);
     final List<Venue> visibleVenues = venues.take(visible).toList();
     final int remaining = venues.length - visible; // still used for sizing
-    final TextStyle headerLabelStyle = widget.icon == filledStarIcon ? Styles.basicText : headerActive
+    final TextStyle headerLabelStyle = widget.icon == filledStarIcon
         ? Styles.basicText
-        : Styles.basicText.copyWith(color: greyLighter);
+        : headerActive
+            ? Styles.basicText
+            : Styles.basicText.copyWith(color: greyLighter);
     return Column(
       children: [
         // ===== HEADER ROW (ENTIRE ROW CLICKABLE) =======================
@@ -906,15 +893,21 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: widget.icon == filledStarIcon ? owlPurple.withOpacity(0.18) : headerActive
+                    color: widget.icon == filledStarIcon
                         ? owlPurple.withOpacity(0.18)
-                        : white.withOpacity(0.04),
+                        : headerActive
+                            ? owlPurple.withOpacity(0.18)
+                            : white.withOpacity(0.04),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Icon(
                     widget.icon,
-                    color: widget.icon == filledStarIcon ? owlPurple : headerActive ? owlPurple : greyLighter,
+                    color: widget.icon == filledStarIcon
+                        ? owlPurple
+                        : headerActive
+                            ? owlPurple
+                            : greyLighter,
                     size: iconSizeSmall,
                   ),
                 ),
@@ -962,41 +955,41 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
         ),
         // ===== EXPANDED CONTENT ========================================
         if (_expanded && venues.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 0),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Max height for the inner scroll area
-              const double maxInnerHeight = 260.0;
-              // Estimate a row height so the list doesn't get taller than needed
-              const double rowHeight = 52.0;
-              final int visible = visibleVenues.length;
-              // We still use `remaining` only to approximate needed height,
-              final double neededHeight =
-                visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
-              final double height = math.min(
-                maxInnerHeight,
-                neededHeight,
-              );
-              return SizedBox(
-                height: height,
-                child: OwlScrollbar(
-                  thickness: 1,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding:
-                    const EdgeInsets.only(right: 3), // space for scrollbar
-                    itemCount: visibleVenues.length,
-                    itemBuilder: (context, index) {
-                      final v = visibleVenues[index];
-                      return _buildVenueRow(context, v);
-                    },
+          Padding(
+            padding: const EdgeInsets.only(bottom: 0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Max height for the inner scroll area
+                const double maxInnerHeight = 260.0;
+                // Estimate a row height so the list doesn't get taller than needed
+                const double rowHeight = 52.0;
+                final int visible = visibleVenues.length;
+                // We still use `remaining` only to approximate needed height,
+                final double neededHeight =
+                    visible * rowHeight + (remaining > 0 ? 8.0 : 0.0);
+                final double height = math.min(
+                  maxInnerHeight,
+                  neededHeight,
+                );
+                return SizedBox(
+                  height: height,
+                  child: OwlScrollbar(
+                    thickness: 1,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(
+                          right: 3), // space for scrollbar
+                      itemCount: visibleVenues.length,
+                      itemBuilder: (context, index) {
+                        final v = visibleVenues[index];
+                        return _buildVenueRow(context, v);
+                      },
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -1004,11 +997,9 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
   Widget _buildVenueRow(BuildContext context, Venue v) {
     final user = widget.userLocation;
     final now = DateTime.now();
-    final rawName =
-      v.displayName.isNotEmpty ? v.displayName : v.name;
+    final rawName = v.displayName.isNotEmpty ? v.displayName : v.name;
     // Active under current filters? (used by "All" & "Favorites" tile)
-    final bool venueActive =
-      widget.isVenueActive?.call(v) ?? widget.isOn;
+    final bool venueActive = widget.isVenueActive?.call(v) ?? widget.isOn;
     // Is this venue one of my favorites?
     final bool isFavorite = widget.favoriteVenueIds.contains(v.id);
     // === NAME STYLE + STAR PREFIX =====================================
@@ -1016,12 +1007,10 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
     if (!venueActive) {
       // Dim everything that’s filtered out, even favorites
       nameStyle = Styles.basicText.copyWith(color: greyLighter);
-    }
-    else if (isFavorite) {
+    } else if (isFavorite) {
       // Highlight favorites in owlPurple
       nameStyle = Styles.basicText.copyWith(color: owlPurple);
-    }
-    else {
+    } else {
       nameStyle = Styles.basicText;
     }
     // Text-only star prefix for favorites
@@ -1034,13 +1023,11 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
     final String walk = Distance.walkText(user, v);
     final String dist = Distance.normalDistanceText(user, v);
     final String? walkLabel =
-      walk.isEmpty && dist.isEmpty ? null : '$walk - $dist';
+        walk.isEmpty && dist.isEmpty ? null : '$walk - $dist';
     // Opening-hours display info (range + +1 flag)
-    final OpeningDisplayRow opening =
-      openingDisplayForVenue(v, now);
+    final OpeningDisplayRow opening = openingDisplayForVenue(v, now);
     // Age restriction, e.g. "21+"
-    final String? ageLabel =
-      ageRestrictionLabelFor(v, now);
+    final String? ageLabel = ageRestrictionLabelFor(v, now);
     // Right side top: only the time range, or nothing.
     Widget openingTop;
     if (opening.showRange) {
@@ -1064,19 +1051,18 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
               overflow: TextOverflow.ellipsis,
             ),
             if (opening.nextDay)
-            Positioned(
-              right: -2,
-              top: -5,
-              child: Text(
-                '+1',
-                style: supStyle,
+              Positioned(
+                right: -2,
+                top: -5,
+                child: Text(
+                  '+1',
+                  style: supStyle,
+                ),
               ),
-            ),
           ],
         ),
       );
-    }
-    else {
+    } else {
       // Closed today (or only opens tomorrow) → show nothing
       openingTop = const SizedBox.shrink();
     }
@@ -1099,8 +1085,7 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name (one line, ellipsis)
                   Text(
@@ -1111,15 +1096,15 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
                   ),
                   // Walk text (white)
                   if (walkLabel != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      walkLabel,
-                      style: walkStyle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        walkLabel,
+                        style: walkStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -1134,14 +1119,13 @@ class _VenueFilterExpandableTileState extends State<VenueFilterExpandableTile> {
                 const SizedBox(height: 4),
                 // Bottom: age restriction e.g. "21+"
                 if (ageLabel != null)
-                Text(
-                  ageLabel,
-                  style: Styles.smallText.copyWith(
-                    color:
-                    venueActive ? white : greyLighter,
-                    fontSize: fontSizeSmaller,
+                  Text(
+                    ageLabel,
+                    style: Styles.smallText.copyWith(
+                      color: venueActive ? white : greyLighter,
+                      fontSize: fontSizeSmaller,
+                    ),
                   ),
-                ),
               ],
             ),
           ],
@@ -1185,10 +1169,9 @@ OpeningDisplayRow openingDisplayForVenue(Venue v, DateTime nowLocal) {
   // - it opens later today.
   //
   // If closed all day or only opens tomorrow → show nothing.
-  final bool showRange =
-    hasRange &&
+  final bool showRange = hasRange &&
       (status.phase == OpeningPhase.open ||
-        status.phase == OpeningPhase.opensLaterToday);
+          status.phase == OpeningPhase.opensLaterToday);
   if (!showRange) {
     return const OpeningDisplayRow(
       showRange: false,
@@ -1242,7 +1225,7 @@ _OpeningStatusInfo _openingStatusInfoFor(Venue v) {
   final bool isOpenNow = phase == OpeningPhase.open;
   // We can infer "soon" from the label we generated above:
   final bool isSoon =
-    label.startsWith('Opens in') || label.startsWith('Closes in');
+      label.startsWith('Opens in') || label.startsWith('Closes in');
   final bool shouldShow = isOpenNow || isSoon;
   if (!shouldShow) {
     return _OpeningStatusInfo(

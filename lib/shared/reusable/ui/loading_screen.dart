@@ -108,7 +108,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
                         width: widget.imageSize,
                         height: widget.imageSize,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(borderRadiusSmall),
+                          borderRadius:
+                              BorderRadius.circular(borderRadiusSmall),
                           child: Image.asset(
                             _logoPaths[_currentIndex],
                             fit: BoxFit.cover,

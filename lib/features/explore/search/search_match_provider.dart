@@ -4,8 +4,8 @@ import 'package:nightowlcode/features/explore/search/search_engine.dart';
 import 'package:nightowlcode/models/venues/venue.dart';
 
 import '../../../data/services/location/location_providers.dart';
-import '../filters/filter_controller.dart';     // 👈 NEW
-import '../filters/filter_predicate.dart';     // 👈 NEW
+import '../filters/filter_controller.dart'; // 👈 NEW
+import '../filters/filter_predicate.dart'; // 👈 NEW
 import '../ranking/explore_ranked_providers.dart';
 import 'search_controller.dart';
 

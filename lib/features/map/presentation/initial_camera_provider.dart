@@ -9,10 +9,11 @@ import 'package:nightowlcode/shared/utility/lat_lng.dart';
 const _fallbackLatLng = LatLng(55.6761, 12.5683); // (lat, lng)
 
 CameraOptions get fallbackCamera => CameraOptions(
-  // Mapbox Position is (lng, lat)
-  center: Point(coordinates: Position(_fallbackLatLng.lng, _fallbackLatLng.lat)),
-  zoom: mapZoomDefault,
-);
+      // Mapbox Position is (lng, lat)
+      center: Point(
+          coordinates: Position(_fallbackLatLng.lng, _fallbackLatLng.lat)),
+      zoom: mapZoomDefault,
+    );
 
 final initialCameraProvider = FutureProvider<CameraOptions>((ref) async {
   // 1) Ensure location permission (don’t block forever).
@@ -38,9 +39,8 @@ final initialCameraProvider = FutureProvider<CameraOptions>((ref) async {
   pos ??= await geo.Geolocator.getLastKnownPosition();
 
   // 4) Final fallback to a static center.
-  final target = (pos != null)
-      ? LatLng(pos.latitude, pos.longitude)
-      : _fallbackLatLng;
+  final target =
+      (pos != null) ? LatLng(pos.latitude, pos.longitude) : _fallbackLatLng;
 
   return CameraOptions(
     center: Point(coordinates: Position(target.lng, target.lat)),

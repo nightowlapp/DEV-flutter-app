@@ -5,8 +5,8 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
 import 'friends_provider.dart';
 
-final _authStateProvider =
-StreamProvider<fb.User?>((ref) => fb.FirebaseAuth.instance.authStateChanges());
+final _authStateProvider = StreamProvider<fb.User?>(
+    (ref) => fb.FirebaseAuth.instance.authStateChanges());
 
 final authUserIdProvider = Provider<String?>((ref) {
   final auth = ref.watch(_authStateProvider).value;
@@ -26,11 +26,12 @@ final sortedFriendsProvider = Provider<List<model.User>>((ref) {
   final me = ref.watch(authUserIdProvider);
 
   final all = ref.watch(friendsProvider).maybeWhen(
-    data: (v) => v,
-    orElse: () => const <model.User>[],
-  );
+        data: (v) => v,
+        orElse: () => const <model.User>[],
+      );
 
-  final list = all.where((u) => me == null ? true : u.id != me).toList(growable: false);
+  final list =
+      all.where((u) => me == null ? true : u.id != me).toList(growable: false);
 
   list.sort((a, b) {
     final pa = _p(a.currentPartyStatus);

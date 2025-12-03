@@ -75,7 +75,6 @@ class MapImageRegistry {
     return greyLighter;
   }
 
-
   Future<void> syncIdToUrl({
     required MapboxMap map,
     required Map<String, String> images,
@@ -129,7 +128,6 @@ class MapImageRegistry {
       }
     }
   }
-
 
   void clear() => _loaded.clear();
 
@@ -192,8 +190,7 @@ class MapImageRegistry {
         borderColor: borderColor,
       );
 
-      final pngData =
-      await avatar.toByteData(format: ui.ImageByteFormat.png);
+      final pngData = await avatar.toByteData(format: ui.ImageByteFormat.png);
       if (pngData == null) return null;
 
       final pngBytes = pngData.buffer.asUint8List();
@@ -211,12 +208,10 @@ class MapImageRegistry {
     }
   }
 
-
 // _composeCircleAvatar stays exactly as you pasted,
 // it already draws black fill + colored ring + image.
 
-
-/// Load bytes for `path`:
+  /// Load bytes for `path`:
   /// - normalize storage paths / gs:// → HTTPS when possible
   /// - use DefaultCacheManager for HTTP (disk cached)
   /// - fall back to Firebase Storage SDK otherwise
@@ -236,8 +231,8 @@ class MapImageRegistry {
     // --- preferred path: HTTP + disk cache (cheapest on Firebase) -----
     if (isHttp(resolved)) {
       try {
-        final file = await DefaultCacheManager()
-            .getSingleFile(resolved, key: resolved);
+        final file =
+            await DefaultCacheManager().getSingleFile(resolved, key: resolved);
         return await file.readAsBytes();
       } catch (e) {
         if (kDebugMode) {
@@ -257,7 +252,8 @@ class MapImageRegistry {
       return await ref.getData(8 * 1024 * 1024);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('MapLogoRegistry: Firebase getData failed for $resolved -> $e');
+        debugPrint(
+            'MapLogoRegistry: Firebase getData failed for $resolved -> $e');
       }
       return null;
     }
@@ -277,15 +273,14 @@ class MapImageRegistry {
   /// 2. Crop to that box.
   /// 3. Scale into a circle of diameter [edge] with some padding.
   Future<ui.Image> _cropAndFitToCircle(
-      ui.Image src, {
-        required int edge,
-        double paddingFraction = 0.12,
-      }) async {
+    ui.Image src, {
+    required int edge,
+    double paddingFraction = 0.12,
+  }) async {
     final width = src.width;
     final height = src.height;
 
-    final byteData =
-    await src.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final byteData = await src.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) {
       // fallback: simple scale into circle
       return _scaleImageToCircle(
@@ -337,13 +332,14 @@ class MapImageRegistry {
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final paint = ui.Paint()..isAntiAlias = true ..filterQuality = ui.FilterQuality.high;
+    final paint = ui.Paint()
+      ..isAntiAlias = true
+      ..filterQuality = ui.FilterQuality.high;
 
     final radius = edge / 2.0;
     final center = ui.Offset(radius, radius);
 
-    final circleRect =
-    ui.Rect.fromCircle(center: center, radius: radius);
+    final circleRect = ui.Rect.fromCircle(center: center, radius: radius);
     final clipPath = ui.Path()..addOval(circleRect);
     canvas.clipPath(clipPath);
 
@@ -357,8 +353,7 @@ class MapImageRegistry {
     );
 
     final double scale =
-        (innerRadius * 2.0) /
-            (cropWidth > cropHeight ? cropWidth : cropHeight);
+        (innerRadius * 2.0) / (cropWidth > cropHeight ? cropWidth : cropHeight);
 
     final destW = cropWidth * scale;
     final destH = cropHeight * scale;
@@ -376,18 +371,19 @@ class MapImageRegistry {
   }
 
   Future<ui.Image> _scaleImageToCircle(
-      ui.Image src, {
-        required int edge,
-        double paddingFraction = 0.12,
-      }) async {
+    ui.Image src, {
+    required int edge,
+    double paddingFraction = 0.12,
+  }) async {
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final paint = ui.Paint()..isAntiAlias = true ..filterQuality = ui.FilterQuality.high;
+    final paint = ui.Paint()
+      ..isAntiAlias = true
+      ..filterQuality = ui.FilterQuality.high;
 
     final radius = edge / 2.0;
     final center = ui.Offset(radius, radius);
-    final circleRect =
-    ui.Rect.fromCircle(center: center, radius: radius);
+    final circleRect = ui.Rect.fromCircle(center: center, radius: radius);
     final clipPath = ui.Path()..addOval(circleRect);
     canvas.clipPath(clipPath);
 
@@ -401,8 +397,7 @@ class MapImageRegistry {
     );
 
     final double scale =
-        (innerRadius * 2.0) /
-            (src.width > src.height ? src.width : src.height);
+        (innerRadius * 2.0) / (src.width > src.height ? src.width : src.height);
 
     final destW = src.width * scale;
     final destH = src.height * scale;
@@ -423,11 +418,11 @@ class MapImageRegistry {
   /// - `logoCircle` is already circular with transparent corners.
   /// - Draw it onto a bigger canvas and add a colored ring.
   Future<ui.Image> _composeCircleAvatar(
-      ui.Image logoCircle, {
-        required int edge,
-        required double borderWidth,
-        required ui.Color borderColor,
-      }) async {
+    ui.Image logoCircle, {
+    required int edge,
+    required double borderWidth,
+    required ui.Color borderColor,
+  }) async {
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
     final size = edge.toDouble();
@@ -509,7 +504,4 @@ class MapImageRegistry {
     final picture = recorder.endRecording();
     return picture.toImage(edge, edge);
   }
-
-
 }
-

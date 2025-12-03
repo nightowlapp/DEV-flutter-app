@@ -22,7 +22,8 @@ class LanguageSwitcher extends StatelessWidget {
       child: CircleAvatar(
         backgroundColor: transparent,
         radius: iconSizeDefault,
-        child: Image.asset(ImagePaths.ukFlag,
+        child: Image.asset(
+          ImagePaths.ukFlag,
           width: radius * 1.3,
           height: radius,
           fit: BoxFit.cover,

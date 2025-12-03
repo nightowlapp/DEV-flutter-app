@@ -91,11 +91,10 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
         icon: logoImage != null
             ? CircleAvatar(
-          radius: borderRadiusDefault,
-          backgroundImage: logoImage,
-          backgroundColor:
-          transparent,
-        )
+                radius: borderRadiusDefault,
+                backgroundImage: logoImage,
+                backgroundColor: transparent,
+              )
             : Icon(burgerMenu),
       ),
     );
@@ -103,9 +102,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final Widget? resolvedLeading = leading ??
         (showBack && canPop
             ? IconButton(
-          icon: Icon(chevronLeftIcon),
-          onPressed: onBack ?? () => _defaultBack(context),
-        )
+                icon: Icon(chevronLeftIcon),
+                onPressed: onBack ?? () => _defaultBack(context),
+              )
             : defaultLeading);
 
     // Build default trailing (settings? + end-drawer avatar)
@@ -126,9 +125,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     } else {
       defaultActions.add(ProfilePictureAvatar(
-          useAuthUserAsFallback: true,
+        useAuthUserAsFallback: true,
         onTap: () => Scaffold.maybeOf(context)?.openEndDrawer(),
-
       ));
     }
 
@@ -139,21 +137,20 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final Widget resolvedTitle = title ??
         (hasTitleText
             ? Text(
-          titleText!,
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(color: titleColor),
-          overflow: TextOverflow.ellipsis,
-        )
+                titleText!,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: titleColor),
+                overflow: TextOverflow.ellipsis,
+              )
             : Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            Image.asset(ImagePaths.logoTextWide, height: 70),
-          ],
-        ));
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(ImagePaths.logoTextWide, height: 70),
+                ],
+              ));
 
     return AppBar(
       elevation: 0,

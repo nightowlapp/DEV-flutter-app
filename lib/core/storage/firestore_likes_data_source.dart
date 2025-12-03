@@ -8,8 +8,8 @@ class FirestoreLikesDataSource implements LikesDataSource {
   FirestoreLikesDataSource(this.db);
   final FirebaseFirestore db;
 
-  CollectionReference<Map<String, dynamic>> _likesCol(String userId) => db
-      .collection(UserDocumentPaths.likesCollection(userId));
+  CollectionReference<Map<String, dynamic>> _likesCol(String userId) =>
+      db.collection(UserDocumentPaths.likesCollection(userId));
 
   @override
   Future<bool> isLiked({

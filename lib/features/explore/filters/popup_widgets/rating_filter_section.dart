@@ -45,8 +45,7 @@ class RatingFilterSection extends ConsumerWidget {
                     max: 4.5,
                     divisions: 9,
                     value: filters.minRating ?? 0,
-                    onChanged: (v) =>
-                        ctrl.setMinRating(v == 0 ? null : v),
+                    onChanged: (v) => ctrl.setMinRating(v == 0 ? null : v),
                   ),
                 ),
               ),
@@ -144,18 +143,14 @@ class _RatingEmojiScale extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color:
-                isActive ? owlPurple.withOpacity(.28) : transparent,
+                color: isActive ? owlPurple.withOpacity(.28) : transparent,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 opt.emoji,
                 style: TextStyle(
-                  fontSize:
-                  isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive
-                      ? owlPurple
-                      : white.withOpacity(.85),
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
             ),

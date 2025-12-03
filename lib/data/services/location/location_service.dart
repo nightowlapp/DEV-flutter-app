@@ -35,15 +35,13 @@ class LocationService {
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(timeout, onTimeout: () {
-            return Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.medium,
-            );
-          }
+        return Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
         );
+      });
 
       return LatLng(pos.latitude, pos.longitude);
-    }
-    catch (_) {
+    } catch (_) {
       return null;
     }
   }
@@ -54,8 +52,7 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
       return LatLng(p.latitude, p.longitude);
-    }
-    catch (_) {
+    } catch (_) {
       return null;
     }
   }

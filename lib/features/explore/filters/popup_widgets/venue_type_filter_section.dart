@@ -11,8 +11,7 @@ import '../filter_controller.dart';
 import 'card_section.dart';
 
 const double _kVenueChipWidth = 60.0;
-const Duration _kVenueChipAnimDuration =
-Duration(milliseconds: 620);
+const Duration _kVenueChipAnimDuration = Duration(milliseconds: 620);
 
 class VenueTypeFilterSection extends ConsumerWidget {
   const VenueTypeFilterSection({super.key});
@@ -96,8 +95,7 @@ class VenueTypeFilterSection extends ConsumerWidget {
                   children.add(gap);
                 }
 
-                if (selectedTypes.isNotEmpty &&
-                    unselectedTypes.isNotEmpty) {
+                if (selectedTypes.isNotEmpty && unselectedTypes.isNotEmpty) {
                   children.add(gap);
                 }
 

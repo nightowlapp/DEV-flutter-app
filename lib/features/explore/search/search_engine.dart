@@ -8,8 +8,8 @@ import 'package:nightowlcode/models/venues/venue.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
-import 'package:nightowlcode/shared/utility/european_location_mapper.dart'
-as eu hide LatLng;
+import 'package:nightowlcode/shared/utility/european_location_mapper.dart' as eu
+    hide LatLng;
 
 // ---------------------------------------------------------------------------
 // Public provider
@@ -19,7 +19,7 @@ typedef NowInTz = DateTime Function(String? tzid);
 
 /// Riverpod provider for the search engine.
 final venueSearchEngineProvider =
-Provider.autoDispose<VenueSearchEngine>((ref) {
+    Provider.autoDispose<VenueSearchEngine>((ref) {
   // If you have a real tz resolver, inject it here. For now: device time.
   final nowInTz = (String? _) => DateTime.now();
   return VenueSearchEngine(nowInTz: nowInTz);
@@ -40,10 +40,10 @@ class VenueSearchEngine {
   /// - `query` is the raw text from the search bar (e.g. "club 21+ 4* open").
   /// - `userLoc` is optional, but enables distance tokens like "5km".
   List<Venue> filter(
-      List<Venue> input,
-      String query, {
-        LatLng? userLoc,
-      }) {
+    List<Venue> input,
+    String query, {
+    LatLng? userLoc,
+  }) {
     final q = query.trim();
     if (q.isEmpty) return input;
 
@@ -106,7 +106,7 @@ class VenueSearchEngine {
 
       // AGE: 18+, age:18, age>=18, a18+, 21+
       final age =
-      _parseNumberWithPlus(t, prefixes: const ['age', 'a', 'alder']);
+          _parseNumberWithPlus(t, prefixes: const ['age', 'a', 'alder']);
       if (age != null && age >= 10) {
         spec.minAge = age;
         continue;
@@ -198,8 +198,8 @@ class VenueSearchEngine {
       final blob = _buildTextBlob(v);
       final nameBlob = _normalize(
         '${v.displayName.isNotEmpty ? v.displayName : v.name} '
-            '${v.city} '
-            '${v.countryCode}',
+        '${v.city} '
+        '${v.countryCode}',
       );
 
       for (final term in s.textTerms) {
@@ -221,44 +221,44 @@ class VenueSearchEngine {
   /// IMPORTANT: city/country & their synonyms come from EuropeanLocationMapper.
   String _buildTextBlob(Venue v) {
     final displayName =
-    (v.displayName.isNotEmpty ? v.displayName : v.name).trim();
+        (v.displayName.isNotEmpty ? v.displayName : v.name).trim();
 
     final sb = StringBuffer()
-    // names
+      // names
       ..write(displayName)
       ..write(' ')
       ..write(v.name)
       ..write(' ')
-    // description
+      // description
       ..write(v.description)
       ..write(' ')
-    // location (raw from venue)
+      // location (raw from venue)
       ..write(v.city)
       ..write(' ')
       ..write(v.countryCode)
       ..write(' ')
-    // identity / misc
+      // identity / misc
       ..write(v.companyNumber ?? '')
       ..write(' ')
       ..write(v.email ?? '')
       ..write(' ')
       ..write(v.phone ?? '')
       ..write(' ')
-    // type & dress code & subscription
+      // type & dress code & subscription
       ..write(describeEnum(v.type))
       ..write(' ')
       ..write(describeEnum(v.defaultDressCode))
       ..write(' ')
       ..write(subscriptionTypeToString(v.subscriptionType))
       ..write(' ')
-    // tags
+      // tags
       ..write(v.tagids.join(' '))
       ..write(' ')
-    // age forms
+      // age forms
       ..write(v.defaultAgeRestriction.toString())
       ..write(' ')
       ..write('${v.defaultAgeRestriction}+ ')
-    // rating forms
+      // rating forms
       ..write(_ratingBlob(v))
       ..write(' ');
 
@@ -351,7 +351,6 @@ class VenueSearchEngine {
     return null; // plain "18" or "80" is NOT age
   }
 
-
   VenueType? _parseType(String t) {
     final norm = _normalize(t);
     return _typeMap[norm];
@@ -363,20 +362,18 @@ class VenueSearchEngine {
 
     // price<=10 / p:10 / pris 10
     final m1 = RegExp(
-        r'^(?:price|pris|p)\s*(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:kr)?$'
-    ).firstMatch(s);
+            r'^(?:price|pris|p)\s*(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:kr)?$')
+        .firstMatch(s);
     if (m1 != null) return double.tryParse(m1.group(1)!);
 
     // $10 or €10 (with optional comparator)
-    final m2 = RegExp(
-        r'^(?:<=|=|:)?\s*(?:€|\$)\s*([0-9]+(?:\.[0-9]+)?)\s*$'
-    ).firstMatch(s);
+    final m2 = RegExp(r'^(?:<=|=|:)?\s*(?:€|\$)\s*([0-9]+(?:\.[0-9]+)?)\s*$')
+        .firstMatch(s);
     if (m2 != null) return double.tryParse(m2.group(1)!);
 
     // 10kr (with optional comparator)
-    final m3 = RegExp(
-        r'^(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*kr$'
-    ).firstMatch(s);
+    final m3 =
+        RegExp(r'^(?:<=|=|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*kr$').firstMatch(s);
     if (m3 != null) return double.tryParse(m3.group(1)!);
 
     return null; // plain "80" becomes a text term
@@ -429,7 +426,7 @@ class VenueSearchEngine {
 
     final dp = List<List<int>>.generate(
       la + 1,
-          (_) => List<int>.filled(lb + 1, 0),
+      (_) => List<int>.filled(lb + 1, 0),
     );
 
     for (var i = 0; i <= la; i++) {

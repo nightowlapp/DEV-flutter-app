@@ -114,7 +114,6 @@ class FavoritesSectionRightDrawer extends ConsumerWidget {
                             v,
                           );
                         },
-
                       ),
                     );
                   }),

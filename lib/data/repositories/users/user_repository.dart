@@ -8,15 +8,15 @@ import '../../firestore_paths/firestore_paths.dart';
 class UserRepository {
   UserRepository(FirebaseFirestore db)
       : _users = db
-      .collection(UserDocumentPaths.collection)
-      .withConverter<model.User>(
-    fromFirestore: (snap, _) {
-      final data = snap.data() ?? const <String, dynamic>{};
-      // inject docId as 'id' for the Dart model; DO NOT store it
-      return model.User.fromJson({'id': snap.id, ...data});
-    },
-    toFirestore: (u, _) => _userToFirestore(u),
-  );
+            .collection(UserDocumentPaths.collection)
+            .withConverter<model.User>(
+              fromFirestore: (snap, _) {
+                final data = snap.data() ?? const <String, dynamic>{};
+                // inject docId as 'id' for the Dart model; DO NOT store it
+                return model.User.fromJson({'id': snap.id, ...data});
+              },
+              toFirestore: (u, _) => _userToFirestore(u),
+            );
 
   final CollectionReference<model.User> _users;
 
@@ -138,15 +138,13 @@ class UserRepository {
     final q = query.trim().toLowerCase();
 
     Query<model.User> base =
-    _users.orderBy(UserDocumentPaths.userNameLower).limit(limit);
+        _users.orderBy(UserDocumentPaths.userNameLower).limit(limit);
 
     // Prefix search: [startAt(q), endAt(q + '\uf8ff')]
     if (q.isNotEmpty) {
       base = _users
           .orderBy(UserDocumentPaths.userNameLower)
-          .startAt([q])
-          .endAt([q + '\uf8ff'])
-          .limit(limit);
+          .startAt([q]).endAt([q + '\uf8ff']).limit(limit);
     }
 
     return base
@@ -187,10 +185,7 @@ class UserRepository {
           dist[i - 1][j - 1] + cost, // substitution
         ].reduce((x, y) => x < y ? x : y);
 
-        if (i > 1 &&
-            j > 1 &&
-            a[i - 1] == b[j - 2] &&
-            a[i - 2] == b[j - 1]) {
+        if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
           v = v < dist[i - 2][j - 2] + cost ? v : dist[i - 2][j - 2] + cost;
         }
         dist[i][j] = v;
@@ -281,7 +276,7 @@ class UserRepository {
   Future<bool> usernameAvailableFast(String userName) async {
     final lc = userName.trim().toLowerCase();
     final snap =
-    await _users.firestore.doc(UsernameDocumentPaths.doc(lc)).get();
+        await _users.firestore.doc(UsernameDocumentPaths.doc(lc)).get();
     return !snap.exists;
   }
 
@@ -307,9 +302,8 @@ class UserRepository {
       final data = userSnap.data() as Map<String, dynamic>;
 
       final current =
-      (data[UserDocumentPaths.userName] as String? ?? '').trim();
-      final currentLc =
-      (data[UserDocumentPaths.userNameLower] as String? ??
+          (data[UserDocumentPaths.userName] as String? ?? '').trim();
+      final currentLc = (data[UserDocumentPaths.userNameLower] as String? ??
           current.toLowerCase());
 
       // If it's a case-only change, ensure mapping points to me and update case.
@@ -447,7 +441,7 @@ class UserRepository {
 
 // Optionally expose a provider
 final userRepositoryProvider = Provider<UserRepository>(
-      (ref) => UserRepository(FirebaseFirestore.instance),
+  (ref) => UserRepository(FirebaseFirestore.instance),
 );
 
 Map<String, Object?> _userToFirestore(model.User u) {
@@ -477,17 +471,17 @@ Map<String, Object?> _userToFirestore(model.User u) {
 
 // Users who liked a venue:
 Stream<List<String>> userIdsWhoLikedVenue(
-    FirebaseFirestore db,
-    String venueId,
-    ) {
+  FirebaseFirestore db,
+  String venueId,
+) {
   return db
       .collectionGroup(UserDocumentPaths.likes)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.docs
-      .map((d) => d.reference.parent.parent?.id)
-      .whereType<String>()
-      .toList());
+          .map((d) => d.reference.parent.parent?.id)
+          .whereType<String>()
+          .toList());
 }
 
 // Count favorites for a venue:

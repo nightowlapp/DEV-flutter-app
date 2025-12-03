@@ -18,7 +18,8 @@ import '../search/search_engine.dart';
 import 'venue_ranker.dart';
 
 /// Rules for ranking (we can later make this react to search, etc.)
-final rankerRulesProvider = StateProvider<PointRules>((_) => const PointRules());
+final rankerRulesProvider =
+    StateProvider<PointRules>((_) => const PointRules());
 
 final _rankerAvProvider = Provider<AsyncValue<VenueRanker>>((ref) {
   final rules = ref.watch(rankerRulesProvider);
@@ -66,7 +67,7 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
   final prefsAv = ref.watch(mePrefsAvProvider);
   if (prefsAv.isLoading) {
     final warm =
-    ranker.sort(all.take(24).toList(), userLocation: userLoc, media: null);
+        ranker.sort(all.take(24).toList(), userLocation: userLoc, media: null);
     return AsyncData(warm);
   }
   if (prefsAv.hasError) {
@@ -83,11 +84,10 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
   final Iterable<Venue> pool = (userLoc == null)
       ? all
       : all.where(
-        (v) => Distance.metersLatLng(userLoc, v.entry) <= gateMeters,
-  );
+          (v) => Distance.metersLatLng(userLoc, v.entry) <= gateMeters,
+        );
 
-  final ranked =
-  ranker.sort(pool.toList(), userLocation: userLoc, media: null);
+  final ranked = ranker.sort(pool.toList(), userLocation: userLoc, media: null);
   return AsyncData(ranked);
 });
 
@@ -96,7 +96,7 @@ final exploreRankedVenuesProvider = Provider<AsyncValue<List<Venue>>>((ref) {
 /// 2. Apply text search
 /// 3. Apply filters **only when not searching**
 final exploreVisibleVenuesProvider =
-Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
+    Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
   final rankedAv = ref.watch(exploreRankedVenuesProvider);
 
   final q = ref.watch(searchQueryProvider);
@@ -136,7 +136,4 @@ Provider.autoDispose<AsyncValue<List<Venue>>>((ref) {
     loading: () => const AsyncLoading(),
     error: (e, s) => AsyncError(e, s),
   );
-
-
 }, name: 'exploreVisibleVenuesProvider');
-

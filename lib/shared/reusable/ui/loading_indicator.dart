@@ -47,7 +47,8 @@ class LoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSecondary;
 
-    final logos = (logoSequence.isNotEmpty) ? logoSequence : <String>[logoAsset];
+    final logos =
+        (logoSequence.isNotEmpty) ? logoSequence : <String>[logoAsset];
 
     return IgnorePointer(
       ignoring: true,
@@ -61,12 +62,12 @@ class LoadingIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: enableGlow
                     ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.28),
-                    blurRadius: 12,
-                    spreadRadius: 3,
-                  ),
-                ]
+                        BoxShadow(
+                          color: color.withOpacity(0.28),
+                          blurRadius: 12,
+                          spreadRadius: 3,
+                        ),
+                      ]
                     : const [],
               ),
               child: _RotatingCircle(
@@ -107,7 +108,7 @@ class _RotatingCircle extends StatefulWidget {
 class _RotatingCircleState extends State<_RotatingCircle>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-  AnimationController(vsync: this, duration: widget.duration)..repeat();
+      AnimationController(vsync: this, duration: widget.duration)..repeat();
 
   static const double _twoPi = 6.283185307179586; // 2 * pi
 

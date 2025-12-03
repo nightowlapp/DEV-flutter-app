@@ -119,8 +119,6 @@ class MediaExistence {
       }
     }
 
-
-
     debugPrint('MediaExistence.check raw="$raw"');
     final directUrl = StorageUrl.normalize(raw);
     debugPrint('MediaExistence.check normalized="$directUrl"');

@@ -30,8 +30,7 @@ class UserDocumentPaths {
   static String fcmTokensCollection(String userId) =>
       '$collection/$userId/$fcmTokens';
 
-  static String likesCollection(String userId) =>
-      '$collection/$userId/$likes';
+  static String likesCollection(String userId) => '$collection/$userId/$likes';
 
   static String partyStatusDaysCollection(String userId) =>
       '$collection/$userId/$partyStatusDays';

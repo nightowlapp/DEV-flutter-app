@@ -29,9 +29,9 @@ class PartyStatusRepository {
   }
 
   CollectionReference<Map<String, dynamic>> _dayEntriesCol(
-      String uid,
-      String dayId,
-      ) {
+    String uid,
+    String dayId,
+  ) {
     return _db
         .collection(UserDocumentPaths.collection)
         .doc(uid)
@@ -81,15 +81,14 @@ class PartyStatusRepository {
   Future<CurrentPartyStatus> loadCurrent() async {
     final uid = _uid();
     final doc = await _db.doc(UserDocumentPaths.doc(uid)).get();
-    final raw =
-    doc.data()?[UserDocumentPaths.currentPartyStatus] as String?;
+    final raw = doc.data()?[UserDocumentPaths.currentPartyStatus] as String?;
 
     final status = (raw == null || raw.isEmpty)
         ? null
         : PartyStatusTypes.values.firstWhere(
-          (e) => e.name == raw,
-      orElse: () => PartyStatusTypes.still_planning,
-    );
+            (e) => e.name == raw,
+            orElse: () => PartyStatusTypes.still_planning,
+          );
 
     return CurrentPartyStatus(status!);
   }

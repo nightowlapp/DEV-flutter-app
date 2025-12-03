@@ -6,13 +6,13 @@ import 'package:nightowlcode/features/explore/search/search_query.dart';
 
 /// Raw text typed in the Explore search bar (debounced via [SearchController]).
 final searchQueryProvider = StateProvider.autoDispose<String>(
-      (_) => '',
+  (_) => '',
   name: 'searchQueryProvider',
 );
 
 /// Main search state: parsed [SearchQuery] (normalized, tokens, etc.).
 final searchControllerProvider =
-AutoDisposeNotifierProvider<SearchController, SearchQuery>(
+    AutoDisposeNotifierProvider<SearchController, SearchQuery>(
   SearchController.new,
 );
 
@@ -26,9 +26,9 @@ class SearchController extends AutoDisposeNotifier<SearchQuery> {
   /// Attach to a TextEditingController so changes in the text field
   /// update this notifier (debounced).
   void attach(
-      TextEditingController c, {
-        Duration debounce = const Duration(milliseconds: 160),
-      }) {
+    TextEditingController c, {
+    Duration debounce = const Duration(milliseconds: 160),
+  }) {
     if (_attached == c) return;
     _attached?.removeListener(_onText);
     _attached = c..addListener(_onText);

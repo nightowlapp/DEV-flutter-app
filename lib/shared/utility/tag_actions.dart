@@ -42,9 +42,8 @@ InputDecoration _searchBarDecoration({
     focusedBorder: baseBorder.copyWith(
       borderSide: const BorderSide(color: owlPurple, width: 0.9),
     ),
-    prefixIcon: prefixIcon == null
-        ? null
-        : Icon(prefixIcon, color: white, size: 20),
+    prefixIcon:
+        prefixIcon == null ? null : Icon(prefixIcon, color: white, size: 20),
     contentPadding: multiline
         ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
         : const EdgeInsets.symmetric(vertical: 0),
@@ -64,10 +63,10 @@ class TagPickerResult {
 
 /// Called from VenueTagsGrid.onAddTag
 Future<void> handleAddTagPressed(
-    BuildContext context,
-    WidgetRef ref,
-    Venue venue,
-    ) async {
+  BuildContext context,
+  WidgetRef ref,
+  Venue venue,
+) async {
   // ✅ Correct: bool, derived from userRolesProvider
   final bool isAdmin = ref.read(currentUserIsAdminProvider);
 
@@ -81,9 +80,8 @@ Future<void> handleAddTagPressed(
 
   if (result == null || result.tagIds.isEmpty) return;
 
-  final message = (result.message ?? '').trim().isEmpty
-      ? null
-      : result.message!.trim();
+  final message =
+      (result.message ?? '').trim().isEmpty ? null : result.message!.trim();
 
   // We need tag metadata to enforce exclusives on write for admins
   final tagsAsync = ref.read(tagsSsoProvider);
@@ -120,8 +118,7 @@ Future<void> handleAddTagPressed(
 
   // Submit each suggestion / auto-apply for admins
   for (final tagId in result.tagIds) {
-    final conflicts =
-    isAdmin ? conflictingTagIdsFor(tagId) : const <String>[];
+    final conflicts = isAdmin ? conflictingTagIdsFor(tagId) : const <String>[];
 
     await FeedbackRepository.submitVenueTagSuggestion(
       venueId: venue.id,
@@ -154,7 +151,7 @@ Future<void> handleAddTagPressed(
     title: isAdmin ? 'Tag$plural added' : 'Tag$plural suggested',
     message: isAdmin
         ? 'Added $count tag$plural to '
-        '${venue.displayName.isNotEmpty ? venue.displayName : venue.name}.'
+            '${venue.displayName.isNotEmpty ? venue.displayName : venue.name}.'
         : 'Sent $count tag suggestion$plural.',
     variant: OwlSnackVariant.success,
   );
@@ -165,23 +162,21 @@ Future<void> handleAddTagPressed(
 /// - exclusiveTypes: at most 1
 /// - maxByType: optional caps beyond exclusives
 Future<TagPickerResult?> showTagPickerDialog(
-    BuildContext context,
-    WidgetRef ref, {
-      required Venue venue,
-      required bool isAdmin,
-    }) async {
+  BuildContext context,
+  WidgetRef ref, {
+  required Venue venue,
+  required bool isAdmin,
+}) async {
   // All cached tags from SSO
   final asyncTags = ref.read(tagsSsoProvider);
   final Map<String, Tag> allTagMap = asyncTags.value ?? const {};
 
   // Exclude tags the venue already has
-  final existingIds = venue.tagids
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toSet();
+  final existingIds =
+      venue.tagids.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
 
   final List<Tag> allTags =
-  allTagMap.values.where((t) => !existingIds.contains(t.id)).toList();
+      allTagMap.values.where((t) => !existingIds.contains(t.id)).toList();
 
   if (allTags.isEmpty) {
     OwlSnack.show(
@@ -235,11 +230,10 @@ Future<TagPickerResult?> showTagPickerDialog(
     for (final t in allTags) t.id: t,
   };
 
-
   List<Tag> selectedOfType(
-      TagType type,
-      Set<String> selectedIds,
-      ) {
+    TagType type,
+    Set<String> selectedIds,
+  ) {
     return selectedIds
         .map((id) => tagsById[id])
         .whereType<Tag>()
@@ -269,13 +263,13 @@ Future<TagPickerResult?> showTagPickerDialog(
           final List<Tag> filtered = q.isEmpty
               ? allTags
               : allTags.where((t) {
-            final name = t.name.toLowerCase();
-            final typeLabel = t.type.name.toLowerCase();
-            final id = t.id.toLowerCase();
-            return name.contains(q) ||
-                typeLabel.contains(q) ||
-                id.contains(q);
-          }).toList();
+                  final name = t.name.toLowerCase();
+                  final typeLabel = t.type.name.toLowerCase();
+                  final id = t.id.toLowerCase();
+                  return name.contains(q) ||
+                      typeLabel.contains(q) ||
+                      id.contains(q);
+                }).toList();
 
           // Group by TagType
           final Map<TagType, List<Tag>> grouped = <TagType, List<Tag>>{};
@@ -290,8 +284,6 @@ Future<TagPickerResult?> showTagPickerDialog(
             expanded.putIfAbsent(type, () => isMaxOneType(type));
           }
 
-
-
 // Order sections:
 // 1) all max-one types first
 // 2) then the rest, both groups using your rank() order internally
@@ -305,7 +297,6 @@ Future<TagPickerResult?> showTagPickerDialog(
               }
               return rank(a).compareTo(rank(b));
             });
-
 
           void toggleTag(Tag tag) {
             setState(() {
@@ -346,7 +337,7 @@ Future<TagPickerResult?> showTagPickerDialog(
             final isExpanded = expanded[type] ?? false;
 
             final typeLabel =
-            type.name.replaceAll('_', ' '); // nice human label
+                type.name.replaceAll('_', ' '); // nice human label
 
             return InkWell(
               onTap: () {
@@ -436,17 +427,14 @@ Future<TagPickerResult?> showTagPickerDialog(
                       label,
                       overflow: TextOverflow.ellipsis,
                       style: Styles.smallText.copyWith(
-                        color: disabled
-                            ? grey
-                            : (selected ? owlPurple : white),
+                        color: disabled ? grey : (selected ? owlPurple : white),
                       ),
                     ),
                   ),
                 ],
               ),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding:
-              const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               selectedColor: owlPurple.withOpacity(0.3),
               backgroundColor: disabled ? black.withOpacity(0.5) : black,
               shape: RoundedRectangleBorder(
@@ -487,25 +475,24 @@ Future<TagPickerResult?> showTagPickerDialog(
                   suffixIcon: query.trim().isEmpty
                       ? null
                       : IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: grey,
-                    ),
-                    splashRadius: 16,
-                    onPressed: () {
-                      setState(() {
-                        query = '';
-                        queryResetTick++; // force a new TextField instance → clears text
-                      });
-                    },
-                  ),
+                          icon: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: grey,
+                          ),
+                          splashRadius: 16,
+                          onPressed: () {
+                            setState(() {
+                              query = '';
+                              queryResetTick++; // force a new TextField instance → clears text
+                            });
+                          },
+                        ),
                 ),
                 onChanged: (value) {
                   setState(() => query = value);
                 },
               ),
-
 
               const SizedBox(height: verticalSpacerSmall),
 
@@ -549,9 +536,8 @@ Future<TagPickerResult?> showTagPickerDialog(
                       Navigator.of(ctx).pop<TagPickerResult>(
                         TagPickerResult(
                           tagIds: selectedIds.toList(),
-                          message: message.trim().isEmpty
-                              ? null
-                              : message.trim(),
+                          message:
+                              message.trim().isEmpty ? null : message.trim(),
                         ),
                       );
                     },
@@ -582,7 +568,6 @@ Future<TagPickerResult?> showTagPickerDialog(
                     for (final type in orderedTypes) ...[
                       buildTypeHeader(type, grouped[type]!.length),
                       if (expanded[type] ?? false)
-
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Wrap(
@@ -596,11 +581,6 @@ Future<TagPickerResult?> showTagPickerDialog(
                     ],
                   ],
                 ),
-
-
-
-
-
             ],
           );
         },
@@ -608,5 +588,3 @@ Future<TagPickerResult?> showTagPickerDialog(
     },
   );
 }
-
-

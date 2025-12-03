@@ -52,6 +52,7 @@ class _FeedbackButtonState extends State<FeedbackButton> {
       ),
     );
   }
+
   Future<void> _showFeedbackDialog(BuildContext context) async {
     final controller = TextEditingController();
     String selectedCategory = 'suggestion';
@@ -68,36 +69,33 @@ class _FeedbackButtonState extends State<FeedbackButton> {
                   spacing: 6,
                   runSpacing: 6,
                   children: categoryLabels.entries.map((entry) {
-                      final isSelected = selectedCategory == entry.key;
-                      return ChoiceChip(
-                        label: Text(
-                          entry.value,
-                          style: Styles.smallText.copyWith(
-                            color: isSelected ? owlPurple : white,
-                          ),
+                    final isSelected = selectedCategory == entry.key;
+                    return ChoiceChip(
+                      label: Text(
+                        entry.value,
+                        style: Styles.smallText.copyWith(
+                          color: isSelected ? owlPurple : white,
                         ),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        selected: isSelected,
-                        selectedColor: owlPurple.withOpacity(0.2),
-                        backgroundColor: black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: isSelected ? owlPurple : grey),
-                        ),
-                        onSelected: (_) {
-                          setModalState(() {
-                              selectedCategory = entry.key;
-                            }
-                          );
-                        },
-                      );
-                    }
-                  ).toList(),
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      selected: isSelected,
+                      selectedColor: owlPurple.withOpacity(0.2),
+                      backgroundColor: black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: isSelected ? owlPurple : grey),
+                      ),
+                      onSelected: (_) {
+                        setModalState(() {
+                          selectedCategory = entry.key;
+                        });
+                      },
+                    );
+                  }).toList(),
                 ),
-
                 const SizedBox(height: verticalSpacerMedium),
-
                 TextField(
                   controller: controller,
                   maxLines: 10,
@@ -108,9 +106,7 @@ class _FeedbackButtonState extends State<FeedbackButton> {
                     border: OutlineInputBorder(),
                   ),
                 ),
-
                 const SizedBox(height: verticalSpacerMedium),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -122,8 +118,6 @@ class _FeedbackButtonState extends State<FeedbackButton> {
                       textColor: white,
                       fullWidth: false,
                     ),
-
-
                     OwlButton(
                       label: "Submit",
                       onPressed: () async {
@@ -158,5 +152,4 @@ class _FeedbackButtonState extends State<FeedbackButton> {
       },
     );
   }
-
 }

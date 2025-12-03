@@ -8,10 +8,10 @@ class NavStep {
 }
 
 class NavRoute {
-  final List<LatLng> points;     // polyline path
-  final List<NavStep> steps;     // ordered maneuvers
-  final double distanceMeters;   // total
-  final double durationSeconds;  // total
+  final List<LatLng> points; // polyline path
+  final List<NavStep> steps; // ordered maneuvers
+  final double distanceMeters; // total
+  final double durationSeconds; // total
   const NavRoute({
     required this.points,
     required this.steps,

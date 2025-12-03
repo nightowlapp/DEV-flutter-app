@@ -52,9 +52,9 @@ class LiveLocation {
   /// Old-style doc (what you showed in the screenshot):
   /// { last_known_lat, last_known_lon, updated_at }
   factory LiveLocation.fromLocationDoc(
-      String uid,
-      Map<String, dynamic> data,
-      ) {
+    String uid,
+    Map<String, dynamic> data,
+  ) {
     double? _toDouble(dynamic v) {
       if (v == null) return null;
       if (v is num) return v.toDouble();

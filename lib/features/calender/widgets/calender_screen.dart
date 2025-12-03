@@ -71,6 +71,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
     const safety = 2.0; // small buffer
     return maxW + horizontalPadding + safety;
   }
+
 // TODO Toggle view - calender vs list
   @override
   Widget build(BuildContext context) {

@@ -22,7 +22,7 @@ final liveLocationPublisherProvider = Provider<LiveLocationPublisher>((ref) {
 /// Current sharing audience (friends / closeFriends / none).
 /// This also starts/stops the LiveLocationPublisher.
 final shareAudienceProvider =
-StateNotifierProvider<ShareAudienceController, LocationAudience>((ref) {
+    StateNotifierProvider<ShareAudienceController, LocationAudience>((ref) {
   final pub = ref.read(liveLocationPublisherProvider);
   final controller = ShareAudienceController(pub);
 
@@ -39,7 +39,6 @@ StateNotifierProvider<ShareAudienceController, LocationAudience>((ref) {
 
   return controller;
 });
-
 
 class ShareAudienceController extends StateNotifier<LocationAudience> {
   ShareAudienceController(this._publisher) : super(LocationAudience.none);
@@ -65,8 +64,7 @@ class ShareAudienceController extends StateNotifier<LocationAudience> {
     final todayReset = DateTime(now.year, now.month, now.day, _resetHour);
 
     // If we last changed audience before today's reset point → force NONE.
-    final effective =
-    (updatedAt == null || updatedAt.isBefore(todayReset))
+    final effective = (updatedAt == null || updatedAt.isBefore(todayReset))
         ? LocationAudience.none
         : savedAudience;
 
@@ -115,8 +113,9 @@ class ShareAudienceController extends StateNotifier<LocationAudience> {
 
     final now = DateTime.now();
     final todayReset = DateTime(now.year, now.month, now.day, _resetHour);
-    final nextReset =
-    now.isBefore(todayReset) ? todayReset : todayReset.add(const Duration(days: 1));
+    final nextReset = now.isBefore(todayReset)
+        ? todayReset
+        : todayReset.add(const Duration(days: 1));
 
     final duration = nextReset.difference(now);
 

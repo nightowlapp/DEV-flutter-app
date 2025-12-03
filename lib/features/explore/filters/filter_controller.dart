@@ -12,7 +12,7 @@ import 'advanced_search_filter.dart';
 /// - types = all (empty set = no restriction)
 // Build defaults once from user prefs.
 final _defaultFiltersProvider =
-Provider.autoDispose<AdvancedSearchFilter>((ref) {
+    Provider.autoDispose<AdvancedSearchFilter>((ref) {
   final prefsAv = ref.watch(mePrefsAvProvider); // AsyncValue<UserPrefs>
   final prefs = prefsAv.asData?.value;
 
@@ -32,7 +32,9 @@ Provider.autoDispose<AdvancedSearchFilter>((ref) {
       defaultMinAge = eligible.isNotEmpty ? eligible.last : lowestAge;
     } else {
       // Otherwise prefer 18+ if it exists, else the lowest available restriction
-      defaultMinAge = sortedAges.contains(18) ? 18 : lowestAge; //TODO ages should not be able to go below 18.
+      defaultMinAge = sortedAges.contains(18)
+          ? 18
+          : lowestAge; //TODO ages should not be able to go below 18.
     }
   }
 
@@ -48,10 +50,9 @@ Provider.autoDispose<AdvancedSearchFilter>((ref) {
   );
 });
 
-
 final filtersProvider =
-StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
-      (ref) {
+    StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
+  (ref) {
     final defaults = ref.watch(_defaultFiltersProvider);
     final ctrl = FilterController(defaults);
 
@@ -59,7 +60,7 @@ StateNotifierProvider.autoDispose<FilterController, AdvancedSearchFilter>(
     // keep defaults (and untouched state) in sync.
     ref.listen<AdvancedSearchFilter>(
       _defaultFiltersProvider,
-          (previous, next) {
+      (previous, next) {
         ctrl.updateDefaults(next);
 
         // If user hasn’t changed filters yet (state == old defaults),
@@ -84,13 +85,12 @@ final filtersActiveProvider = Provider.autoDispose<bool>((ref) {
 
 /// Public view of defaults (for labels / comparisons).
 final filterDefaultsProvider =
-Provider.autoDispose<AdvancedSearchFilter>((ref) {
+    Provider.autoDispose<AdvancedSearchFilter>((ref) {
   return ref.watch(_defaultFiltersProvider);
 });
 
 // ---- Which age restrictions actually exist in venues *today* ----
-final ageRestrictionOptionsProvider =
-Provider.autoDispose<List<int>>((ref) {
+final ageRestrictionOptionsProvider = Provider.autoDispose<List<int>>((ref) {
   final bootDone = ref.watch(venuesLocalBootDoneProvider);
   if (!bootDone) {
     // While venues boot, fall back to 18+
@@ -102,7 +102,8 @@ Provider.autoDispose<List<int>>((ref) {
   final ages = <int>{};
 
   for (final v in venues) {
-    final age = v.effectiveAgeRestriction(now); // uses age_restriction[today] or default_age_rest
+    final age = v.effectiveAgeRestriction(
+        now); // uses age_restriction[today] or default_age_rest
     if (age > 0) {
       ages.add(age);
     }
@@ -134,20 +135,17 @@ class FilterController extends StateNotifier<AdvancedSearchFilter> {
   void setMaxDistanceKm(double km) =>
       state = state.copyWith(maxDistanceKm: km, clearMaxDistance: false);
 
-  void clearMaxDistance() =>
-      state = state.copyWith(clearMaxDistance: true);
+  void clearMaxDistance() => state = state.copyWith(clearMaxDistance: true);
 
   void setMinAgeRestriction(int? age) =>
       state = state.copyWith(minAgeRestriction: age, clearMinAge: age == null);
 
-  void clearMinAgeRestriction() =>
-      state = state.copyWith(clearMinAge: true);
+  void clearMinAgeRestriction() => state = state.copyWith(clearMinAge: true);
 
-  void setMaxEntryPrice(double? price) => state = state.copyWith(
-      maxEntryPrice: price, clearMaxEntryPrice: price == null);
+  void setMaxEntryPrice(double? price) => state =
+      state.copyWith(maxEntryPrice: price, clearMaxEntryPrice: price == null);
 
-  void clearMaxEntryPrice() =>
-      state = state.copyWith(clearMaxEntryPrice: true);
+  void clearMaxEntryPrice() => state = state.copyWith(clearMaxEntryPrice: true);
 
   void toggleType(VenueType t) {
     final s = Set<VenueType>.from(state.types);

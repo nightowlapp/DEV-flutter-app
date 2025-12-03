@@ -27,7 +27,8 @@ Widget VenueLogo({
 
   // Fallback options
   bool showInitialFallback = true, // controls whether *any* fallback is shown
-  bool showTypeIfNoLogo = true, // when true, use venue.type.icon instead of initials
+  bool showTypeIfNoLogo =
+      true, // when true, use venue.type.icon instead of initials
   String? fallbackText,
   Color fallbackBgColor = const Color(0xFF222222),
   Color fallbackTextColor = white,
@@ -51,17 +52,16 @@ Widget VenueLogo({
   final DateTime now = nowForOpenCheck ?? DateTime.now();
 
   final bool isOpen = venue.isOpenNow(now);
-  final bool isSoon = venue.isOpeningOrClosingSoon(now); // opens OR closes within 60 min
+  final bool isSoon =
+      venue.isOpeningOrClosingSoon(now); // opens OR closes within 60 min
 
   final Color effectiveBorder = !autoBorderByOpen
       ? borderColor
       : isSoon
-      ? isSooColor          // opening OR closing soon  -> yellow
-      : isOpen
-      ? openBorderColor // open                     -> green
-      : closedBorderColor; // closed, not soon      -> red
-
-
+          ? isSooColor // opening OR closing soon  -> yellow
+          : isOpen
+              ? openBorderColor // open                     -> green
+              : closedBorderColor; // closed, not soon      -> red
 
   Widget _fallbackBadge() {
     // Only use the type icon if we *want* to and the type isn't unknown
@@ -79,22 +79,22 @@ Widget VenueLogo({
 
     final decoration = shape == VenueLogoShape.circle
         ? BoxDecoration(
-      shape: BoxShape.circle,
-      color: backgroundColor ?? fallbackBgColor,
-      border: Border.all(color: effectiveBorder, width: borderWidth),
-    )
+            shape: BoxShape.circle,
+            color: backgroundColor ?? fallbackBgColor,
+            border: Border.all(color: effectiveBorder, width: borderWidth),
+          )
         : BoxDecoration(
-      color: backgroundColor ?? fallbackBgColor,
-      borderRadius: borderRadius,
-      border: Border.all(color: effectiveBorder, width: borderWidth),
-    );
+            color: backgroundColor ?? fallbackBgColor,
+            borderRadius: borderRadius,
+            border: Border.all(color: effectiveBorder, width: borderWidth),
+          );
 
     final child = useTypeIcon
         ? Icon(venue.type.icon, color: fallbackTextColor, size: size * 0.56)
         : FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(label, style: textStyle),
-    );
+            fit: BoxFit.scaleDown,
+            child: Text(label, style: textStyle),
+          );
 
     return Container(
       width: size,

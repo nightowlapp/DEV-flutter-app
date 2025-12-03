@@ -12,27 +12,28 @@ enum OwlSnackVariant { info, success, warning, error, neutral }
 class OwlSnack {
   /// Show a floating bottom snackbar with title + optional message.
   /// Requires a [ScaffoldMessenger] in the widget tree.
-  static void show( // TODO bool to push forward on screen z value.
-      BuildContext context, {
-        required String title,
-        String? message,
-        OwlSnackVariant variant = OwlSnackVariant.neutral,
-        SnackBarBehavior behavior = SnackBarBehavior.floating, // <- rename
-        // Visuals
-        Widget? icon,
-        bool showIcon = true,
-        double iconSize = 22,
-        bool showDivider = true,
-        Duration duration = const Duration(seconds: 3),
-        EdgeInsetsGeometry? margin,
-        EdgeInsetsGeometry? padding,
-        double borderRadius = borderRadiusDefault,
-        Color? backgroundColor,
-        Color? textColor,
-        Color? borderColor,
-        String? actionLabel,
-        VoidCallback? onAction,
-      }) {
+  static void show(
+    // TODO bool to push forward on screen z value.
+    BuildContext context, {
+    required String title,
+    String? message,
+    OwlSnackVariant variant = OwlSnackVariant.neutral,
+    SnackBarBehavior behavior = SnackBarBehavior.floating, // <- rename
+    // Visuals
+    Widget? icon,
+    bool showIcon = true,
+    double iconSize = 22,
+    bool showDivider = true,
+    Duration duration = const Duration(seconds: 3),
+    EdgeInsetsGeometry? margin,
+    EdgeInsetsGeometry? padding,
+    double borderRadius = borderRadiusDefault,
+    Color? backgroundColor,
+    Color? textColor,
+    Color? borderColor,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
     final palette = _paletteFor(variant);
     final bg = backgroundColor ?? palette.$1;
     final fg = textColor ?? palette.$2;
@@ -85,7 +86,7 @@ class OwlSnack {
                 style: TextButton.styleFrom(
                   foregroundColor: fg,
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -117,7 +118,6 @@ class OwlSnack {
     messenger.removeCurrentSnackBar();
     messenger.showSnackBar(snack);
   }
-
 
   /// Default palette per variant: (background, text, border).
   static (Color, Color, Color) _paletteFor(OwlSnackVariant v) {

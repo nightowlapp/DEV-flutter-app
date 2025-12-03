@@ -77,7 +77,8 @@ class NavigationBanner extends StatelessWidget {
     final now = DateTime.now();
     if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
       return clock; // today
-    } else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
+    } else if (dt.difference(DateTime(now.year, now.month, now.day)).inDays ==
+        1) {
       return clock;
     } else {
       return '${dt.month}/${dt.day} $clock';
@@ -109,7 +110,8 @@ class NavigationBanner extends StatelessWidget {
                 color: black,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -124,7 +126,8 @@ class NavigationBanner extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: accentColor.withOpacity(0.18),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: accentColor.withOpacity(0.35)),
+                                  border: Border.all(
+                                      color: accentColor.withOpacity(0.35)),
                                 ),
                                 child: Icon(_modeIcon(navProfile),
                                     color: accentColor, size: iconSizeDefault),

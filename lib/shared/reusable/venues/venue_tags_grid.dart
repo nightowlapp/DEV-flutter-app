@@ -93,15 +93,15 @@ class VenueTagsGrid extends ConsumerWidget {
               height: chipHeight,
               child: isAddTagItem
                   ? _addTagChip(
-                width: tagWidth,
-                height: tagHeight,
-                onTap: onAddTag,
-              )
+                      width: tagWidth,
+                      height: tagHeight,
+                      onTap: onAddTag,
+                    )
                   : _tagChip(
-                tags[visualIndex],
-                tagWidth,
-                tagHeight,
-              ),
+                      tags[visualIndex],
+                      tagWidth,
+                      tagHeight,
+                    ),
             );
           },
         ),
@@ -142,13 +142,13 @@ class VenueTagsGrid extends ConsumerWidget {
   }
 
   Widget _boxed(Widget child) => Container(
-    decoration: BoxDecoration(
-      color: black,
-      border: Border.all(color: white, width: 1.5),
-      borderRadius: BorderRadius.circular(borderRadiusSmall),
-    ),
-    child: child,
-  );
+        decoration: BoxDecoration(
+          color: black,
+          border: Border.all(color: white, width: 1.5),
+          borderRadius: BorderRadius.circular(borderRadiusSmall),
+        ),
+        child: child,
+      );
 }
 
 Widget _tagChip(Tag tag, double width, double height) {
@@ -267,7 +267,8 @@ Widget _addTagChip({
 
   if (onTap == null) return chip;
 
-  return GestureDetector( //TODO add tag hooked up - look through all tags and add. Maybe only for reviewers/testers?
+  return GestureDetector(
+    //TODO add tag hooked up - look through all tags and add. Maybe only for reviewers/testers?
     onTap: onTap,
     child: chip,
   );

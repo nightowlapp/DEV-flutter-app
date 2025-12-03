@@ -30,7 +30,9 @@ class NavTts {
     _muted = value;
     muted.value = value;
     if (value) {
-      try { await _tts.stop(); } catch (_) {}
+      try {
+        await _tts.stop();
+      } catch (_) {}
     }
     await _prefs?.setBool(_kMutedKey, value);
   }
@@ -41,16 +43,22 @@ class NavTts {
     if (_muted) return;
     final t = text.trim();
     if (t.isEmpty) return;
-    try { await _tts.stop(); } catch (_) {}
+    try {
+      await _tts.stop();
+    } catch (_) {}
     await _tts.speak(t);
   }
 
   Future<void> stop() async {
-    try { await _tts.stop(); } catch (_) {}
+    try {
+      await _tts.stop();
+    } catch (_) {}
   }
 
   Future<void> dispose() async {
-    try { await _tts.stop(); } catch (_) {}
+    try {
+      await _tts.stop();
+    } catch (_) {}
     muted.dispose();
   }
 }

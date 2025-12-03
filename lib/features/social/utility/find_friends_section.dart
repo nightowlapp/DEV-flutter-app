@@ -24,8 +24,7 @@ class FindFriendsSection extends ConsumerStatefulWidget {
   const FindFriendsSection({super.key});
 
   @override
-  ConsumerState<FindFriendsSection> createState() =>
-  _FindFriendsSectionState();
+  ConsumerState<FindFriendsSection> createState() => _FindFriendsSectionState();
 }
 
 class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
@@ -36,12 +35,12 @@ class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
 
     // Only pending outgoing
     final outgoing = ref.watch(outgoingFriendRequestsProvider).maybeWhen(
-      data: (l) => l
-        .where((r) => r.status == FriendRequestStatus.pending)
-        .map((e) => e.toUid)
-        .toSet(),
-      orElse: () => <String>{},
-    );
+          data: (l) => l
+              .where((r) => r.status == FriendRequestStatus.pending)
+              .map((e) => e.toUid)
+              .toSet(),
+          orElse: () => <String>{},
+        );
 
     // 👇 New: how many suggestions / matches we currently have
     final int? matchCount = usersAv.asData?.value.length;
@@ -54,7 +53,7 @@ class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
         _SearchField(
           initial: q,
           onChanged: (v) =>
-          ref.read(userSearchQueryProvider.notifier).state = v,
+              ref.read(userSearchQueryProvider.notifier).state = v,
           matchCount: matchCount, // 👈 pass down
         ),
         const SizedBox(height: 8),
@@ -117,7 +116,6 @@ class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
   }
 }
 
-
 class _UserRow extends ConsumerStatefulWidget {
   const _UserRow({required this.user, required this.alreadyPending});
   final model.User user;
@@ -141,30 +139,30 @@ class _UserRowState extends ConsumerState<_UserRow> {
     final trailing = switch ((widget.alreadyPending, _sending)) {
       (true, _) => _RequestedChip(),
       (false, true) => const SizedBox(
-        width: 24,
-        height: 24,
-        child: LoadingIndicator(),
-      ),
+          width: 24,
+          height: 24,
+          child: LoadingIndicator(),
+        ),
       (false, false) => IconButton(
-        tooltip: 'Add friend',
-        icon: const Icon(Icons.person_add_alt_1_outlined, color: white),
-        onPressed: () async {
-          setState(() => _sending = true);
-          final res = await repo.send(toUid: widget.user.id);
-          if (!mounted) return;
-          setState(() => _sending = false);
+          tooltip: 'Add friend',
+          icon: const Icon(Icons.person_add_alt_1_outlined, color: white),
+          onPressed: () async {
+            setState(() => _sending = true);
+            final res = await repo.send(toUid: widget.user.id);
+            if (!mounted) return;
+            setState(() => _sending = false);
 
-          final (msg, isOk) = _msgForResult(res, widget.user.userName);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(msg),
-              backgroundColor:
-              isOk ? Colors.green.shade700 : Colors.red.shade700,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
-      ),
+            final (msg, isOk) = _msgForResult(res, widget.user.userName);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(msg),
+                backgroundColor:
+                    isOk ? Colors.green.shade700 : Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+        ),
     };
 
     return InkWell(
@@ -208,11 +206,11 @@ class _UserRowState extends ConsumerState<_UserRow> {
                     maxLines: 1,
                   ),
                   widget.user.displayFullName.isNotEmpty
-                    ? Text(
-                      Utility.formatString(widget.user.displayFullName),
-                      style: Styles.smallText,
-                    )
-                    : const SizedBox.shrink(),
+                      ? Text(
+                          Utility.formatString(widget.user.displayFullName),
+                          style: Styles.smallText,
+                        )
+                      : const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -237,11 +235,10 @@ class _UserRowState extends ConsumerState<_UserRow> {
         return ('Request already pending.', false);
       case FriendRequestSendResult.error:
       default:
-      return ('Could not send request. Try again.', false);
+        return ('Could not send request. Try again.', false);
     }
   }
 }
-
 
 class _RequestedChip extends StatelessWidget {
   @override
@@ -266,7 +263,11 @@ class _RequestedChip extends StatelessWidget {
 }
 
 class _SearchField extends StatefulWidget {
-  const _SearchField({required this.initial, required this.onChanged, required this.matchCount,});
+  const _SearchField({
+    required this.initial,
+    required this.onChanged,
+    required this.matchCount,
+  });
   final String initial;
   final ValueChanged<String> onChanged;
   final int? matchCount;
@@ -303,9 +304,8 @@ class _SearchFieldState extends State<_SearchField> {
   void _onChangedDebounced(String v) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-        widget.onChanged(v);
-      }
-    );
+      widget.onChanged(v);
+    });
   }
 
   @override
@@ -342,8 +342,7 @@ class _SearchFieldState extends State<_SearchField> {
         prefixIcon: const Icon(Icons.search, color: white),
 
         // 👇 NEW: "x nearby / matches" + clear button like VenueSearchBar
-        suffixIconConstraints:
-        const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -358,30 +357,27 @@ class _SearchFieldState extends State<_SearchField> {
               ),
             ),
             if (hasText)
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              constraints: const BoxConstraints(),
-              icon: const Icon(Icons.clear, color: white),
-              onPressed: () {
-                _c.clear();
-                _onChangedDebounced('');
-                setState(() {}
-                );
-              },
-            ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 0),
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.clear, color: white),
+                onPressed: () {
+                  _c.clear();
+                  _onChangedDebounced('');
+                  setState(() {});
+                },
+              ),
           ],
         ),
         contentPadding: const EdgeInsets.symmetric(vertical: 0),
       ),
       onChanged: (v) {
         _onChangedDebounced(v);
-        setState(() {}
-        ); // update suffix (hasText + label)
+        setState(() {}); // update suffix (hasText + label)
       },
     );
   }
-
 }
 
 class _FriendCountText extends StatelessWidget {
@@ -406,13 +402,12 @@ class _FriendCountText extends StatelessWidget {
         label: semanticsLabelWhenUnknown,
         child: const SizedBox.shrink(),
       );
-    }
-    else {
+    } else {
       final isMatchesLabel =
-        label.trim() == 'matches' || label.contains('matches');
+          label.trim() == 'matches' || label.contains('matches');
       final plural = isMatchesLabel
-        ? (count == 1 ? ' match' : ' matches')
-        : label; // e.g. ' nearby'
+          ? (count == 1 ? ' match' : ' matches')
+          : label; // e.g. ' nearby'
       final numColor = (count == 0) ? red : owlPurple;
 
       child = Semantics(

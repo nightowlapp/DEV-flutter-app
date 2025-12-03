@@ -18,13 +18,14 @@ class FavoriteVenuesSection extends ConsumerWidget {
     final venuesAsync = ref.watch(favoriteVenuesProvider);
     // final favStore = ref.watch(favoriteStoreProvider(venue.id));
 
-
     return venuesAsync.when(
       loading: _loadingSkeleton,
-      error: (e, _) => Text('Could not load favorites', style: Styles.basicText),
+      error: (e, _) =>
+          Text('Could not load favorites', style: Styles.basicText),
       data: (venues) {
         if (venues.isEmpty) {
-          return Text('You haven’t favorited any venues yet.', style: Styles.basicText);
+          return Text('You haven’t favorited any venues yet.',
+              style: Styles.basicText);
         }
 
         // Keep backend order; for alphabetical by displayName, uncomment next line:
@@ -35,7 +36,7 @@ class FavoriteVenuesSection extends ConsumerWidget {
           children: [
             Text(
               'You are receiving notifications from ${venues.length} '
-                  'venue${venues.length == 1 ? '' : 's'}',
+              'venue${venues.length == 1 ? '' : 's'}',
               style: Styles.basicText,
             ),
             const SizedBox(height: 8),
@@ -54,7 +55,8 @@ class FavoriteVenuesSection extends ConsumerWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.favorite, color: owlPurple, size: iconSizeDefault),
+      leading:
+          const Icon(Icons.favorite, color: owlPurple, size: iconSizeDefault),
       title: Text(name, style: Styles.basicText),
       onTap: () {
         // FavoriteVenueButton(store: favStore, venue: venue),
@@ -69,7 +71,7 @@ class FavoriteVenuesSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: List.generate(
         4,
-            (i) => Container(
+        (i) => Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
           height: 16,
           decoration: BoxDecoration(

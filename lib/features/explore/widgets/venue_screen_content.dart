@@ -39,11 +39,11 @@ import 'more_info_screen.dart';
 // -------------------- LIVE COUNT PROVIDERS --------------------
 // Stream<int> -> Riverpod provider so we can watch it in the UI.
 final liveVenueCountProvider = StreamProvider.family<int, String>(
-        (ref, venueId) => liveVenueCount(venueId));
+    (ref, venueId) => liveVenueCount(venueId));
 
 // (Optional) all counts if you ever need them elsewhere.
 final liveAllVenueCountsProvider =
-StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
+    StreamProvider<Map<String, int>>((ref) => liveAllVenueCounts());
 
 class VenueScreenContent extends ConsumerWidget {
   const VenueScreenContent({
@@ -96,7 +96,7 @@ class VenueScreenContent extends ConsumerWidget {
 
     // safe % filled
     final int percentFilled =
-    (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
+        (((visits / cap!) * 100.0).clamp(0.0, 100.0)).round();
 
     return Column(
       children: [
@@ -123,7 +123,11 @@ class VenueScreenContent extends ConsumerWidget {
                   LikeVenueButton(store: likeStore, venue: venue),
                   const SizedBox(width: allSidePaddingDefault),
                   //TODO multiple places. If admin, tester or reviewer open editbadge on click.
-                  venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
+                  venue.isVerified
+                      ? const VerifiedBadge()
+                      : EditBadge(
+                          venue: venue,
+                        ),
                   const Spacer(),
                   Column(
                     children: [
@@ -143,7 +147,7 @@ class VenueScreenContent extends ConsumerWidget {
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding:
-            const EdgeInsets.symmetric(horizontal: allSidePaddingDefault),
+                const EdgeInsets.symmetric(horizontal: allSidePaddingDefault),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -266,7 +270,7 @@ class VenueScreenContent extends ConsumerWidget {
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
                   OfferTodaySection(venueId: venue.id),
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
-                ] ,
+                ],
               ],
             ),
           ),
@@ -314,36 +318,34 @@ class VenueScreenContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: info.isClosedForDisplay
                 ? Text(
-              'Closed today',
-              style: baseStyle.copyWith(color: red),
-            )
+                    'Closed today',
+                    style: baseStyle.copyWith(color: red),
+                  )
                 : Align(
-              alignment: Alignment.centerLeft,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // base time range
-                  Text(
-                    '${info.openLabel} - ${info.closeLabel}',
-                    style: baseStyle,
-                  ),
-                  if (info.goesPastMidnight)
-                    Positioned(
-                      right: -10, // overlaps instead of widening
-                      top: -8,
-                      child: Text(
-                        '+1',
-                        style: supStyle,
-                      ),
+                    alignment: Alignment.centerLeft,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // base time range
+                        Text(
+                          '${info.openLabel} - ${info.closeLabel}',
+                          style: baseStyle,
+                        ),
+                        if (info.goesPastMidnight)
+                          Positioned(
+                            right: -10, // overlaps instead of widening
+                            top: -8,
+                            child: Text(
+                              '+1',
+                              style: supStyle,
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
-            ),
+                  ),
           ),
         ),
       ),
     );
   }
-
-
 }

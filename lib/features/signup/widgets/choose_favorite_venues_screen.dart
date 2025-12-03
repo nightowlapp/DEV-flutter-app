@@ -133,7 +133,11 @@ class _ChooseFavoriteVenuesScreenState
         centerTitle: true,
         leading: SizedBox.shrink(),
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+          CircleAvatar(
+            backgroundImage: const AssetImage(ImagePaths.logo),
+            radius: iconSizeDefault,
+            backgroundColor: transparent,
+          ),
         ],
       ),
       body: SafeArea(

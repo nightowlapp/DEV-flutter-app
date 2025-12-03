@@ -34,8 +34,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
   @override
   void initState() {
     super.initState();
-    _focus.addListener(() => setState(() {}
-      ));
+    _focus.addListener(() => setState(() {}));
     widget.controller.addListener(_handleTextChanged);
   }
 
@@ -50,8 +49,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
     final text = widget.controller.text;
     // Push text into global search query provider
     ref.read(searchQueryProvider.notifier).state = text;
-    setState(() {}
-    ); // rebuild to switch nearby ↔ matches label
+    setState(() {}); // rebuild to switch nearby ↔ matches label
   }
 
   @override
@@ -88,7 +86,7 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
           ),
           prefixIcon: Icon(exploreIcon, color: white),
           suffixIconConstraints:
-          const BoxConstraints(minWidth: 0, minHeight: 0),
+              const BoxConstraints(minWidth: 0, minHeight: 0),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -97,37 +95,37 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: hasText
-                  // ── SEARCH TEXT → show search matches ───────────────
-                  ? Padding(
-                    key: const ValueKey('matches'),
-                    padding: const EdgeInsets.only(right: 0),
-                    child: _CountText(
-                      count: matchCount ?? 0,
-                      label: ' matches',
-                      semanticsLabelWhenUnknown: 'Search matches',
-                    ),
-                  )
-                  // ── NO TEXT, FILTERS ACTIVE → show filter matches ───
-                  : filtersActive
+                    // ── SEARCH TEXT → show search matches ───────────────
                     ? Padding(
-                      key: const ValueKey('filterMatches'),
-                      padding: const EdgeInsets.only(right: 0),
-                      child: _CountText(
-                        count: filterMatchCount ?? 0,
-                        label: ' matches', // same style as search
-                        semanticsLabelWhenUnknown: 'Filtered venues',
-                      ),
-                    )
-                    // ── NO TEXT, NO FILTERS → show nearby count ─────
-                    : Padding(
-                      key: const ValueKey('nearby'),
-                      padding: const EdgeInsets.only(right: 0),
-                      child: _CountText(
-                        count: nearbyCount,
-                        label: ' nearby',
-                        semanticsLabelWhenUnknown: 'Nearby venues',
-                      ),
-                    ),
+                        key: const ValueKey('matches'),
+                        padding: const EdgeInsets.only(right: 0),
+                        child: _CountText(
+                          count: matchCount ?? 0,
+                          label: ' matches',
+                          semanticsLabelWhenUnknown: 'Search matches',
+                        ),
+                      )
+                    // ── NO TEXT, FILTERS ACTIVE → show filter matches ───
+                    : filtersActive
+                        ? Padding(
+                            key: const ValueKey('filterMatches'),
+                            padding: const EdgeInsets.only(right: 0),
+                            child: _CountText(
+                              count: filterMatchCount ?? 0,
+                              label: ' matches', // same style as search
+                              semanticsLabelWhenUnknown: 'Filtered venues',
+                            ),
+                          )
+                        // ── NO TEXT, NO FILTERS → show nearby count ─────
+                        : Padding(
+                            key: const ValueKey('nearby'),
+                            padding: const EdgeInsets.only(right: 0),
+                            child: _CountText(
+                              count: nearbyCount,
+                              label: ' nearby',
+                              semanticsLabelWhenUnknown: 'Nearby venues',
+                            ),
+                          ),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
@@ -159,7 +157,6 @@ class _VenueSearchBarState extends ConsumerState<VenueSearchBar> {
                 },
                 tooltip: 'Filters',
               ),
-
             ],
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -194,9 +191,8 @@ class _CountText extends StatelessWidget {
     } else {
       final isMatchesLabel =
           label.trim() == 'matches' || label.contains('matches');
-      final plural = isMatchesLabel
-          ? (count == 1 ? ' match' : ' matches')
-          : label;
+      final plural =
+          isMatchesLabel ? (count == 1 ? ' match' : ' matches') : label;
       final numColor = (count == 0) ? red : owlPurple;
 
       child = Semantics(

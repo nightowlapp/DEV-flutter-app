@@ -56,13 +56,13 @@ class LevelIndicator extends StatelessWidget {
                 Container(
                   height: height,
                   decoration:
-                  BoxDecoration(color: trackColor, borderRadius: br),
+                      BoxDecoration(color: trackColor, borderRadius: br),
                 ),
                 LayoutBuilder(
                   builder: (context, c) {
                     // build-up fill inside with color
                     final w =
-                    v == 0 ? 0.0 : math.max(minFillPx, c.maxWidth * v);
+                        v == 0 ? 0.0 : math.max(minFillPx, c.maxWidth * v);
                     return Align(
                       alignment: Alignment.centerLeft,
                       child: AnimatedContainer(
@@ -85,7 +85,7 @@ class LevelIndicator extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       mainAxisAlignment:
-                      MainAxisAlignment.spaceEvenly, // each side of middle
+                          MainAxisAlignment.spaceEvenly, // each side of middle
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(

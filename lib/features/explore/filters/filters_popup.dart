@@ -91,7 +91,7 @@ class _FiltersCard extends ConsumerWidget {
                     onChanged: ctrl.setOpenNow,
                     activeColor: owlPurple,
                     trackOutlineColor:
-                    WidgetStatePropertyAll(grey.withOpacity(.5)),
+                        WidgetStatePropertyAll(grey.withOpacity(.5)),
                     inactiveThumbColor: grey,
                     inactiveTrackColor: grey.withOpacity(.35),
                   ),

@@ -54,7 +54,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-  with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin {
   mb.MapboxMap? _map;
   bool _mapCreated = false;
   bool _loading = true;
@@ -87,7 +87,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   RouteRenderer? _renderer;
   final NavTts _tts = NavTts();
   String _logoImageIdFor(Venue v) =>
-  'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
+      'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}';
   bool _showClosed = true;
   bool _favoritesOnly = false;
   bool _showFriendsOnMap = true;
@@ -101,8 +101,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         desiredAccuracy: geo.LocationAccuracy.best,
       );
       _userLocation = LatLng(pos.latitude, pos.longitude);
-    }
-    catch (_) {
+    } catch (_) {
       // ignore – panel will just omit distances
     }
   }
@@ -118,7 +117,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     VenueType.sports_bar,
     VenueType.karaoke_bar,
     VenueType.gay_bar,
-    VenueType.unknown, // TODO Actual problem Unknown should be a placeholder for venues Right now they are not a part of map. Maybe just call other at some point (if so need to check everything for lingering "unknown" around all codebases.)
+    VenueType
+        .unknown, // TODO Actual problem Unknown should be a placeholder for venues Right now they are not a part of map. Maybe just call other at some point (if so need to check everything for lingering "unknown" around all codebases.)
   ];
   // Currently enabled types (starts with all ON)
   final Set<VenueType> _allowedTypes = Set.of(_filterableTypes);
@@ -130,66 +130,62 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.initState();
     _tts.init();
     _tts.muted.addListener(() {
-        if (mounted) setState(() {}
-          );
-      }
-    );
+      if (mounted) setState(() {});
+    });
     // 🔥 subscribe to live counts
     _liveCountsSub = liveAllVenueCounts().listen((counts) {
-        // cache for later
-        _lastLiveCounts = counts;
-        // if the map + style are already ready, update now
-        if (_map != null && _styleReady) {
-          _updateHotVenuesFromCounts(counts);
-        }
+      // cache for later
+      _lastLiveCounts = counts;
+      // if the map + style are already ready, update now
+      if (_map != null && _styleReady) {
+        _updateHotVenuesFromCounts(counts);
       }
-    );
+    });
     _flameTimer = Timer.periodic(const Duration(milliseconds: 80), (_) {
-        final map = _map;
-        if (map == null || !_styleReady) return;
-        // advance phase
-        _flamePhase += 0.25; // tweak speed here
-        if (_flamePhase > math.pi * 2) {
-          _flamePhase -= math.pi * 2;
-        }
-        // 0..1 pulse value
-        final t = (math.sin(_flamePhase) + 1) / 2.0;
-        double lerp(double a, double b, double t) => a + (b - a) * t;
-        // Radii + opacities
-        final outerRadius = lerp(16.0, 28.0, t);
-        final innerRadius = lerp(6.0, 16.0, t);
-        final outerOpacity = lerp(0.15, 0.55, t);
-        final innerOpacity = lerp(0.4, 0.9, t);
-        // Flame icon size (subtle pulse)
-        final iconSize = lerp(16.0, 22.0, t);
-        final style = map.style;
-        style.setStyleLayerProperty(
-          MapStyle.lyrHotGlowOuter,
-          'circle-radius',
-          outerRadius,
-        );
-        style.setStyleLayerProperty(
-          MapStyle.lyrHotGlowOuter,
-          'circle-opacity',
-          outerOpacity,
-        );
-        style.setStyleLayerProperty(
-          MapStyle.lyrHotGlowInner,
-          'circle-radius',
-          innerRadius,
-        );
-        style.setStyleLayerProperty(
-          MapStyle.lyrHotGlowInner,
-          'circle-opacity',
-          innerOpacity,
-        );
-        style.setStyleLayerProperty(
-          MapStyle.lyrHotFlameIcon,
-          'text-size',
-          iconSize,
-        );
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      // advance phase
+      _flamePhase += 0.25; // tweak speed here
+      if (_flamePhase > math.pi * 2) {
+        _flamePhase -= math.pi * 2;
       }
-    );
+      // 0..1 pulse value
+      final t = (math.sin(_flamePhase) + 1) / 2.0;
+      double lerp(double a, double b, double t) => a + (b - a) * t;
+      // Radii + opacities
+      final outerRadius = lerp(16.0, 28.0, t);
+      final innerRadius = lerp(6.0, 16.0, t);
+      final outerOpacity = lerp(0.15, 0.55, t);
+      final innerOpacity = lerp(0.4, 0.9, t);
+      // Flame icon size (subtle pulse)
+      final iconSize = lerp(16.0, 22.0, t);
+      final style = map.style;
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowOuter,
+        'circle-radius',
+        outerRadius,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowOuter,
+        'circle-opacity',
+        outerOpacity,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowInner,
+        'circle-radius',
+        innerRadius,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotGlowInner,
+        'circle-opacity',
+        innerOpacity,
+      );
+      style.setStyleLayerProperty(
+        MapStyle.lyrHotFlameIcon,
+        'text-size',
+        iconSize,
+      );
+    });
   }
 
   @override
@@ -227,7 +223,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       mb.ScaleBarSettings(enabled: false, isMetricUnits: true),
     );
     await _map!.attribution.updateSettings(
-      mb.AttributionSettings(clickable: false, iconColor: transparent.toARGB32()),
+      mb.AttributionSettings(
+          clickable: false, iconColor: transparent.toARGB32()),
     );
     await _map!.compass.updateSettings(
       mb.CompassSettings(marginTop: 12.0, marginRight: 12.0),
@@ -269,18 +266,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final map = _map;
     if (map == null) return;
 
-    Map<String, dynamic>? _asMap(Object? o) => (o is Map) ? o.cast<String, dynamic>() : null;
+    Map<String, dynamic>? _asMap(Object? o) =>
+        (o is Map) ? o.cast<String, dynamic>() : null;
 
     String? _firstId(List<mb.QueriedRenderedFeature?> items) {
       for (final r in items) {
         if (r == null) continue;
         final feat = r.queriedFeature.feature as Map?;
         final props = _asMap(feat?['properties']);
-        final rawId = props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+        final rawId = props?['id'] ??
+            props?['venue_id'] ??
+            props?['venueId'] ??
+            feat?['id'];
         if (rawId != null) return rawId.toString();
       }
       return null;
     }
+
     // use a slightly larger box: 44x44 px target-ish
     const half = 22.0;
     final p = ctx.touchPosition;
@@ -295,9 +297,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final friendsHits = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrFriendIcons,
-          MapStyle.lyrFriendLabels,
-        ]),
+        MapStyle.lyrFriendIcons,
+        MapStyle.lyrFriendLabels,
+      ]),
     );
     debugPrint('tap: friend hits = ${friendsHits.length}');
     final friendId = _firstId(friendsHits);
@@ -311,9 +313,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final friendClusterHits = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrFriendClusters,
-          MapStyle.lyrFriendClusterCount,
-        ]),
+        MapStyle.lyrFriendClusters,
+        MapStyle.lyrFriendClusterCount,
+      ]),
     );
     debugPrint('tap: friend cluster hits = ${friendClusterHits.length}');
     for (final r in friendClusterHits) {
@@ -322,7 +324,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final props = _asMap(feat?['properties']);
       if (props?['point_count'] != null) {
         final coords =
-          (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
+            (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
         if (coords != null && coords.length >= 2) {
           final lon = coords[0].toDouble();
           final lat = coords[1].toDouble();
@@ -343,11 +345,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final sym = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrVip,
-          MapStyle.lyrUnclustered,
-          MapStyle.lyrVipLabels,
-          MapStyle.lyrLabels,
-        ]),
+        MapStyle.lyrVip,
+        MapStyle.lyrUnclustered,
+        MapStyle.lyrVipLabels,
+        MapStyle.lyrLabels,
+      ]),
     );
     debugPrint('tap: symbol/labels hits = ${sym.length}');
     final symId = _firstId(sym);
@@ -359,7 +361,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // 2) background dots
     final dots = await map.queryRenderedFeatures(
       box,
-      mb.RenderedQueryOptions(layerIds: [MapStyle.lyrVipBg, MapStyle.lyrUnclusteredBg]),
+      mb.RenderedQueryOptions(
+          layerIds: [MapStyle.lyrVipBg, MapStyle.lyrUnclusteredBg]),
     );
     debugPrint('tap: bg hits = ${dots.length}');
     final dotId = _firstId(dots);
@@ -379,7 +382,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final feat = r.queriedFeature.feature as Map?;
       final props = _asMap(feat?['properties']);
       if (props?['point_count'] != null) {
-        final coords = (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
+        final coords =
+            (_asMap(feat?['geometry'])?['coordinates'] as List?)?.cast<num>();
         if (coords != null && coords.length >= 2) {
           final lon = coords[0].toDouble(), lat = coords[1].toDouble();
           final cs = await map.getCameraState();
@@ -405,8 +409,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _openVenueByIdOrExplain(nearestId);
         return;
       }
-    }
-    catch (_) {}
+    } catch (_) {}
     debugPrint('tap: nothing hit');
   }
 
@@ -421,10 +424,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // All venues list, used for per-type counts and lists in the filter panel
     final allVenues = ref.watch(allVenuesListProvider);
     final favoriteIds = ref.watch(favoriteVenueIdsProvider).maybeWhen(
-      data: (ids) => ids.toSet(),
-      orElse: () => <String>{},
-    );
-    final venuesVisibleOnMapCount = _visibleVenuesOnMap(allVenues, favoriteIds) ?? 0;
+          data: (ids) => ids.toSet(),
+          orElse: () => <String>{},
+        );
+    final venuesVisibleOnMapCount =
+        _visibleVenuesOnMap(allVenues, favoriteIds) ?? 0;
     final friendCountsAsync = ref.watch(friendCountsProvider);
 
     final friendsCount = friendCountsAsync.maybeWhen(
@@ -440,81 +444,78 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Build friend list for the filter panel (only those with a location)
     final List<FriendFilterItem> friendFilterItems = [];
     _latestFriendLocs.forEach((uid, loc) {
-        final profile = _latestFriendProfiles[uid];
-        if (profile == null) return;
+      final profile = _latestFriendProfiles[uid];
+      if (profile == null) return;
 
-        final name = profile.displayName!.trim();
+      final name = profile.displayName!.trim();
 
-        friendFilterItems.add(
-          FriendFilterItem(
-            uid: uid,
-            title: name,
-            lat: loc.lat,
-            lng: loc.lng,
-            avatarUrl: profile.photoUrl, // 👈 real profile picture
-          ),
-        );
-      }
-    );
+      friendFilterItems.add(
+        FriendFilterItem(
+          uid: uid,
+          title: name,
+          lat: loc.lat,
+          lng: loc.lng,
+          avatarUrl: profile.photoUrl, // 👈 real profile picture
+        ),
+      );
+    });
 
     ref.listen<MapNavCommand?>(mapNavControllerProvider, (prev, next) async {
-        final map = _map;
-        if (next == null || next.id <= _lastNavId) return;
-        _lastNavId = next.id;
-        if (map == null || !_styleReady) {
-          _pendingNav = next;
-          return;
-        }
-        map.easeTo(
-          mb.CameraOptions(
-            center: mb.Point(coordinates: mb.Position(next.target.lng, next.target.lat)),
-            zoom: next.zoom,
-          ),
-          mb.MapAnimationOptions(duration: 500),
-        );
+      final map = _map;
+      if (next == null || next.id <= _lastNavId) return;
+      _lastNavId = next.id;
+      if (map == null || !_styleReady) {
+        _pendingNav = next;
+        return;
       }
-    );
+      map.easeTo(
+        mb.CameraOptions(
+          center: mb.Point(
+              coordinates: mb.Position(next.target.lng, next.target.lat)),
+          zoom: next.zoom,
+        ),
+        mb.MapAnimationOptions(duration: 500),
+      );
+    });
     ref.listen<VenuesFc>(venuesGeoJsonProvider, (prev, next) async {
-        final map = _map;
-        if (map == null || !_styleReady) return;
-        await _style.applyFilters(
-          map,
-          showClosed: _showClosed,
-          allowedTypes: _allowedTypeNamesForStyle(),
-          baseClusterableFc: next.clusterable,
-          baseVipFc: next.vip,
-          favoriteVenueIds: favoriteIds,
-          onlyFavorites: _favoritesOnly,
-        );
-        final venues = ref.read(allVenuesListProvider);
-        final idToPath2 = <String, String>{};
-        for (final v in venues) {
-          if (!v.isVerified) continue;
-          final baseId = _logoImageIdFor(v);
-          final path = 'venue_images/${v.id}/logo.webp';
-          // Two CircleAvatar variants – open/closed
-          idToPath2['${baseId}_open'] = path;
-          idToPath2['${baseId}_closed'] = path;
-        }
-        final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
-        await MapImageRegistry.instance.syncIdToUrl(
-          map: map,
-          images: idToPath2, // or idToPath2
-          maxSize: 46, // logical diameter on the map (same as before)
-          pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
-        );
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      await _style.applyFilters(
+        map,
+        showClosed: _showClosed,
+        allowedTypes: _allowedTypeNamesForStyle(),
+        baseClusterableFc: next.clusterable,
+        baseVipFc: next.vip,
+        favoriteVenueIds: favoriteIds,
+        onlyFavorites: _favoritesOnly,
+      );
+      final venues = ref.read(allVenuesListProvider);
+      final idToPath2 = <String, String>{};
+      for (final v in venues) {
+        if (!v.isVerified) continue;
+        final baseId = _logoImageIdFor(v);
+        final path = 'venue_images/${v.id}/logo.webp';
+        // Two CircleAvatar variants – open/closed
+        idToPath2['${baseId}_open'] = path;
+        idToPath2['${baseId}_closed'] = path;
       }
-    );
+      final dpr = MediaQuery.of(context).devicePixelRatio.clamp(1.0, 3.0);
+      await MapImageRegistry.instance.syncIdToUrl(
+        map: map,
+        images: idToPath2, // or idToPath2
+        maxSize: 46, // logical diameter on the map (same as before)
+        pixelRatio: dpr.toDouble(), // e.g. 2.0 or 3.0
+      );
+    });
     // 1) When locations change
     // 1) When locations change
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
       (prev, next) {
         next.whenData((locs) {
-            _latestFriendLocs = locs;
-            _refreshFriendsOnMap();
-          }
-        );
+          _latestFriendLocs = locs;
+          _refreshFriendsOnMap();
+        });
       },
     );
 
@@ -531,23 +532,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
       timeTickerProvider,
       (prev, next) {
         next.whenData((_) {
-            // Only recompute labels, not locations themselves.
-            _refreshFriendsOnMap();
-          }
-        );
+          // Only recompute labels, not locations themselves.
+          _refreshFriendsOnMap();
+        });
       },
     );
 
     ref.listen<Map<String, Venue>>(venuesByIdMapProvider, (prev, next) {
-        _venuesById
+      _venuesById
         ..clear()
         ..addAll(next);
-      }
-    );
-    ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider, (prev, next) {
-        next.whenData((cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
-      }
-    );
+    });
+    ref.listen<AsyncValue<mb.CameraOptions>>(initialCameraProvider,
+        (prev, next) {
+      next.whenData(
+          (cam) => _map?.flyTo(cam, mb.MapAnimationOptions(duration: 650)));
+    });
     ref.listen<AsyncValue<List<String>>>(
       favoriteVenueIdsProvider,
       (prev, next) async {
@@ -570,7 +570,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       },
     );
     final camAsync = ref.watch(initialCameraProvider);
-    final cam = camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
+    final cam =
+        camAsync.maybeWhen(data: (c) => c, orElse: () => fallbackCamera);
     final bottomOffset = _navigating ? 100.0 : 16.0; // avoids nav banner
     // Group venues per type (only the filterable ones)
     final Map<VenueType, List<Venue>> venuesByType = {
@@ -607,46 +608,48 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
 
           if (_activeFriendId != null && _activeFriendScreenPos != null)
-          Positioned(
-            left: _activeFriendScreenPos!.dx - 140, // tweak to center horizontally
-            top: _activeFriendScreenPos!.dy - 80,   // already moved up a bit above
-            child: FriendMapBubble(
-              uid: _activeFriendId!,
-              profile: _latestFriendProfiles[_activeFriendId!]!,
-              loc: _latestFriendLocs[_activeFriendId!]!,
-              onMessage: () {
-                // TODO: open chat
-              },
-              onOpenProfile: () {
-                // TODO: push friend profile screen
-                // e.g. context.push('/friends/${_activeFriendId!}');
-              },
-              onClose: () {
-                setState(() {
+            Positioned(
+              left: _activeFriendScreenPos!.dx -
+                  140, // tweak to center horizontally
+              top: _activeFriendScreenPos!.dy -
+                  80, // already moved up a bit above
+              child: FriendMapBubble(
+                uid: _activeFriendId!,
+                profile: _latestFriendProfiles[_activeFriendId!]!,
+                loc: _latestFriendLocs[_activeFriendId!]!,
+                onMessage: () {
+                  // TODO: open chat
+                },
+                onOpenProfile: () {
+                  // TODO: push friend profile screen
+                  // e.g. context.push('/friends/${_activeFriendId!}');
+                },
+                onClose: () {
+                  setState(() {
                     _activeFriendId = null;
                     _activeFriendScreenPos = null;
-                  }
-                );
-              },
+                  });
+                },
+              ),
             ),
-          ),
 
-          if (_navigating) NavigationBanner(
-            activeRoute: _activeRoute,
-            navDest: _navDest,
-            navProfile: _navProfile,
-            onStop: _stopNavigation,
-            onToggleMute: _toggleMute,
-            isMuted: _tts.isMuted,
-            initialDistance: _initialDistance,
-          ), // REPLACED _navBanner()
+          if (_navigating)
+            NavigationBanner(
+              activeRoute: _activeRoute,
+              navDest: _navDest,
+              navProfile: _navProfile,
+              onStop: _stopNavigation,
+              onToggleMute: _toggleMute,
+              isMuted: _tts.isMuted,
+              initialDistance: _initialDistance,
+            ), // REPLACED _navBanner()
 
           if (_loading)
-          const Positioned.fill(
-            child: ColoredBox(
-              color: transparent,
+            const Positioned.fill(
+              child: ColoredBox(
+                color: transparent,
+              ),
             ),
-          ),
           // Center on user
           Positioned(
             right: 16,
@@ -695,16 +698,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       children: [
                         Text(
                           '$venuesVisibleOnMapCount',
-                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount>999? 5:6),
-                        ),
-                        Text(_friendsVisibleOnMapCount > 0 ?
-                          ' + ' :'',
-                          style: Styles.smallText.copyWith(fontSize: venuesVisibleOnMapCount>999? 5:6),
-                        ),
-                        Text( _friendsVisibleOnMapCount > 0 ?
-                          '$_friendsVisibleOnMapCount' : '',
                           style: Styles.smallText.copyWith(
-                            fontSize: venuesVisibleOnMapCount>999? 5:6,
+                              fontSize: venuesVisibleOnMapCount > 999 ? 5 : 6),
+                        ),
+                        Text(
+                          _friendsVisibleOnMapCount > 0 ? ' + ' : '',
+                          style: Styles.smallText.copyWith(
+                              fontSize: venuesVisibleOnMapCount > 999 ? 5 : 6),
+                        ),
+                        Text(
+                          _friendsVisibleOnMapCount > 0
+                              ? '$_friendsVisibleOnMapCount'
+                              : '',
+                          style: Styles.smallText.copyWith(
+                            fontSize: venuesVisibleOnMapCount > 999 ? 5 : 6,
                             color: blue, // 👈 friends number stays blue
                           ),
                         ),
@@ -722,7 +729,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
             child: FloatingActionButton(
               mini: true,
               onPressed: () async {
-
                 final currentAudience = ref.read(shareAudienceProvider);
                 final selected = await showShareLocationPopup(
                   context,
@@ -731,10 +737,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   closeFriendsCount: closeFriendsCount,
                 );
                 if (!mounted || selected == null) return;
-                await ref.read(shareAudienceProvider.notifier).setAudience(selected);
+                await ref
+                    .read(shareAudienceProvider.notifier)
+                    .setAudience(selected);
               },
               child: Icon(
-                sharingPosition ? sharingFriends ? Icons.group_rounded : Icons.star_rounded : distanceDisabledIcon,
+                sharingPosition
+                    ? sharingFriends
+                        ? Icons.group_rounded
+                        : Icons.star_rounded
+                    : distanceDisabledIcon,
                 color: sharingPosition ? blue : red,
               ),
             ),
@@ -754,7 +766,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
               left: 0,
               right: 0,
               bottom: bottomOffset + 72, // sits above FAB row
-              child: VenueFilterPanel( // REPLACED _VenueTypeFilterPanel
+              child: VenueFilterPanel(
+                // REPLACED _VenueTypeFilterPanel
                 selected: _allowedTypes,
                 allTypes: _filterableTypes,
                 counts: typeCounts,
@@ -766,9 +779,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   final map = _map;
                   if (map == null || !_styleReady) return;
                   setState(() {
-                      _showClosed = !value;
-                    }
-                  );
+                    _showClosed = !value;
+                  });
                   final fcNow = ref.read(venuesGeoJsonProvider);
                   await _style.applyFilters(
                     map,
@@ -784,11 +796,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   final map = _map;
                   if (map == null || !_styleReady) return;
                   setState(() {
-                      _allowedTypes
+                    _allowedTypes
                       ..clear()
                       ..addAll(selection);
-                    }
-                  );
+                  });
                   final fcNow = ref.read(venuesGeoJsonProvider);
                   await _style.applyFilters(
                     map,
@@ -805,9 +816,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   final map = _map;
                   if (map == null || !_styleReady) return;
                   setState(() {
-                      _favoritesOnly = value;
-                    }
-                  );
+                    _favoritesOnly = value;
+                  });
                   final fcNow = ref.read(venuesGeoJsonProvider);
                   await _style.applyFilters(
                     map,
@@ -834,9 +844,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 showFriends: _showFriendsOnMap,
                 onShowFriendsChanged: (value) async {
                   setState(() {
-                      _showFriendsOnMap = value;
-                    }
-                  );
+                    _showFriendsOnMap = value;
+                  });
                   await _refreshFriendsOnMap();
                 },
                 onFriendTap: (friend) async {
@@ -855,7 +864,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   //   _activeFriendScreenPos = null; // you'll need to compute screen pos if you want it
                   // });
                 },
-              ), 
+              ),
             ),
           ],
         ],
@@ -894,9 +903,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _styleReady = true;
     final fcNow = ref.read(venuesGeoJsonProvider);
     final favIds = ref.read(favoriteVenueIdsProvider).maybeWhen(
-      data: (ids) => ids.toSet(),
-      orElse: () => <String>{},
-    );
+          data: (ids) => ids.toSet(),
+          orElse: () => <String>{},
+        );
     await _style.applyFilters(
       map,
       showClosed: _showClosed,
@@ -941,7 +950,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       _pendingNav = null;
       map.easeTo(
         mb.CameraOptions(
-          center: mb.Point(coordinates: mb.Position(cmd.target.lng, cmd.target.lat)),
+          center: mb.Point(
+              coordinates: mb.Position(cmd.target.lng, cmd.target.lat)),
           zoom: cmd.zoom,
         ),
         mb.MapAnimationOptions(duration: 500),
@@ -950,7 +960,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   // ---------------- ROUTING ----------------
-  Future<void> _buildRouteTo(Venue v, {NavProfile profile = NavProfile.walking}) async {
+  Future<void> _buildRouteTo(Venue v,
+      {NavProfile profile = NavProfile.walking}) async {
     try {
       setState(() => _loading = true);
       final pos = await geo.Geolocator.getCurrentPosition(
@@ -990,11 +1001,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           distanceFilter: 5, // meters between ticks
         ),
       ).listen(_onLocationTick);
-    }
-    catch (e) {
+    } catch (e) {
       _toast('Routing failed: $e', variant: OwlSnackVariant.error);
-    }
-    finally {
+    } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -1008,8 +1017,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _initialDistance = null;
     _lastRerouteAt = null;
     await _renderer?.clear();
-    if (mounted) setState(() {}
-      );
+    if (mounted) setState(() {});
   }
 
   Future<void> _onLocationTick(geo.Position p) async {
@@ -1017,9 +1025,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // simple throttle to reduce API spam
     final now = DateTime.now();
     if (_lastRerouteAt != null &&
-      now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
-      if (mounted) setState(() {}
-        ); // still refresh banner counters
+        now.difference(_lastRerouteAt!) < const Duration(seconds: 8)) {
+      if (mounted) setState(() {}); // still refresh banner counters
       return;
     }
     _lastRerouteAt = now;
@@ -1038,10 +1045,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         color: _routeColorFor(_navProfile),
         width: 6,
       );
-      if (mounted) setState(() {}
-        );
-    }
-    catch (_) {
+      if (mounted) setState(() {});
+    } catch (_) {
       // ignore transient failures
     }
   }
@@ -1049,8 +1054,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // ---- helpers ----
   void _toast(
     String msg, {
-      OwlSnackVariant variant = OwlSnackVariant.neutral,
-    }) {
+    OwlSnackVariant variant = OwlSnackVariant.neutral,
+  }) {
     if (!mounted) return;
     OwlSnack.show(
       context,
@@ -1105,22 +1110,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
     String? bestId;
     double best = maxMeters;
     venues.forEach((id, v) {
-        final type = v.type; // VenueType?
-        // Respect current type filters
-        if (type == null || !_allowedTypes.contains(type)) {
-          return; // skip hidden types
-        }
-        // Respect open/closed filter only when _showClosed == false
-        if (!_showClosed && !_isVenueOpenNow(v)) {
-          return;
-        }
-        final d = Distance.metersLatLng(tap, v.entry);
-        if (d < best) {
-          best = d;
-          bestId = id;
-        }
+      final type = v.type; // VenueType?
+      // Respect current type filters
+      if (type == null || !_allowedTypes.contains(type)) {
+        return; // skip hidden types
       }
-    );
+      // Respect open/closed filter only when _showClosed == false
+      if (!_showClosed && !_isVenueOpenNow(v)) {
+        return;
+      }
+      final d = Distance.metersLatLng(tap, v.entry);
+      if (d < best) {
+        best = d;
+        bestId = id;
+      }
+    });
     return bestId;
   }
 
@@ -1136,12 +1140,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   RouteStyle _routeStyleFor(NavProfile p) =>
-  p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
+      p == NavProfile.walking ? RouteStyle.line : RouteStyle.line;
 
   Future<void> _toggleMute() async {
     await _tts.toggleMuted();
-    if (mounted) setState(() {}
-      );
+    if (mounted) setState(() {});
   }
 
   // ===== scrollable content below rating/header (placeholder) =====
@@ -1161,8 +1164,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
             alignment: Alignment.center,
             child: Text(
-              'Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
-              style: Styles.basicText),
+                'Details for ${v.displayName.isNotEmpty ? v.displayName : v.name}',
+                style: Styles.basicText),
           ),
           const SizedBox(height: 12),
         ],
@@ -1183,8 +1186,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         // - if not favorites-only → nothing visible
         if (!_favoritesOnly) continue;
         // - if favorites-only → allow favorites of ANY type
-      }
-      else {
+      } else {
         if (type == null || !_allowedTypes.contains(type)) continue;
       }
       // Open / closed
@@ -1204,7 +1206,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final visits = counts[v.id] ?? 0;
       final cap = v.capacity;
       //TODO make hot venues only animated if not in clutter. Make clutter show a perventage of hot venues within clutter (circle diagram
-      final bool isHot = (cap > 0 && (visits / cap) >= 0.65); //TODO find out amount
+      final bool isHot =
+          (cap > 0 && (visits / cap) >= 0.65); //TODO find out amount
       if (!isHot) continue;
       features.add({
         'type': 'Feature',
@@ -1217,14 +1220,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
           'visits': visits,
           'capacity': cap,
         },
-      }
-      );
+      });
     }
     final fc = jsonEncode({
       'type': 'FeatureCollection',
       'features': features,
-    }
-    );
+    });
     await _style.setHotVenuesData(map, fc);
   }
 
@@ -1288,11 +1289,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (mounted) {
       setState(() {
         _friendsVisibleOnMapCount =
-        _showFriendsOnMap ? _latestFriendLocs.length : 0;
+            _showFriendsOnMap ? _latestFriendLocs.length : 0;
       });
     }
   }
-
 
   Future<void> _openFriendById(String uid) async {
     final profile = _latestFriendProfiles[uid];
@@ -1324,15 +1324,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (map == null) return;
 
     Map<String, dynamic>? _asMap(Object? o) =>
-    (o is Map) ? o.cast<String, dynamic>() : null;
+        (o is Map) ? o.cast<String, dynamic>() : null;
 
     String? _firstId(List<mb.QueriedRenderedFeature?> items) {
       for (final r in items) {
         if (r == null) continue;
         final feat = r.queriedFeature.feature as Map?;
         final props = _asMap(feat?['properties']);
-        final rawId =
-          props?['id'] ?? props?['venue_id'] ?? props?['venueId'] ?? feat?['id'];
+        final rawId = props?['id'] ??
+            props?['venue_id'] ??
+            props?['venueId'] ??
+            feat?['id'];
         if (rawId != null) return rawId.toString();
       }
       return null;
@@ -1351,9 +1353,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final friendsHits = await map.queryRenderedFeatures(
       box,
       mb.RenderedQueryOptions(layerIds: [
-          MapStyle.lyrFriendIcons,
-          MapStyle.lyrFriendLabels,
-        ]),
+        MapStyle.lyrFriendIcons,
+        MapStyle.lyrFriendLabels,
+      ]),
     );
 
     final friendId = _firstId(friendsHits);
@@ -1371,14 +1373,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       extra: uid,
     );
   }
-
-
-
 }
-
-
-
-
-
 
 bool _isVenueOpenNow(Venue v) => v.isOpenNow(DateTime.now());

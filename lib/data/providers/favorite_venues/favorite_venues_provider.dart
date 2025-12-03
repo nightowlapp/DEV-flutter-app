@@ -17,15 +17,16 @@ final favoriteVenueIdsProvider = StreamProvider<List<String>>((ref) {
 
 /// Helper to fetch venues by IDs (chunks of 10).
 Future<List<Venue>> _fetchVenuesByIds(
-    FirebaseFirestore db,
-    List<String> ids,
-    ) async {
+  FirebaseFirestore db,
+  List<String> ids,
+) async {
   if (ids.isEmpty) return const [];
   const chunkSize = 10;
 
   final chunks = <List<String>>[];
   for (var i = 0; i < ids.length; i += chunkSize) {
-    chunks.add(ids.sublist(i, i + chunkSize > ids.length ? ids.length : i + chunkSize));
+    chunks.add(ids.sublist(
+        i, i + chunkSize > ids.length ? ids.length : i + chunkSize));
   }
 
   final results = <Venue>[];

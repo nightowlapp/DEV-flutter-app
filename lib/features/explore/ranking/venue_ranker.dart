@@ -372,7 +372,6 @@ class VenueRanker {
     //   items.add(ScoreItem('hasCorners', rules.hasCornersPoints));
     // }
 
-
     // 7) Popularity (likes & favs only, clamped, bucketed)
     final popPts = _popularityPoints(v.likeCount, v.favoriteCount);
     if (popPts != 0) {
@@ -432,7 +431,8 @@ class VenueRanker {
 
   // lib/shared/utility/venue_ranker.dart
 
-  int _pointsForDistance(double meters, double? userMaxKm, {required bool strict}) {
+  int _pointsForDistance(double meters, double? userMaxKm,
+      {required bool strict}) {
     // ✅ use kilometers properly
     final int? maxMeters = (userMaxKm != null && userMaxKm > 0)
         ? (userMaxKm * 1000).round()
@@ -440,7 +440,8 @@ class VenueRanker {
 
     if (maxMeters != null && meters > maxMeters) {
       if (rules.hardCutBeyondMaxDistance) return _DROP;
-      return strict ? rules.strictBeyondMaxDistancePenalty
+      return strict
+          ? rules.strictBeyondMaxDistancePenalty
           : rules.beyondMaxDistancePenalty;
     }
 
@@ -453,7 +454,6 @@ class VenueRanker {
     }
     return 0;
   }
-
 
   int _popularityPoints(int likes, int favs) {
     final r = rules;

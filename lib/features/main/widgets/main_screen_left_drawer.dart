@@ -21,7 +21,6 @@ class MainScreenLeftDrawer extends ConsumerWidget {
     final width = PlatformConfig.width(context) * 0.5;
     final roles = ref.watch(userRolesProvider);
 
-
     return Drawer(
       surfaceTintColor: owlPurple.withOpacity(0.01),
       shadowColor: grey,
@@ -47,7 +46,8 @@ class MainScreenLeftDrawer extends ConsumerWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      const url = WebsitePaths.website; // test with a known working URL
+                      const url =
+                          WebsitePaths.website; // test with a known working URL
                       final uri = Uri.parse(url);
                       launchUrl(uri, mode: LaunchMode.externalApplication);
                     },
@@ -67,9 +67,10 @@ class MainScreenLeftDrawer extends ConsumerWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      const url = WebsitePaths.website; // test with a known working URL
+                      const url =
+                          WebsitePaths.website; // test with a known working URL
                       final uri = Uri.parse(url);
-                        launchUrl(uri, mode: LaunchMode.externalApplication);
+                      launchUrl(uri, mode: LaunchMode.externalApplication);
                     },
                     child: SizedBox(
                       width: PlatformConfig.width(context) * 0.4,
@@ -85,8 +86,8 @@ class MainScreenLeftDrawer extends ConsumerWidget {
               const Divider(color: owlPurple),
               const SizedBox(height: verticalSpacerSmall),
 
-              if(roles.isReviewer || roles.isTester || roles.isAdmin)
-                 const FeedbackButton(),
+              if (roles.isReviewer || roles.isTester || roles.isAdmin)
+                const FeedbackButton(),
 
               // const OwlsOnlineSectionLeftDrawer(online: 29324, total: 35735,),  //TODO Does this even make sense? Owls nearby?
 
@@ -129,5 +130,3 @@ class MainScreenLeftDrawer extends ConsumerWidget {
     );
   }
 }
-
-

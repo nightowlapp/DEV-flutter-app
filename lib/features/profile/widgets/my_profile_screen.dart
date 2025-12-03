@@ -97,8 +97,7 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(
-                                    height: verticalSpacerVerySmall),
+                                const SizedBox(height: verticalSpacerVerySmall),
                                 Text(
                                   u.userName,
                                   style: Styles.usernameDisplay,
@@ -120,18 +119,13 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        SizedBox(
-                            height:
-                            PlatformConfig.height(context) * 0.01),
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
                         const SizedBox.shrink(),
                         SizedBox(
-                          height:
-                          PlatformConfig.height(context) * 0.03,
+                          height: PlatformConfig.height(context) * 0.03,
                           child: const PartyStatusIndicator(),
                         ),
-                        SizedBox(
-                            height:
-                            PlatformConfig.height(context) * 0.01),
+                        SizedBox(height: PlatformConfig.height(context) * 0.01),
                       ],
                     ),
                   ),
@@ -144,10 +138,8 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                 levelLabel: u.level.toInt() == 1337
                     ? 'Level 1337'
                     : 'Level ${p.level.toInt()}',
-                current:
-                u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
-                total:
-                u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(),
+                current: u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
+                total: u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(),
                 height: PlatformConfig.height(context) * 0.05,
                 gradient: const LinearGradient(
                     colors: [owlPurple, purple, owlPurple, purple]),

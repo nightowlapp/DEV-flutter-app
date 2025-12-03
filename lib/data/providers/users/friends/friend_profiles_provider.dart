@@ -11,14 +11,14 @@ import 'friends_locations_provider.dart';
 /// Keeps a live in-memory Map<uid, FriendProfile> for everyone that
 /// currently has a LiveLocation (except yourself).
 final friendProfilesProvider =
-StateNotifierProvider<FriendProfilesNotifier, Map<String, FriendProfile>>(
-      (ref) {
+    StateNotifierProvider<FriendProfilesNotifier, Map<String, FriendProfile>>(
+  (ref) {
     final notifier = FriendProfilesNotifier();
 
     // Whenever the set of uids with locations changes, sync watchers.
     ref.listen<AsyncValue<Map<String, LiveLocation>>>(
       friendsLocationsProvider,
-          (prev, next) {
+      (prev, next) {
         next.whenData((locs) {
           notifier.setTrackedUids(locs.keys.toSet());
         });
@@ -30,14 +30,12 @@ StateNotifierProvider<FriendProfilesNotifier, Map<String, FriendProfile>>(
   },
 );
 
-class FriendProfilesNotifier
-    extends StateNotifier<Map<String, FriendProfile>> {
+class FriendProfilesNotifier extends StateNotifier<Map<String, FriendProfile>> {
   FriendProfilesNotifier() : super(const {});
 
   final _db = FirebaseFirestore.instance;
-  final Map<String,
-      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
-  _subs = {};
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+      _subs = {};
 
   Set<String> _tracked = const {};
 

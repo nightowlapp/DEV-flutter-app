@@ -10,8 +10,6 @@ import '../../../../shared/constants/enums.dart';
 /// Keep this enum consistent with your existing one.
 /// If you already declared GenderOption elsewhere, remove one to avoid conflicts.
 
-
-
 /// Hybrid UI:
 /// - Outer bordered card (black bg, white stroke).
 /// - Centered title (no icon).

@@ -23,8 +23,8 @@ final nearbyVenueCountProvider = Provider.autoDispose<int?>((ref) {
 
   // Max distance from prefs or default
   final double maxKm =
-  (ref.watch(userPrefsProvider)?.maxDistanceKm ?? _kDefaultMaxDistanceKm)
-      .toDouble();
+      (ref.watch(userPrefsProvider)?.maxDistanceKm ?? _kDefaultMaxDistanceKm)
+          .toDouble();
 
   if (userLoc == null) return null; // still waiting on location
   if (venues == null || venues.isEmpty) return null;

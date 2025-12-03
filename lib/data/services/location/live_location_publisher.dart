@@ -20,10 +20,7 @@ class LiveLocationPublisher {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    await _db
-        .collection(FirestoreCollections.locations)
-        .doc(uid)
-        .set(
+    await _db.collection(FirestoreCollections.locations).doc(uid).set(
       {
         'audience': _audience.raw,
         'updated_at': FieldValue.serverTimestamp(),
@@ -32,7 +29,8 @@ class LiveLocationPublisher {
     );
   }
 
-  Future<void> start() async { //Todo needs to know when this fires. Should be correct location.
+  Future<void> start() async {
+    //Todo needs to know when this fires. Should be correct location.
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 

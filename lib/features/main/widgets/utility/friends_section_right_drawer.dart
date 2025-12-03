@@ -27,7 +27,8 @@ class FriendsSectionRightDrawer extends ConsumerWidget {
     final currentText = '$activeCount';
     final limitText = '$totalCount';
     final Color brand = owlPurple;
-    final Color currentColor = activeCount <= friends.length / 2.floor() ? red : brand;
+    final Color currentColor =
+        activeCount <= friends.length / 2.floor() ? red : brand;
     final Color limitColor = brand;
 
     if (totalCount == 0) {
@@ -93,15 +94,14 @@ class FriendsSectionRightDrawer extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: List.generate(friends.length, (i) {
-                  final user = friends[i]; // left → right in sorted order
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: horizontalSpacerSmall / 2,
-                    ),
-                    child: _FriendAvatar(uid: user.id),
-                  );
-                }
-              ),
+                final user = friends[i]; // left → right in sorted order
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: horizontalSpacerSmall / 2,
+                  ),
+                  child: _FriendAvatar(uid: user.id),
+                );
+              }),
             ),
           ),
         ),
@@ -131,11 +131,11 @@ class _FriendAvatar extends ConsumerWidget {
         }
 
         final borderColor =
-          ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
         final imageUrl = (u.profilePictureUrl?.isNotEmpty ?? false)
-          ? u.profilePictureUrl!
-          : null;
+            ? u.profilePictureUrl!
+            : null;
 
         return ProfilePictureAvatar(
           size: circleAvatarSizeDefault * 2,

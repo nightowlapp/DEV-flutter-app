@@ -27,14 +27,14 @@ import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 
 Future<void> showVenuePopupSheet(
   BuildContext context, {
-    required Venue venue,
-    VoidCallback? onGo,
-    VoidCallback? onClose,
-    Widget? body,
-    double initialSize = 0.47,
-    double minSize = 0.2,
-    double maxSize = 0.9,
-  }) {
+  required Venue venue,
+  VoidCallback? onGo,
+  VoidCallback? onClose,
+  Widget? body,
+  double initialSize = 0.47,
+  double minSize = 0.2,
+  double maxSize = 0.9,
+}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -114,8 +114,9 @@ class _VenuePopupContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final name = venue.displayName.isNotEmpty ? venue.displayName : venue.name;
-    final typeLabel =
-      venue.type == VenueType.unknown ? '' : Utility.formatString(venue.type.name);
+    final typeLabel = venue.type == VenueType.unknown
+        ? ''
+        : Utility.formatString(venue.type.name);
     final likeStore = ref.watch(likeStoreProvider(venue.id));
     final favStore = ref.watch(favoriteStoreProvider(venue.id));
 
@@ -123,15 +124,16 @@ class _VenuePopupContent extends ConsumerWidget {
     final int count = venue.ratingCount;
 
     // green outline when verified
-    final borderSide =
-      venue.isVerified ? BorderSide(color: green, width: 1.4) : BorderSide.none;
+    final borderSide = venue.isVerified
+        ? BorderSide(color: green, width: 1.4)
+        : BorderSide.none;
 
     return Material(
       color: black,
       elevation: 12,
       shape: RoundedRectangleBorder(
-        borderRadius:
-        const BorderRadius.vertical(top: Radius.circular(borderRadiusDefault)),
+        borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(borderRadiusDefault)),
         side: borderSide,
       ),
       clipBehavior: Clip.antiAlias,
@@ -160,17 +162,19 @@ class _VenuePopupContent extends ConsumerWidget {
                     children: [
                       // type pill
                       Container(
-                        padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: transparent,
-                          borderRadius: BorderRadius.circular(borderRadiusSmall),
+                          borderRadius:
+                              BorderRadius.circular(borderRadiusSmall),
                           border: Border.all(color: grey, width: 0.7),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(venue.type.icon, size: iconSizeSmall, color: white),
+                            Icon(venue.type.icon,
+                                size: iconSizeSmall, color: white),
                             if (typeLabel.isNotEmpty) ...[
                               Text(typeLabel, style: Styles.smallText),
                             ],
@@ -183,7 +187,8 @@ class _VenuePopupContent extends ConsumerWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Styles.basicTextHeader.copyWith(fontSize: fontSizeMedium),
+                          style: Styles.basicTextHeader
+                              .copyWith(fontSize: fontSizeMedium),
                         ),
                       ),
                       Row(
@@ -219,11 +224,15 @@ class _VenuePopupContent extends ConsumerWidget {
                       const SizedBox(width: allSidePaddingDefault),
                       LikeVenueButton(store: likeStore, venue: venue),
                       const SizedBox(width: allSidePaddingDefault),
-                      venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
+                      venue.isVerified
+                          ? const VerifiedBadge()
+                          : EditBadge(
+                              venue: venue,
+                            ),
                       const Spacer(),
                       OwlButton(
-                        padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         fullWidth: false,
                         onPressed: onGo,
                         label: "Directions",
@@ -236,36 +245,36 @@ class _VenuePopupContent extends ConsumerWidget {
             ),
           ),
 
-
           // ===== SCROLLABLE BODY AREA =====
           SliverToBoxAdapter(
-            child:
-            Column(
+            child: Column(
               children: [
                 MoodImagesSection(venueId: venue.id),
-
-                (venue.tagids.isNotEmpty) ? Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        VenueTagsGrid(
-                          tagIds: venue.tagids,
-                          viewportWidth: PlatformConfig.width(context),
-                          viewportHeight: PlatformConfig.height(context),
-                          onAddTag: () => handleAddTagPressed(context, ref, venue),
+                (venue.tagids.isNotEmpty)
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            VenueTagsGrid(
+                              tagIds: venue.tagids,
+                              viewportWidth: PlatformConfig.width(context),
+                              viewportHeight: PlatformConfig.height(context),
+                              onAddTag: () =>
+                                  handleAddTagPressed(context, ref, venue),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ) : const SizedBox.shrink(),
+                      )
+                    : const SizedBox.shrink(),
               ],
             ),
           ),
 
-            SliverToBoxAdapter(
+          SliverToBoxAdapter(
               //TODO AMOUNT OF USERS.
-            ),
+              ),
 
           // ===== BREADCRUMB + MORE INFO BUTTON (BOTTOM) =====
           SliverToBoxAdapter(
@@ -294,25 +303,27 @@ class _VenuePopupContent extends ConsumerWidget {
                         await Future.delayed(const Duration(milliseconds: 50));
                         root.context.goToExploreVenueMoreInfo(venue);
                       },
-                    ),),
-                  if (venue.isVerified)
-                  SizedBox(
-                    height: PlatformConfig.height(context) * 0.04,
-                    width: PlatformConfig.width(context) * 0.35,
-                    child: OwlButton(
-                      borderRadius: borderRadiusSmall,
-                      label: 'Bar Card',
-                      onPressed: () async {
-                        // Close the popup first, then navigate through Explore → Venue → More Info
-                        final root = Navigator.of(context, rootNavigator: true);
-                        root.pop(); // dismiss sheet
-                        // Give the pop a moment; then chain navigation
-                        await Future.delayed(const Duration(milliseconds: 50));
-                        root.context.goToExploreVenueBarCard(venue);
-                      },
                     ),
                   ),
-
+                  if (venue.isVerified)
+                    SizedBox(
+                      height: PlatformConfig.height(context) * 0.04,
+                      width: PlatformConfig.width(context) * 0.35,
+                      child: OwlButton(
+                        borderRadius: borderRadiusSmall,
+                        label: 'Bar Card',
+                        onPressed: () async {
+                          // Close the popup first, then navigate through Explore → Venue → More Info
+                          final root =
+                              Navigator.of(context, rootNavigator: true);
+                          root.pop(); // dismiss sheet
+                          // Give the pop a moment; then chain navigation
+                          await Future.delayed(
+                              const Duration(milliseconds: 50));
+                          root.context.goToExploreVenueBarCard(venue);
+                        },
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -323,7 +334,6 @@ class _VenuePopupContent extends ConsumerWidget {
   }
 }
 
-
 Widget _tinyIconButton({
   required IconData icon,
   required VoidCallback? onPressed,
@@ -332,9 +342,9 @@ Widget _tinyIconButton({
   return IconButton(
     onPressed: onPressed,
     icon: Icon(icon, size: iconSizeDefault, color: color),
-    padding: EdgeInsets.zero,                                 // no extra padding
-    visualDensity: VisualDensity.compact,                     // tighter layout
-    splashRadius: 16,                                         // small ripple
+    padding: EdgeInsets.zero, // no extra padding
+    visualDensity: VisualDensity.compact, // tighter layout
+    splashRadius: 16, // small ripple
     alignment: Alignment.centerRight,
   );
 }
@@ -364,31 +374,31 @@ Widget _displayOpeningHours(Venue v) {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           child: info.isClosedForDisplay
               ? Text(
-            'Closed today',
-            style: baseStyle.copyWith(color: red),
-          )
+                  'Closed today',
+                  style: baseStyle.copyWith(color: red),
+                )
               : RichText(
-            text: TextSpan(
-              style: baseStyle,
-              children: [
-                TextSpan(
-                  text: '${info.openLabel} - ${info.closeLabel}',
-                ),
-                if (info.goesPastMidnight)
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.baseline,
-                    baseline: TextBaseline.alphabetic,
-                    child: Transform.translate(
-                      offset: const Offset(2, -5),
-                      child: Text(
-                        '+1',
-                        style: supStyle,
+                  text: TextSpan(
+                    style: baseStyle,
+                    children: [
+                      TextSpan(
+                        text: '${info.openLabel} - ${info.closeLabel}',
                       ),
-                    ),
+                      if (info.goesPastMidnight)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: Transform.translate(
+                            offset: const Offset(2, -5),
+                            child: Text(
+                              '+1',
+                              style: supStyle,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          ),
+                ),
         ),
       ),
     ),

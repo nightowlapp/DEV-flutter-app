@@ -9,7 +9,6 @@ class StoragePaths {
   static const offerImages = 'offer_images';
   static const moodImages = 'mood_images';
 
-
   static String userImage(String userId, String fileName) =>
       '$userImages/$userId/$fileName';
 
@@ -19,10 +18,10 @@ class StoragePaths {
       '$userImages/$userId/$venueId';
 
   static String userVenueMoodImage(
-      String userId,
-      String venueId,
-      String fileName,
-      ) =>
+    String userId,
+    String venueId,
+    String fileName,
+  ) =>
       '${userVenueMoodImagesDir(userId, venueId)}/$fileName';
 
   // ---- Venues ----

@@ -5,19 +5,19 @@ import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 import 'package:nightowlcode/assets.dart';
 
-class ErrorScreen extends StatelessWidget { //TODO SEND CRAHC
-  const ErrorScreen({
-    super.key,
-    this.imagePath = ImagePaths.logo,
-    this.borderColor = owlPurple,
-    this.borderWidth = 1.5,
-    this.backgroundColor = black,
-    this.imageSize = 120,
-    this.borderRadius = borderRadiusDefault,
-    this.slogan = 'Woops something went wrong',
-    this.sloganStyle,
-    this.error
-  });
+class ErrorScreen extends StatelessWidget {
+  //TODO SEND CRAHC
+  const ErrorScreen(
+      {super.key,
+      this.imagePath = ImagePaths.logo,
+      this.borderColor = owlPurple,
+      this.borderWidth = 1.5,
+      this.backgroundColor = black,
+      this.imageSize = 120,
+      this.borderRadius = borderRadiusDefault,
+      this.slogan = 'Woops something went wrong',
+      this.sloganStyle,
+      this.error});
 
   final String imagePath;
   final Color borderColor;

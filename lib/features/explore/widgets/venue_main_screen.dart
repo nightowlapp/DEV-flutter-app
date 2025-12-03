@@ -29,8 +29,7 @@ class VenueMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logo =
-    VenueLogo(
+    final logo = VenueLogo(
       venue: venue,
       size: iconSizeLarge + 4,
     );

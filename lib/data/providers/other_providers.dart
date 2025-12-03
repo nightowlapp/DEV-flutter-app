@@ -16,9 +16,9 @@ import '../repositories/storage_repository.dart';
 
 // --- Low-level singletons ---
 final firebaseAuthProvider =
-  Provider<fb.FirebaseAuth>((ref) => fb.FirebaseAuth.instance);
+    Provider<fb.FirebaseAuth>((ref) => fb.FirebaseAuth.instance);
 final firestoreProvider =
-  Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
+    Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
 
 // Current Firebase user (null when signed out)
 final authStateProvider = StreamProvider<fb.User?>(
@@ -31,39 +31,32 @@ final userRepositoryProvider = Provider<UserRepository>(
 );
 
 final profilePictureServiceProvider = Provider<ProfilePictureService>((ref) {
-    return ProfilePictureService(ref.read(firebaseStorageProvider));
-  }
-);
+  return ProfilePictureService(ref.read(firebaseStorageProvider));
+});
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-    final cfg = AppConfig.current;
-    return AuthRepository(
-      auth: ref.watch(firebaseAuthProvider),
-      users: ref.watch(userRepositoryProvider),
-      googleServerClientId: cfg.googleServerClientId,
-      googleIosClientId:
-      cfg.googleIosClientId.isEmpty ? null : cfg.googleIosClientId,
-    );
-  }
-);
+  final cfg = AppConfig.current;
+  return AuthRepository(
+    auth: ref.watch(firebaseAuthProvider),
+    users: ref.watch(userRepositoryProvider),
+    googleServerClientId: cfg.googleServerClientId,
+    googleIosClientId:
+        cfg.googleIosClientId.isEmpty ? null : cfg.googleIosClientId,
+  );
+});
 
 final authUserProvider = StreamProvider<model.User?>(
   (ref) => ref.watch(authRepositoryProvider).authUser$(),
 );
 
 final userFinalizeServiceProvider = Provider<UserFinalizeService>((ref) {
-    final users = ref.watch(userRepositoryProvider);
-    final auth = fb.FirebaseAuth.instance;
-    return UserFinalizeService(users, auth);
-  }
-);
+  final users = ref.watch(userRepositoryProvider);
+  final auth = fb.FirebaseAuth.instance;
+  return UserFinalizeService(users, auth);
+});
 
 final firebaseStorageProvider =
-  Provider<FirebaseStorage>((ref) => FirebaseStorage.instance);
+    Provider<FirebaseStorage>((ref) => FirebaseStorage.instance);
 final storageRepositoryProvider = Provider<StorageRepository>(
   (ref) => StorageRepository(ref.watch(firebaseStorageProvider)),
 );
-
-
-
-

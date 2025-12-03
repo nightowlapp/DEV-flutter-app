@@ -37,7 +37,11 @@ class EmblemsSection extends StatelessWidget {
         const SizedBox(height: verticalSpacerSmall),
         SizedBox(
           height: PlatformConfig.height(context) * 0.2,
-          child: Center(child: Text("Coming soon", style: Styles.basicText.copyWith(color: orange),)),
+          child: Center(
+              child: Text(
+            "Coming soon",
+            style: Styles.basicText.copyWith(color: orange),
+          )),
           // child: ListView.separated(
           //   scrollDirection: Axis.horizontal,
           //   itemCount: 8,

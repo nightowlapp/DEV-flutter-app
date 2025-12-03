@@ -53,7 +53,6 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-
     if (!_formKey.currentState!.validate() || !_canContinue) return;
     setState(() => _isLoading = true);
     try {
@@ -87,7 +86,11 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
         showBack: true,
         titleText: 'Login',
         actions: [
-          CircleAvatar(backgroundImage: const AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+          CircleAvatar(
+            backgroundImage: const AssetImage(ImagePaths.logo),
+            radius: iconSizeDefault,
+            backgroundColor: transparent,
+          ),
         ],
       ),
       body: Padding(

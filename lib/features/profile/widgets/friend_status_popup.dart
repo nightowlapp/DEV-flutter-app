@@ -20,9 +20,9 @@ class FriendStatusPopup extends StatelessWidget {
   /// Bottom popup (modal sheet) styled similarly to OwlSnack.
   static Future<FriendStatusChoice?> show(
     BuildContext context, {
-      required String userName,
-      required bool isCloseFriend,
-    }) {
+    required String userName,
+    required bool isCloseFriend,
+  }) {
     return showModalBottomSheet<FriendStatusChoice>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -80,10 +80,12 @@ class FriendStatusPopup extends StatelessWidget {
                     Text(
                       'Choose how you want to classify ',
                       style: Styles.popupText.copyWith(color: greyLighter),
-                    ), Text(
+                    ),
+                    Text(
                       userName,
                       style: Styles.popupText.copyWith(color: owlPurple),
-                    ), Text(
+                    ),
+                    Text(
                       '.',
                       style: Styles.popupText.copyWith(color: greyLighter),
                     ),
@@ -97,7 +99,7 @@ class FriendStatusPopup extends StatelessWidget {
                 context,
                 label: 'Close friend',
                 description:
-                'Show more of $userName and enable close friend features.',
+                    'Show more of $userName and enable close friend features.',
                 selected: isCloseFriend,
                 color: owlPurple,
                 result: FriendStatusChoice.closeFriend,
@@ -139,19 +141,20 @@ class FriendStatusPopup extends StatelessWidget {
 
   Widget _buildOption(
     BuildContext context, {
-      required String label,
-      required String description,
-      required bool selected,
-      required Color color,
-      required FriendStatusChoice result,
-    }) {
+    required String label,
+    required String description,
+    required bool selected,
+    required Color color,
+    required FriendStatusChoice result,
+  }) {
     return InkWell(
       onTap: () => Navigator.of(context).pop(result),
       borderRadius: BorderRadius.circular(borderRadiusSmall),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon( // Todo icons star so on
+          Icon(
+            // Todo icons star so on
             selected ? Icons.radio_button_checked : Icons.radio_button_off,
             color: selected ? color : greyLighter,
             size: iconSizeLarge,

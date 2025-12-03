@@ -3,15 +3,16 @@ import 'package:nightowlcode/shared/constants/enums.dart';
 
 class AdvancedSearchFilter {
   final double? maxDistanceKm; // null = ignore
-  final double? minRating;     // 0–5, null = ignore //TODO want smart to use venues.lowestrated.round
-  final bool openNowOnly;      // default true (from defaults provider)
-  final Set<VenueType> types;  // empty = all
+  final double?
+      minRating; // 0–5, null = ignore //TODO want smart to use venues.lowestrated.round
+  final bool openNowOnly; // default true (from defaults provider)
+  final Set<VenueType> types; // empty = all
 
   // Optional extra knobs you can start using when you add UI:
-  final bool verifiedOnly;        // only verified venues
-  final int? minAgeRestriction;   // e.g. 21 -> only 21+ venues
-  final double? maxEntryPrice;    // null = ignore
-  final Set<String> includeTags;  // venue.tagids must contain at least one
+  final bool verifiedOnly; // only verified venues
+  final int? minAgeRestriction; // e.g. 21 -> only 21+ venues
+  final double? maxEntryPrice; // null = ignore
+  final Set<String> includeTags; // venue.tagids must contain at least one
 
   const AdvancedSearchFilter({
     this.maxDistanceKm,
@@ -41,17 +42,17 @@ class AdvancedSearchFilter {
   }) {
     return AdvancedSearchFilter(
       maxDistanceKm:
-      clearMaxDistance ? null : (maxDistanceKm ?? this.maxDistanceKm),
+          clearMaxDistance ? null : (maxDistanceKm ?? this.maxDistanceKm),
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       openNowOnly: openNowOnly ?? this.openNowOnly,
       types: types ?? this.types,
       verifiedOnly: verifiedOnly ?? this.verifiedOnly,
       minAgeRestriction:
-      clearMinAge ? null : (minAgeRestriction ?? this.minAgeRestriction),
-      maxEntryPrice: clearMaxEntryPrice
-          ? null
-          : (maxEntryPrice ?? this.maxEntryPrice),
-      includeTags: clearIncludeTags ? const {} : (includeTags ?? this.includeTags),
+          clearMinAge ? null : (minAgeRestriction ?? this.minAgeRestriction),
+      maxEntryPrice:
+          clearMaxEntryPrice ? null : (maxEntryPrice ?? this.maxEntryPrice),
+      includeTags:
+          clearIncludeTags ? const {} : (includeTags ?? this.includeTags),
     );
   }
 
@@ -72,13 +73,13 @@ class AdvancedSearchFilter {
 
   bool get hasAnyRestriction =>
       maxDistanceKm != null ||
-          minRating != null ||
-          openNowOnly ||
-          verifiedOnly ||
-          minAgeRestriction != null ||
-          maxEntryPrice != null ||
-          types.isNotEmpty ||
-          includeTags.isNotEmpty;
+      minRating != null ||
+      openNowOnly ||
+      verifiedOnly ||
+      minAgeRestriction != null ||
+      maxEntryPrice != null ||
+      types.isNotEmpty ||
+      includeTags.isNotEmpty;
 
   static bool _setEquals<E>(Set<E> a, Set<E> b) {
     if (identical(a, b)) return true;

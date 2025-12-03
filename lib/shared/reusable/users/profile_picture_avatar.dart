@@ -107,7 +107,7 @@ class ProfilePictureAvatar extends StatelessWidget {
               shape: BoxShape.circle,
               color: backgroundColor,
               border:
-              Border.all(color: effectiveBorderColor, width: borderWidth),
+                  Border.all(color: effectiveBorderColor, width: borderWidth),
             ),
             child: avatar,
           );

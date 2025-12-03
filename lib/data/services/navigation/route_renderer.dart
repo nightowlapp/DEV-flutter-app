@@ -25,23 +25,23 @@ class RouteRenderer {
   static Future<RouteRenderer> attach(mb.MapboxMap map) async {
     final r = RouteRenderer._(map);
     r._lineMgr = await map.annotations.createPolylineAnnotationManager();
-    r._dotMgr  = await map.annotations.createCircleAnnotationManager();
+    r._dotMgr = await map.annotations.createCircleAnnotationManager();
     return r;
   }
 
   int _argb(Color c) => c.value; // 0xAARRGGBB
 
   Future<void> show(
-      NavRoute route, {
-        RouteStyle style = RouteStyle.line,
-        Color color = const Color(0xFF2563EB),
-        double width = 6,
-        double opacity = .9,
-        // dots
-        double dotRadius = 3.5,
-        double dotOpacity = .95,
-        int dotStep = 4,
-      }) async {
+    NavRoute route, {
+    RouteStyle style = RouteStyle.line,
+    Color color = const Color(0xFF2563EB),
+    double width = 6,
+    double opacity = .9,
+    // dots
+    double dotRadius = 3.5,
+    double dotOpacity = .95,
+    int dotStep = 4,
+  }) async {
     await clear();
     if (route.points.isEmpty) return;
 
@@ -67,7 +67,8 @@ class RouteRenderer {
         ));
       }
       if (opts.isNotEmpty) {
-        final created = await _dotMgr.createMulti(opts); // List<CircleAnnotation?>
+        final created =
+            await _dotMgr.createMulti(opts); // List<CircleAnnotation?>
         // Filter out any nulls to satisfy List<CircleAnnotation>
         for (final a in created) {
           if (a != null) _dots.add(a);
@@ -94,10 +95,10 @@ class RouteRenderer {
   }
 
   Future<void> fitToRoute(
-      NavRoute route, {
-        double padding = 48,
-        int durationMs = 800,
-      }) async {
+    NavRoute route, {
+    double padding = 48,
+    int durationMs = 800,
+  }) async {
     if (route.points.isEmpty) return;
     final b = Bounds.fromPoints(route.points);
     await map.flyTo(

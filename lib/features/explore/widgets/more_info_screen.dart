@@ -76,8 +76,7 @@ class MoreInfoScreen extends ConsumerWidget {
       favoriteStoreProvider(venue.id),
     );
 
-    final logo =
-    VenueLogo(
+    final logo = VenueLogo(
       venue: venue,
       size: iconSizeLarge + 4,
     );
@@ -117,7 +116,11 @@ class MoreInfoScreen extends ConsumerWidget {
                       venue: venue,
                     ),
                     const SizedBox(width: allSidePaddingDefault),
-                    venue.isVerified ? const VerifiedBadge() : EditBadge(venue: venue,),
+                    venue.isVerified
+                        ? const VerifiedBadge()
+                        : EditBadge(
+                            venue: venue,
+                          ),
 
                     const Spacer(),
                     RatingCard(venue: venue), // will be replaced below

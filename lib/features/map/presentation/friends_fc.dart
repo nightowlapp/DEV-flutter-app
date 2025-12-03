@@ -9,11 +9,10 @@ import '../../../models/users/live_location.dart';
 
 //TODO change at some point. NO need to run through all of them. Just friends.
 
-
 String friendsToFeatureCollection(
-    Map<String, LiveLocation> locations,
-    Map<String, FriendProfile> profiles,
-    ) {
+  Map<String, LiveLocation> locations,
+  Map<String, FriendProfile> profiles,
+) {
   final features = <Map<String, dynamic>>[];
 
   locations.forEach((uid, loc) {
@@ -50,4 +49,3 @@ String friendsToFeatureCollection(
     'features': features,
   });
 }
-

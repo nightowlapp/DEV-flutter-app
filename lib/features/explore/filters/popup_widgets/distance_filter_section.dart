@@ -22,8 +22,8 @@ class DistanceFilterSection extends ConsumerWidget {
         filters.maxDistanceKm ?? defaults.maxDistanceKm ?? 0.0;
 
     final uiDistanceKm = (effectiveDistanceKm <= 0
-        ? (defaults.maxDistanceKm ?? 15.0)
-        : effectiveDistanceKm)
+            ? (defaults.maxDistanceKm ?? 15.0)
+            : effectiveDistanceKm)
         .clamp(1.0, 60.0);
 
     return CardSection(
@@ -138,18 +138,14 @@ class _DistanceEmojiScale extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color:
-                isActive ? owlPurple.withOpacity(.28) : transparent,
+                color: isActive ? owlPurple.withOpacity(.28) : transparent,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 opt.emoji,
                 style: TextStyle(
-                  fontSize:
-                  isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive
-                      ? owlPurple
-                      : white.withOpacity(.85),
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
             ),
@@ -189,7 +185,7 @@ class _DistanceLabel extends StatelessWidget {
     } else {
       final km = baseKm;
       final displayKm =
-      km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);
+          km % 1 == 0 ? km.toInt().toString() : km.toStringAsFixed(1);
       text = '$displayKm km';
     }
 
@@ -229,8 +225,7 @@ Future<double?> _promptForNumber({
           const SizedBox(height: verticalSpacerDefault),
           TextField(
             controller: controller,
-            keyboardType:
-            const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(color: white),
             autofocus: true,
             decoration: InputDecoration(

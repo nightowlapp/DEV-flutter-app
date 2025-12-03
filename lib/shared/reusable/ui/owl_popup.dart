@@ -27,7 +27,7 @@ class OwlPopup extends StatelessWidget {
 
     // NEW: size knobs
     double maxHeightFraction = 0.85, // cap dialog height to 85% of screen
-    double maxWidth = 560,           // optional desktop/tablet nicety
+    double maxWidth = 560, // optional desktop/tablet nicety
   }) {
     return OwlPopup._internal(
       key: key,
@@ -66,11 +66,9 @@ class OwlPopup extends StatelessWidget {
     this.divider,
     this.showDivider = true,
     this.border,
-
     this.defaultTextAlign = TextAlign.start,
     this.bodyCrossAxisAlignment = CrossAxisAlignment.start,
     this.forceTextDirection,
-
     this.maxHeightFraction = 0.85,
     this.maxWidth = 560,
   });
@@ -111,7 +109,8 @@ class OwlPopup extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(title, style: headerStyle, textAlign: TextAlign.left),
+                child:
+                    Text(title, style: headerStyle, textAlign: TextAlign.left),
               ),
               if (icon != null) icon!,
             ],
@@ -131,7 +130,8 @@ class OwlPopup extends StatelessWidget {
         return AnimatedPadding(
           duration: const Duration(milliseconds: 200),
           curve: Curves.decelerate,
-          padding: MediaQuery.of(context).viewInsets + const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          padding: MediaQuery.of(context).viewInsets +
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: AlertDialog(
             backgroundColor: backgroundColor,
             clipBehavior: Clip.antiAlias,
@@ -150,7 +150,8 @@ class OwlPopup extends StatelessWidget {
                     borderRadius: BorderRadius.circular(borderRadius),
                     border: border,
                   ),
-                  padding: contentPadding ?? const EdgeInsets.fromLTRB(20, 30, 20, 30),
+                  padding: contentPadding ??
+                      const EdgeInsets.fromLTRB(20, 30, 20, 30),
                   child: body,
                 ),
               ),
@@ -159,6 +160,5 @@ class OwlPopup extends StatelessWidget {
         );
       },
     );
-
   }
 }

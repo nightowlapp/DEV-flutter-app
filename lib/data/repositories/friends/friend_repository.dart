@@ -21,16 +21,16 @@ class FriendsRepository {
     if (me == null) return;
 
     final myFriendDoc = _db
-      .doc(UserDocumentPaths.doc(me))
-      .collection(UserDocumentPaths.friends)
-      .doc(friendUid);
+        .doc(UserDocumentPaths.doc(me))
+        .collection(UserDocumentPaths.friends)
+        .doc(friendUid);
 
     await myFriendDoc.set(
-    {
-      FriendEdgeFields.isCloseFriend: isClose,
-      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-    },
-    SetOptions(merge: true),
+      {
+        FriendEdgeFields.isCloseFriend: isClose,
+        UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
     );
   }
 
@@ -44,17 +44,16 @@ class FriendsRepository {
     if (me == null) return;
 
     final myFriendDoc = _db
-      .doc(UserDocumentPaths.doc(me))
-      .collection(UserDocumentPaths.friends)
-      .doc(friendUid);
+        .doc(UserDocumentPaths.doc(me))
+        .collection(UserDocumentPaths.friends)
+        .doc(friendUid);
 
     await myFriendDoc.set(
-    {
-      'they_can_see_me': allow,
-      UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
-    },
-    SetOptions(merge: true),
+      {
+        'they_can_see_me': allow,
+        UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
     );
   }
-
 }

@@ -187,7 +187,7 @@ class FeedbackRepository {
       if (conflictingTagIds.isNotEmpty) {
         tx.update(venueRef, {
           VenueDocumentPaths.tagIds:
-          FieldValue.arrayRemove(conflictingTagIds.toSet().toList()),
+              FieldValue.arrayRemove(conflictingTagIds.toSet().toList()),
         });
       }
 
@@ -240,8 +240,7 @@ class FeedbackRepository {
     final Uint8List originalBytes = await file.readAsBytes();
 
     // 2) Compress & re-encode as WebP
-    final Uint8List webpBytes =
-    await FlutterImageCompress.compressWithList(
+    final Uint8List webpBytes = await FlutterImageCompress.compressWithList(
       originalBytes,
       format: CompressFormat.webp,
       quality: 80,
@@ -266,7 +265,6 @@ class FeedbackRepository {
     return (url: url, uploadedAt: uploadedAt);
   }
 
-
   static Future<String> uploadMoodImage({
     required String venueId,
     required File file,
@@ -280,15 +278,15 @@ class FeedbackRepository {
     final Uint8List originalBytes = await file.readAsBytes();
 
     // 2) Compress & re-encode as WebP
-    final Uint8List webpBytes =
-    await FlutterImageCompress.compressWithList(
+    final Uint8List webpBytes = await FlutterImageCompress.compressWithList(
       originalBytes,
       format: CompressFormat.webp,
       quality: 80,
     );
 
     // 3) Storage path for mood images
-    final path = '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.moodImages}/$ts.webp';
+    final path =
+        '${StoragePaths.userImages}/${user.uid}/${StoragePaths.venueFeedback}/$venueId/${StoragePaths.moodImages}/$ts.webp';
     final ref = _storage.ref().child(path);
 
     // 4) Upload WebP bytes with correct contentType
@@ -310,6 +308,4 @@ class FeedbackRepository {
 
     return url;
   }
-
-
 }

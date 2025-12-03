@@ -17,7 +17,7 @@ final venueMediaBundleProvider =
 
 // Public provider the UI will consume
 final venueMediaProvider =
-FutureProvider.family<VenueMediaHealth, String>((ref, venueId) async {
+    FutureProvider.family<VenueMediaHealth, String>((ref, venueId) async {
   final bundle = await ref.watch(venueMediaBundleProvider(venueId).future);
   return bundle.toHealth();
 });
@@ -26,15 +26,15 @@ extension _BundleToHealth on VenueMediaBundle {
   VenueMediaHealth toHealth() {
     // Adjust field names if your bundle differs
     final cover = coverUrl ?? '';
-    final logo  = logoUrl ?? '';
+    final logo = logoUrl ?? '';
     final moods = moodImageUrls ?? const <String>[];
 
     return VenueMediaHealth(
       coverExists: cover.isNotEmpty,
-      logoExists:  logo.isNotEmpty,
-      moodCount:   moods.length,
-      coverUrl:    cover.isNotEmpty ? cover : null,
-      logoUrl:     logo.isNotEmpty ? logo : null,
+      logoExists: logo.isNotEmpty,
+      moodCount: moods.length,
+      coverUrl: cover.isNotEmpty ? cover : null,
+      logoUrl: logo.isNotEmpty ? logo : null,
     );
   }
 }

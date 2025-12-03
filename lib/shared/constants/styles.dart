@@ -37,8 +37,8 @@ class Styles {
         color: white,
         // fontWeight: FontWeight.w600,
       );
-    
-    static TextStyle get mediumSmallText => baseFont.copyWith(
+
+  static TextStyle get mediumSmallText => baseFont.copyWith(
         fontSize: fontSizeSmaller,
         color: white,
         // fontWeight: FontWeight.w600,
@@ -67,23 +67,21 @@ class Styles {
       letterSpacing: 3.5);
 
   static TextStyle get sloganStyle => Styles.baseFont.copyWith(
-    fontSize: fontSizeLarge,
-    letterSpacing: 3,
-    fontWeight: FontWeight.w800,
-    foreground: Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          white,
-          owlPurple,
-         black,
-        ],
-        stops: [0.0, 0.5, 1.0],
-      ).createShader(
-        const Rect.fromLTWH(60, 50, 300, 200),
-      ),
-  );
-
-
+        fontSize: fontSizeLarge,
+        letterSpacing: 3,
+        fontWeight: FontWeight.w800,
+        foreground: Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              white,
+              owlPurple,
+              black,
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ).createShader(
+            const Rect.fromLTWH(60, 50, 300, 200),
+          ),
+      );
 }

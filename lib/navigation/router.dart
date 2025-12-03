@@ -60,158 +60,156 @@ Widget _buildRoot(MainScreenName s, Key key) {
   return MainScreenWrapper(screen: s, child: content);
 }
 
-
 GoRouter createRouter({required String initialLocation}) {
   return GoRouter(
-    initialLocation: initialLocation,
-    routes: [
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        pageBuilder: (_, __) => const NoTransitionPage(child: LoginScreen()),
-      ),
-      GoRoute(
-        path: '/login-or-create',
-        name: 'loginOrCreate',
-        pageBuilder: (_, __) =>
-        const NoTransitionPage(child: LoginOrCreateAccountScreen()),
-      ),
-      GoRoute(
-        path: '/first-create-nightowl-profile',
-        name: 'firstCreateNightowlProfile',
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: FirstCreateNightowlProfileScreen()), //TODO
-      ),
-      GoRoute(
-        path: '/second-create-nightowl-profile',
-        name: 'secondCreateNightowlProfile',
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: SecondCreateNightowlProfileScreen()),
-      ),
-      GoRoute(
-        path: '/third-create-nightowl-profile',
-        name: 'thirdCreateNightowlProfile',
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: ThirdCreateNightowlProfileScreen()),
-      ),
-      GoRoute(
-        path: '/fourth-create-nightowl-profile',
-        name: 'fourthCreateNightowlProfile',
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: FourthCreateNightowlProfileScreen()),
-      ),
-      GoRoute(
-        path: '/choose-favorite-venues',
-        name: 'chooseFavoriteVenues',
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: ChooseFavoriteVenuesScreen()),
-      ),
-      // GoRoute(
-      //   path: '/optional-details',
-      //   name: 'optionalDetails',
-      //   pageBuilder: (context, state) =>
-      //   const NoTransitionPage(child: OptionalDetailsScreen()),
-      // ),
+      initialLocation: initialLocation,
+      routes: [
+        GoRoute(
+          path: '/login',
+          name: 'login',
+          pageBuilder: (_, __) => const NoTransitionPage(child: LoginScreen()),
+        ),
+        GoRoute(
+          path: '/login-or-create',
+          name: 'loginOrCreate',
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: LoginOrCreateAccountScreen()),
+        ),
+        GoRoute(
+          path: '/first-create-nightowl-profile',
+          name: 'firstCreateNightowlProfile',
+          pageBuilder: (context, state) => const NoTransitionPage(
+              child: FirstCreateNightowlProfileScreen()), //TODO
+        ),
+        GoRoute(
+          path: '/second-create-nightowl-profile',
+          name: 'secondCreateNightowlProfile',
+          pageBuilder: (context, state) => const NoTransitionPage(
+              child: SecondCreateNightowlProfileScreen()),
+        ),
+        GoRoute(
+          path: '/third-create-nightowl-profile',
+          name: 'thirdCreateNightowlProfile',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ThirdCreateNightowlProfileScreen()),
+        ),
+        GoRoute(
+          path: '/fourth-create-nightowl-profile',
+          name: 'fourthCreateNightowlProfile',
+          pageBuilder: (context, state) => const NoTransitionPage(
+              child: FourthCreateNightowlProfileScreen()),
+        ),
+        GoRoute(
+          path: '/choose-favorite-venues',
+          name: 'chooseFavoriteVenues',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ChooseFavoriteVenuesScreen()),
+        ),
+        // GoRoute(
+        //   path: '/optional-details',
+        //   name: 'optionalDetails',
+        //   pageBuilder: (context, state) =>
+        //   const NoTransitionPage(child: OptionalDetailsScreen()),
+        // ),
 
-      // Standalone
-      GoRoute(
-        path: '/venue/:id',
-        name: 'venue',
-        pageBuilder: (context, state) {
-          final args = state.extra as VenueMainArgs?;
-          if (args == null) {
-            return const NoTransitionPage(
-              child: Scaffold(body: Center(child: Text('Missing Venue'))),
+        // Standalone
+        GoRoute(
+          path: '/venue/:id',
+          name: 'venue',
+          pageBuilder: (context, state) {
+            final args = state.extra as VenueMainArgs?;
+            if (args == null) {
+              return const NoTransitionPage(
+                child: Scaffold(body: Center(child: Text('Missing Venue'))),
+              );
+            }
+            return NoTransitionPage(
+              child: VenueMainScreen(
+                venue: args.venue,
+                media: args.media,
+                userLoc: args.userLoc,
+              ),
             );
-          }
-          return NoTransitionPage(
-            child: VenueMainScreen(
+          },
+        ),
+        GoRoute(
+          path: '/settings',
+          name: SettingsScreen.routeName,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SettingsScreen()),
+          // const NoTransitionPage(child: LoadingScreen()),
+        ),
+        // in your router config
+        GoRoute(
+          path: '/more-info',
+          name: MoreInfoScreen.routeName,
+          builder: (context, state) {
+            final args = state.extra as VenueMoreInfoArgs;
+            return MoreInfoScreen(
               venue: args.venue,
               media: args.media,
               userLoc: args.userLoc,
-            ),
-          );
-        },
-      ),
-      GoRoute(
-        path: '/settings',
-        name: SettingsScreen.routeName,
-        pageBuilder: (context, state) =>
-        const NoTransitionPage(child: SettingsScreen()),
-        // const NoTransitionPage(child: LoadingScreen()),
-      ),
-      // in your router config
-      GoRoute(
-        path: '/more-info',
-        name: MoreInfoScreen.routeName,
-        builder: (context, state) {
-          final args = state.extra as VenueMoreInfoArgs;
-          return MoreInfoScreen(
-            venue: args.venue,
-            media: args.media,
-            userLoc: args.userLoc,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/bar-card',
-        name: BarCardScreen.routeName, // 'barCard'
-        pageBuilder: (context, state) {
-          final args = state.extra as BarCardArgs?;
-          if (args == null) {
-            return const NoTransitionPage(
-              child: Scaffold(body: Center(child: Text('Missing BarCardArgs'))),
             );
-          }
-          return NoTransitionPage(child: BarCardScreen(args: args));
-        },
-      ),
-      GoRoute(
-        path: '/other-profile',
-        name: 'otherProfile',
-        pageBuilder: (context, state) {
-          final uid = state.extra as String?;
-          if (uid == null) {
-            return const NoTransitionPage(
-              child: Scaffold(
-                body: Center(child: Text('Missing user')),
-              ),
-            );
-          }
-          return NoTransitionPage(
-            child: OtherProfileScreen(uid: uid),
-          );
-        },
-      ),
-
-      // GoRoute(
-      //   path: '/test',
-      //   name: 'test',
-      //   pageBuilder: (context, state) =>
-      //   const NoTransitionPage(child: VenuePopup(id: 'Test')),
-      // ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navShell) => MainShell(nav: navShell),
-        branches: [
-          for (final s in kBranchOrder)
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: '/${s.name}',
-                  name: s.name,
-                  pageBuilder: (context, state) => NoTransitionPage(
-                    child: _buildRoot(s, PageStorageKey(s.name)),
-                  ),
+          },
+        ),
+        GoRoute(
+          path: '/bar-card',
+          name: BarCardScreen.routeName, // 'barCard'
+          pageBuilder: (context, state) {
+            final args = state.extra as BarCardArgs?;
+            if (args == null) {
+              return const NoTransitionPage(
+                child:
+                    Scaffold(body: Center(child: Text('Missing BarCardArgs'))),
+              );
+            }
+            return NoTransitionPage(child: BarCardScreen(args: args));
+          },
+        ),
+        GoRoute(
+          path: '/other-profile',
+          name: 'otherProfile',
+          pageBuilder: (context, state) {
+            final uid = state.extra as String?;
+            if (uid == null) {
+              return const NoTransitionPage(
+                child: Scaffold(
+                  body: Center(child: Text('Missing user')),
                 ),
-              ],
-            ),
-        ],
-      ),
-    ],
-    errorPageBuilder: (context, state) =>
-     MaterialPage(child: ErrorScreen(
-         // state.error
-     ))
-  );
-}
+              );
+            }
+            return NoTransitionPage(
+              child: OtherProfileScreen(uid: uid),
+            );
+          },
+        ),
 
+        // GoRoute(
+        //   path: '/test',
+        //   name: 'test',
+        //   pageBuilder: (context, state) =>
+        //   const NoTransitionPage(child: VenuePopup(id: 'Test')),
+        // ),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navShell) => MainShell(nav: navShell),
+          branches: [
+            for (final s in kBranchOrder)
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/${s.name}',
+                    name: s.name,
+                    pageBuilder: (context, state) => NoTransitionPage(
+                      child: _buildRoot(s, PageStorageKey(s.name)),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+      errorPageBuilder: (context, state) => MaterialPage(
+          child: ErrorScreen(
+              // state.error
+              )));
+}

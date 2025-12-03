@@ -125,9 +125,7 @@ class FriendRequestsRepository {
     batch.set(b, baseEdgeData);
 
     // update request status instead of deleting
-    final r = _db
-        .collection(FriendRequestDocumentPaths.collection)
-        .doc(req.id);
+    final r = _db.collection(FriendRequestDocumentPaths.collection).doc(req.id);
 
     batch.update(r, {
       FriendRequestDocumentPaths.status: FriendRequestStatus.accepted.name,
@@ -155,5 +153,4 @@ class FriendRequestsRepository {
         .doc(req.id)
         .delete();
   }
-
 }

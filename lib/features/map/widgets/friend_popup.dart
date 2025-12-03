@@ -25,7 +25,7 @@ String _formatPartyStatus(String? rawStatus) {
   final status = rawStatus ?? 'still_planning';
 
   switch (status) {
-  // TODO mappings you wanted
+    // TODO mappings you wanted
     case 'out_tonight':
       return 'Out';
     case 'pregame':
@@ -43,12 +43,12 @@ String _formatPartyStatus(String? rawStatus) {
 
 /// Helper: show the friend popup as a bottom sheet.
 Future<void> showFriendPopupSheet(
-    BuildContext context, {
-      required String uid,
-      required FriendProfile profile,
-      required LiveLocation loc,
-      VoidCallback? onMessage,
-    }) {
+  BuildContext context, {
+  required String uid,
+  required FriendProfile profile,
+  required LiveLocation loc,
+  VoidCallback? onMessage,
+}) {
   return showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -61,9 +61,9 @@ Future<void> showFriendPopupSheet(
         onMessage: onMessage == null
             ? null
             : () {
-          onMessage();
-          Navigator.of(ctx).pop();
-        },
+                onMessage();
+                Navigator.of(ctx).pop();
+              },
         onClose: () => Navigator.of(ctx).pop(),
       );
     },
@@ -88,13 +88,12 @@ class FriendPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = profile.displayName?.isNotEmpty == true
-        ? profile.displayName!
-        : uid;
+    final name =
+        profile.displayName?.isNotEmpty == true ? profile.displayName! : uid;
 
     // "Active XXXX"
     final lastActiveAgo =
-    Utility.formatString(Utility.formatTimeAgo(loc.timestamp));
+        Utility.formatString(Utility.formatTimeAgo(loc.timestamp));
 
     // Pretty party status
     final prettyStatus = _formatPartyStatus(profile.partyStatus?.name);
@@ -124,8 +123,8 @@ class FriendPopup extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const ProfilePictureAvatar(
-                    // imageUrl: friend.url
-                  ),
+                      // imageUrl: friend.url
+                      ),
                   const SizedBox(width: 6),
 
                   // Name + Active + Been status + Close X
@@ -153,7 +152,6 @@ class FriendPopup extends StatelessWidget {
                             ],
                           ),
                         ),
-
 
                         // Right side: X above "Been ... for ..."
                         Column(
@@ -210,7 +208,6 @@ class FriendPopup extends StatelessWidget {
   }
 }
 
-
 class FriendMapBubble extends StatelessWidget {
   final String uid;
   final FriendProfile profile;
@@ -231,14 +228,13 @@ class FriendMapBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = profile.displayName?.isNotEmpty == true
-        ? profile.displayName!
-        : uid;
+    final name =
+        profile.displayName?.isNotEmpty == true ? profile.displayName! : uid;
 
     final rawStatus = profile.partyStatus?.name ?? 'still_planning';
     final prettyStatus = Utility.formatString(
-      rawStatus.replaceAll('_', ' '),
-    ) ??
+          rawStatus.replaceAll('_', ' '),
+        ) ??
         rawStatus;
 
     // For now we reuse the location timestamp for the “been XYZ for …”
@@ -313,7 +309,8 @@ class FriendMapBubble extends StatelessWidget {
                   ),
                 if (onClose != null)
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+                    icon: const Icon(Icons.close,
+                        size: 18, color: Colors.white70),
                     padding: const EdgeInsets.only(left: 4),
                     constraints: const BoxConstraints(),
                     onPressed: onClose,

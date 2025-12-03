@@ -16,7 +16,8 @@ class TokenSyncService {
     final token = await FirebaseMessaging.instance.getToken();
     if (token == null) return;
 
-    final userSnap = await _db.collection(FirestoreCollections.users).doc(uid).get();
+    final userSnap =
+        await _db.collection(FirestoreCollections.users).doc(uid).get();
     final user = userSnap.data() ?? {};
 
     final gender = ((user['gender'] as String?) ?? 'other').toLowerCase();

@@ -26,7 +26,7 @@ class MapStyle {
   static const lyrVipLabels = 'lyr_vip_labels'; // VIP names
 
   static const lyrFriendDots = 'lyr_friend_dots';
-  static const lyrFriendIcons  = 'lyr_friend_icons';
+  static const lyrFriendIcons = 'lyr_friend_icons';
   static const lyrFriendLabels = 'lyr_friend_labels';
   static const lyrFriendClusters = 'lyr_friend_clusters';
   static const lyrFriendClusterCount = 'lyr_friend_cluster_count';
@@ -50,13 +50,13 @@ class MapStyle {
     await _ensureSources(map);
 
     // 2) Venue clusters + icons/labels
-    await _ensureClusterLayers(map);          // cluster circles + counts
+    await _ensureClusterLayers(map); // cluster circles + counts
     await _ensureNonVipCircleBackground(map); // small purple/black dots
-    await _ensureVipCircleBackground(map);    // VIP circle background
-    await _ensureVipIcons(map);               // VIP foreground
-    await _ensureNonVipIcons(map);            // non-VIP foreground
-    await _ensureNonVipLabels(map);           // non-VIP labels
-    await _ensureVipLabels(map);              // VIP labels
+    await _ensureVipCircleBackground(map); // VIP circle background
+    await _ensureVipIcons(map); // VIP foreground
+    await _ensureNonVipIcons(map); // non-VIP foreground
+    await _ensureNonVipLabels(map); // non-VIP labels
+    await _ensureVipLabels(map); // VIP labels
 
     // 3) Friends
     await _ensureFriendLayers(map);
@@ -75,10 +75,10 @@ class MapStyle {
   }
 
   Future<void> setVenueData(
-      MapboxMap map, {
-        required String clusterableFc,
-        required String vipFc,
-      }) async {
+    MapboxMap map, {
+    required String clusterableFc,
+    required String vipFc,
+  }) async {
     final style = map.style;
     if (await style.styleSourceExists(srcVenuesClusterable)) {
       await style.setStyleSourceProperty(
@@ -103,14 +103,14 @@ class MapStyle {
   }
 
   Future<void> applyFilters(
-      MapboxMap map, {
-        required bool showClosed,
-        required Set<String> allowedTypes,
-        required String baseClusterableFc,
-        required String baseVipFc,
-        required Set<String> favoriteVenueIds,
-        bool onlyFavorites = false,
-      }) async {
+    MapboxMap map, {
+    required bool showClosed,
+    required Set<String> allowedTypes,
+    required String baseClusterableFc,
+    required String baseVipFc,
+    required Set<String> favoriteVenueIds,
+    bool onlyFavorites = false,
+  }) async {
     final style = map.style;
 
     bool _typeAllowed(Map<String, dynamic> props) {
@@ -156,8 +156,7 @@ class MapStyle {
         final dynamic rawId =
             props['id'] ?? props['venue_id'] ?? props['venueId'];
         final String? id = rawId == null ? null : rawId.toString();
-        final bool isFavorite =
-            id != null && favoriteVenueIds.contains(id);
+        final bool isFavorite = id != null && favoriteVenueIds.contains(id);
 
         // ----- type filter (special rules in favorites-only mode) -----
         bool passType;
@@ -271,7 +270,7 @@ class MapStyle {
     const int maxSizeCluster = 9999;
 
     // --- clusters (non-VIP venues) ----------------------------------------
-        {
+    {
       // 1) Ensure the layer exists
       if (!await style.styleLayerExists(lyrClusters)) {
         await style.addLayer(
@@ -393,7 +392,10 @@ class MapStyle {
         'filter',
         jsonEncode([
           'all',
-          ['!', ['has', 'point_count']],
+          [
+            '!',
+            ['has', 'point_count']
+          ],
         ]),
       );
 
@@ -417,7 +419,11 @@ class MapStyle {
         'circle-opacity',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
           0.0, // verified → no bg here
           1.0, // non-verified → show black circle
         ]),
@@ -457,7 +463,11 @@ class MapStyle {
         'circle-opacity',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
           0.0,
           1.0,
         ]),
@@ -468,7 +478,11 @@ class MapStyle {
         'circle-stroke-width',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
           0.0,
           3.0,
         ]),
@@ -480,11 +494,19 @@ class MapStyle {
         jsonEncode([
           'case',
           // soon → yellow
-          ['==', ['get', 'isSoon'], true],
+          [
+            '==',
+            ['get', 'isSoon'],
+            true
+          ],
           yellow.toHex(),
 
           // open → green
-          ['==', ['get', 'isOpenNow'], true],
+          [
+            '==',
+            ['get', 'isOpenNow'],
+            true
+          ],
           green.toHex(),
 
           // else → red
@@ -512,24 +534,85 @@ class MapStyle {
         'icon-image',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
           [
-            'case',
-            ['==', ['get', 'isOpenNow'], true],
-            ['concat', ['get', 'logo_image_id'], '_open'],
-            ['concat', ['get', 'logo_image_id'], '_closed'],
+            '==',
+            ['get', 'isVerified'],
+            true
           ],
           [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar',
-            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar',
-            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar',
-            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar',
-            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar',
-            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar',
-            ['==', ['get', 'venueType'], 'pub'], 'pub',
-            ['==', ['get', 'venueType'], 'bar'], 'bar',
-            ['==', ['get', 'venueType'], 'club'], 'club',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_open'
+            ],
+            [
+              'concat',
+              ['get', 'logo_image_id'],
+              '_closed'
+            ],
+          ],
+          [
+            'case',
+            [
+              '==',
+              ['get', 'venueType'],
+              'wine_bar'
+            ],
+            'wine_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'cocktail_bar'
+            ],
+            'cocktail_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'beer_bar'
+            ],
+            'beer_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'karaoke_bar'
+            ],
+            'karaoke_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'sports_bar'
+            ],
+            'sports_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'gay_bar'
+            ],
+            'gay_bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'pub'
+            ],
+            'pub',
+            [
+              '==',
+              ['get', 'venueType'],
+              'bar'
+            ],
+            'bar',
+            [
+              '==',
+              ['get', 'venueType'],
+              'club'
+            ],
+            'club',
             'unknown',
           ],
         ]),
@@ -538,12 +621,9 @@ class MapStyle {
       await style.setStyleLayerProperty(lyrVip, 'icon-size', 0.9);
 
       // VIPs should participate in collisions so they don't stack
-      await style.setStyleLayerProperty(
-          lyrVip, 'icon-allow-overlap', true);
-      await style.setStyleLayerProperty(
-          lyrVip, 'icon-ignore-placement', false);
-      await style.setStyleLayerProperty(
-          lyrVip, 'icon-halo-width', 0.0);
+      await style.setStyleLayerProperty(lyrVip, 'icon-allow-overlap', true);
+      await style.setStyleLayerProperty(lyrVip, 'icon-ignore-placement', false);
+      await style.setStyleLayerProperty(lyrVip, 'icon-halo-width', 0.0);
 
       // Reserve some screen space around each VIP marker
       await style.setStyleLayerProperty(
@@ -561,8 +641,7 @@ class MapStyle {
       );
 
       // Place VIPs first so they win collisions vs regular venues
-      await style.setStyleLayerProperty(
-          lyrVip, 'symbol-sort-key', 0.0);
+      await style.setStyleLayerProperty(lyrVip, 'symbol-sort-key', 0.0);
     }
   }
 
@@ -580,8 +659,15 @@ class MapStyle {
         'filter',
         jsonEncode([
           'all',
-          ['!', ['has', 'point_count']],
-          ['!=', ['get', 'isVerified'], true], // ⬅️ exclude verified here
+          [
+            '!',
+            ['has', 'point_count']
+          ],
+          [
+            '!=',
+            ['get', 'isVerified'],
+            true
+          ], // ⬅️ exclude verified here
         ]),
       );
 
@@ -591,33 +677,127 @@ class MapStyle {
         jsonEncode([
           'case',
           // OPEN → pick *_open variants
-          ['==', ['get', 'isOpenNow'], true],
+          [
+            '==',
+            ['get', 'isOpenNow'],
+            true
+          ],
           [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar_open',
-            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar_open',
-            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar_open',
-            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar_open',
-            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar_open',
-            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar_open',
-            ['==', ['get', 'venueType'], 'pub'], 'pub_open',
-            ['==', ['get', 'venueType'], 'bar'], 'bar_open',
-            ['==', ['get', 'venueType'], 'club'], 'club_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'wine_bar'
+            ],
+            'wine_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'cocktail_bar'
+            ],
+            'cocktail_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'beer_bar'
+            ],
+            'beer_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'karaoke_bar'
+            ],
+            'karaoke_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'sports_bar'
+            ],
+            'sports_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'gay_bar'
+            ],
+            'gay_bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'pub'
+            ],
+            'pub_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'bar'
+            ],
+            'bar_open',
+            [
+              '==',
+              ['get', 'venueType'],
+              'club'
+            ],
+            'club_open',
             'unknown_open',
           ],
 
           // CLOSED → pick *_closed variants
           [
             'case',
-            ['==', ['get', 'venueType'], 'wine_bar'], 'wine_bar_closed',
-            ['==', ['get', 'venueType'], 'cocktail_bar'], 'cocktail_bar_closed',
-            ['==', ['get', 'venueType'], 'beer_bar'], 'beer_bar_closed',
-            ['==', ['get', 'venueType'], 'karaoke_bar'], 'karaoke_bar_closed',
-            ['==', ['get', 'venueType'], 'sports_bar'], 'sports_bar_closed',
-            ['==', ['get', 'venueType'], 'gay_bar'], 'gay_bar_closed',
-            ['==', ['get', 'venueType'], 'pub'], 'pub_closed',
-            ['==', ['get', 'venueType'], 'bar'], 'bar_closed',
-            ['==', ['get', 'venueType'], 'club'], 'club_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'wine_bar'
+            ],
+            'wine_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'cocktail_bar'
+            ],
+            'cocktail_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'beer_bar'
+            ],
+            'beer_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'karaoke_bar'
+            ],
+            'karaoke_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'sports_bar'
+            ],
+            'sports_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'gay_bar'
+            ],
+            'gay_bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'pub'
+            ],
+            'pub_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'bar'
+            ],
+            'bar_closed',
+            [
+              '==',
+              ['get', 'venueType'],
+              'club'
+            ],
+            'club_closed',
             'unknown_closed',
           ],
         ]),
@@ -638,7 +818,11 @@ class MapStyle {
         'icon-opacity',
         jsonEncode([
           'case',
-          ['==', ['get', 'isVerified'], true],
+          [
+            '==',
+            ['get', 'isVerified'],
+            true
+          ],
           0.0, // verified → don't draw here
           1.0, // non-verified → visible
         ]),
@@ -652,12 +836,26 @@ class MapStyle {
         jsonEncode([
           'concat',
           // base id: venueType or "unknown"
-          ['coalesce', ['get', 'venueType'], 'unknown'],
+          [
+            'coalesce',
+            ['get', 'venueType'],
+            'unknown'
+          ],
           // suffix: _isSoon / _open / _closed
           [
             'case',
-            ['==', ['get', 'isSoon'], true], '_isSoon',
-            ['==', ['get', 'isOpenNow'], true], '_open',
+            [
+              '==',
+              ['get', 'isSoon'],
+              true
+            ],
+            '_isSoon',
+            [
+              '==',
+              ['get', 'isOpenNow'],
+              true
+            ],
+            '_open',
             '_closed',
           ],
         ]),
@@ -668,8 +866,7 @@ class MapStyle {
           lyrUnclustered, 'icon-allow-overlap', true);
       await style.setStyleLayerProperty(
           lyrUnclustered, 'icon-ignore-placement', false);
-      await style.setStyleLayerProperty(
-          lyrUnclustered, 'icon-halo-width', 0.0);
+      await style.setStyleLayerProperty(lyrUnclustered, 'icon-halo-width', 0.0);
 
       // keep regular venues below VIP markers
       await style.setStyleLayerProperty(
@@ -730,7 +927,11 @@ class MapStyle {
         'text-color',
         jsonEncode([
           'case',
-          ['==', ['get', 'isFavorite'], true],
+          [
+            '==',
+            ['get', 'isFavorite'],
+            true
+          ],
           owlPurple.toHex(), // favorite → owl purple
           white.toHex(), // otherwise → white
         ]),
@@ -738,10 +939,8 @@ class MapStyle {
 
       await style.setStyleLayerProperty(
           lyrLabels, 'text-halo-color', black.toHex());
-      await style.setStyleLayerProperty(
-          lyrLabels, 'text-halo-width', 1.25);
-      await style.setStyleLayerProperty(
-          lyrLabels, 'text-halo-blur', 0.25);
+      await style.setStyleLayerProperty(lyrLabels, 'text-halo-width', 1.25);
+      await style.setStyleLayerProperty(lyrLabels, 'text-halo-blur', 0.25);
 
       await style.setStyleLayerProperty(
         lyrLabels,
@@ -766,14 +965,11 @@ class MapStyle {
         ]),
       );
 
-      await style.setStyleLayerProperty(
-          lyrLabels, 'text-padding', 1.0);
-      await style.setStyleLayerProperty(
-          lyrLabels, 'text-allow-overlap', false);
+      await style.setStyleLayerProperty(lyrLabels, 'text-padding', 1.0);
+      await style.setStyleLayerProperty(lyrLabels, 'text-allow-overlap', false);
       await style.setStyleLayerProperty(
           lyrLabels, 'text-ignore-placement', false);
-      await style.setStyleLayerProperty(
-          lyrLabels, 'text-keep-upright', true);
+      await style.setStyleLayerProperty(lyrLabels, 'text-keep-upright', true);
 
       await style.setStyleLayerProperty(
         lyrLabels,
@@ -789,8 +985,7 @@ class MapStyle {
         ]),
       );
 
-      await style.setStyleLayerProperty(
-          lyrLabels, 'symbol-sort-key', 1100.0);
+      await style.setStyleLayerProperty(lyrLabels, 'symbol-sort-key', 1100.0);
     }
   }
 
@@ -828,14 +1023,17 @@ class MapStyle {
         ]),
       );
 
-      await style.setStyleLayerProperty(
-          lyrVipLabels, 'text-size', 14.0);
+      await style.setStyleLayerProperty(lyrVipLabels, 'text-size', 14.0);
       await style.setStyleLayerProperty(
         lyrVipLabels,
         'text-color',
         jsonEncode([
           'case',
-          ['==', ['get', 'isFavorite'], true],
+          [
+            '==',
+            ['get', 'isFavorite'],
+            true
+          ],
           owlPurple.toHex(),
           white.toHex(),
         ]),
@@ -843,10 +1041,8 @@ class MapStyle {
 
       await style.setStyleLayerProperty(
           lyrVipLabels, 'text-halo-color', black.toHex());
-      await style.setStyleLayerProperty(
-          lyrVipLabels, 'text-halo-width', 1.25);
-      await style.setStyleLayerProperty(
-          lyrVipLabels, 'text-halo-blur', 0.25);
+      await style.setStyleLayerProperty(lyrVipLabels, 'text-halo-width', 1.25);
+      await style.setStyleLayerProperty(lyrVipLabels, 'text-halo-blur', 0.25);
 
       await style.setStyleLayerProperty(
         lyrVipLabels,
@@ -915,7 +1111,6 @@ class MapStyle {
   // PRIVATE HELPERS – FRIENDS
   // ======================================================================
 
-
   //TODO friends cluster together like venues. When clicked small popup to see names and interactions.
   //TODO Clusters should indicate what friends are doing - border color of majority? Bordercolor changeing as circle diagram?
   Future<void> _ensureFriendLayers(MapboxMap map) async {
@@ -949,8 +1144,8 @@ class MapStyle {
       jsonEncode([
         'step',
         ['get', 'point_count'],
-        28,   // 1–4 friends
-        5,  36, // 5–9
+        28, // 1–4 friends
+        5, 36, // 5–9
         10, 44, // 10–19
         20, 52, // 20+
       ]),
@@ -996,7 +1191,7 @@ class MapStyle {
     await style.setStyleLayerProperty(
       lyrFriendClusterCount,
       'text-color',
-      white.toHex(),  // white numbers on blue
+      white.toHex(), // white numbers on blue
     );
 
     await style.setStyleLayerProperty(
@@ -1034,7 +1229,10 @@ class MapStyle {
       'filter',
       jsonEncode([
         'all',
-        ['!', ['has', 'point_count']],
+        [
+          '!',
+          ['has', 'point_count']
+        ],
       ]),
     );
 
@@ -1072,7 +1270,10 @@ class MapStyle {
       'filter',
       jsonEncode([
         'all',
-        ['!', ['has', 'point_count']],
+        [
+          '!',
+          ['has', 'point_count']
+        ],
       ]),
     );
 
@@ -1122,13 +1323,12 @@ class MapStyle {
     );
   }
 
-
-
   // ======================================================================
   // PRIVATE HELPERS – PITCH ALIGNMENT
   // ======================================================================
 
-  Future<void> _ensureDotPitchAlignment(MapboxMap map) async { // TODO what does this do?
+  Future<void> _ensureDotPitchAlignment(MapboxMap map) async {
+    // TODO what does this do?
     final style = map.style;
 
     // pitch alignment for dots

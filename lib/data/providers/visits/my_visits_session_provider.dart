@@ -11,8 +11,7 @@ final myVisitSessionsProvider = StreamProvider<List<VisitSession>>((ref) {
   final uid = auth.currentUser?.uid;
   if (uid == null) return const Stream.empty();
 
-  final col =
-  db.collection(VisitDocumentPaths.collectionForUser(uid));
+  final col = db.collection(VisitDocumentPaths.collectionForUser(uid));
 
   return col
       .orderBy(VisitDocumentPaths.enteredAt, descending: true)

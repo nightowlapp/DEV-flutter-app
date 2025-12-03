@@ -3,7 +3,7 @@ class ImagePaths {
   static const String flags = 'assets/flags';
 
   static const String logo = logoLeftBackground;
-  
+
   static const String logoLeft = '$root/logo_left.png';
   static const String logoUp = '$root/logo_up.png';
   static const String logoRight = '$root/logo_right.png';
@@ -23,6 +23,6 @@ class ImagePaths {
   static const String dkFlag = '$flags/dk.png';
 }
 
-class WebsitePaths{
+class WebsitePaths {
   static const String website = 'https://nightowl.now/';
 }

@@ -2,7 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:nightowlcode/data/firestore_paths/firestore_paths.dart';
 
 final DatabaseReference _liveCountsRoot =
-FirebaseDatabase.instance.ref(LiveCountDocumentPaths.collection);
+    FirebaseDatabase.instance.ref(LiveCountDocumentPaths.collection);
 
 // Stream all counts (Map<venueId, count>)
 Stream<Map<String, int>> liveAllVenueCounts() {

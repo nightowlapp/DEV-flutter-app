@@ -21,7 +21,7 @@ class AnimatedVenuesGrid extends StatefulWidget {
     this.pageSize = 12,
     this.onEndReached,
     this.datasetKey, // optional: parent can force-reset paging by changing this
-    this.onRefresh,  // 👈 NEW
+    this.onRefresh, // 👈 NEW
   });
 
   final List<Venue> venues; // already ranked
@@ -219,8 +219,8 @@ class _AnimatedVenueCell extends StatelessWidget {
       transitionBuilder: (child, anim) {
         final fade = CurvedAnimation(parent: anim, curve: Curves.easeOut);
         final slide =
-        Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero)
-            .animate(fade);
+            Tween<Offset>(begin: const Offset(0, .08), end: Offset.zero)
+                .animate(fade);
         return FadeTransition(
             opacity: fade,
             child: SlideTransition(position: slide, child: child));
@@ -228,18 +228,18 @@ class _AnimatedVenueCell extends StatelessWidget {
       child: venue == null
           ? const SizedBox(key: ValueKey('__empty__'), height: 0)
           : VenueCard(
-        key: ValueKey(switchKey),
-        venue: venue!,
-        userLocation: userLoc,
-        media: mediaById[venue!.id],
-        onTap: () {
-          context.pushVenue(
-            venue!,
-            media: mediaById[venue!.id],
-            userLoc: userLoc,
-          );
-        },
-      ),
+              key: ValueKey(switchKey),
+              venue: venue!,
+              userLocation: userLoc,
+              media: mediaById[venue!.id],
+              onTap: () {
+                context.pushVenue(
+                  venue!,
+                  media: mediaById[venue!.id],
+                  userLoc: userLoc,
+                );
+              },
+            ),
     );
   }
 }

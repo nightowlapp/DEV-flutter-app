@@ -15,7 +15,7 @@ class LikedVenue {
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
-    FirestoreFields.createdAt: createdAt.toIso8601String(),
+        FirestoreFields.createdAt: createdAt.toIso8601String(),
       };
 
   static LikedVenue fromJson(Map<String, dynamic> json, String id) {

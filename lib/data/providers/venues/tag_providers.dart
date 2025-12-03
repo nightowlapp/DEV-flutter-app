@@ -35,15 +35,15 @@ int _typeRank(TagType t) {
 
 /// Live tags for a venue (reactive to website edits)
 final venueTagsStreamProvider =
-StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
+    StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
   return ref.watch(tagRepositoryProvider).watchByIds(tagIds);
 });
 final tagRepositoryProvider = Provider<TagRepository>(
-      (ref) => TagRepository(db: ref.watch(firestoreProvider)),
+  (ref) => TagRepository(db: ref.watch(firestoreProvider)),
 );
 
 final venueSortedTagsProvider =
-StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
+    StreamProvider.family<List<Tag>, List<String>>((ref, tagIds) {
   return ref.watch(venueTagsStreamProvider(tagIds).stream).map((tags) {
     final list = List<Tag>.from(tags);
     list.sort((a, b) {

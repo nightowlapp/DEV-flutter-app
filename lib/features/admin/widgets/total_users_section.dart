@@ -15,7 +15,9 @@ class TotalUsersSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 0.0),
       child: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection(FirestoreCollections.users).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const SizedBox();
 
@@ -23,23 +25,29 @@ class TotalUsersSection extends StatelessWidget {
           final allUsers = docs.length;
           final femaleCount = docs
               .where((doc) =>
-          (doc.data() as Map<String, dynamic>)[UserDocumentPaths.gender] == FirestoreFields.female)
+                  (doc.data()
+                      as Map<String, dynamic>)[UserDocumentPaths.gender] ==
+                  FirestoreFields.female)
               .length;
           final maleCount = docs
               .where((doc) =>
-          (doc.data() as Map<String, dynamic>)[UserDocumentPaths.gender] == FirestoreFields.male)
+                  (doc.data()
+                      as Map<String, dynamic>)[UserDocumentPaths.gender] ==
+                  FirestoreFields.male)
               .length;
           final isAndroidUser = docs
               .where((doc) =>
-          (doc.data() as Map<String, dynamic>)[UserDocumentPaths.platformType]
-              ?.toLowerCase() ==
-              PlatformType.android.name)
+                  (doc.data() as Map<String, dynamic>)[
+                          UserDocumentPaths.platformType]
+                      ?.toLowerCase() ==
+                  PlatformType.android.name)
               .length;
           final isIOSUser = docs
               .where((doc) =>
-          (doc.data() as Map<String, dynamic>)[UserDocumentPaths.platformType]
-              ?.toLowerCase() ==
-              PlatformType.ios.name)
+                  (doc.data() as Map<String, dynamic>)[
+                          UserDocumentPaths.platformType]
+                      ?.toLowerCase() ==
+                  PlatformType.ios.name)
               .length;
 
           return LayoutBuilder(
@@ -55,8 +63,8 @@ class TotalUsersSection extends StatelessWidget {
                       Text('Total Users',
                           style: Styles.basicText.copyWith(color: adminColor)),
                       Text('$allUsers',
-                          style: Styles.basicText.copyWith(
-                              decoration: TextDecoration.underline)),
+                          style: Styles.basicText
+                              .copyWith(decoration: TextDecoration.underline)),
                     ],
                   ),
                   const SizedBox(height: 8),

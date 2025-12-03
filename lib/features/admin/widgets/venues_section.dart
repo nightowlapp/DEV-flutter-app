@@ -29,7 +29,7 @@ class VenuesSection extends ConsumerWidget {
 
       // Countries (normalize)
       final code =
-      (v.countryCode.isEmpty ? 'unknown' : v.countryCode.toUpperCase());
+          (v.countryCode.isEmpty ? 'unknown' : v.countryCode.toUpperCase());
       countryCounts[code] = (countryCounts[code] ?? 0) + 1;
     }
 
@@ -236,7 +236,6 @@ class _CountryStatChip extends StatelessWidget {
               ),
             ),
           ),
-
           Text(
             '$count',
             style: Styles.basicText.copyWith(

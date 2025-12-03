@@ -126,10 +126,9 @@ class _MainShellState extends ConsumerState<MainShell> {
     final roles = ref.watch(userRolesProvider);
     final tabs = _visibleTabs(roles);
 
-    final MainScreenName activeGlobal =
-    kBranchOrder[widget.nav.currentIndex];
+    final MainScreenName activeGlobal = kBranchOrder[widget.nav.currentIndex];
     final currentVisibleIndex =
-    tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
+        tabs.indexOf(activeGlobal).clamp(0, tabs.length - 1);
 
     final pendingCount = ref.watch(pendingRequestsCountProvider);
 

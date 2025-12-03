@@ -23,7 +23,8 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
     final startTimestamp = Timestamp.fromDate(start);
     return FirebaseFirestore.instance
         .collection(FirestoreCollections.users)
-        .where(FirestoreFields.createdAt, isGreaterThanOrEqualTo: startTimestamp)
+        .where(FirestoreFields.createdAt,
+            isGreaterThanOrEqualTo: startTimestamp)
         .snapshots();
   }
 
@@ -52,7 +53,7 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
                 },
                 style: TextButton.styleFrom(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
                   backgroundColor: adminColor,
                 ),
                 child: Text('Load More', style: Styles.basicText),
@@ -76,7 +77,7 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
               final today = DateTime.now();
               final displayedDates = List.generate(
                 _daysBackUserGrowth + 1,
-                    (i) => DateFormat('yyyy-MM-dd')
+                (i) => DateFormat('yyyy-MM-dd')
                     .format(today.subtract(Duration(days: i))),
               );
 
@@ -89,7 +90,7 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
 
               // Calculate cumulative totals for all dates
               final allDatesAsc =
-              displayedDates.reversed.toList(); // Ascending order
+                  displayedDates.reversed.toList(); // Ascending order
               int cumulative = 0;
               final Map<String, int> cumulativeTotals = {};
               for (final date in allDatesAsc) {
@@ -113,21 +114,23 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
                             Expanded(
                                 flex: 1,
                                 child: Center(
-                                    child: Text('Total', style: Styles.basicText))),
-                            Expanded(
-                                flex: 1,
-                                child: Center(
-                                    child: Text('New', style: Styles.basicText))),
+                                    child: Text('Total',
+                                        style: Styles.basicText))),
                             Expanded(
                                 flex: 1,
                                 child: Center(
                                     child:
-                                    Text('Increase', style: Styles.basicText))),
+                                        Text('New', style: Styles.basicText))),
+                            Expanded(
+                                flex: 1,
+                                child: Center(
+                                    child: Text('Increase',
+                                        style: Styles.basicText))),
                           ],
                         ),
                         ...displayedDates.map((date) {
                           final parsedDate =
-                          DateFormat('yyyy-MM-dd').parse(date);
+                              DateFormat('yyyy-MM-dd').parse(date);
                           final total = cumulativeTotals[date]!;
                           final newUsers = newUsersByDate[date] ?? 0;
                           final prevDateKey = DateFormat('yyyy-MM-dd').format(
@@ -185,9 +188,7 @@ class _UserGrowthSectionState extends State<UserGrowthSection> {
                                       '${incPct.toStringAsFixed(1)}%',
                                       style: Styles.basicText.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: incPct > 0
-                                            ? owlPurple
-                                            : red,
+                                        color: incPct > 0 ? owlPurple : red,
                                       ),
                                     ),
                                   ),

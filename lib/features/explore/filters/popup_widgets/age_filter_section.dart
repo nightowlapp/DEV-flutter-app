@@ -37,9 +37,7 @@ class AgeRestrictionFilterSection extends ConsumerWidget {
 
     // Current effective age value (filter overrides defaults)
     final currentAgeValue =
-        filters.minAgeRestriction ??
-            defaults.minAgeRestriction ??
-            fallbackAge;
+        filters.minAgeRestriction ?? defaults.minAgeRestriction ?? fallbackAge;
 
     return CardSection(
       title: 'Age Restriction',
@@ -55,17 +53,14 @@ class AgeRestrictionFilterSection extends ConsumerWidget {
         children: [
           Builder(
             builder: (context) {
-              final ages =
-              ageOptions.isNotEmpty ? ageOptions : <int>[18];
+              final ages = ageOptions.isNotEmpty ? ageOptions : <int>[18];
 
               int selectedIndex = 0;
               if (ages.length > 1) {
                 int bestIdx = 0;
-                int bestDiff =
-                (ages[0] - currentAgeValue).abs();
+                int bestDiff = (ages[0] - currentAgeValue).abs();
                 for (var i = 1; i < ages.length; i++) {
-                  final diff =
-                  (ages[i] - currentAgeValue).abs();
+                  final diff = (ages[i] - currentAgeValue).abs();
                   if (diff < bestDiff) {
                     bestDiff = diff;
                     bestIdx = i;
@@ -88,8 +83,7 @@ class AgeRestrictionFilterSection extends ConsumerWidget {
                   divisions: maxIndex > 0 ? maxIndex : null,
                   value: selectedIndex.toDouble(),
                   onChanged: (v) {
-                    final idx =
-                    v.round().clamp(0, maxIndex);
+                    final idx = v.round().clamp(0, maxIndex);
                     final age = ages[idx];
                     ctrl.setMinAgeRestriction(age);
                   },
@@ -178,19 +172,14 @@ class _AgeEmojiScale extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: isActive
-                    ? owlPurple.withOpacity(.28)
-                    : transparent,
+                color: isActive ? owlPurple.withOpacity(.28) : transparent,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 emoji,
                 style: TextStyle(
-                  fontSize:
-                  isActive ? iconSizeMedium : iconSizeDefault,
-                  color: isActive
-                      ? owlPurple
-                      : white.withOpacity(.85),
+                  fontSize: isActive ? iconSizeMedium : iconSizeDefault,
+                  color: isActive ? owlPurple : white.withOpacity(.85),
                 ),
               ),
             ),

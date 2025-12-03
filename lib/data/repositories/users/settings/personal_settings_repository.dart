@@ -72,7 +72,6 @@ class PersonalSettingsRepository {
   }
 }
 
-final personalSettingsRepositoryProvider =
-Provider<PersonalSettingsRepository>(
-      (ref) => PersonalSettingsRepository(FirebaseFirestore.instance),
+final personalSettingsRepositoryProvider = Provider<PersonalSettingsRepository>(
+  (ref) => PersonalSettingsRepository(FirebaseFirestore.instance),
 );

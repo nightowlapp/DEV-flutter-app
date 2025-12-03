@@ -80,4 +80,3 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
   }
 }
-

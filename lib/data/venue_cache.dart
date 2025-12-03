@@ -12,9 +12,9 @@ class VenueCache {
 
   VenueCache._(this._all, this._byId);
 
-  factory VenueCache.fromList(List<Venue> list) =>
-      VenueCache._(List.unmodifiable(list),
-          Map<String, Venue>.unmodifiable({for (final v in list) v.id: v}));
+  factory VenueCache.fromList(List<Venue> list) => VenueCache._(
+      List.unmodifiable(list),
+      Map<String, Venue>.unmodifiable({for (final v in list) v.id: v}));
 
   // ---- lookups ----
   List<Venue> get all => _all;
@@ -28,15 +28,20 @@ class VenueCache {
     double best = maxMeters;
     for (final v in _all) {
       final d = Distance.metersLatLng(p, v.entry);
-      if (d < best) { best = d; bestId = v.id; }
+      if (d < best) {
+        best = d;
+        bestId = v.id;
+      }
     }
     return bestId;
   }
 
   /// Simple viewport filtering (optional helper)
   Iterable<Venue> withinBounds({
-    required double minLat, required double minLng,
-    required double maxLat, required double maxLng,
+    required double minLat,
+    required double minLng,
+    required double maxLat,
+    required double maxLng,
   }) sync* {
     for (final v in _all) {
       final lat = v.entry.lat, lng = v.entry.lng;

@@ -129,35 +129,38 @@ enum Gender { male, female, other }
 
 extension GenderX on Gender {
   String get code => switch (this) {
-    Gender.female => 'f',
-    Gender.male => 'm',
-    Gender.other => 'o',
-  };
+        Gender.female => 'f',
+        Gender.male => 'm',
+        Gender.other => 'o',
+      };
 
   String get label => switch (this) {
-    Gender.female => 'Female',
-    Gender.male => 'Male',
-    Gender.other => 'Other',
-  };
+        Gender.female => 'Female',
+        Gender.male => 'Male',
+        Gender.other => 'Other',
+      };
 
   IconData get icon => switch (this) {
-    Gender.female => femaleIcon,
-    Gender.male => maleIcon,
-    Gender.other => otherGenderIcon,
-  };
+        Gender.female => femaleIcon,
+        Gender.male => maleIcon,
+        Gender.other => otherGenderIcon,
+      };
 }
 
 extension GenderFromCodeX on String? {
   Gender get asGender {
     switch ((this ?? '').toLowerCase()) {
-      case 'm': return Gender.male;
-      case 'f': return Gender.female;
-      case 'o': return Gender.other;
-      default:  return Gender.other;
+      case 'm':
+        return Gender.male;
+      case 'f':
+        return Gender.female;
+      case 'o':
+        return Gender.other;
+      default:
+        return Gender.other;
     }
   }
 }
-
 
 //TODO dispaly partystatus with a "wheel" and turn to select the mood. Maybe find more?
 enum PartyStatusTypes {

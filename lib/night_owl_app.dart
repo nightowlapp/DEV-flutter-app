@@ -25,12 +25,10 @@ class NightOwlApp extends StatelessWidget {
       title: config.appTitle,
       theme: AppTheme().defaultAppTheme,
       routerConfig: createRouter(
-        initialLocation: initial == StartDest.explore
-            ? '/explore'
-            : '/login-or-create',
+        initialLocation:
+            initial == StartDest.explore ? '/explore' : '/login-or-create',
       ),
       scaffoldMessengerKey: scaffoldMessengerKey,
     );
   }
 }
-

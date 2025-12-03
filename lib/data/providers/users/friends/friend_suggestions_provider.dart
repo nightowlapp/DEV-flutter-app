@@ -12,7 +12,7 @@ import '../../../firestore_paths/firestore_paths.dart';
 import 'friend_request_provider.dart';
 import 'friends_provider.dart';
 import 'sorted_friends_provider.dart' show authUserIdProvider;
-import '../../../../shared/party_priority.dart';       // partyPriority()
+import '../../../../shared/party_priority.dart'; // partyPriority()
 
 // ----------------------------------------------------------------------------
 // Search text from the "Find Friends" TextField
@@ -42,11 +42,11 @@ class _RankKey implements Comparable<_RankKey> {
     required this.missingFields,
   });
 
-  final int searchRank;        // lower = better match to query
-  final double distanceM;      // closer first
-  final int noImageFirst;      // 0 if has image, 1 otherwise
+  final int searchRank; // lower = better match to query
+  final double distanceM; // closer first
+  final int noImageFirst; // 0 if has image, 1 otherwise
   final int partyPriorityRank; // lower = better (out tonight > ...)
-  final int missingFields;     // fewer missing profile fields is better
+  final int missingFields; // fewer missing profile fields is better
 
   @override
   int compareTo(_RankKey other) {
@@ -79,8 +79,7 @@ double _haversine(GeoPoint a, GeoPoint b) {
   final la1 = _toRad(a.latitude);
   final la2 = _toRad(b.latitude);
   final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(la1) * math.cos(la2) *
-          math.sin(dLon / 2) * math.sin(dLon / 2);
+      math.cos(la1) * math.cos(la2) * math.sin(dLon / 2) * math.sin(dLon / 2);
   return 2 * r * math.atan2(math.sqrt(h), math.sqrt(1 - h));
 }
 
@@ -90,10 +89,8 @@ double _distanceForUser(Map<String, dynamic> data, GeoPoint? myOrigin) {
   if (data['location'] is GeoPoint) {
     gp = data['location'] as GeoPoint;
   } else {
-    final lat =
-    (data[LocationDocumentPaths.lastKnownLat] as num?)?.toDouble();
-    final lon =
-    (data[LocationDocumentPaths.lastKnownLon] as num?)?.toDouble();
+    final lat = (data[LocationDocumentPaths.lastKnownLat] as num?)?.toDouble();
+    final lon = (data[LocationDocumentPaths.lastKnownLon] as num?)?.toDouble();
     if (lat != null && lon != null) {
       gp = GeoPoint(lat, lon);
     }
@@ -131,9 +128,8 @@ int _missingProfileFields(Map<String, dynamic> data) {
 }
 
 bool _hasImage(Map<String, dynamic> data) {
-  return ((data[UserDocumentPaths.profilePictureUrl] as String?)
-      ?.isNotEmpty ??
-      false) ||
+  return ((data[UserDocumentPaths.profilePictureUrl] as String?)?.isNotEmpty ??
+          false) ||
       ((data['profilePictureUrl'] as String?)?.isNotEmpty ?? false);
 }
 
@@ -155,7 +151,7 @@ int _searchRank(String q, String usernameLc, String fullNameLc) {
 const _maxDocsPerQuery = 60; // cap Firestore reads per search
 
 final suggestedUsersProvider =
-StreamProvider.autoDispose<List<model.User>>((ref) {
+    StreamProvider.autoDispose<List<model.User>>((ref) {
   final me = ref.watch(authUserIdProvider);
   if (me == null) return const Stream.empty();
 
@@ -163,27 +159,21 @@ StreamProvider.autoDispose<List<model.User>>((ref) {
   final db = FirebaseFirestore.instance;
 
   final friends = ref.watch(friendUidsProvider).maybeWhen(
-    data: (ids) => ids.toSet(),
-    orElse: () => <String>{},
-  );
+        data: (ids) => ids.toSet(),
+        orElse: () => <String>{},
+      );
 
-  final incomingPending =
-  ref.watch(incomingFriendRequestsProvider).maybeWhen(
-    data: (reqs) => reqs
-        .where((r) => r.statusIsPending)
-        .map((r) => r.fromUid)
-        .toSet(),
-    orElse: () => <String>{},
-  );
+  final incomingPending = ref.watch(incomingFriendRequestsProvider).maybeWhen(
+        data: (reqs) =>
+            reqs.where((r) => r.statusIsPending).map((r) => r.fromUid).toSet(),
+        orElse: () => <String>{},
+      );
 
-  final outgoingPending =
-  ref.watch(outgoingFriendRequestsProvider).maybeWhen(
-    data: (reqs) => reqs
-        .where((r) => r.statusIsPending)
-        .map((r) => r.toUid)
-        .toSet(),
-    orElse: () => <String>{},
-  );
+  final outgoingPending = ref.watch(outgoingFriendRequestsProvider).maybeWhen(
+        data: (reqs) =>
+            reqs.where((r) => r.statusIsPending).map((r) => r.toUid).toSet(),
+        orElse: () => <String>{},
+      );
 
   final myOrigin = ref.watch(myLocationProvider);
 
@@ -191,7 +181,7 @@ StreamProvider.autoDispose<List<model.User>>((ref) {
   final s = q.toLowerCase();
 
   Query<Map<String, dynamic>> base =
-  db.collection(UserDocumentPaths.collection);
+      db.collection(UserDocumentPaths.collection);
 
   // Optional length gate to save reads — uncomment if you want it:
   // if (s.length < 2 && q.isNotEmpty) {
@@ -212,9 +202,7 @@ StreamProvider.autoDispose<List<model.User>>((ref) {
 
     base = base
         .orderBy(field)
-        .startAt([s])
-        .endAt(['$s\uf8ff'])
-        .limit(_maxDocsPerQuery);
+        .startAt([s]).endAt(['$s\uf8ff']).limit(_maxDocsPerQuery);
   }
 
   return base.snapshots().map((snap) {

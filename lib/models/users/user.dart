@@ -1,6 +1,6 @@
 // models/users/user.dart
 import 'package:flutter/foundation.dart'
-  show immutable, defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show immutable, defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/models/users/phone_number.dart';
 
@@ -24,7 +24,7 @@ PlatformType _detectPlatformType() {
     case TargetPlatform.iOS:
       return PlatformType.ios;
     default:
-    return PlatformType.android;
+      return PlatformType.android;
   }
 }
 
@@ -53,7 +53,7 @@ class User {
   final String? homeCountryCode; // iso2 lowercase
   final String? homeTown; // lowercase
 
-  final bool homeLocationLocked;   // <— NEW
+  final bool homeLocationLocked; // <— NEW
 
   // ---- Defaults / flags ----
   final String? appVersion;
@@ -63,7 +63,6 @@ class User {
   final double xp;
   final PartyStatusTypes currentPartyStatus;
   // final Set<Emblem> earnedEmblems; //TODO maybe just int?
-
 
   final Set<VenueType> preferredVenueTypes;
   final double maxDistanceKm;
@@ -89,7 +88,7 @@ class User {
     this.profilePictureUrl,
     this.homeCountryCode,
     this.homeTown,
-    this.homeLocationLocked = false,  // <— default
+    this.homeLocationLocked = false, // <— default
     this.appVersion,
 
     // Defaults / flags
@@ -112,11 +111,11 @@ class User {
     // Auditing
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : preferredVenueTypes = preferredVenueTypes ?? allVenueTypes(),
-    roles = roles ?? const {UserRole.user},
-    platformType = platformType ?? _detectPlatformType(),
-    createdAt = createdAt ?? DateTime.now(),
-    updatedAt = updatedAt ?? DateTime.now();
+  })  : preferredVenueTypes = preferredVenueTypes ?? allVenueTypes(),
+        roles = roles ?? const {UserRole.user},
+        platformType = platformType ?? _detectPlatformType(),
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   String get displayFullName {
     final parts = <String>[
@@ -131,7 +130,7 @@ class User {
     final now = DateTime.now();
     int a = now.year - birthDate.year;
     final hadBirthday = (now.month > birthDate.month) ||
-      (now.month == birthDate.month && now.day >= birthDate.day);
+        (now.month == birthDate.month && now.day >= birthDate.day);
     return hadBirthday ? a : a - 1;
   }
 
@@ -215,8 +214,7 @@ class User {
       'is_verified': isVerified,
       'level': level,
       'xp': xp,
-      'preferred_venue_types':
-      preferredVenueTypes.map(_enumToString).toList(),
+      'preferred_venue_types': preferredVenueTypes.map(_enumToString).toList(),
       'max_distance_km': maxDistanceKm,
       'roles': roles.map(_enumToString).toList(),
       'subscription_type': _enumToString(subscriptionType),
@@ -243,11 +241,9 @@ class User {
     return map;
   }
 
-
-
   factory User.fromJson(Map<String, dynamic> json) {
     dynamic _v(String k1, [String? k2]) =>
-    json[k1] ?? (k2 != null ? json[k2] : null);
+        json[k1] ?? (k2 != null ? json[k2] : null);
     DateTime _asDate(dynamic v, {DateTime? fallback}) {
       if (v == null) return fallback ?? DateTime.now();
       if (v is DateTime) return v;
@@ -262,9 +258,9 @@ class User {
     String? _s(String k1, [String? k2]) => _v(k1, k2) as String?;
     List<dynamic>? _l(String k1, [String? k2]) => _v(k1, k2) as List<dynamic>?;
 
-    final rolesList = (_l('roles') ?? const[]).cast<String>();
+    final rolesList = (_l('roles') ?? const []).cast<String>();
     final venueTypesList =
-      (_l('preferred_venue_types') ?? const[]).cast<String>();
+        (_l('preferred_venue_types') ?? const []).cast<String>();
 
     return User(
       id: _s('id') ?? '',
@@ -276,98 +272,99 @@ class User {
       middleName: _s('middle_name', 'middleName'),
       lastName: _s('last_name', 'lastName'),
       phoneNumber: json['phone_number'] is Map<String, dynamic>
-        ? PhoneNumber.fromJson(json['phone_number'] as Map<String, dynamic>)
-        : null,
+          ? PhoneNumber.fromJson(json['phone_number'] as Map<String, dynamic>)
+          : null,
       biography: _s('biography'),
       profilePictureUrl: _s('profile_picture_url'),
       homeCountryCode: _s('home_country')?.toLowerCase(),
       homeTown: _s('home_town')?.toLowerCase(),
-      homeLocationLocked: (json['home_location_locked'] as bool?) ?? false, // <— NEW
+      homeLocationLocked:
+          (json['home_location_locked'] as bool?) ?? false, // <— NEW
       appVersion: _s('app_version'),
       isVerified: (json['is_verified'] as bool?) ?? false,
       level: (json['level'] as num?)?.toInt() ?? 0,
       xp: ((json['xp'] as num?) ?? 0).toDouble(),
       preferredVenueTypes: venueTypesList.isEmpty
-        ? allVenueTypes()
-        : venueTypesList
-          .map((s) => _enumFromString<VenueType>(
-              s, VenueType.values, VenueType.unknown))
-          .toSet(),
+          ? allVenueTypes()
+          : venueTypesList
+              .map((s) => _enumFromString<VenueType>(
+                  s, VenueType.values, VenueType.unknown))
+              .toSet(),
       maxDistanceKm: ((json['max_distance_km'] as num?) ?? 50).toDouble(),
       roles: rolesList.isEmpty
-        ? const {UserRole.user}
-        : rolesList
-          .map((s) =>
-            _enumFromString<UserRole>(s, UserRole.values, UserRole.user))
-          .toSet(),
+          ? const {UserRole.user}
+          : rolesList
+              .map((s) =>
+                  _enumFromString<UserRole>(s, UserRole.values, UserRole.user))
+              .toSet(),
       subscriptionType: _enumFromString(_s('subscription_type'),
-        SubscriptionTypesUser.values, SubscriptionTypesUser.free),
+          SubscriptionTypesUser.values, SubscriptionTypesUser.free),
       platformType: _enumFromString(
-        _s('platform_type'), PlatformType.values, _detectPlatformType()),
+          _s('platform_type'), PlatformType.values, _detectPlatformType()),
       currentPartyStatus: _enumFromString(_s('current_party_status'),
-        PartyStatusTypes.values, PartyStatusTypes.still_planning),
+          PartyStatusTypes.values, PartyStatusTypes.still_planning),
       createdAt: _asDate(_v('created_at')),
       updatedAt: _asDate(_v('updated_at')),
     );
   }
 
   @override
-  bool operator==(Object other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is User &&
-      other.id == id &&
-      other.email == email &&
-      other.userName == userName &&
-      other.birthDate == birthDate &&
-      other.gender == gender &&
-      other.firstName == firstName &&
-      other.middleName == middleName &&
-      other.lastName == lastName &&
-      _phoneEq(other.phoneNumber, phoneNumber) &&
-      other.biography == biography &&
-      other.profilePictureUrl == profilePictureUrl &&
-      other.homeCountryCode == homeCountryCode &&
-      other.homeTown == homeTown &&
-      other.appVersion == appVersion &&
-      other.isVerified == isVerified &&
-      other.level == level &&
-      other.xp == xp &&
-      _setEq(other.preferredVenueTypes, preferredVenueTypes) &&
-      other.maxDistanceKm == maxDistanceKm &&
-      _setEq(other.roles, roles) &&
-      other.subscriptionType == subscriptionType &&
-      other.platformType == platformType &&
-      other.currentPartyStatus == currentPartyStatus &&
-      other.createdAt == createdAt &&
-      other.updatedAt == updatedAt;
+        other.id == id &&
+        other.email == email &&
+        other.userName == userName &&
+        other.birthDate == birthDate &&
+        other.gender == gender &&
+        other.firstName == firstName &&
+        other.middleName == middleName &&
+        other.lastName == lastName &&
+        _phoneEq(other.phoneNumber, phoneNumber) &&
+        other.biography == biography &&
+        other.profilePictureUrl == profilePictureUrl &&
+        other.homeCountryCode == homeCountryCode &&
+        other.homeTown == homeTown &&
+        other.appVersion == appVersion &&
+        other.isVerified == isVerified &&
+        other.level == level &&
+        other.xp == xp &&
+        _setEq(other.preferredVenueTypes, preferredVenueTypes) &&
+        other.maxDistanceKm == maxDistanceKm &&
+        _setEq(other.roles, roles) &&
+        other.subscriptionType == subscriptionType &&
+        other.platformType == platformType &&
+        other.currentPartyStatus == currentPartyStatus &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
   }
 
   @override
   int get hashCode =>
-  id.hashCode ^
-    email.hashCode ^
-    userName.hashCode ^
-    birthDate.hashCode ^
-    gender.hashCode ^
-    (firstName?.hashCode ?? 0) ^
-    (middleName?.hashCode ?? 0) ^
-    (lastName?.hashCode ?? 0) ^
-    (phoneNumber?.hashCode ?? 0) ^
-    (biography?.hashCode ?? 0) ^
-    (profilePictureUrl?.hashCode ?? 0) ^
-    (homeCountryCode?.hashCode ?? 0) ^
-    (homeTown?.hashCode ?? 0) ^
-    (appVersion?.hashCode ?? 0) ^
-    isVerified.hashCode ^
-    level.hashCode ^
-    xp.hashCode ^
-    preferredVenueTypes.fold(0, (p, e) => p ^ e.hashCode) ^
-    roles.fold(0, (p, e) => p ^ e.hashCode) ^
-    subscriptionType.hashCode ^
-    platformType.hashCode ^
-    currentPartyStatus.hashCode ^
-    createdAt.hashCode ^
-    updatedAt.hashCode;
+      id.hashCode ^
+      email.hashCode ^
+      userName.hashCode ^
+      birthDate.hashCode ^
+      gender.hashCode ^
+      (firstName?.hashCode ?? 0) ^
+      (middleName?.hashCode ?? 0) ^
+      (lastName?.hashCode ?? 0) ^
+      (phoneNumber?.hashCode ?? 0) ^
+      (biography?.hashCode ?? 0) ^
+      (profilePictureUrl?.hashCode ?? 0) ^
+      (homeCountryCode?.hashCode ?? 0) ^
+      (homeTown?.hashCode ?? 0) ^
+      (appVersion?.hashCode ?? 0) ^
+      isVerified.hashCode ^
+      level.hashCode ^
+      xp.hashCode ^
+      preferredVenueTypes.fold(0, (p, e) => p ^ e.hashCode) ^
+      roles.fold(0, (p, e) => p ^ e.hashCode) ^
+      subscriptionType.hashCode ^
+      platformType.hashCode ^
+      currentPartyStatus.hashCode ^
+      createdAt.hashCode ^
+      updatedAt.hashCode;
 
   static Set<VenueType> allVenueTypes() => VenueType.values.toSet();
 

@@ -7,13 +7,13 @@ import '../shared/constants/styles.dart';
 
 /// Attach this to MaterialApp.scaffoldMessengerKey
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-GlobalKey<ScaffoldMessengerState>();
+    GlobalKey<ScaffoldMessengerState>();
 
 /// Call for any error you want to surface. Used by global handlers too.
 void handleError(Object error, [StackTrace? stackTrace]) {
   // If it's your AppException, show its message; otherwise show a generic one.
   final msg = error is AppException
-  //TODO If in production do somehting else.
+      //TODO If in production do somehting else.
       ? error.message
       : 'Something went wrong. Please try again.\nIf something keeps going wrong you might want to check your app permissions under settings on your phone';
 
@@ -24,6 +24,12 @@ void handleError(Object error, [StackTrace? stackTrace]) {
   final messenger = scaffoldMessengerKey.currentState;
   if (messenger != null) {
     messenger.clearSnackBars();
-    messenger.showSnackBar(SnackBar(content: Text(msg, style: Styles.smallText,), backgroundColor: grey,));
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        msg,
+        style: Styles.smallText,
+      ),
+      backgroundColor: grey,
+    ));
   }
 }

@@ -23,7 +23,7 @@ class AppConfig {
 
   /// Single source of truth for env.
   static const String envName =
-  String.fromEnvironment('APP_ENV', defaultValue: 'prod');
+      String.fromEnvironment('APP_ENV', defaultValue: 'prod');
   // String.fromEnvironment('APP_ENV', defaultValue: 'dev');
 
   bool get isProd => env == 'prod';
@@ -35,12 +35,12 @@ class AppConfig {
     accessToken: String.fromEnvironment(
       'MAPBOX_ACCESS_TOKEN',
       defaultValue:
-      'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpmbmZsYTAxNnEya3M5eHJlcnlteGYifQ._IsVBAIAbKg7GZgJLdo7qA',
+          'pk.eyJ1IjoibmlnaHQtb3dsIiwiYSI6ImNtZnpmbmZsYTAxNnEya3M5eHJlcnlteGYifQ._IsVBAIAbKg7GZgJLdo7qA',
     ),
     googleServerClientId: String.fromEnvironment(
       'GOOGLE_SERVER_CLIENT_ID',
       defaultValue:
-      '658302244013-nn1l5bnl7trst9hcvnmlrnj2da5b62nv.apps.googleusercontent.com',
+          '658302244013-nn1l5bnl7trst9hcvnmlrnj2da5b62nv.apps.googleusercontent.com',
     ),
     googleIosClientId: String.fromEnvironment(
       'GOOGLE_IOS_CLIENT_ID',

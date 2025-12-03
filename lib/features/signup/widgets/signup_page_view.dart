@@ -29,7 +29,8 @@ class PageViewExample extends StatefulWidget {
   State<PageViewExample> createState() => _PageViewExampleState();
 }
 
-class _PageViewExampleState extends State<PageViewExample> with TickerProviderStateMixin {
+class _PageViewExampleState extends State<PageViewExample>
+    with TickerProviderStateMixin {
   late PageController _pageViewController;
   late TabController _tabController;
   int _currentPageIndex = 0;
@@ -97,10 +98,16 @@ class _PageViewExampleState extends State<PageViewExample> with TickerProviderSt
 
   bool get _isOnDesktopAndWeb =>
       kIsWeb ||
-          switch (defaultTargetPlatform) {
-            TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.windows => true,
-            TargetPlatform.android || TargetPlatform.iOS || TargetPlatform.fuchsia => false,
-          };
+      switch (defaultTargetPlatform) {
+        TargetPlatform.macOS ||
+        TargetPlatform.linux ||
+        TargetPlatform.windows =>
+          true,
+        TargetPlatform.android ||
+        TargetPlatform.iOS ||
+        TargetPlatform.fuchsia =>
+          false,
+      };
 }
 
 /// Page indicator for desktop and web platforms.

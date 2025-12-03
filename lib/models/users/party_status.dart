@@ -25,19 +25,16 @@ class PartyStatusEntry {
   });
 
   Map<String, dynamic> toJson() => {
-    PartyStatusEntryDocumentPaths.partyStatus: partyStatus.name,
-    PartyStatusEntryDocumentPaths.change: partyStatusChange.name,
-    PartyStatusEntryDocumentPaths.createdAt:
-    Timestamp.fromDate(createdAt),
-    if (location != null)
-      PartyStatusEntryDocumentPaths.location: location,
-    if (accuracy != null)
-      PartyStatusEntryDocumentPaths.accuracy: accuracy,
-  };
+        PartyStatusEntryDocumentPaths.partyStatus: partyStatus.name,
+        PartyStatusEntryDocumentPaths.change: partyStatusChange.name,
+        PartyStatusEntryDocumentPaths.createdAt: Timestamp.fromDate(createdAt),
+        if (location != null) PartyStatusEntryDocumentPaths.location: location,
+        if (accuracy != null) PartyStatusEntryDocumentPaths.accuracy: accuracy,
+      };
 
   static PartyStatusEntry fromSnapshot(
-      DocumentSnapshot<Map<String, dynamic>> snap,
-      ) {
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
     final d = snap.data()!;
     final ts = d[PartyStatusEntryDocumentPaths.createdAt];
     final dt = ts is Timestamp ? ts.toDate() : DateTime.now();
@@ -45,21 +42,20 @@ class PartyStatusEntry {
     return PartyStatusEntry(
       id: snap.id,
       partyStatus: PartyStatusTypes.values.firstWhere(
-            (e) => e.name ==
+        (e) =>
+            e.name ==
             (d[PartyStatusEntryDocumentPaths.partyStatus] as String? ?? ''),
         orElse: () => PartyStatusTypes.still_planning,
       ),
       partyStatusChange: PartyStatusChange.values.firstWhere(
-            (e) => e.name ==
+        (e) =>
+            e.name ==
             (d[PartyStatusEntryDocumentPaths.change] as String? ?? ''),
         orElse: () => PartyStatusChange.manual,
       ),
       createdAt: dt,
-      location:
-      d[PartyStatusEntryDocumentPaths.location] as GeoPoint?,
-      accuracy:
-      (d[PartyStatusEntryDocumentPaths.accuracy] as num?)
-          ?.toDouble(),
+      location: d[PartyStatusEntryDocumentPaths.location] as GeoPoint?,
+      accuracy: (d[PartyStatusEntryDocumentPaths.accuracy] as num?)?.toDouble(),
     );
   }
 

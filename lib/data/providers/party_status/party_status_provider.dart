@@ -153,4 +153,3 @@ final partyStatusPulsePaletteProvider = Provider<List<Color>>((ref) {
     c(PartyStatusTypes.still_planning),
   ];
 });
-

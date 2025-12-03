@@ -16,9 +16,9 @@ class GeofencingRepository {
   /// - If an open session exists for a different venue → close it, open a new one for [venueId].
   /// - If no open session exists → open a new one for [venueId].
   Future<String> enterVenue(
-      String venueId, {
-        String source = 'geofence',
-      }) async {
+    String venueId, {
+    String source = 'geofence',
+  }) async {
     // Fetch any open sessions (normally 0 or 1, but we tolerate >1 and fix it)
     final openSnap = await _sessionsCol
         .where(VisitDocumentPaths.exitedAt, isNull: true)
@@ -60,7 +60,7 @@ class GeofencingRepository {
   /// If multiple open sessions exist (shouldn't, but may), close them all defensively.
   Future<void> exitVenue({String? venueId}) async {
     Query<Map<String, dynamic>> q =
-    _sessionsCol.where(VisitDocumentPaths.exitedAt, isNull: true);
+        _sessionsCol.where(VisitDocumentPaths.exitedAt, isNull: true);
     if (venueId != null) {
       q = q.where(VisitDocumentPaths.venueId, isEqualTo: venueId);
     }

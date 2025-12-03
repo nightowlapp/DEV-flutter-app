@@ -107,7 +107,7 @@ Future<FirebaseApp> ensureFirebaseInitialized() async {
   final options = _firebaseOptionsForEnv();
   logI(
     'Initializing Firebase for env=${AppConfig.envName}, '
-        'projectId=${options.projectId}',
+    'projectId=${options.projectId}',
   );
 
   try {
@@ -184,7 +184,7 @@ Future<void> _resetIfEnvOrProjectChanged() async {
 
   logI(
     'Boot env=$currentEnv (lastEnv=$lastEnv, envChanged=$envChanged), '
-        'projectId=$currentProjectId (lastProjectId=$lastProjectId, projectChanged=$projectChanged)',
+    'projectId=$currentProjectId (lastProjectId=$lastProjectId, projectChanged=$projectChanged)',
   );
 
   if (changed) {

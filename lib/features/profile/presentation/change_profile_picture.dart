@@ -108,7 +108,9 @@ Future<ImageSource?> _chooseSource(BuildContext context) {
               size: iconSizeDefault,
               color: owlPurple,
             ),
-            title: Text('Take photo', style: Styles.basicText), // TODO require permission to users photos of venues in the future.
+            title: Text('Take photo',
+                style: Styles
+                    .basicText), // TODO require permission to users photos of venues in the future.
             onTap: () =>
                 Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
           ),

@@ -32,8 +32,9 @@ extension VenuesLocalStoreStreaming on VenuesLocalStore {
         .cast<String>()
         .toList(growable: false);
 
-    double _dist(Venue v) =>
-        origin == null ? double.infinity : Distance.metersLatLng(origin, v.entry);
+    double _dist(Venue v) => origin == null
+        ? double.infinity
+        : Distance.metersLatLng(origin, v.entry);
 
     int _cmp(Venue a, Venue b) {
       final oa = a.isOpenNow(now) ? 0 : 1;
@@ -169,15 +170,16 @@ dynamic _jsonSafe(dynamic v) {
 // --------------------------------------
 // Riverpod: provider + live sync engine
 // --------------------------------------
-final venuesLocalBootDoneProvider = StateProvider<bool>((_) => false); // When finished fetching all from hive
+final venuesLocalBootDoneProvider =
+    StateProvider<bool>((_) => false); // When finished fetching all from hive
 
 final venuesLocalStoreProvider = FutureProvider<VenuesLocalStore>((ref) async {
-    return VenuesLocalStore.open();
-  }
-);
+  return VenuesLocalStore.open();
+});
+
 ///True provider with all venues from local.
 final venuesSsoProvider =
-  AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
+    AsyncNotifierProvider<VenuesSso, List<Venue>>(VenuesSso.new);
 
 class VenuesSso extends AsyncNotifier<List<Venue>> {
   StreamSubscription<List<Venue>>? _subLocal;
@@ -203,8 +205,7 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       final lat = prefs.getDouble('last_lat');
       final lng = prefs.getDouble('last_lng');
       if (lat != null && lng != null) _origin = LatLng(lat, lng);
-    }
-    catch (_) {}
+    } catch (_) {}
 
     // Re-sort when a new location arrives (don’t rebuild the whole world)
     ref.listen(latLngSafeStreamProvider, (prev, next) {
@@ -216,7 +217,7 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
       final prevLat = prefs.getDouble('last_lat');
       final prevLng = prefs.getDouble('last_lng');
       if (prevLat != null && prevLng != null) {
-        final moved = Distance.metersLatLng(LatLng(prevLat,prevLng), p);
+        final moved = Distance.metersLatLng(LatLng(prevLat, prevLng), p);
         if (moved < 50) return;
       }
       prefs.setDouble('last_lat', p.lat);
@@ -248,12 +249,11 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     await _startLiveSync(db, store);
 
     ref.onDispose(() async {
-        await _subLocal?.cancel();
-        await _subDelta?.cancel();
-        await _subRemovals?.cancel();
-        _keepAlive?.close();
-      }
-    );
+      await _subLocal?.cancel();
+      await _subDelta?.cancel();
+      await _subRemovals?.cancel();
+      _keepAlive?.close();
+    });
 
     return state.value ?? <Venue>[];
   }
@@ -284,12 +284,13 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
   }
 
   // In _startLiveSync, sort before publishing:
-  Future<void> _startLiveSync(FirebaseFirestore db, VenuesLocalStore store) async {
+  Future<void> _startLiveSync(
+      FirebaseFirestore db, VenuesLocalStore store) async {
     // Important that this only runs on updated_at. If that field is wrong, gone or otherwise fucked shit wont work.
     final col = db.collection(FirestoreCollections.venues).withConverter<Venue>(
-      fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-      toFirestore: (v, _) => VenueFirestore.toMap(v),
-    );
+          fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+          toFirestore: (v, _) => VenueFirestore.toMap(v),
+        );
 
     final lastSync = await store.getLastSync();
 
@@ -297,76 +298,74 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
     Query<Venue> deltaQ = col;
     try {
       if (lastSync != null) {
-        deltaQ = deltaQ.where(FirestoreFields.updatedAt, isGreaterThan: Timestamp.fromDate(lastSync));
+        deltaQ = deltaQ.where(FirestoreFields.updatedAt,
+            isGreaterThan: Timestamp.fromDate(lastSync));
       }
       deltaStream = deltaQ.snapshots();
-    }
-    catch (_) {
+    } catch (_) {
       deltaStream = col.snapshots();
     }
 
     await _subDelta?.cancel();
     _subDelta = deltaStream.listen((qs) async {
-        final current = Map<String, Venue>.fromEntries(
-          (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
-        );
-        DateTime? maxSeenUpdatedAt;
+      final current = Map<String, Venue>.fromEntries(
+        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+      );
+      DateTime? maxSeenUpdatedAt;
 
-        if (qs.docChanges.isEmpty && lastSync == null) {
-          final all = qs.docs.map((d) => d.data()).toList(growable: false);
-          await store.upsertMany(all);
-          state = AsyncData(_sorted(all));
-          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-          return;
-        }
+      if (qs.docChanges.isEmpty && lastSync == null) {
+        final all = qs.docs.map((d) => d.data()).toList(growable: false);
+        await store.upsertMany(all);
+        state = AsyncData(_sorted(all));
+        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+        return;
+      }
 
-        for (final change in qs.docChanges) {
-          if (change.type == DocumentChangeType.added ||
+      for (final change in qs.docChanges) {
+        if (change.type == DocumentChangeType.added ||
             change.type == DocumentChangeType.modified) {
-            final v = change.doc.data();
-            if (v != null) {
-              await store.upsert(v);
-              current[v.id] = v;
-              maxSeenUpdatedAt = _maxDate(maxSeenUpdatedAt, _extractUpdatedAt(v));
-            }
+          final v = change.doc.data();
+          if (v != null) {
+            await store.upsert(v);
+            current[v.id] = v;
+            maxSeenUpdatedAt = _maxDate(maxSeenUpdatedAt, _extractUpdatedAt(v));
           }
         }
+      }
 
-        final list = current.values.toList(growable: false);
-        state = AsyncData(_sorted(list));
-        await store.setLastSync(maxSeenUpdatedAt ?? DateTime.now());
-      }, onError: (e, st) async {
-        state = AsyncError(e, st);
-        try {
-          final all = await _fetchAllOnce(db);
-          await store.upsertMany(all);
-          await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
-          state = AsyncData(_sorted(all));
-        }
-        catch (_) {}
-      }, cancelOnError: false);
+      final list = current.values.toList(growable: false);
+      state = AsyncData(_sorted(list));
+      await store.setLastSync(maxSeenUpdatedAt ?? DateTime.now());
+    }, onError: (e, st) async {
+      state = AsyncError(e, st);
+      try {
+        final all = await _fetchAllOnce(db);
+        await store.upsertMany(all);
+        await store.setLastSync(_maxUpdatedAt(all) ?? DateTime.now());
+        state = AsyncData(_sorted(all));
+      } catch (_) {}
+    }, cancelOnError: false);
 
     await _subRemovals?.cancel();
     _subRemovals = col.snapshots().listen((qs) async {
-        if (qs.docChanges.isEmpty) return;
-        var changed = false;
-        final current = Map<String, Venue>.fromEntries(
-          (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
-        );
+      if (qs.docChanges.isEmpty) return;
+      var changed = false;
+      final current = Map<String, Venue>.fromEntries(
+        (state.value ?? const <Venue>[]).map((v) => MapEntry(v.id, v)),
+      );
 
-        for (final change in qs.docChanges) {
-          if (change.type == DocumentChangeType.removed) {
-            final id = change.doc.id;
-            await store.remove(id);
-            if (current.remove(id) != null) changed = true;
-          }
-        }
-
-        if (changed) {
-          state = AsyncData(_sorted(current.values.toList(growable: false)));
+      for (final change in qs.docChanges) {
+        if (change.type == DocumentChangeType.removed) {
+          final id = change.doc.id;
+          await store.remove(id);
+          if (current.remove(id) != null) changed = true;
         }
       }
-    );
+
+      if (changed) {
+        state = AsyncData(_sorted(current.values.toList(growable: false)));
+      }
+    });
   }
 
   // ---------- helpers ----------
@@ -407,11 +406,12 @@ class VenuesSso extends AsyncNotifier<List<Venue>> {
   }
 }
 
-Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async { // TODO should not be called loosely
-  final col = db.collection(FirestoreCollections.venues).withConverter<Venue>
-    (fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
-    toFirestore: (v, _) => VenueFirestore.toMap(v), );
+Future<List<Venue>> _fetchAllOnce(FirebaseFirestore db) async {
+  // TODO should not be called loosely
+  final col = db.collection(FirestoreCollections.venues).withConverter<Venue>(
+        fromFirestore: (snap, _) => VenueFirestore.fromSnapshot(snap),
+        toFirestore: (v, _) => VenueFirestore.toMap(v),
+      );
   final snap = await col.get(const GetOptions(source: Source.server));
   return snap.docs.map((d) => d.data()).toList(growable: false);
 }
-

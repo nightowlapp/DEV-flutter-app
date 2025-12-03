@@ -35,8 +35,7 @@ final friendCountsProvider = StreamProvider<FriendCounts>((ref) {
     for (final doc in q.docs) {
       total++;
       final data = doc.data();
-      final isClose =
-          (data[FriendEdgeFields.isCloseFriend] as bool?) ?? false;
+      final isClose = (data[FriendEdgeFields.isCloseFriend] as bool?) ?? false;
       if (isClose) close++;
     }
 
@@ -64,13 +63,12 @@ final friendsProvider = StreamProvider<List<model.User>>((ref) {
   });
 });
 
-
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   return FriendsRepository(FirebaseFirestore.instance, FirebaseAuth.instance);
 });
 
 final friendEdgeWithUserProvider =
-StreamProvider.family<FriendEdge?, String>((ref, otherUid) {
+    StreamProvider.family<FriendEdge?, String>((ref, otherUid) {
   final auth = ref.watch(firebaseAuthProvider);
   final me = auth.currentUser;
   if (me == null) {

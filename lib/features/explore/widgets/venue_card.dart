@@ -43,11 +43,11 @@ class VenueCard extends ConsumerWidget {
   static final AutoSizeGroup _titleGroup = AutoSizeGroup();
 
   Widget _pill(
-      String text, {
-        Color? bg,
-        Color? fg,
-        Key? key,
-      }) =>
+    String text, {
+    Color? bg,
+    Color? fg,
+    Key? key,
+  }) =>
       Container(
         key: key,
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
@@ -116,11 +116,13 @@ class VenueCard extends ConsumerWidget {
                     // Background image
                     Positioned.fill(
                       child: CoverImage(
-                        imageUrl: StorageUrl.normalize(venue.coverImageUrl ?? ''),
+                        imageUrl:
+                            StorageUrl.normalize(venue.coverImageUrl ?? ''),
                         height: height,
                         fit: BoxFit.cover,
                         hideIfEmpty: false,
-                        fallbackAsset: overrideFallbackAsset ?? assetForCity(venue.city),
+                        fallbackAsset:
+                            overrideFallbackAsset ?? assetForCity(venue.city),
                       ),
                     ),
 
@@ -137,7 +139,7 @@ class VenueCard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: black.withOpacity(0.7),
                           borderRadius:
-                          BorderRadius.circular(borderRadiusDefault),
+                              BorderRadius.circular(borderRadiusDefault),
                         ),
                         child: Center(
                           child: VenueTitle(title),
@@ -153,8 +155,7 @@ class VenueCard extends ConsumerWidget {
                       child: Builder(
                         builder: (context) {
                           final status = venue.openingHours.statusAt(now);
-                          final isOpen =
-                              status.phase == OpeningPhase.open;
+                          final isOpen = status.phase == OpeningPhase.open;
 
                           // --- Closing soon logic (when already open) ---
                           int minutesLeft = -1;
@@ -165,25 +166,21 @@ class VenueCard extends ConsumerWidget {
                                 .inMinutes;
                             if (minutesLeft < 0) minutesLeft = 0;
                           }
-                          final closingSoon =
-                              isOpen && minutesLeft <= 60;
+                          final closingSoon = isOpen && minutesLeft <= 60;
 
                           // --- Opening soon logic (when currently closed) ---
                           int minutesUntilOpen = -1;
                           final nowM = now.hour * 60 + now.minute;
 
                           if (status.openMinutes != null) {
-                            if (status.phase ==
-                                OpeningPhase.opensLaterToday) {
+                            if (status.phase == OpeningPhase.opensLaterToday) {
                               // Same-day opening later
-                              minutesUntilOpen =
-                                  status.openMinutes! - nowM;
+                              minutesUntilOpen = status.openMinutes! - nowM;
                             } else if (status.phase ==
                                 OpeningPhase.opensTomorrow) {
                               // Opening tomorrow, compute across midnight
                               minutesUntilOpen =
-                                  (24 * 60 - nowM) +
-                                      status.openMinutes!;
+                                  (24 * 60 - nowM) + status.openMinutes!;
                             }
                           }
 
@@ -212,23 +209,20 @@ class VenueCard extends ConsumerWidget {
                           final right = _pill('$age+');
 
                           return Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // 🔥 Smooth transition between states
                               AnimatedSwitcher(
-                                duration:
-                                const Duration(milliseconds: 250),
-                                transitionBuilder:
-                                    (child, animation) =>
+                                duration: const Duration(milliseconds: 250),
+                                transitionBuilder: (child, animation) =>
                                     FadeTransition(
-                                      opacity: animation,
-                                      child: SizeTransition(
-                                        sizeFactor: animation,
-                                        axis: Axis.horizontal,
-                                        child: child,
-                                      ),
-                                    ),
+                                  opacity: animation,
+                                  child: SizeTransition(
+                                    sizeFactor: animation,
+                                    axis: Axis.horizontal,
+                                    child: child,
+                                  ),
+                                ),
                                 child: _pill(
                                   leftLabel,
                                   fg: leftFg,

@@ -67,8 +67,7 @@ class NotificationDocumentPaths {
   /// Subcollection name holding the queue per sender/user.
   static const queue = 'queue';
 
-  static String senderQueue(String senderId) =>
-      '$collection/$senderId/$queue';
+  static String senderQueue(String senderId) => '$collection/$senderId/$queue';
 }
 
 class LocationDocumentPaths {
@@ -194,5 +193,4 @@ class FriendEdgeFields {
 
   static const iCanSeeThem = 'i_can_see_them';
   static const isCloseFriend = 'is_close_friend';
-
 }

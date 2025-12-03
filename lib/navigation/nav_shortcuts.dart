@@ -29,7 +29,8 @@ extension NavShortcuts on BuildContext {
     GoRouter.of(this).goNamed(screen.routeName);
   }
 
-  Future<T?> pushNamedPage<T extends Object?>(String routeName, {Object? extra}) {
+  Future<T?> pushNamedPage<T extends Object?>(String routeName,
+      {Object? extra}) {
     return GoRouter.of(this).pushNamed<T>(routeName, extra: extra);
   }
 
@@ -47,7 +48,8 @@ extension NavShortcuts on BuildContext {
   }
 
   /// Switch to Map tab, wait a tick so listeners attach, then command the map.
-  Future<void> goToMapAndFocusVenue(WidgetRef ref, Venue v, {double zoom = 16}) async {
+  Future<void> goToMapAndFocusVenue(WidgetRef ref, Venue v,
+      {double zoom = 16}) async {
     final scaffold = Scaffold.maybeOf(this);
     scaffold?.closeEndDrawer();
     scaffold?.closeDrawer();
@@ -62,11 +64,11 @@ extension NavShortcuts on BuildContext {
 
   /// Same as [goToMapAndFocusVenue] but also opens the pullable popup.
   Future<void> goToMapFocusAndOpenVenue(
-      WidgetRef ref,
-      Venue v, {
-        double zoom = 15,
-        double popupInitialSize = 0.55,
-      }) async {
+    WidgetRef ref,
+    Venue v, {
+    double zoom = 15,
+    double popupInitialSize = 0.55,
+  }) async {
     // 👇 Capture root navigator BEFORE closing drawer / awaiting.
     final rootNavigator = Navigator.of(this, rootNavigator: true);
 
@@ -98,10 +100,10 @@ extension NavShortcuts on BuildContext {
 
   /// Go to Explore tab, push Venue page, then push More Info page on top.
   Future<void> goToExploreVenueMoreInfo(
-      Venue v, {
-        VenueMediaHealth? media,
-        LatLng? userLoc,
-      }) async {
+    Venue v, {
+    VenueMediaHealth? media,
+    LatLng? userLoc,
+  }) async {
     final scaffold = Scaffold.maybeOf(this);
     scaffold?.closeEndDrawer();
     scaffold?.closeDrawer();
@@ -129,10 +131,10 @@ extension NavShortcuts on BuildContext {
   }
 
   Future<void> goToExploreVenueBarCard(
-      Venue v, {
-        VenueMediaHealth? media,
-        LatLng? userLoc,
-      }) async {
+    Venue v, {
+    VenueMediaHealth? media,
+    LatLng? userLoc,
+  }) async {
     final scaffold = Scaffold.maybeOf(this);
     scaffold?.closeEndDrawer();
     scaffold?.closeDrawer();
@@ -160,8 +162,5 @@ extension NavShortcuts on BuildContext {
         venueName: v.displayName,
       ),
     );
-
-
   }
-
 }

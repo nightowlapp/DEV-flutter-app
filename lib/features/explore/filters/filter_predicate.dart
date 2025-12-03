@@ -7,11 +7,11 @@ import 'advanced_search_filter.dart';
 const double _kDistanceSliderMaxKm = 60.0;
 
 bool venuePassesFilters(
-    Venue v,
-    AdvancedSearchFilter f, {
-      LatLng? userLoc,
-      DateTime? nowLocalForVenue,
-    }) {
+  Venue v,
+  AdvancedSearchFilter f, {
+  LatLng? userLoc,
+  DateTime? nowLocalForVenue,
+}) {
   // distance
   if (f.maxDistanceKm != null && userLoc != null) {
     final maxKm = f.maxDistanceKm!;

@@ -9,12 +9,11 @@ class TagRepository {
   TagRepository({FirebaseFirestore? db})
       : _db = db ?? FirebaseFirestore.instance;
 
-  CollectionReference<Tag> get _tags => _db
-      .collection(TagDocumentPaths.collection)
-      .withConverter<Tag>(
-    fromFirestore: Tag.fromFirestore,
-    toFirestore: Tag.toFirestore,
-  );
+  CollectionReference<Tag> get _tags =>
+      _db.collection(TagDocumentPaths.collection).withConverter<Tag>(
+            fromFirestore: Tag.fromFirestore,
+            toFirestore: Tag.toFirestore,
+          );
 
   /// Watch a single tag
   Stream<Tag?> watchById(String id) =>
@@ -48,7 +47,7 @@ class TagRepository {
 
     for (final id in clean) {
       final sub = _tags.doc(id).snapshots().listen(
-            (snap) {
+        (snap) {
           map[id] = snap.data(); // can be null if doc doesn't exist
           emitIfReady();
         },

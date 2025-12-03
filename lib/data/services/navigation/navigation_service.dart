@@ -10,9 +10,12 @@ enum NavProfile { driving, walking, cycling }
 extension on NavProfile {
   String get slug {
     switch (this) {
-      case NavProfile.driving:  return 'driving';
-      case NavProfile.walking:  return 'walking';
-      case NavProfile.cycling:  return 'cycling';
+      case NavProfile.driving:
+        return 'driving';
+      case NavProfile.walking:
+        return 'walking';
+      case NavProfile.cycling:
+        return 'cycling';
     }
   }
 }
@@ -26,18 +29,18 @@ class NavigationService {
   Future<NavRoute> route({
     required LatLng origin,
     required LatLng destination,
-    NavProfile profile = NavProfile.walking,     // <- default walking
-    String? language,                             // e.g. 'en', 'da'
+    NavProfile profile = NavProfile.walking, // <- default walking
+    String? language, // e.g. 'en', 'da'
   }) async {
     final profileSlug = profile.slug; // 'driving' | 'walking' | 'cycling'
     final lang = (language ?? 'en').split('_').first;
 
     final uri = Uri.parse(
       'https://api.mapbox.com/directions/v5/mapbox/$profileSlug/'
-          '${origin.lng},${origin.lat};${destination.lng},${destination.lat}'
-          '?alternatives=false&geometries=polyline6&steps=true&overview=full'
-          '&language=$lang'
-          '&access_token=$accessToken',
+      '${origin.lng},${origin.lat};${destination.lng},${destination.lat}'
+      '?alternatives=false&geometries=polyline6&steps=true&overview=full'
+      '&language=$lang'
+      '&access_token=$accessToken',
     );
 
     final res = await _client.get(uri);
@@ -48,7 +51,8 @@ class NavigationService {
     final map = jsonDecode(res.body) as Map<String, dynamic>;
     final routes = (map['routes'] as List?) ?? const [];
     if (routes.isEmpty) {
-      return const NavRoute(points: [], steps: [], distanceMeters: 0, durationSeconds: 0);
+      return const NavRoute(
+          points: [], steps: [], distanceMeters: 0, durationSeconds: 0);
     }
 
     final r = routes.first as Map<String, dynamic>;
@@ -79,12 +83,24 @@ class NavigationService {
   }
 
   // convenience wrappers if you like:
-  Future<NavRoute> walkingRoute({required LatLng origin, required LatLng destination})
-  => route(origin: origin, destination: destination, profile: NavProfile.walking);
+  Future<NavRoute> walkingRoute(
+          {required LatLng origin, required LatLng destination}) =>
+      route(
+          origin: origin,
+          destination: destination,
+          profile: NavProfile.walking);
 
-  Future<NavRoute> cyclingRoute({required LatLng origin, required LatLng destination})
-  => route(origin: origin, destination: destination, profile: NavProfile.cycling);
+  Future<NavRoute> cyclingRoute(
+          {required LatLng origin, required LatLng destination}) =>
+      route(
+          origin: origin,
+          destination: destination,
+          profile: NavProfile.cycling);
 
-  Future<NavRoute> drivingRoute({required LatLng origin, required LatLng destination})
-  => route(origin: origin, destination: destination, profile: NavProfile.driving);
+  Future<NavRoute> drivingRoute(
+          {required LatLng origin, required LatLng destination}) =>
+      route(
+          origin: origin,
+          destination: destination,
+          profile: NavProfile.driving);
 }

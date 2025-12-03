@@ -15,9 +15,9 @@ class SocialScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final friends = ref.watch(friendsProvider).maybeWhen(
-      data: (v) => v,
-      orElse: () => const[],
-    );
+          data: (v) => v,
+          orElse: () => const [],
+        );
 
     return Scaffold(
       backgroundColor: black,
@@ -28,11 +28,8 @@ class SocialScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (friends.isNotEmpty) const MyFriendsSection(),
-
               const FriendRequestsSection(),
-
               const SizedBox(height: 8),
-
               const FindFriendsSection(),
             ],
           ),

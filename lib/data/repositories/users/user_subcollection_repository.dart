@@ -13,10 +13,10 @@ class UserSocialRepository {
   CollectionReference<FavoriteVenue> _favoritesCol(String uid) => _db
       .collection(UserDocumentPaths.favoritesCollection(uid))
       .withConverter<FavoriteVenue>(
-    fromFirestore: (snap, _) =>
-        FavoriteVenue.fromJson(snap.data()!, snap.id),
-    toFirestore: (f, _) => f.toJson(),
-  );
+        fromFirestore: (snap, _) =>
+            FavoriteVenue.fromJson(snap.data()!, snap.id),
+        toFirestore: (f, _) => f.toJson(),
+      );
 
   Future<void> addFavorite(String uid, String venueId) async {
     // created_at is set by the model; use merge:false to avoid re-writing created_at later
@@ -39,10 +39,9 @@ class UserSocialRepository {
   CollectionReference<LikedVenue> _likesCol(String uid) => _db
       .collection(UserDocumentPaths.likesCollection(uid))
       .withConverter<LikedVenue>(
-    fromFirestore: (snap, _) =>
-        LikedVenue.fromJson(snap.data()!, snap.id),
-    toFirestore: (l, _) => l.toJson(),
-  );
+        fromFirestore: (snap, _) => LikedVenue.fromJson(snap.data()!, snap.id),
+        toFirestore: (l, _) => l.toJson(),
+      );
 
   Future<void> likeVenue(String uid, String venueId) async {
     final ref = _likesCol(uid).doc(venueId);
@@ -63,15 +62,15 @@ class UserSocialRepository {
   // -------- Emblems --------
   CollectionReference<Emblem> _emblemsCol(String uid) => _db
       .collection(
-    UserDocumentPaths.subcollection(uid, EmblemDocumentPaths.collection),
-  )
+        UserDocumentPaths.subcollection(uid, EmblemDocumentPaths.collection),
+      )
       .withConverter<Emblem>(
-    fromFirestore: (snap, _) => Emblem.fromJson({
-      'id': snap.id, // inject id from doc id
-      ...?snap.data(),
-    }),
-    toFirestore: (a, _) => a.toJson()..remove('id'),
-  );
+        fromFirestore: (snap, _) => Emblem.fromJson({
+          'id': snap.id, // inject id from doc id
+          ...?snap.data(),
+        }),
+        toFirestore: (a, _) => a.toJson()..remove('id'),
+      );
 
   Future<void> upsertEmblem(String uid, Emblem a) async {
     final ref = _emblemsCol(uid).doc(a.id);
@@ -91,17 +90,17 @@ class UserSocialRepository {
 
 /// Users who liked a venue (returns userIds).
 Stream<List<String>> userIdsWhoLikedVenue(
-    FirebaseFirestore db,
-    String venueId,
-    ) {
+  FirebaseFirestore db,
+  String venueId,
+) {
   return db
       .collectionGroup(UserDocumentPaths.likes)
       .where(FieldPath.documentId, isEqualTo: venueId)
       .snapshots()
       .map((q) => q.docs
-      .map((d) => d.reference.parent.parent?.id)
-      .whereType<String>()
-      .toList());
+          .map((d) => d.reference.parent.parent?.id)
+          .whereType<String>()
+          .toList());
 }
 
 /// Real-time count of favorites for a venue (downloads matching docs).

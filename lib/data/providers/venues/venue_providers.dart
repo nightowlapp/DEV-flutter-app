@@ -11,7 +11,6 @@ import '../../../shared/constants/enums.dart';
 import '../other_providers.dart';
 import '../time_ticker_provider.dart';
 
-
 /// Single Source Of Truth for Venues:
 /// - Immediately serves locally cached venues (fast start)
 /// - On first-ever run (no cache): fetches all venues once and caches them
@@ -35,9 +34,6 @@ final venuesByIdMapProvider = Provider.autoDispose<Map<String, Venue>>((ref) {
   return {for (final v in list) v.id: v};
 });
 
-
-
-
 typedef VenuesFc = ({String clusterable, String vip});
 
 final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
@@ -45,9 +41,9 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
 
   // ⏱ depend on time so we recompute every tick
   final localNow = ref.watch(timeTickerProvider).maybeWhen(
-    data: (d) => d,
-    orElse: () => DateTime.now(),
-  );
+        data: (d) => d,
+        orElse: () => DateTime.now(),
+      );
 
   final clusterable = <Map<String, dynamic>>[];
   final vip = <Map<String, dynamic>>[];
@@ -69,10 +65,10 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
             ? v.displayName
             : Utility.formatString(v.name),
         'rating': v.rating ?? 3.4,
-        'venueType': v.type.name,           // "bar", "club", "wine_bar", ...
+        'venueType': v.type.name, // "bar", "club", "wine_bar", ...
         'isVerified': v.isVerified,
         'logo_image_id':
-        'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}',
+            'logo_${v.id}_${(v.updatedAt ?? v.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).millisecondsSinceEpoch}',
         'subscription': v.subscriptionType.name,
 
         // 🔥 these are what Mapbox style reads
@@ -97,14 +93,13 @@ final venuesGeoJsonProvider = Provider<VenuesFc>((ref) {
   }
 
   return (
-  clusterable: jsonEncode({
-    'type': 'FeatureCollection',
-    'features': clusterable,
-  }),
-  vip: jsonEncode({
-    'type': 'FeatureCollection',
-    'features': vip,
-  }),
+    clusterable: jsonEncode({
+      'type': 'FeatureCollection',
+      'features': clusterable,
+    }),
+    vip: jsonEncode({
+      'type': 'FeatureCollection',
+      'features': vip,
+    }),
   );
 });
-

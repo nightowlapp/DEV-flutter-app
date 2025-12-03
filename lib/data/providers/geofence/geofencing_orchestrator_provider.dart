@@ -8,7 +8,7 @@ import '../venues/venue_providers.dart';
 
 // Geofencing orchestrator wired to SSO + location
 final geofencingOrchestratorProvider =
-Provider.autoDispose<GeofencingOrchestrator?>((ref) {
+    Provider.autoDispose<GeofencingOrchestrator?>((ref) {
   final user = ref.watch(firebaseAuthProvider).currentUser;
   if (user == null) return null;
 

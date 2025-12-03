@@ -25,7 +25,6 @@ class EnvStorage {
   /// SharedPreferences key: e.g. prefsKey('last_lat') -> 'dev_last_lat'
   static String prefsKey(String base) => '${env}_$base';
 
-
 //   static String mapboxStyle{ //TODO
 //
 //     if(AppConfig.current.env = AppConfig.current.isProd){
@@ -33,6 +32,4 @@ class EnvStorage {
 //   }else
 //     return 'mapbox://styles/night-owl/cmi6bl6jd00as01secypxenk8'
 // }
-
-
 }

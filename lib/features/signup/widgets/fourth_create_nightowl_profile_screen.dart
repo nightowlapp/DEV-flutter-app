@@ -41,8 +41,8 @@ class _FourthCreateNightowlProfileScreenState
 
   // --- Username validation state ---
   bool _checkingUname = false; // in-flight check
-  bool? _unameOk;              // null = unknown, true = ok, false = bad
-  String? _unameMsg;           // message for bad/other states
+  bool? _unameOk; // null = unknown, true = ok, false = bad
+  String? _unameMsg; // message for bad/other states
   Timer? _unameDebounce;
 
   @override
@@ -77,8 +77,7 @@ class _FourthCreateNightowlProfileScreenState
     super.dispose();
   }
 
-  bool get _canContinue =>
-      !_busy && _gender != null && (_unameOk ?? false);
+  bool get _canContinue => !_busy && _gender != null && (_unameOk ?? false);
 
   void _queueUsernameCheck() {
     final name = _username.text.trim();
@@ -116,7 +115,7 @@ class _FourthCreateNightowlProfileScreenState
         // Fast availability (case-insensitive via /usernames/<lowercase>) with fallback
         bool ok;
 
-          ok = await repo.usernameAvailableFast(name);
+        ok = await repo.usernameAvailableFast(name);
 
         setState(() {
           _checkingUname = false;
@@ -141,7 +140,10 @@ class _FourthCreateNightowlProfileScreenState
     if (_checkingUname) {
       return const Row(
         children: [
-          SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2)),
           SizedBox(width: 8),
           Text('Checking Username…'),
         ],
@@ -217,8 +219,8 @@ class _FourthCreateNightowlProfileScreenState
       final msg = e.code == 'email-already-in-use'
           ? 'Email already in use. Please sign in or use a different email.'
           : (e.code == 'weak-password'
-          ? 'Please choose a stronger password.'
-          : 'Auth error: ${e.message}');
+              ? 'Please choose a stronger password.'
+              : 'Auth error: ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
@@ -242,8 +244,11 @@ class _FourthCreateNightowlProfileScreenState
         showBack: true,
         titleText: 'Final Details',
         actions: [
-          CircleAvatar(backgroundImage: AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
-
+          CircleAvatar(
+            backgroundImage: AssetImage(ImagePaths.logo),
+            radius: iconSizeDefault,
+            backgroundColor: transparent,
+          ),
         ],
       ),
       body: Padding(

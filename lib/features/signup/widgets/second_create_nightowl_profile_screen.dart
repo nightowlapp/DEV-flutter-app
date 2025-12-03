@@ -132,7 +132,11 @@ class _SecondCreateNightowlProfileScreenState
         showBack: true,
         titleText: 'Email',
         actions: [
-          CircleAvatar(backgroundImage: AssetImage(ImagePaths.logo), radius: iconSizeDefault, backgroundColor: transparent,),
+          CircleAvatar(
+            backgroundImage: AssetImage(ImagePaths.logo),
+            radius: iconSizeDefault,
+            backgroundColor: transparent,
+          ),
         ],
       ),
       body: Padding(

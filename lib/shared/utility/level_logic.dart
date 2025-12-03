@@ -78,7 +78,7 @@ class PiecewiseCurve implements LevelCurve {
   PiecewiseCurve(List<CurveSegment> segments)
       : assert(segments.isNotEmpty),
         _segments =
-        (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
+            (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
     assert(_segments.first.start == 1, 'First segment must start at level 1');
   }
   final List<CurveSegment> _segments;
@@ -86,7 +86,7 @@ class PiecewiseCurve implements LevelCurve {
   @override
   double deltaForLevel(int level) {
     final seg = _segments.firstWhere(
-          (s) => s.contains(level),
+      (s) => s.contains(level),
       orElse: () => _segments.last,
     );
     return seg.curve.deltaForLevel(seg.local(level));

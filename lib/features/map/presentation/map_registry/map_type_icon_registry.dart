@@ -122,10 +122,10 @@ class MapTypeIconRegistry {
   }
 
   Future<ui.Image> _drawIcon(
-      IconData icon, {
-        required int edge,
-        required ui.Color color,
-      }) async {
+    IconData icon, {
+    required int edge,
+    required ui.Color color,
+  }) async {
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
 
