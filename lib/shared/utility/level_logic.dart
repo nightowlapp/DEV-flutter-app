@@ -78,7 +78,7 @@ class PiecewiseCurve implements LevelCurve {
   PiecewiseCurve(List<CurveSegment> segments)
       : assert(segments.isNotEmpty),
         _segments =
-            (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
+        (List.of(segments)..sort((a, b) => a.start.compareTo(b.start))) {
     assert(_segments.first.start == 1, 'First segment must start at level 1');
   }
   final List<CurveSegment> _segments;
@@ -86,7 +86,7 @@ class PiecewiseCurve implements LevelCurve {
   @override
   double deltaForLevel(int level) {
     final seg = _segments.firstWhere(
-      (s) => s.contains(level),
+          (s) => s.contains(level),
       orElse: () => _segments.last,
     );
     return seg.curve.deltaForLevel(seg.local(level));
@@ -236,5 +236,57 @@ class LevelLogic {
   }) {
     final start = cumulativeXpToReachLevel(currentLevel);
     return (currentXp - start).clamp(0.0, curve.deltaForLevel(currentLevel));
+  }
+
+  // === XP reward helpers ===
+  // Visits:
+  // - Each visit: +5 XP flat.
+  // - Time bonus: +1 XP per *completed* 2 hours at the venue (rounded down).
+  //   e.g. 4.6h -> floor(4.6 / 2) = 2 → +2 XP.
+  // - Repeat-visit bonus per venue: +[visitNumberForVenue] XP
+  //   (5th visit to the same venue => +5 XP from this part).
+
+  /// Flat XP awarded for any visit.
+  static const int visitFlatXp = 5;
+
+  /// XP per completed 2 hours at venue.
+  static const int visitXpPerTwoHours = 1;
+
+  /// XP from just "being there": 5 flat + 1 per completed 2h block.
+  ///
+  /// Examples:
+  /// - 0.5h stay -> 5 XP
+  /// - 4.6h stay -> 7 XP (5 base + floor(4.6 / 2) = 2)
+  /// - 5.9h stay -> 7 XP (5 base + floor(5.9 / 2) = 2)
+  static int xpFromVisitDuration(Duration stayDuration) {
+    if (stayDuration <= Duration.zero) return visitFlatXp;
+
+    final minutes = stayDuration.inMinutes;
+    final completedTwoHourBlocks = minutes ~/ (2 * 60); // 120 minutes
+    final timeBonus = completedTwoHourBlocks * visitXpPerTwoHours;
+
+    return visitFlatXp + timeBonus;
+  }
+
+  /// Full XP for a venue visit.
+  ///
+  /// [stayDuration]  – time between enter and exit.
+  /// [visitNumberForVenue] – 1-based index for this venue
+  ///                        (1 = first time, 5 = 5th visit, etc.).
+  ///
+  /// Formula:
+  ///   5 (flat)
+  /// + floor(hours / 2)  (time bonus)
+  /// + visitNumberForVenue (repeat-visit bonus)
+  ///
+  /// Example, 5th visit, 4.6h:
+  ///   5 (flat) + 2 (time) + 5 (5th visit) = 12 XP.
+  static int xpForVenueVisit({
+    required Duration stayDuration,
+    required int visitNumberForVenue,
+  }) {
+    final safeVisitNumber = visitNumberForVenue < 1 ? 1 : visitNumberForVenue;
+    final baseAndTime = xpFromVisitDuration(stayDuration);
+    return baseAndTime + safeVisitNumber;
   }
 }

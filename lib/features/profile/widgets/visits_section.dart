@@ -11,7 +11,6 @@ import '../../../shared/reusable/ui/venue_logo.dart';
 import '../../../shared/utility/utility.dart';
 
 class VisitsSection extends ConsumerWidget {
-  //TODO Cache so user doesnt have to fetch-
   const VisitsSection({
     super.key,
     this.maxHeight, // ← nullable: if null, fills as much as parent allows
@@ -39,10 +38,10 @@ class VisitsSection extends ConsumerWidget {
     // Total visits for left header
     final total = data.fold<int>(0, (sum, e) => sum + e.visits);
 
-    // Row height: at least 36 for touch, equals avatar diameter otherwise
-    final rowH = math.max(avatarRadius * 2, 36.0);
+    // Row height: at least 44 for touch + pill content.
+    final rowH = math.max(avatarRadius * 2, 44.0);
     final contentH =
-        data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
+    data.isEmpty ? rowH : (data.length * rowH) + ((data.length - 1) * 8.0);
 
     // Header height (title + spacing below)
     const headerH = 32.0 + verticalSpacerSmall;
@@ -57,7 +56,7 @@ class VisitsSection extends ConsumerWidget {
         // If maxHeight is null → fill as much as possible (use parentCap).
         // If maxHeight is set → clamp to min(parentCap, maxHeight).
         final targetCap =
-            maxHeight == null ? parentCap : math.min(parentCap, maxHeight!);
+        maxHeight == null ? parentCap : math.min(parentCap, maxHeight!);
 
         final listHeight = hasBounded ? targetCap : (maxHeight ?? contentH);
 
@@ -80,14 +79,14 @@ class VisitsSection extends ConsumerWidget {
                     alignment: Alignment.center,
                     child: Text(title, style: Styles.basicText),
                   ),
-                  if(seeAllEnabled)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: InkWell(
-                      onTap: onRightTap,
-                      child: Text(rightCaption, style: Styles.basicText),
+                  if (seeAllEnabled)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: onRightTap,
+                        child: Text(rightCaption, style: Styles.basicText),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -151,7 +150,9 @@ class VisitsSection extends ConsumerWidget {
                                   Utility.formatString(v.city),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Styles.smallText.copyWith(color: blue),
+                                  style: Styles.smallText.copyWith(
+                                    color: blue,
+                                  ),
                                 ),
                               ],
                             ),
@@ -166,9 +167,9 @@ class VisitsSection extends ConsumerWidget {
                             ),
                             child: Text(
                               '${visits}x',
-                              style: TextStyle(
-                                  color: badgeColor,
-                                  fontWeight: FontWeight.w600),
+                              style: Styles.basicText.copyWith(
+                                color: badgeColor,
+                              ),
                             ),
                           ),
                         ],

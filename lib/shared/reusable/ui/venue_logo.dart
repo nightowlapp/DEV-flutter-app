@@ -65,8 +65,7 @@ Widget VenueLogo({
 
   Widget _fallbackBadge() {
     // Only use the type icon if we *want* to and the type isn't unknown
-    final bool hasTypeIcon = venue.type != VenueType.unknown;
-    final bool useTypeIcon = showTypeIfNoLogo && hasTypeIcon;
+    final bool useTypeIcon = showTypeIfNoLogo;
 
     final label = (fallbackText ?? _initialOf(venue)).toUpperCase();
 

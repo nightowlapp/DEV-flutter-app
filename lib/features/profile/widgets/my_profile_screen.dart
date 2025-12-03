@@ -1,3 +1,4 @@
+// lib/features/profile/widgets/my_profile_screen.dart (or similar)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/features/profile/presentation/change_profile_picture.dart';
@@ -11,6 +12,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../data/providers/other_providers.dart';
+import '../../../data/providers/visits/visit_xp_provider.dart';
 import '../../../models/users/user.dart';
 import '../../../shared/constants/values.dart';
 import '../../../shared/reusable/ui/buttons.dart';
@@ -40,7 +42,14 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
       );
     }
 
-    final totalXp = u.xp.toDouble();
+    // XP from all visit sessions
+    final visitXp = ref.watch(myVisitXpProvider);
+
+    // TOTAL XP that drives the level bar.
+    // If you also use u.xp from Firestore, you can change this to:
+    //   final totalXp = u.xp.toDouble() + visitXp.toDouble();
+    final totalXp = visitXp.toDouble();
+
     final p = LevelLogic.progress(totalXp);
 
     final xpThisLevel = LevelLogic.calculateThisLevelTotalXp(
@@ -73,7 +82,6 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                             size: PlatformConfig.width(context) * 0.25,
                             disablePrompt: false,
                             useAuthUserAsFallback: true,
-
                           ),
                           const SizedBox(width: horizontalSpacerMedium),
 
@@ -83,14 +91,14 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Full name: show naturally, wrap/ellipsis instead of squeezing
                                 AutoSizeText(
                                   u.displayFullName,
                                   style: Styles.fullNameDisplay,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: verticalSpacerVerySmall),
+                                const SizedBox(
+                                    height: verticalSpacerVerySmall),
                                 Text(
                                   u.userName,
                                   style: Styles.usernameDisplay,
@@ -107,18 +115,23 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
 
                   // RIGHT: keep a fixed (or small) width
                   SizedBox(
-                    width: PlatformConfig.width(context) * 0.25, // fixed space for the right column
+                    width: PlatformConfig.width(context) * 0.25,
                     height: PlatformConfig.height(context) * 0.12,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        SizedBox(height: PlatformConfig.height(context) * 0.01),
-                        const SizedBox.shrink(), // your optional button area
                         SizedBox(
-                          height: PlatformConfig.height(context) * 0.03,
+                            height:
+                            PlatformConfig.height(context) * 0.01),
+                        const SizedBox.shrink(),
+                        SizedBox(
+                          height:
+                          PlatformConfig.height(context) * 0.03,
                           child: const PartyStatusIndicator(),
                         ),
-                        SizedBox(height: PlatformConfig.height(context) * 0.01),
+                        SizedBox(
+                            height:
+                            PlatformConfig.height(context) * 0.01),
                       ],
                     ),
                   ),
@@ -126,13 +139,15 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
               ),
               const SizedBox(height: verticalSpacerDefault),
 
-              // Level indicator
+              // Level indicator (now driven by visit XP)
               LevelIndicator(
                 levelLabel: u.level.toInt() == 1337
                     ? 'Level 1337'
                     : 'Level ${p.level.toInt()}',
-                current: u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
-                total: u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(),
+                current:
+                u.level.toInt() == 1337 ? 69 : currentXp.toInt(),
+                total:
+                u.level.toInt() == 1337 ? 420 : xpThisLevel.toInt(),
                 height: PlatformConfig.height(context) * 0.05,
                 gradient: const LinearGradient(
                     colors: [owlPurple, purple, owlPurple, purple]),
@@ -140,20 +155,13 @@ class _ProfileScreenState extends ConsumerState<MyProfileScreen> {
                 // onTap: _openLevelPopup, //TODO
               ),
 
-              // const SizedBox(height: verticalSpacerDefault),
-              // const EmblemsSection(achieved: 37, total: 113,title:  'My Emblems'),
-
               const SizedBox(height: verticalSpacerDefault),
 
-              // ✅ Let visits fill the rest
               const Expanded(
                 child: VisitsSection(
-                  // maxHeight: null => use parent constraints (fill downwards)
                   maxHeight: null,
                 ),
               ),
-
-              // If you later want content below, keep it after the Expanded in another Column or a bottom bar.
             ],
           ),
         ),
