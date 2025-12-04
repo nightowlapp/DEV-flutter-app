@@ -64,3 +64,27 @@ class ErrorScreen extends StatelessWidget {
     );
   }
 }
+
+//TODO below:
+
+// Container(
+// margin: const EdgeInsets.symmetric(vertical: 8),
+// padding: const EdgeInsets.all(12),
+// decoration: BoxDecoration(
+// color: Colors.red.withOpacity(0.08),
+// borderRadius: BorderRadius.circular(borderRadiusDefault),
+// border: Border.all(color: Colors.redAccent, width: 0.7),
+// ),
+// child: Row(
+// children: [
+// const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+// const SizedBox(width: 8),
+// Expanded(
+// child: Text(
+// 'Could not load friend suggestions.\nPull to refresh or try again later.',
+// style: Styles.smallText.copyWith(color: Colors.redAccent),
+// ),
+// ),
+// ],
+// ),
+// ),

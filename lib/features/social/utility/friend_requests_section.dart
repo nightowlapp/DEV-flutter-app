@@ -43,12 +43,12 @@ class FriendRequestsSection extends ConsumerWidget {
 
     final allIncoming = incomingAv.asData?.value ?? const <FriendRequest>[];
     final incoming =
-        allIncoming.where((r) => r.statusIsPending).toList(growable: false);
+      allIncoming.where((r) => r.statusIsPending).toList(growable: false);
 
     // existing outgoing logic
     final allOutgoing = outgoingAv.asData?.value ?? const <FriendRequest>[];
     final pendingOutgoing =
-        allOutgoing.where((r) => r.statusIsPending).toList(growable: false);
+      allOutgoing.where((r) => r.statusIsPending).toList(growable: false);
 
     if (incoming.isEmpty && pendingOutgoing.isEmpty) {
       return const SizedBox.shrink();
@@ -60,11 +60,13 @@ class FriendRequestsSection extends ConsumerWidget {
         if (incoming.isNotEmpty) ...[
           Row(
             children: [
-              Text('Friend Requests', style: Styles.basicTextHeader),
+              Text('Received Friend Requests',
+                style: Styles.basicText.copyWith(color: greyLighter)
+              ),
               const Spacer(),
               Text(
                 '${incoming.length}',
-                style: Styles.basicText,
+                style: Styles.basicText.copyWith(color: greyLighter),
               ),
             ],
           ),
@@ -122,7 +124,7 @@ class _IncomingRequestRow extends ConsumerWidget {
         final userName = Utility.formatString(u.userName);
         final fullName = (u.displayFullName).trim();
         final borderColor =
-            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+          ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
         return InkWell(
           borderRadius: BorderRadius.circular(10),
@@ -171,7 +173,7 @@ class _IncomingRequestRow extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         Utility.formatString(
-                            Utility.formatTimeAgo(req.createdAt)),
+                          Utility.formatTimeAgo(req.createdAt)),
                         style: Styles.smallText,
                       ),
                     ],
@@ -216,7 +218,7 @@ class _OutgoingRequestRow extends ConsumerWidget {
         final userName = Utility.formatString(u.userName);
         final fullName = (u.displayFullName).trim();
         final borderColor =
-            ref.read(partyStatusColorForProvider(u.currentPartyStatus));
+          ref.read(partyStatusColorForProvider(u.currentPartyStatus));
 
         return InkWell(
           borderRadius: BorderRadius.circular(borderRadiusDefault),

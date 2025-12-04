@@ -62,7 +62,28 @@ class _FindFriendsSectionState extends ConsumerState<FindFriendsSection> {
             height: 80,
             child: Center(child: LoadingIndicator()),
           ),
-          error: (e, _) => const ErrorScreen(),
+          error: (e, _) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(borderRadiusDefault),
+              border: Border.all(color: Colors.redAccent, width: 0.7),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Could not load friend suggestions. Please try again later.',
+                    style: Styles.smallText.copyWith(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           data: (list) {
             if (list.isEmpty) {
               return Text(
@@ -383,12 +404,12 @@ class _SearchFieldState extends State<_SearchField> {
 class _FriendCountText extends StatelessWidget {
   const _FriendCountText({
     required this.count,
-    required this.label,
+    required this.label, // ' nearby' or ' matches'
     required this.semanticsLabelWhenUnknown,
   });
 
   final int? count;
-  final String label; // ' nearby' or ' matches'
+  final String label;
   final String semanticsLabelWhenUnknown;
 
   @override
@@ -396,9 +417,8 @@ class _FriendCountText extends StatelessWidget {
     Widget child;
 
     if (count == null) {
-      // nothing yet (e.g. loading) but keep semantics if you want SRs to read something
+      // nothing yet (e.g. loading)
       child = Semantics(
-        key: const ValueKey('friend_count_empty'),
         label: semanticsLabelWhenUnknown,
         child: const SizedBox.shrink(),
       );
@@ -411,7 +431,6 @@ class _FriendCountText extends StatelessWidget {
       final numColor = (count == 0) ? red : owlPurple;
 
       child = Semantics(
-        key: ValueKey('friend_count_${label}_$count'),
         label: '$count$plural',
         child: Text.rich(
           TextSpan(
@@ -442,3 +461,4 @@ class _FriendCountText extends StatelessWidget {
     );
   }
 }
+

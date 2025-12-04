@@ -1,14 +1,16 @@
 // lib/data/repositories/users/friends_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../firestore_paths/firestore_paths.dart';
 
 class FriendsRepository {
-  FriendsRepository(this._db, this._auth);
+  FriendsRepository(this._db, this._auth, this._functions);
 
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
+  final FirebaseFunctions _functions;
 
   String? get _me => _auth.currentUser?.uid;
 
@@ -56,4 +58,18 @@ class FriendsRepository {
       SetOptions(merge: true),
     );
   }
+
+  Future<void> unfriend(String friendUid) async {
+    final me = _auth.currentUser;
+    if (me == null) {
+      throw Exception('Not authenticated');
+    }
+
+    final callable = _functions.httpsCallable('unfriendUser');
+    await callable.call(<String, dynamic>{
+      'targetUid': friendUid,
+    });
+  }
 }
+
+

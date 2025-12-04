@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nightowlcode/shared/constants/enums.dart';
-import '../../../models/users/friend.dart';
 import '../../../models/users/friend_request.dart';
 import '../../firestore_paths/firestore_paths.dart';
 
@@ -97,42 +96,14 @@ class FriendRequestsRepository {
     }
   }
 
-// in FriendRequestsRepository.approve
   Future<void> approve(FriendRequest req) async {
-    final batch = _db.batch();
-
-    final now = FieldValue.serverTimestamp();
-
-    // create edges
-    final a = _db
-        .doc(UserDocumentPaths.doc(req.toUid))
-        .collection(UserDocumentPaths.friends)
-        .doc(req.fromUid);
-
-    final b = _db
-        .doc(UserDocumentPaths.doc(req.fromUid))
-        .collection(UserDocumentPaths.friends)
-        .doc(req.toUid);
-
-    final baseEdgeData = {
-      FriendEdgeFields.iCanSeeThem: true,
-      FriendEdgeFields.isCloseFriend: false,
-      UserDocumentPaths.createdAt: now,
-      UserDocumentPaths.updatedAt: now,
-    };
-
-    batch.set(a, baseEdgeData);
-    batch.set(b, baseEdgeData);
-
-    // update request status instead of deleting
-    final r = _db.collection(FriendRequestDocumentPaths.collection).doc(req.id);
-
-    batch.update(r, {
+    await _db
+        .collection(FriendRequestDocumentPaths.collection)
+        .doc(req.id)
+        .update({
       FriendRequestDocumentPaths.status: FriendRequestStatus.accepted.name,
       UserDocumentPaths.updatedAt: FieldValue.serverTimestamp(),
     });
-
-    await batch.commit();
   }
 
   Future<void> reject(FriendRequest req) async {

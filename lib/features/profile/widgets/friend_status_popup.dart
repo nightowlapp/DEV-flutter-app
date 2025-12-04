@@ -83,7 +83,7 @@ class FriendStatusPopup extends StatelessWidget {
                     ),
                     Text(
                       userName,
-                      style: Styles.popupText.copyWith(color: owlPurple),
+                      style: Styles.popupText.copyWith(color: blue),
                     ),
                     Text(
                       '.',

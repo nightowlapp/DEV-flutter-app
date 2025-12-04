@@ -22,7 +22,6 @@ class FirestoreCollections {
   // live people count (shared name for Firestore + RTDB)
   static const String liveCounts = 'live_counts';
 }
-
 /// Very common field names reused across multiple collections.
 class FirestoreFields {
   FirestoreFields._();

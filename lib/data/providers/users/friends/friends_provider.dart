@@ -1,5 +1,6 @@
 // lib/data/providers/friends/friends_provider.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/models/users/user.dart' as model;
@@ -64,7 +65,12 @@ final friendsProvider = StreamProvider<List<model.User>>((ref) {
 });
 
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
-  return FriendsRepository(FirebaseFirestore.instance, FirebaseAuth.instance);
+  final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+  return FriendsRepository(
+    FirebaseFirestore.instance,
+    FirebaseAuth.instance,
+    functions,
+  );
 });
 
 final friendEdgeWithUserProvider =

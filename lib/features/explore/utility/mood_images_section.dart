@@ -27,27 +27,26 @@ class MoodImagesSection extends ConsumerWidget {
     // 🔐 Only admins / testers / reviewers can add mood images
     final roles = ref.watch(userRolesProvider);
     final canAdd = roles.isAdmin || roles.isTester || roles.isReviewer;
-
     return ref.watch(venueMediaBundleProvider(venueId)).when(
-          loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (b) {
-            final mood = b.moodImageUrls.map(StorageUrl.normalize).toList();
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (b) {
+        final mood = b.moodImageUrls.map(StorageUrl.normalize).toList();
 
-            // If no images AND user can't add → hide completely
-            if (mood.isEmpty && !canAdd) return const SizedBox.shrink();
+        // If no images AND user can't add → hide completely
+        if (mood.isEmpty && !canAdd) return const SizedBox.shrink();
 
-            return _HStrip(
-              urls: mood,
-              venueId: venueId,
-              canAddMoodImage: canAdd,
-              height: PlatformConfig.height(c) * 0.2,
-              itemExtent: PlatformConfig.width(c) * 0.3,
-              radius: borderRadiusDefault,
-              ref: ref,
-            );
-          },
+        return _HStrip(
+          urls: mood,
+          venueId: venueId,
+          canAddMoodImage: canAdd,
+          height: PlatformConfig.height(c) * 0.2,
+          itemExtent: PlatformConfig.width(c) * 0.3,
+          radius: borderRadiusDefault,
+          ref: ref,
         );
+      },
+    );
   }
 }
 
@@ -75,10 +74,10 @@ class _HStrip extends StatelessWidget {
 
   void _open(BuildContext c, int initial) {
     Navigator.of(c).push(PageRouteBuilder(
-      opaque: false,
-      barrierColor: Colors.black.withOpacity(.95),
-      pageBuilder: (_, __, ___) => _Gallery(urls: urls, initial: initial),
-    ));
+        opaque: false,
+        barrierColor: Colors.black.withOpacity(.95),
+        pageBuilder: (_, __, ___) => _Gallery(urls: urls, initial: initial),
+      ));
   }
 
   @override
@@ -314,9 +313,9 @@ class _GalleryState extends State<_Gallery> {
 
 Future<void> _handleAddMoodImage(
   BuildContext context, {
-  required WidgetRef ref,
-  required String venueId,
-}) async {
+    required WidgetRef ref,
+    required String venueId,
+  }) async {
   final rootCtx = Navigator.of(context, rootNavigator: true).context;
 
   final src = await _chooseMoodImageSource(rootCtx);
@@ -347,7 +346,8 @@ Future<void> _handleAddMoodImage(
       message: 'Hoot hoot! The vibes just got better 🦉',
       variant: OwlSnackVariant.success,
     );
-  } catch (e) {
+  }
+  catch (e) {
     OwlSnack.show(
       rootCtx,
       title: 'Could not add image',
@@ -375,7 +375,7 @@ Future<ImageSource?> _chooseMoodImageSource(BuildContext context) {
             ),
             title: Text('Take photo', style: Styles.basicText),
             onTap: () =>
-                Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
+            Navigator.of(ctx, rootNavigator: true).pop(ImageSource.camera),
           ),
           ListTile(
             leading: const Icon(
@@ -385,7 +385,7 @@ Future<ImageSource?> _chooseMoodImageSource(BuildContext context) {
             ),
             title: Text('Choose from gallery', style: Styles.basicText),
             onTap: () =>
-                Navigator.of(ctx, rootNavigator: true).pop(ImageSource.gallery),
+            Navigator.of(ctx, rootNavigator: true).pop(ImageSource.gallery),
           ),
         ],
       ),

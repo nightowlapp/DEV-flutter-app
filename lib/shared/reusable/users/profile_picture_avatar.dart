@@ -112,12 +112,7 @@ class ProfilePictureAvatar extends StatelessWidget {
             child: avatar,
           );
         }
-
-        final out = (semanticLabel != null)
-            ? Semantics(label: semanticLabel, button: true, child: avatar)
-            : avatar;
-
-        return SizedBox(width: size, height: size, child: out);
+        return SizedBox(width: size, height: size, child: avatar);
       },
     );
   }

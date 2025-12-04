@@ -1,1 +1,35 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"prod-nightowl","appId":"1:692796480383:android:998ae118b423a67471d84a","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"prod-nightowl","configurations":{"android":"1:692796480383:android:998ae118b423a67471d84a","ios":"1:692796480383:ios:5d9577a582d0e27071d84a","web":"1:692796480383:web:59e79b7cf51406d771d84a"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "prod-nightowl",
+          "appId": "1:692796480383:android:998ae118b423a67471d84a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "prod-nightowl",
+          "configurations": {
+            "android": "1:692796480383:android:998ae118b423a67471d84a",
+            "ios": "1:692796480383:ios:5d9577a582d0e27071d84a",
+            "web": "1:692796480383:web:59e79b7cf51406d771d84a"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "singleProjectMode": true,
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    }
+  }
+}

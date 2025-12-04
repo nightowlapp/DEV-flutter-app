@@ -66,7 +66,7 @@ class MainBottomNavigationBar extends StatelessWidget {
           right: -8, // tweak offsets to taste
           top: -4,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
             child: Text(text,
                 textAlign: TextAlign.center,
                 style: Styles.mediumSmallText

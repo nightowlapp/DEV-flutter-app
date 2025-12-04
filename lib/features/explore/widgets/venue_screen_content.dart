@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:nightowlcode/core/platform_config.dart';
+import 'package:nightowlcode/data/repositories/users/role_repository.dart';
 import 'package:nightowlcode/data/services/like_store.dart';
 import 'package:nightowlcode/features/explore/utility/cover_image.dart';
 import 'package:nightowlcode/features/explore/utility/offer_today_section.dart';
@@ -84,6 +85,7 @@ class VenueScreenContent extends ConsumerWidget {
     final likeStore = ref.watch(likeStoreProvider(venue.id));
     final favStore = ref.watch(favoriteStoreProvider(venue.id));
     final asyncMedia = ref.watch(venueMediaBundleProvider(venue.id));
+    final isAdmin = ref.watch(currentUserIsAdminProvider);
 
     // ✅ Watch live count as AsyncValue<int>
     final visitsAsync = ref.watch(liveVenueCountProvider(venue.id));
@@ -205,7 +207,7 @@ class VenueScreenContent extends ConsumerWidget {
                   ],
                 ),
 
-                if (showStats) ...[
+                if (showStats || isAdmin) ...[
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
                   const Divider(color: white),
                   SizedBox(height: PlatformConfig.height(context) * 0.05),
