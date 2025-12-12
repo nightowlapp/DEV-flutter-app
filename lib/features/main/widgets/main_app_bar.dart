@@ -148,7 +148,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(ImagePaths.logoTextWide, height: 70),
+                Center(
+                 child: Text('NightOwl', style: Styles.popupHeader,)
+                )
                 ],
               ));
 

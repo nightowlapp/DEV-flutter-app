@@ -27,7 +27,7 @@ class CustomNetworkImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.cacheKey,
     this.httpHeaders,
-    this.fallbackAsset = ImagePaths.logo,
+    this.fallbackAsset = ImagePaths.logoWhite,
     this.fallBackEnabled = true,
     this.normalizeStorage = true,
   });

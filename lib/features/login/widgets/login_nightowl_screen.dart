@@ -87,7 +87,7 @@ class _LoginScreenUIState extends ConsumerState<LoginScreen> {
         titleText: 'Login',
         actions: [
           CircleAvatar(
-            backgroundImage: const AssetImage(ImagePaths.logo),
+            backgroundImage: const AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),

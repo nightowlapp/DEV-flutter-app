@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 // const owlOrange = Colors.purple;
 // const owlOrange = Colors.purpleAccent;
 // const owlOrange = Colors.deepPurple;
-const owlPurple = Colors.deepPurpleAccent;
+
+// const owlPurple = Colors.deepPurpleAccent;
+const owlPurple = Color.fromRGBO(168, 0, 227, 1.0);
 const deepPurpleAccent = Color.fromRGBO(124, 77, 255, 1.0);
+
 // const owlOrange = Color.fromRGBO(110, 28, 198, 1.0);
 const adminColor = Colors.deepOrange ?? Color(0xFF0137E8);
 

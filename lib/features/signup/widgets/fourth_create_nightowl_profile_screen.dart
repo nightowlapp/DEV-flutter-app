@@ -245,7 +245,7 @@ class _FourthCreateNightowlProfileScreenState
         titleText: 'Final Details',
         actions: [
           CircleAvatar(
-            backgroundImage: AssetImage(ImagePaths.logo),
+            backgroundImage: AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),

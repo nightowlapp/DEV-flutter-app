@@ -10,7 +10,7 @@ import 'package:nightowlcode/shared/constants/values.dart';
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({
     super.key,
-    this.imagePath = ImagePaths.logoDownBackground,
+    this.imagePath = ImagePaths.logoColored,
     this.backgroundColor = transparent,
     this.imageSize = 150,
     this.slogan = 'Claim The Night',
@@ -40,10 +40,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.initState();
 
     _logoPaths = <String>[
-      ImagePaths.logoLeftBackground,
-      ImagePaths.logoUpBackground,
-      ImagePaths.logoRightBackground,
-      ImagePaths.logoDownBackground,
+      ImagePaths.logoColored,
+      // ImagePaths.logoUpBackground,
+      // ImagePaths.logoRightBackground,
+      // ImagePaths.logoDownBackground,
     ];
 
     // Start from the provided imagePath if it matches one of the logos

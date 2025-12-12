@@ -92,7 +92,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
         titleText: 'Birthdate',
         actions: [
           CircleAvatar(
-            backgroundImage: const AssetImage(ImagePaths.logo),
+            backgroundImage: const AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),

@@ -134,7 +134,7 @@ class _ChooseFavoriteVenuesScreenState
         leading: SizedBox.shrink(),
         actions: [
           CircleAvatar(
-            backgroundImage: const AssetImage(ImagePaths.logo),
+            backgroundImage: const AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),

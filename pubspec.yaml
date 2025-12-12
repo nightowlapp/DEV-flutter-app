@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.1.3+1
+version: 0.2.0+100
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -156,16 +156,16 @@ flutter_launcher_icons:
 
   # Base icons (required by the tool)
   # Android (pre-Oreo) uses this flat square PNG. You can temporarily reuse fg.png if needed.
-  image_path_android: assets/nightowl/logo_down_background.png
+  image_path_android: assets/nightowl/logos/NO_color.png
 
   # iOS needs a 1024×1024 OPAQUE PNG (no transparency). iOS will round it automatically.
-  image_path_ios: assets/nightowl/logo_down_background.png
+  image_path_ios: assets/nightowl/logos/NO_color.png
   remove_alpha_ios: true
 
   # Adaptive icons (Android 8+) → gives you rounded/squircle shapes per launcher
-  adaptive_icon_foreground: assets/nightowl/logo_down_background.png  # 432×432 transparent glyph with padding
+  adaptive_icon_foreground: assets/nightowl/logos/NO_color.png  # 432×432 transparent glyph with padding
   adaptive_icon_background: "#000000"                # or assets/app_icon/bg.png (1080×1080)
-#  adaptive_icon_monochrome: assets/nightowl/logo_down_background.png # optional, pure white glyph for Android 13 themed icon
+#  adaptive_icon_monochrome: assets/nightowl/logos/NO_color.png # optional, pure white glyph for Android 13 themed icon
 
 flutter_native_splash:
   color: "#000000"
@@ -193,9 +193,11 @@ flutter:
     - assets/fonts/
     - assets/nightowl/
     - assets/nightowl/cities/
+    - assets/nightowl/logos/
     - assets/nightowl/flame.png
 
-    - assets/fonts/Bitter-Regular.ttf
+    - assets/fonts/MADE Tommy Soft Light PERSONAL USE.otf
+    - assets/fonts/Quicksand-Regular.ttf
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -210,9 +212,10 @@ flutter:
   # list giving the asset and other descriptors for the font.
 
   fonts:
-    - family: Bitter
+    - family: TommySoft
       fonts:
-        - asset: assets/fonts/Bitter-Regular.ttf
+       - asset: assets/fonts/MADE Tommy Soft Regular PERSONAL USE.otf
+       - asset: assets/fonts/Quicksand-Regular.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

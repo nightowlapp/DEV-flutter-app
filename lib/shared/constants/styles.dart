@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
 import 'package:nightowlcode/shared/constants/values.dart';
 
+class Font {
+  static TextStyle tommySoftRegular() =>
+      const TextStyle(fontFamily: 'TommySoft');
+}
+
 class Styles {
-  static TextStyle get baseFont => GoogleFonts.bitter();
-  // Cool fonts
-  // static TextStyle get base => GoogleFonts.spaceGrotesk
-  // static TextStyle get base => GoogleFonts.manrope
-  // static TextStyle get base => GoogleFonts.figtree
-  // static TextStyle get base => GoogleFonts.jetBrainsMono
-  // static TextStyle get base => GoogleFonts.figtree();
+  static TextStyle get baseFont => Font.tommySoftRegular();
 
   static TextStyle get fullNameDisplay => baseFont.copyWith(
       fontWeight: FontWeight.w600, color: white, fontSize: fontSizeLarge);

@@ -55,7 +55,7 @@ class _ThirdCreateNightowlProfileScreenState
     return Scaffold(
       appBar: const MainAppBar(showBack: true, titleText: 'Password', actions: [
         CircleAvatar(
-          backgroundImage: AssetImage(ImagePaths.logo),
+          backgroundImage: AssetImage(ImagePaths.logoColored),
           radius: iconSizeDefault,
           backgroundColor: transparent,
         ),

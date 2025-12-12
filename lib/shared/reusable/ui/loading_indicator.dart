@@ -17,12 +17,12 @@ import 'package:nightowlcode/assets.dart';
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     super.key,
-    this.logoAsset = ImagePaths.logo,
+    this.logoAsset = ImagePaths.logoColored,
     this.logoSequence = const [
-      ImagePaths.logoLeftBackground,
-      ImagePaths.logoUpBackground,
-      ImagePaths.logoRightBackground,
-      ImagePaths.logoDownBackground,
+      ImagePaths.logoColored,
+      // ImagePaths.logoUpBackground,
+      // ImagePaths.logoRightBackground,
+      // ImagePaths.logoDownBackground,
     ],
     this.size = 85.0,
     this.duration = const Duration(milliseconds: 2500),
@@ -115,7 +115,7 @@ class _RotatingCircleState extends State<_RotatingCircle>
   @override
   Widget build(BuildContext context) {
     final assets = widget.logoAssets.isEmpty
-        ? <String>[ImagePaths.logo]
+        ? <String>[ImagePaths.logoColored]
         : widget.logoAssets;
 
     return AnimatedBuilder(

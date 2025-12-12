@@ -25,7 +25,7 @@ import 'package:nightowlcode/data/providers/geofence/geofencing_orchestrator_pro
 import 'package:nightowlcode/data/providers/party_status/party_status_provider.dart';
 import 'package:nightowlcode/data/providers/users/user_providers.dart';
 import 'package:nightowlcode/data/services/location/location_providers.dart';
-import 'package:nightowlcode/data/services/notifications/notification_service.dart';
+// import 'package:nightowlcode/data/services/notifications/notification_service.dart';
 import 'package:nightowlcode/shared/utility/utility.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -232,9 +232,9 @@ class PostBoot {
   }
 
   static Future<void> _initNotifications() async {
-    final notif = NotificationService();
-    await notif.initLocalNotifications();
-    await notif.init();
+    // final notif = NotificationService();
+    // await notif.initLocalNotifications();
+    // await notif.init();
   }
 
   static Future<void> _initTimeZones() async {

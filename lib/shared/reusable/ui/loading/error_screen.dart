@@ -9,7 +9,7 @@ class ErrorScreen extends StatelessWidget {
   //TODO SEND CRAHC
   const ErrorScreen(
       {super.key,
-      this.imagePath = ImagePaths.logo,
+      this.imagePath = ImagePaths.logoColored,
       this.borderColor = owlPurple,
       this.borderWidth = 1.5,
       this.backgroundColor = black,

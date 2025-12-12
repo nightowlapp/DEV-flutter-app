@@ -4,7 +4,6 @@ import 'package:nightowlcode/core/platform_config.dart';
 import 'package:nightowlcode/data/providers/other_providers.dart'; // has authStateProvider & sharedPrefsFutureProvider
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/constants/colors.dart';
-import 'package:nightowlcode/shared/constants/enums.dart';
 import 'package:nightowlcode/shared/constants/styles.dart';
 import 'package:nightowlcode/shared/reusable/ui/buttons.dart';
 import 'package:nightowlcode/shared/reusable/users/language_switcher.dart';
@@ -44,33 +43,6 @@ class LoginOrCreateAccountScreen extends StatelessWidget {
   }
 }
 
-/// Minimal branded loading screen.
-class _LoadingScaffold extends StatelessWidget {
-  const _LoadingScaffold();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                ImagePaths.logoDownBackground,
-                height: PlatformConfig.height(context) * 0.18,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 24),
-              const CircularProgressIndicator(color: owlPurple),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Your existing login/create UI, untouched.
 class _LoginBody extends StatelessWidget {
   const _LoginBody();
@@ -90,7 +62,7 @@ class _LoginBody extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          ImagePaths.logoDownBackground,
+                          ImagePaths.logoColored,
                           height: PlatformConfig.height(context) * 0.25,
                           errorBuilder: (context, _, __) =>
                               const SizedBox.shrink(),

@@ -133,7 +133,7 @@ class _SecondCreateNightowlProfileScreenState
         titleText: 'Email',
         actions: [
           CircleAvatar(
-            backgroundImage: AssetImage(ImagePaths.logo),
+            backgroundImage: AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),

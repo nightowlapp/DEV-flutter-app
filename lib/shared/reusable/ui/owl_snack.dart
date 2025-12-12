@@ -40,7 +40,7 @@ class OwlSnack {
     final brd = borderColor ?? palette.$3;
 
     final Widget defaultIcon = Image.asset(
-      ImagePaths.logo,
+      ImagePaths.logoColored,
       width: iconSize,
       height: iconSize,
     );
