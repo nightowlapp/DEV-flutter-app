@@ -756,7 +756,7 @@ class Venue {
 
     final effectiveCover = _effectiveCover(rawCover, rawLogo);
 
-    // (optional but very helpful for debugging)
+    // (optional but very helpful for debugging) TODO make better fetch for improve performance.
     debugPrint(
       'Venue[$id] fromJson: rawCover="$rawCover" rawLogo="$rawLogo" effectiveCover="$effectiveCover"',
     );
