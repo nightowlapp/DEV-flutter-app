@@ -38,8 +38,8 @@ class UserFinalizeService {
       isVerified: false,
     );
 
-    // 1) Create user document
-    await _users.create(user); // create-only
+    // 1) Create user document with trigger
+    // await _users.create(user); // create-only
 
     // 2) Apply the same username logic as Settings:
     //    - set user_name_lc on the user doc

@@ -8,7 +8,7 @@ class GeofenceEvent {
   final String venueId;
   final bool enter; // true=enter, false=exit
   final DateTime at;
-  GeofenceEvent.enter(this.venueId)
+  GeofenceEvent.enter(this.venueId) // 2 constructors
       : enter = true,
         at = DateTime.now();
   GeofenceEvent.exit(this.venueId)
@@ -20,7 +20,7 @@ class GeofenceEngine {
   GeofenceEngine({
     required Stream<({double lat, double lng})> location$,
     required List<VenueZone> zones,
-    this.dwell = const Duration(seconds: 5),
+    this.dwell = const Duration(seconds: 600), // Making sure that user is actually visiting.
   }) : _zones = zones {
     _sub = location$.listen(
       _onLoc,
@@ -58,7 +58,7 @@ class GeofenceEngine {
     }
 
     // If we’re dwelling towards a zone that disappeared → cancel dwell.
-    if (_candidate != null && !_zones.any((z) => z.venueId == _candidate)) {
+    if (_candidate != null && !_zones.any((z) => z.venueId == _candidate)) { // True if missing
       _cancelDwell();
       _candidate = null;
     }
@@ -112,7 +112,7 @@ class GeofenceEngine {
     _dwellTimer = null;
   }
 
-  String? _resolve(double lat, double lng) {
+  String? _resolve(double lat, double lng) { // return venue "inside" or null
     for (final z in _zones) {
       if (z.polygon.isNotEmpty) {
         if (_pointInPolygon(lat, lng, z.polygon)) return z.venueId;
@@ -127,6 +127,7 @@ class GeofenceEngine {
   }
 
   // Ray-casting point-in-polygon
+  //Loops and toggles inside if ray crosses edge.
   bool _pointInPolygon(double lat, double lng, List<LatLng> poly) {
     bool inside = false;
     for (int i = 0, j = poly.length - 1; i < poly.length; j = i++) {

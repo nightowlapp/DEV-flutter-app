@@ -11,7 +11,7 @@ class GeofencingRepository {
   CollectionReference<Map<String, dynamic>> get _sessionsCol =>
       _db.collection(VisitDocumentPaths.collectionForUser(userId));
 
-  /// Ensure there is exactly one *open* session and it's for [venueId].
+  /// Ensure there is exactly one *open* session per [venueId].
   /// - If an open session for the same venue already exists → do nothing, return its id.
   /// - If an open session exists for a different venue → close it, open a new one for [venueId].
   /// - If no open session exists → open a new one for [venueId].

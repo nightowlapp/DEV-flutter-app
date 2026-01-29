@@ -133,26 +133,23 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     final List<Widget> resolvedActions =
         actions ?? (action != null ? <Widget>[action!] : defaultActions);
     final bool hasTitleText = (titleText?.trim().isNotEmpty ?? false);
-
     final Widget resolvedTitle = title ??
         (hasTitleText
             ? Text(
-                titleText!,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(color: titleColor),
-                overflow: TextOverflow.ellipsis,
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                Center(
-                 child: Text('NightOwl', style: Styles.popupHeader,)
-                )
-                ],
-              ));
+          titleText!,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(color: titleColor),
+          overflow: TextOverflow.ellipsis,
+        )
+            : Center(
+          child: Image.asset(
+            ImagePaths.name,
+            fit: BoxFit.contain,
+          ),
+        ));
+
 
     return AppBar(
       elevation: 0,

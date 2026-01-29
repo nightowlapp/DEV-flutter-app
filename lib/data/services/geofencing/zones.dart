@@ -11,15 +11,15 @@ class VenueZone {
       {required this.venueId,
       required this.polygon,
       required this.center,
-      required this.radiusM});
+      this.radiusM = 11});
 }
 
-VenueZone zoneFromVenue(Venue v, {double fallbackRadiusM = 20}) {
+VenueZone zoneFromVenue(Venue v, {double fallbackRadiusM = 11}) {
   final poly = v.corners;
   return VenueZone(
     venueId: v.id,
     polygon: poly,
     center: v.entry,
-    radiusM: poly.isEmpty ? fallbackRadiusM : 0,
+    radiusM: poly.isEmpty ? fallbackRadiusM : 11,
   );
 }

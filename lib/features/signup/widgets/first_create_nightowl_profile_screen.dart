@@ -4,78 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nightowlcode/features/signup/widgets/utility/date_picker.dart';
 import 'package:nightowlcode/navigation/nav_shortcuts.dart';
 import 'package:nightowlcode/shared/reusable/sign_up_or_login/sign_up.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/platform_config.dart';
 import '../../../shared/constants/colors.dart';
 import '../../../shared/constants/icons.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/constants/values.dart';
-import '../../../shared/legal/terms_of_service.dart';
 import '../../../shared/reusable/ui/buttons.dart';
 import '../../main/widgets/main_app_bar.dart';
-import '../presentation/sign_up_draft_notifier.dart'; // <-- signUpDraftProvider + selectors
+import '../presentation/sign_up_draft_notifier.dart';
 import 'package:nightowlcode/assets.dart';
 
 class FirstCreateNightowlProfileScreen extends ConsumerWidget {
   const FirstCreateNightowlProfileScreen({super.key});
 
-  Future<void> _showTOS(BuildContext context) async {
-    final h = MediaQuery.of(context).size.height;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return SafeArea(
-          top: false,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: black,
-              borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(borderRadiusDefault)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(2)),
-                  ),
-                  Row(
-                    children: [
-                      const Text('Terms of Service',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 18)),
-                      const Spacer(),
-                      IconButton(
-                          icon: const Icon(Icons.close, color: white),
-                          onPressed: () => Navigator.of(ctx).pop()),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: h * 0.6,
-                    child: SingleChildScrollView(
-                      child: Text(
-                        TermsOfService.tosText,
-                        style:
-                            Styles.basicText.copyWith(fontSize: fontSizeMedium),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  // ✅ Put your real URL here
+  static final Uri _tosUri = Uri.parse('https://nightowl.now/legal/terms');
+
+  Future<void> _openTosUrl(BuildContext context) async {
+    final ok = await launchUrl(
+      _tosUri,
+      mode: LaunchMode.inAppBrowserView, // Safari View Controller / Chrome Custom Tabs
+      webViewConfiguration: const WebViewConfiguration(
+        enableJavaScript: true,
+        enableDomStorage: true,
+      ),
     );
+
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Terms of Service.')),
+      );
+    }
   }
 
   @override
@@ -92,7 +53,7 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
         titleText: 'Birthdate',
         actions: [
           CircleAvatar(
-            backgroundImage: const AssetImage(ImagePaths.logoColored),
+            backgroundImage: AssetImage(ImagePaths.logoColored),
             radius: iconSizeDefault,
             backgroundColor: transparent,
           ),
@@ -129,20 +90,22 @@ class FirstCreateNightowlProfileScreen extends ConsumerWidget {
                         .read(signUpDraftProvider.notifier)
                         .setAcceptedTos(!draft.acceptedTos),
                     child: Icon(
-                        draft.acceptedTos
-                            ? checkBoxCheckedIcon
-                            : checkBoxUncheckedIcon,
-                        color: owlPurple),
+                      draft.acceptedTos
+                          ? checkBoxCheckedIcon
+                          : checkBoxUncheckedIcon,
+                      color: owlPurple,
+                    ),
                   ),
                   const SizedBox(width: horizontalSpacerSmall),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Accept ',
-                          style: Styles.boldText
-                              .copyWith(fontSize: fontSizeMedium)),
+                      Text(
+                        'Accept ',
+                        style: Styles.boldText.copyWith(fontSize: fontSizeMedium),
+                      ),
                       GestureDetector(
-                        onTap: () => _showTOS(context),
+                        onTap: () => _openTosUrl(context),
                         child: Text(
                           'Terms of Service',
                           style: Styles.boldText.copyWith(

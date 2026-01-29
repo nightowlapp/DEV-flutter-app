@@ -8,6 +8,8 @@ class ImagePaths {
   static const String logoBlack1 = '$logos/NO_black_1.png';
   static const String logoBlack2 = '$logos/NO_black_2.png';
 
+  static const String name = '$logos/Colored_V2_Line.png';
+
   // static const String logoLeft = '$logos/logo_left.png';
   // static const String logoUp = '$logos/logo_up.png';
   // static const String logoRight = '$logos/logo_right.png';

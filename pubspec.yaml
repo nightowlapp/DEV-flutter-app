@@ -156,14 +156,17 @@ flutter_launcher_icons:
 
   # Base icons (required by the tool)
   # Android (pre-Oreo) uses this flat square PNG. You can temporarily reuse fg.png if needed.
-  image_path_android: assets/nightowl/logos/NO_color.png
+  image_path_android: assets/nightowl/logos/Colored_Background_V2_2Line.png
+#  image_path_android: assets/nightowl/logos/Colored_V2_Logo.png
 
   # iOS needs a 1024×1024 OPAQUE PNG (no transparency). iOS will round it automatically.
-  image_path_ios: assets/nightowl/logos/NO_color.png
+  image_path_ios: assets/nightowl/logos/Colored_Background_V2_2Line.png
+#  image_path_ios: assets/nightowl/logos/Colored_V2_Logo.png
   remove_alpha_ios: true
 
   # Adaptive icons (Android 8+) → gives you rounded/squircle shapes per launcher
-  adaptive_icon_foreground: assets/nightowl/logos/NO_color.png  # 432×432 transparent glyph with padding
+  adaptive_icon_foreground: assets/nightowl/logos/Colored_Background_V2_2Line.png  # 432×432 transparent glyph with padding
+#  adaptive_icon_foreground: assets/nightowl/logos/Colored_V2_Logo.png
   adaptive_icon_background: "#000000"                # or assets/app_icon/bg.png (1080×1080)
 #  adaptive_icon_monochrome: assets/nightowl/logos/NO_color.png # optional, pure white glyph for Android 13 themed icon
 

@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -203,54 +204,38 @@ class EditBadge extends ConsumerWidget {
   /// Creates the stub doc and shows the first snack.
   /// Returns docId or null on error.
   Future<String?> _submitQuick(
-    BuildContext context,
-    WidgetRef ref,
-    String category,
-  ) async {
+      BuildContext context,
+      WidgetRef ref,
+      String category,
+      ) async {
+    String? feedbackId;
+
+    // --- A) Create feedback stub (this is what you want to succeed) ---
     try {
-      final now =
-          DateTime.now(); // later: convert to venue-local using timeZoneId
-      final weekdayIndex = (now.weekday + 6) %
-          7; // 0=Mon, 1=Tue, ..., 6=Sun – matches OpeningHours
+      final now = DateTime.now();
+      final weekdayIndex = (now.weekday + 6) % 7;
 
-      // Extra fields for specific categories
       final extra = <String, dynamic>{};
-
       if (category == 'age_restriction' ||
           category == 'opening_hours' ||
           category == 'entry_price' ||
           category == 'dress_code') {
-        extra['weekday'] = weekdayIndex; // 🔹 important for later migration
+        extra['weekday'] = weekdayIndex;
       }
 
-      final feedbackId = await FeedbackRepository.createVenueFeedbackStub(
+      feedbackId = await FeedbackRepository.createVenueFeedbackStub(
         venueId: venue.id,
         category: category,
         extraFields: extra.isEmpty ? null : extra,
       );
-
-      // 🔥 LOCAL ROLE CHECK – *before* hitting Firestore
-      final authUserAsync = ref.read(authUserProvider);
-      final user = authUserAsync.asData?.value;
-      if (user != null) {
-        final roles = user.roles ?? const <UserRole>{};
-
-        await addReviewerRoleToUserIfMissing(
-          userId: user.id, // or user.uid, depending on your model
-          localRoles: roles,
-        );
-      }
-
+    } on FirebaseException catch (e) {
       OwlSnack.show(
         context,
-        title: 'Hoot hoot! Edit sent 🦉',
-        message:
-            'Thanks for looking out for the NightOwl community! We\'ll review your ${Utility.formatString(category)} suggestion soon.',
-        variant: OwlSnackVariant.success,
-        duration: const Duration(seconds: 10),
+        title: 'Could not send suggestion',
+        message: 'Firestore: ${e.code} — ${e.message ?? ''}',
+        variant: OwlSnackVariant.error,
       );
-
-      return feedbackId;
+      return null;
     } catch (e) {
       OwlSnack.show(
         context,
@@ -260,7 +245,36 @@ class EditBadge extends ConsumerWidget {
       );
       return null;
     }
+
+    // --- B) Optional role update (should NOT block feedback) ---
+    try {
+      final authUserAsync = ref.read(authUserProvider);
+      final user = authUserAsync.asData?.value;
+      if (user != null) {
+        final roles = user.roles ?? const <UserRole>{};
+        await addReviewerRoleToUserIfMissing(
+          userId: user.id, // or user.uid (match your model)
+          localRoles: roles,
+        );
+      }
+    } on FirebaseException catch (e) {
+      debugPrint('Role update denied: ${e.code} ${e.message}');
+    } catch (e) {
+      debugPrint('Role update failed: $e');
+    }
+
+    OwlSnack.show(
+      context,
+      title: 'Hoot hoot! Edit sent 🦉',
+      message:
+      'Thanks for looking out for the NightOwl community! We\'ll review your ${Utility.formatString(category)} suggestion soon.',
+      variant: OwlSnackVariant.success,
+      duration: const Duration(seconds: 10),
+    );
+
+    return feedbackId;
   }
+
 
   Future<void> _showFollowUpDialog(
     BuildContext context,
