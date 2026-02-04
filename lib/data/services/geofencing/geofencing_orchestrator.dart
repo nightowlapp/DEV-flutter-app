@@ -32,8 +32,8 @@ class GeofencingOrchestrator {
   /// Push the latest cached venues here whenever the cache changes.
   void updateVenues(List<Venue> venues) {
     final zones = venues
-        .map((v) => zoneFromVenue(v, fallbackRadiusM: 20))
-        .toList(growable: false);
+        .map((v) => zoneFromVenue(v,))
+        .toList(growable: false); //Fixed length
     _engine.updateZones(zones);
   }
 

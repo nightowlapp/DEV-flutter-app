@@ -42,8 +42,8 @@ class Utility {
     'Dec'
   ];
 
-  static String formatTimeAgo(DateTime dateTime) {
-    if (dateTime.millisecondsSinceEpoch == 0) return '';
+  static String formatTimeAgo(DateTime? dateTime) {
+    if (dateTime == null || dateTime.millisecondsSinceEpoch == 0) return '';
 
     final now = DateTime.now();
     final local = dateTime.toLocal();
