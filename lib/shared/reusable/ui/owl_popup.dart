@@ -96,7 +96,10 @@ class OwlPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final viewInsets = MediaQuery.of(context).viewInsets; // keyboard
-    final maxH = (size.height * maxHeightFraction).clamp(240.0, size.height);
+    // Respect keyboard by reducing the available height
+    final availableHeight = (size.height - viewInsets.bottom).clamp(0.0, size.height);
+    final maxH = (availableHeight * maxHeightFraction)
+        .clamp(240.0, availableHeight);
 
     Widget body = DefaultTextStyle(
       style: textStyle,
@@ -130,7 +133,8 @@ class OwlPopup extends StatelessWidget {
         return AnimatedPadding(
           duration: const Duration(milliseconds: 200),
           curve: Curves.decelerate,
-          padding: MediaQuery.of(context).viewInsets +
+          // Only pad by keyboard on the bottom to avoid over-shifting
+          padding: EdgeInsets.only(bottom: viewInsets.bottom) +
               const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: AlertDialog(
             backgroundColor: backgroundColor,
@@ -144,6 +148,8 @@ class OwlPopup extends StatelessWidget {
               ),
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.zero,
                 child: Container(
                   decoration: BoxDecoration(

@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:nightowlcode/data/repositories/users/role_repository.dart';
 import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../firestore_paths/firestore_paths.dart'; // has FeedbackDocumentPaths, VenueDocumentPaths, FirestoreFields
 
 class FeedbackRepository {
@@ -307,5 +308,75 @@ class FeedbackRepository {
     // }, SetOptions(merge: true));
 
     return url;
+  }
+
+  /// Generic crash report:
+  /// feedback/{uid}/crashes/app/{errorKey}/{autoId}
+  static Future<void> submitCrashReportGeneric({
+    required Object error,
+    StackTrace? stackTrace,
+    String message = '',
+    String venueId = 'app',
+    String? route,
+    Map<String, dynamic>? extraFields,
+  }) async {
+    final user = _requireUser;
+    final info = await _packageInfo();
+
+    final errorString = error.toString();
+    final errorKey = _safeErrorKey(errorString);
+
+    final doc = _userFeedbackRoot(user.uid)
+        .collection(FeedbackDocumentPaths.crashes)
+        .doc(venueId)
+        .collection(errorKey)
+        .doc();
+
+    await doc.set({
+      FeedbackDocumentPaths.createdAt: FieldValue.serverTimestamp(),
+      FeedbackDocumentPaths.message: message,
+      FeedbackDocumentPaths.error: errorString,
+      FeedbackDocumentPaths.errorString: errorString,
+      'stackTrace': stackTrace?.toString(),
+      'route': route,
+      'app': {
+        'packageName': info.packageName,
+        'version': info.version,
+        'buildNumber': info.buildNumber,
+      },
+      'device': {
+        'os': Platform.operatingSystem,
+        'osVersion': Platform.operatingSystemVersion,
+      },
+      if (extraFields != null) ...extraFields,
+    });
+  }
+
+  // ---- PackageInfo cache (avoid re-loading on every error) ----
+  static PackageInfo? _cachedPackageInfo;
+  static Future<PackageInfo> _packageInfo() async {
+    return _cachedPackageInfo ??= await PackageInfo.fromPlatform();
+  }
+
+  // ---- Safe key for Firestore collection names ----
+  // Your old code uses error.toString() as a collection name (can break if it contains '/').
+  static String _safeErrorKey(String input) {
+    // Stable hash-like key but readable-ish
+    final normalized = input.trim().toLowerCase();
+    final hash = _fnv1a64(normalized);
+    return 'e_$hash';
+  }
+
+
+  static String _fnv1a64(String s) {
+    const int fnvPrime = 1099511628211;
+    const int offsetBasis = 1469598103934665603;
+
+    int hash = offsetBasis;
+    for (final codeUnit in s.codeUnits) {
+      hash ^= codeUnit;
+      hash = (hash * fnvPrime) & 0xFFFFFFFFFFFFFFFF;
+    }
+    return hash.toRadixString(16);
   }
 }

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/providers/visits/visits_provider.dart';
+import '../../../data/providers/visits/my_visits_session_provider.dart';
+import '../../../models/users/visit_session.dart';
+import 'visit_session_popup.dart';
 import '../../../shared/constants/styles.dart';
 import '../../../shared/constants/values.dart';
 import '../../../shared/constants/colors.dart';
@@ -117,62 +120,81 @@ class VisitsSection extends ConsumerWidget {
                     final visits = data[i].visits;
                     final dim = avatarRadius * 2;
 
-                    return SizedBox(
-                      height: rowH,
-                      child: Row(
-                        children: [
-                          VenueLogo(
-                            venue: v,
-                            size: dim,
-                            showTypeIfNoLogo: true,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  v.displayName.isNotEmpty
-                                      ? v.displayName
-                                      : v.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Styles.boldText
-                                      .copyWith(fontSize: fontSizeSmall),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  Utility.formatString(v.city),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Styles.smallText.copyWith(
-                                    color: blue,
+                    return InkWell(
+                      onTap: () async {
+                        final sessions = ref
+                            .read(myVisitSessionsProvider)
+                            .maybeWhen(
+                              data: (s) => s,
+                              orElse: () => const <VisitSession>[],
+                            )
+                            .where((s) => s.venueId == v.id)
+                            .toList();
+
+                        await showVisitSessionsPopup(
+                          context,
+                          venue: v,
+                          sessions: sessions,
+                        );
+                      },
+                      child: SizedBox(
+                        height: rowH,
+                        child: Row(
+                          children: [
+                            VenueLogo(
+                              venue: v,
+                              size: dim,
+                              showTypeIfNoLogo: true,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    v.displayName.isNotEmpty
+                                        ? v.displayName
+                                        : v.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Styles.boldText.copyWith(
+                                        fontSize: fontSizeSmall),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white10,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: badgeColor, width: 0.5),
-                            ),
-                            child: Text(
-                              '${visits}x',
-                              style: Styles.basicText.copyWith(
-                                color: badgeColor,
-                                fontSize: fontSizeSmall,
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    Utility.formatString(v.city),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Styles.smallText.copyWith(
+                                      color: blue,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white10,
+                                borderRadius: BorderRadius.circular(999),
+                                border:
+                                    Border.all(color: badgeColor, width: 0.5),
+                              ),
+                              child: Text(
+                                '${visits}x',
+                                style: Styles.basicText.copyWith(
+                                  color: badgeColor,
+                                  fontSize: fontSizeSmall,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

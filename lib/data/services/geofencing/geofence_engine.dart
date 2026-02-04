@@ -1,4 +1,4 @@
-// lib/data/services/geofencing/geofence_engine.dart
+//lib/data/services/geofencing/geofence_engine.dart
 import 'dart:async';
 import 'package:nightowlcode/shared/utility/lat_lng.dart';
 import 'package:nightowlcode/shared/utility/distance.dart';
@@ -81,7 +81,7 @@ class GeofenceEngine {
       return;
     }
 
-    // schedule dwell towards `next`
+    // schedule dwell towards next
     _scheduleDwell(next);
   }
 
